@@ -9,10 +9,10 @@
 static const float gamma_c = 0.5f;
 static const float inv_gamma = 1.0f/gamma_c;
 
-static const float u_max = 30.0f;
+static const float u_max = 1.0f;
 static const float inv_u_max = 1.0f/u_max;
 
-static const float del_h = 10.0f;
+static const float del_h = 0.05f;
 
 static const char * fieldnames[] = {"rho", "y"};
 
@@ -76,7 +76,7 @@ int main(int argc, char * argv[])
     for(size_t i = 0; i < ncells; ++i)
     {
         data[i].rho = 0.3f;
-        data[i].y   = (i > 50) ? 0.2f : 0.1f;
+        data[i].y   = (i < 50) ? 0.2f : 0.1f;
         x += del_h;
     }
 
@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
 
     float the_time = 0.0f;
 
-    for(size_t t = 0; t < 10; ++t)
+    for(size_t t = 0; t < 100; ++t)
     {
         the_time += sim_step();
         ts.append(&(data[0].rho), the_time);
