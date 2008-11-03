@@ -81,6 +81,7 @@ struct full_q
 
     inline float lambda0(float u_max, float gamma) const
     {
+        // can simplify this too
         return u + rho*eq_u_prime(rho, u_max, gamma);
     }
 
@@ -123,6 +124,8 @@ struct full_q
         {
             float lambda0_l = q_l->lambda0(u_max, gamma);
             float lambda0_m;
+
+            bool case3;
             if(q_l->u - q_l->u_eq < q_r->u)
             {
                 // we can simplify this
@@ -132,16 +135,20 @@ struct full_q
                              gamma);
 
                 lambda0_m = q_m.lambda0(u_max, gamma);
+                case3 = false;
             }
             else
+            {
                 lambda0_m = q_l->u - q_l->u_eq;
+                case3 = true;
+            }
 
             if(lambda0_l > 0.0f)
                 q_0 = q_l;
-            else
+            else // lambda0_l <= 0.0f;
             {
                 q_0 = &q_m;
-                if(lambda0_m > 0.0f)
+                if(case3 || lambda0_m > 0.0f)
                     q_m.transonic_rarefaction(q_l,
                                               u_max, gamma, inv_gamma);
             }
