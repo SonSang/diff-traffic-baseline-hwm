@@ -96,8 +96,8 @@ struct full_q
     float u;
 
     static inline void riemann(riemann_solution *rs,
-                               const full_q *__restrict__ q_r,
                                const full_q *__restrict__ q_l,
+                               const full_q *__restrict__ q_r,
                                float u_max,
                                float inv_u_max,
                                float gamma,
