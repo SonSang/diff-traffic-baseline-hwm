@@ -7,6 +7,7 @@
 #include <cmath>
 #include "plot.hpp"
 
+int border_pixels;
 draw_metrics * dm;
 plot_tex pt;
 
@@ -23,7 +24,7 @@ struct cairo_window : public Fl_Double_Window
     virtual void draw()
     {
         dm->dim_update(w(), h());
-        pt.cairo_overlay();
+        pt.cairo_overlay(border_pixels);
         unsigned char * dat = cairo_image_surface_get_data(pt.csurface_);
         fl_draw_image(dat, 0, 0, w(), h(), 4, 0);
     }
@@ -55,9 +56,10 @@ struct cairo_window : public Fl_Double_Window
                     {
                         float fac = (Fl::event_state() & FL_CTRL) ? 1.05 : 1.5;
                         if(Fl::event_state() & FL_BUTTON1)
-                            dm->aspect_scale_ *= pow(fac, -(y-lastmouse_[1])/10.0);
+                            dm->zoom_yb(fac, -(y-lastmouse_[1])/10.0);
                         else
-                            dm->solution_scale_ *= pow(fac, -(y-lastmouse_[1])/10.0);
+                            dm->zoom(fac, -(y-lastmouse_[1])/10.0);
+
                         lastmouse_[0] = x;
                         lastmouse_[1] = y;
                         redraw();
@@ -65,8 +67,9 @@ struct cairo_window : public Fl_Double_Window
                     else
                     {
                         float fac = (Fl::event_state() & FL_CTRL) ? 0.1 : 1.0;
-                        dm->center_[0] += fac*(dm->base_extents_[1] - dm->base_extents_[0])*(float)(x-lastmouse_[0])/((float) w()*dm->solution_scale_);
-                        dm->center_[1] -= fac*(dm->base_extents_[3] - dm->base_extents_[2])*(float)(y-lastmouse_[1])/((float) h()*dm->solution_scale_);
+                        dm->translate(fac,
+                                      (float)(x-lastmouse_[0])/(float) w(),
+                                      (float)(y-lastmouse_[1])/(float) h());
                         lastmouse_[0] = x;
                         lastmouse_[1] = y;
                         redraw();
@@ -79,9 +82,9 @@ struct cairo_window : public Fl_Double_Window
             {
                 float fac = (Fl::event_state() & FL_CTRL) ? 1.05 : 1.5;
                 if(Fl::event_state() & FL_BUTTON1)
-                    dm->aspect_scale_ *= pow(fac, -Fl::event_dy());
+                    dm->zoom_yb(fac, -Fl::event_dy());
                 else
-                    dm->solution_scale_ *= pow(fac, -Fl::event_dy());
+                    dm->zoom(fac, -Fl::event_dy());
 
                 redraw();
             }
@@ -96,18 +99,14 @@ struct cairo_window : public Fl_Double_Window
                 int key = Fl::event_key();
                 switch(key)
                 {
-//                 case '.':
-//                     fltk::lock();
-//                     border_pixels_++;
-//                     redraw();
-//                     fltk::unlock();
-//                     break;
-//                 case ',':
-//                     fltk::lock();
-//                     border_pixels_--;
-//                     redraw();
-//                     fltk::unlock();
-//                     break;
+                 case '.':
+                    border_pixels++;
+                    redraw();
+                    break;
+                case ',':
+                    border_pixels--;
+                    redraw();
+                    break;
                 case FL_Escape:
                     exit(0);
                     break;
@@ -133,8 +132,8 @@ int main(int argc, char * argv[])
 
     dm = new draw_metrics(500, 500);
     pt.dm_ = dm;
+    border_pixels = 20;
     pt.prepare_cairo();
-    pt.border_pixels_ = 50;
     pt.do_corners_ = true;
 
     cw.show();

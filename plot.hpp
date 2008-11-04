@@ -8,6 +8,10 @@ struct draw_metrics
     draw_metrics(int w, int h);
     void dim_update(int neww, int newh);
 
+    void zoom(float fac, float dist);
+    void zoom_yb(float fac, float dist);
+    void translate(float fac, float x, float y);
+
     void query_point(const int pix[2], float val[2]) const;
 
     float base_extents_[4]; // left, right, bottom, top
@@ -23,13 +27,12 @@ struct plot_tex
 {
     bool prepare_cairo();
 
-    void cairo_grid_ticks();
-    void cairo_overlay();
+    void cairo_grid_ticks(int border_pixels);
+    void cairo_overlay(int border_pixels);
 
     cairo_surface_t * csurface_;
     cairo_t * ccontext_;
 
-    int border_pixels_;
     bool do_corners_;
 
     draw_metrics * dm_;

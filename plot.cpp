@@ -105,6 +105,22 @@ void draw_metrics::dim_update(int neww, int newh)
     h_ = newh;
 }
 
+void draw_metrics::zoom(float fac, float dist)
+{
+    solution_scale_ *= std::pow(fac, dist);
+}
+
+void draw_metrics::zoom_yb(float fac, float dist)
+{
+    aspect_scale_ *= std::pow(fac, dist);
+}
+
+void draw_metrics::translate(float fac, float x, float y)
+{
+    center_[0] += x*fac*(base_extents_[1] - base_extents_[0])/solution_scale_;
+    center_[1] -= y*fac*(base_extents_[3] - base_extents_[2])/solution_scale_;
+}
+
 void draw_metrics::query_point(const int inscr[2], float val[2]) const
 {
     //    from (0, w_) x (h_, 0) to (be[0], be[1]) x (be[2] x be[3])
@@ -139,15 +155,15 @@ bool plot_tex::prepare_cairo()
     return true;
 }
 
-void plot_tex::cairo_grid_ticks()
+void plot_tex::cairo_grid_ticks(int border_pixels)
 {
     // x ticks
     {
         float left_soln[2];
-        int left_screen[2] = { border_pixels_, 0};
+        int left_screen[2] = { border_pixels, 0};
 
         float right_soln[2];
-        int right_screen[2] = { dm_->w_-border_pixels_, 0};
+        int right_screen[2] = { dm_->w_-border_pixels, 0};
 
         dm_->query_point(left_screen, left_soln);
         dm_->query_point(right_screen, right_soln);
@@ -175,23 +191,23 @@ void plot_tex::cairo_grid_ticks()
                 if(j == 0)
                 {
                     snprintf(text, 500, "%g", i);
-                    cairo_set_font_size (ccontext_, std::max(border_pixels_/4, 10));
+                    cairo_set_font_size (ccontext_, std::max(border_pixels/4, 10));
 
                     cairo_select_font_face (ccontext_, "SANS",
                                             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
                     cairo_set_source_rgba (ccontext_, 0.0f, 0.0f, 0.0f, 1.0f);
 
-                    double coords[2] = { i, border_pixels_ };
+                    double coords[2] = { i, border_pixels };
                     cairo_user_to_device(ccontext_, &(coords[0]), &(coords[1]));
                     cairo_save(ccontext_);
                     cairo_identity_matrix(ccontext_);
-                    put_text(ccontext_, text, coords[0], coords[1]-border_pixels_/8, CENTER_X, BOTTOM);
-                    put_text(ccontext_, text, coords[0], dm_->h_-border_pixels_+border_pixels_/8, CENTER_X, TOP);
+                    put_text(ccontext_, text, coords[0], coords[1]-border_pixels/8, CENTER_X, BOTTOM);
+                    put_text(ccontext_, text, coords[0], dm_->h_-border_pixels+border_pixels/8, CENTER_X, TOP);
 
                     cairo_restore(ccontext_);
-                    cairo_move_to(ccontext_, i, border_pixels_);
-                    cairo_rel_line_to(ccontext_, 0.0, dm_->h_-2*border_pixels_);
+                    cairo_move_to(ccontext_, i, border_pixels);
+                    cairo_rel_line_to(ccontext_, 0.0, dm_->h_-2*border_pixels);
 
                     cairo_save(ccontext_);
                     cairo_set_source_rgba (ccontext_, 0.0f, 0.0f, 0.0f, 0.1f);
@@ -201,11 +217,11 @@ void plot_tex::cairo_grid_ticks()
                     cairo_restore(ccontext_);
                 }
 
-                cairo_move_to(ccontext_, i, border_pixels_);
-                cairo_rel_line_to(ccontext_, 0, border_pixels_*0.25*std::pow(2.0, 1-j));
+                cairo_move_to(ccontext_, i, border_pixels);
+                cairo_rel_line_to(ccontext_, 0, border_pixels*0.25*std::pow(2.0, 1-j));
 
-                cairo_move_to(ccontext_, i, dm_->h_-border_pixels_);
-                cairo_rel_line_to(ccontext_, 0, -border_pixels_*0.25*std::pow(2.0, 1-j));
+                cairo_move_to(ccontext_, i, dm_->h_-border_pixels);
+                cairo_rel_line_to(ccontext_, 0, -border_pixels*0.25*std::pow(2.0, 1-j));
 
                 cairo_save(ccontext_);
                 cairo_identity_matrix(ccontext_);
@@ -222,10 +238,10 @@ void plot_tex::cairo_grid_ticks()
     // y ticks
     {
         float top_soln[2];
-        int top_screen[2] = { 0, border_pixels_ };
+        int top_screen[2] = { 0, border_pixels };
 
         float bottom_soln[2];
-        int bottom_screen[2] = { 0, dm_->h_-border_pixels_ };
+        int bottom_screen[2] = { 0, dm_->h_-border_pixels };
 
         dm_->query_point(top_screen, top_soln);
         dm_->query_point(bottom_screen, bottom_soln);
@@ -254,22 +270,22 @@ void plot_tex::cairo_grid_ticks()
                 if(j == 0)
                 {
                     snprintf(text, 500, "%g", i);
-                    cairo_set_font_size (ccontext_, std::max(border_pixels_/4, 10));
+                    cairo_set_font_size (ccontext_, std::max(border_pixels/4, 10));
 
                     cairo_select_font_face (ccontext_, "SANS",
                                             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
-                    double coords[2] = { border_pixels_, i };
+                    double coords[2] = { border_pixels, i };
                     cairo_user_to_device(ccontext_, &(coords[0]), &(coords[1]));
                     cairo_save(ccontext_);
                     cairo_identity_matrix(ccontext_);
-                    put_text(ccontext_, text, coords[0]-border_pixels_/8,     coords[1], RIGHT, CENTER_Y);
-                    put_text(ccontext_, text, dm_->w_-coords[0]+border_pixels_/8, coords[1], LEFT,  CENTER_Y);
+                    put_text(ccontext_, text, coords[0]-border_pixels/8,     coords[1], RIGHT, CENTER_Y);
+                    put_text(ccontext_, text, dm_->w_-coords[0]+border_pixels/8, coords[1], LEFT,  CENTER_Y);
 
                     cairo_restore(ccontext_);
 
-                    cairo_move_to(ccontext_, border_pixels_, i);
-                    cairo_rel_line_to(ccontext_,  dm_->w_-2*border_pixels_, 0.0);
+                    cairo_move_to(ccontext_, border_pixels, i);
+                    cairo_rel_line_to(ccontext_,  dm_->w_-2*border_pixels, 0.0);
 
                     cairo_save(ccontext_);
                     cairo_set_source_rgba (ccontext_, 0.0f, 0.0f, 0.0f, 0.1f);
@@ -279,27 +295,25 @@ void plot_tex::cairo_grid_ticks()
                     cairo_restore(ccontext_);
                 }
 
-                cairo_move_to(ccontext_, border_pixels_, i);
-                cairo_rel_line_to(ccontext_,  border_pixels_*0.25*std::pow(2.0, 1-j), 0.0);
+                cairo_move_to(ccontext_, border_pixels, i);
+                cairo_rel_line_to(ccontext_,  border_pixels*0.25*std::pow(2.0, 1-j), 0.0);
 
-                cairo_move_to(ccontext_, dm_->w_-border_pixels_, i);
-                cairo_rel_line_to(ccontext_, -border_pixels_*0.25*std::pow(2.0, 1-j), 0.0);
+                cairo_move_to(ccontext_, dm_->w_-border_pixels, i);
+                cairo_rel_line_to(ccontext_, -border_pixels*0.25*std::pow(2.0, 1-j), 0.0);
 
                 cairo_save(ccontext_);
                 cairo_identity_matrix(ccontext_);
                 cairo_set_line_width(ccontext_, 0.5*std::pow(4.0, 1-j));
                 cairo_stroke(ccontext_);
                 cairo_restore(ccontext_);
-
             }
-
         }
     }
 
     cairo_restore(ccontext_);
 }
 
-void plot_tex::cairo_overlay()
+void plot_tex::cairo_overlay(int border_pixels)
 {
     int width =  cairo_image_surface_get_width(csurface_);
     int height = cairo_image_surface_get_height(csurface_);
@@ -313,11 +327,11 @@ void plot_tex::cairo_overlay()
     cairo_set_source_rgba (ccontext_, 0.3f, 0.3f, 0.3f, 1.0f);
     cairo_paint(ccontext_);
 
-    cairo_rectangle(ccontext_, 0, 0,       dm_->w_, border_pixels_);
-    cairo_rectangle(ccontext_, 0, dm_->h_-border_pixels_, dm_->w_, border_pixels_);
+    cairo_rectangle(ccontext_, 0, 0,       dm_->w_, border_pixels);
+    cairo_rectangle(ccontext_, 0, dm_->h_-border_pixels, dm_->w_, border_pixels);
 
-    cairo_rectangle(ccontext_, 0, border_pixels_, border_pixels_, dm_->h_-border_pixels_*2);
-    cairo_rectangle(ccontext_, dm_->w_-border_pixels_, border_pixels_, border_pixels_, dm_->h_-border_pixels_*2);
+    cairo_rectangle(ccontext_, 0, border_pixels, border_pixels, dm_->h_-border_pixels*2);
+    cairo_rectangle(ccontext_, dm_->w_-border_pixels, border_pixels, border_pixels, dm_->h_-border_pixels*2);
 
     cairo_set_operator(ccontext_, CAIRO_OPERATOR_OVER);
     cairo_set_source_rgba (ccontext_, 1.0f, 1.0f, 1.0f, 0.9f);
@@ -325,7 +339,7 @@ void plot_tex::cairo_overlay()
 
     char text[500];
 
-    cairo_set_font_size(ccontext_, std::max(border_pixels_/4, 10));
+    cairo_set_font_size(ccontext_, std::max(border_pixels/4, 10));
 
     cairo_select_font_face(ccontext_, "SANS",
                             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
@@ -338,35 +352,35 @@ void plot_tex::cairo_overlay()
         float outpos[2];
 
         // NW corner
-        inpos[0] = border_pixels_; inpos[1] = border_pixels_;
+        inpos[0] = border_pixels; inpos[1] = border_pixels;
         dm_->query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], RIGHT, BOTTOM);
 
         // NE corner
-        inpos[0] = dm_->w_-border_pixels_; inpos[1] = border_pixels_;
+        inpos[0] = dm_->w_-border_pixels; inpos[1] = border_pixels;
         dm_->query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], LEFT, BOTTOM);
 
         // SE corner
-        inpos[0] = dm_->w_-border_pixels_; inpos[1] = dm_->h_-border_pixels_;
+        inpos[0] = dm_->w_-border_pixels; inpos[1] = dm_->h_-border_pixels;
         dm_->query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], LEFT, TOP);
 
         // SW corner
-        inpos[0] = border_pixels_; inpos[1] = dm_->h_-border_pixels_;
+        inpos[0] = border_pixels; inpos[1] = dm_->h_-border_pixels;
         dm_->query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], RIGHT, TOP);
 
     }
-    cairo_grid_ticks();
+    cairo_grid_ticks(border_pixels);
 
     cairo_restore(ccontext_);
 }
