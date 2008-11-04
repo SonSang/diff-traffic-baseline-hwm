@@ -174,7 +174,7 @@ void plot_tex::cairo_grid_ticks()
             {
                 if(j == 0)
                 {
-                    sprintf(text, "%g", (double)i);
+                    snprintf(text, 500, "%g", i);
                     cairo_set_font_size (ccontext_, std::max(border_pixels_/4, 10));
 
                     cairo_select_font_face (ccontext_, "SANS",
@@ -212,7 +212,6 @@ void plot_tex::cairo_grid_ticks()
                 cairo_set_line_width(ccontext_, 0.5*std::pow(4.0, 1-j));
                 cairo_stroke(ccontext_);
                 cairo_restore(ccontext_);
-
             }
         }
     }
@@ -254,7 +253,7 @@ void plot_tex::cairo_grid_ticks()
             {
                 if(j == 0)
                 {
-                    sprintf(text, "%g", (double)i);
+                    snprintf(text, 500, "%g", i);
                     cairo_set_font_size (ccontext_, std::max(border_pixels_/4, 10));
 
                     cairo_select_font_face (ccontext_, "SANS",
@@ -342,28 +341,28 @@ void plot_tex::cairo_overlay()
         inpos[0] = border_pixels_; inpos[1] = border_pixels_;
         dm_->query_point(inpos, outpos);
 
-        sprintf(text, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
+        snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], RIGHT, BOTTOM);
 
         // NE corner
         inpos[0] = dm_->w_-border_pixels_; inpos[1] = border_pixels_;
         dm_->query_point(inpos, outpos);
 
-        sprintf(text, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
+        snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], LEFT, BOTTOM);
 
         // SE corner
         inpos[0] = dm_->w_-border_pixels_; inpos[1] = dm_->h_-border_pixels_;
         dm_->query_point(inpos, outpos);
 
-        sprintf(text, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
+        snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], LEFT, TOP);
 
         // SW corner
         inpos[0] = border_pixels_; inpos[1] = dm_->h_-border_pixels_;
         dm_->query_point(inpos, outpos);
 
-        sprintf(text, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
+        snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], RIGHT, TOP);
 
     }
