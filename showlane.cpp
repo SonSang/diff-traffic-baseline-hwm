@@ -136,6 +136,22 @@ int main(int argc, char * argv[])
     border_pixels = 20;
     pt.do_corners_ = true;
 
+    cairo_plotter1d * cp1d = new cairo_plotter1d;
+    cp1d->stride = 1;
+    cp1d->ncells = 100;
+    cp1d->data = (float*) malloc(sizeof(float) * cp1d->ncells);
+    cp1d->h = 10.0/cp1d->ncells;
+    cp1d->origin = -5.0f;
+
+    float x = cp1d->origin;
+    for(int i = 0; i < cp1d->ncells; ++i)
+    {
+        cp1d->data[i] = std::sin(x);
+        x += cp1d->h;
+    }
+
+    pt.plt_ = cp1d;
+
     cw.show();
 
     return Fl::run();

@@ -85,6 +85,17 @@ void spatial_view::query_point(const float screen[2], float val[2]) const
     val[1] = (screen[1]/solution_scale_ - center_[1])/aspect_scale_;
 }
 
+void cairo_plotter1d::draw(cairo_t * cxt, float l, float r)
+{
+    size_t lo = std::max(std::floor((l + origin)/h), 0.0f);
+    size_t hi = std::min(std::ceil ((r + origin)/h), (float)ncells);
+
+    for(size_t i = lo; i < hi; ++i)
+        cairo_rectangle(cxt, i*h+origin, 0.0, h, data[i*stride]);
+
+    cairo_stroke(cxt);
+}
+
 void plot_tex::reset(int w, int h)
 {
     if(w > h)
@@ -342,6 +353,14 @@ void plot_tex::cairo_overlay(int border_pixels)
                             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
     cairo_set_source_rgba(ccontext_, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    cairo_save(ccontext_);
+    cairo_scale(ccontext_,  w/(base_extents_[1] - base_extents_[0]), 1);
+    cairo_translate(ccontext_,  -base_extents_[0], 0);
+    cairo_scale(ccontext_, sv_->solution_scale_, 1.0);
+    cairo_translate(ccontext_, sv_->center_[0], 0.0);
+    plt_->draw(ccontext_, -100.0, 100.0);
+    cairo_restore(ccontext_);
 
     if(do_corners_)
     {

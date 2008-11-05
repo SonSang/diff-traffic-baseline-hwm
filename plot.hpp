@@ -2,6 +2,7 @@
 #define _PLOT_HPP_
 
 #include <cairo.h>
+#include <cstdlib>
 
 struct spatial_view
 {
@@ -16,6 +17,23 @@ struct spatial_view
     float center_[2];
     float solution_scale_;
     float aspect_scale_;
+};
+
+struct plotter1d
+{
+    virtual void draw(cairo_t * cxt, float l, float r) = 0;
+
+    int stride;
+    float * data;
+
+    size_t ncells;
+    float origin;
+    float h;
+};
+
+struct cairo_plotter1d : public plotter1d
+{
+    virtual void draw(cairo_t * cxt, float l, float r);
 };
 
 struct plot_tex
@@ -41,5 +59,6 @@ struct plot_tex
     float base_extents_[4]; // left, right, bottom, top
 
     spatial_view * sv_;
+    plotter1d * plt_;
 };
 #endif
