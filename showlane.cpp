@@ -8,7 +8,7 @@
 #include "plot.hpp"
 
 int border_pixels;
-draw_metrics * dm;
+spatial_view * sv;
 plot_tex pt;
 
 struct cairo_window : public Fl_Double_Window
@@ -23,7 +23,7 @@ struct cairo_window : public Fl_Double_Window
 
     virtual void draw()
     {
-        dm->dim_update(w(), h());
+        pt.prepare_cairo(w(), h());
         pt.cairo_overlay(border_pixels);
         unsigned char * dat = cairo_image_surface_get_data(pt.csurface_);
         fl_draw_image(dat, 0, 0, w(), h(), 4, 0);
@@ -56,9 +56,9 @@ struct cairo_window : public Fl_Double_Window
                     {
                         float fac = (Fl::event_state() & FL_CTRL) ? 1.05 : 1.5;
                         if(Fl::event_state() & FL_BUTTON1)
-                            dm->zoom_yb(fac, -(y-lastmouse_[1])/10.0);
+                            pt.zoom_yb(fac, -(y-lastmouse_[1])/10.0);
                         else
-                            dm->zoom(fac, -(y-lastmouse_[1])/10.0);
+                            pt.zoom(fac, -(y-lastmouse_[1])/10.0);
 
                         lastmouse_[0] = x;
                         lastmouse_[1] = y;
@@ -67,9 +67,9 @@ struct cairo_window : public Fl_Double_Window
                     else
                     {
                         float fac = (Fl::event_state() & FL_CTRL) ? 0.1 : 1.0;
-                        dm->translate(fac,
-                                      (float)(x-lastmouse_[0])/(float) w(),
-                                      (float)(y-lastmouse_[1])/(float) h());
+                        pt.translate(fac,
+                                     (float)(x-lastmouse_[0])/(float) w(),
+                                     (float)(y-lastmouse_[1])/(float) h());
                         lastmouse_[0] = x;
                         lastmouse_[1] = y;
                         redraw();
@@ -82,9 +82,9 @@ struct cairo_window : public Fl_Double_Window
             {
                 float fac = (Fl::event_state() & FL_CTRL) ? 1.05 : 1.5;
                 if(Fl::event_state() & FL_BUTTON1)
-                    dm->zoom_yb(fac, -Fl::event_dy());
+                    pt.zoom_yb(fac, -Fl::event_dy());
                 else
-                    dm->zoom(fac, -Fl::event_dy());
+                    pt.zoom(fac, -Fl::event_dy());
 
                 redraw();
             }
@@ -130,10 +130,10 @@ int main(int argc, char * argv[])
 {
     cairo_window cw(0, 0, 500, 500, "Tick test");
 
-    dm = new draw_metrics(500, 500);
-    pt.dm_ = dm;
+    sv = new spatial_view();
+    pt.reset(500, 500);
+    pt.sv_ = sv;
     border_pixels = 20;
-    pt.prepare_cairo();
     pt.do_corners_ = true;
 
     cw.show();

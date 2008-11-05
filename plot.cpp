@@ -56,14 +56,37 @@ static void put_text(cairo_t * cr, const char * str, float x, float y, txt_align
     cairo_restore(cr);
 }
 
-draw_metrics::draw_metrics(int w, int h) : solution_scale_(1.0f),
-                                           aspect_scale_(1.0f),
-                                           w_(w),
-                                           h_(w)
+spatial_view::spatial_view() : solution_scale_(1.0f),
+                               aspect_scale_(1.0f)
 {
     center_[0] = 0.0f;
     center_[1] = 0.0f;
+}
 
+void spatial_view::zoom(float fac, float dist)
+{
+    solution_scale_ *= std::pow(fac, dist);
+}
+
+void spatial_view::zoom_yb(float fac, float dist)
+{
+    aspect_scale_ *= std::pow(fac, dist);
+}
+
+void spatial_view::translate(float fac, float x, float y)
+{
+    center_[0] += x*fac/solution_scale_;
+    center_[1] -= y*fac/solution_scale_;
+}
+
+void spatial_view::query_point(const float screen[2], float val[2]) const
+{
+    val[0] = (screen[0]/solution_scale_ - center_[0]);
+    val[1] = (screen[1]/solution_scale_ - center_[1])/aspect_scale_;
+}
+
+void plot_tex::reset(int w, int h)
+{
     if(w > h)
     {
         float aspect = (float)w/(float)h;
@@ -84,66 +107,40 @@ draw_metrics::draw_metrics(int w, int h) : solution_scale_(1.0f),
         base_extents_[2] =  -aspect;
         base_extents_[3] =  aspect;
     }
+    prepare_cairo(w, h);
 }
 
-void draw_metrics::dim_update(int neww, int newh)
-
+bool plot_tex::prepare_cairo(int w, int h)
 {
-    float wproportion = (float)(neww-w_)/(float)w_;
-    float hproportion = (float)(newh-h_)/(float)h_;
-
-    float xdelta = wproportion*(base_extents_[1]-base_extents_[0]);
-    float ydelta = hproportion*(base_extents_[3]-base_extents_[2]);
-
-    base_extents_[0] -= xdelta*0.5f;
-    base_extents_[1] += xdelta*0.5f;
-
-    base_extents_[2] -= ydelta*0.5f;
-    base_extents_[3] += ydelta*0.5f;
-
-    w_ = neww;
-    h_ = newh;
-}
-
-void draw_metrics::zoom(float fac, float dist)
-{
-    solution_scale_ *= std::pow(fac, dist);
-}
-
-void draw_metrics::zoom_yb(float fac, float dist)
-{
-    aspect_scale_ *= std::pow(fac, dist);
-}
-
-void draw_metrics::translate(float fac, float x, float y)
-{
-    center_[0] += x*fac*(base_extents_[1] - base_extents_[0])/solution_scale_;
-    center_[1] -= y*fac*(base_extents_[3] - base_extents_[2])/solution_scale_;
-}
-
-void draw_metrics::query_point(const int inscr[2], float val[2]) const
-{
-    //    from (0, w_) x (h_, 0) to (be[0], be[1]) x (be[2] x be[3])
-
-    float screen[2];
-    screen[0] =  inscr[0]/(float)w_*(base_extents_[1] - base_extents_[0]) + base_extents_[0];
-    screen[1] = -inscr[1]/(float)h_*(base_extents_[3] - base_extents_[2]) - base_extents_[2];
-
-    val[0] = (screen[0]/solution_scale_ - center_[0]);
-    val[1] = (screen[1]/solution_scale_ - center_[1])/aspect_scale_;
-}
-
-bool plot_tex::prepare_cairo()
-{
+    int ow, oh;
     if(ccontext_)
     {
+        ow = cairo_image_surface_get_width(csurface_);
+        oh = cairo_image_surface_get_height(csurface_);
+        if(ow != w || oh != h)
+        {
+            float wproportion = (float)(w-ow)/(float)ow;
+            float hproportion = (float)(h-oh)/(float)oh;
+
+            float xdelta = wproportion*(base_extents_[1]-base_extents_[0]);
+            float ydelta = hproportion*(base_extents_[3]-base_extents_[2]);
+
+            base_extents_[0] -= xdelta*0.5f;
+            base_extents_[1] += xdelta*0.5f;
+
+            base_extents_[2] -= ydelta*0.5f;
+            base_extents_[3] += ydelta*0.5f;
+        }
+        else
+            return true;
+
         cairo_surface_destroy(csurface_);
         cairo_destroy(ccontext_);
     }
 
     csurface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                           dm_->w_,
-                                           dm_->h_);
+                                           w,
+                                           h);
 
     if(cairo_surface_status(csurface_) != CAIRO_STATUS_SUCCESS)
         return false;
@@ -157,16 +154,19 @@ bool plot_tex::prepare_cairo()
 
 void plot_tex::cairo_grid_ticks(int border_pixels)
 {
+    int w = cairo_image_surface_get_width(csurface_);
+    int h = cairo_image_surface_get_height(csurface_);
+
     // x ticks
     {
         float left_soln[2];
         int left_screen[2] = { border_pixels, 0};
 
         float right_soln[2];
-        int right_screen[2] = { dm_->w_-border_pixels, 0};
+        int right_screen[2] = { w-border_pixels, 0};
 
-        dm_->query_point(left_screen, left_soln);
-        dm_->query_point(right_screen, right_soln);
+        query_point(left_screen, left_soln);
+        query_point(right_screen, right_soln);
 
         float soln_width = right_soln[0]-left_soln[0];
         int npot = (int)std::floor(std::log(soln_width)/log(10.0));
@@ -175,12 +175,12 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
         cairo_set_operator(ccontext_, CAIRO_OPERATOR_OVER);
         cairo_set_source_rgba(ccontext_, 0.0, 0.0, 0.0, 1.0);
 
-        cairo_scale(ccontext_,  dm_->w_/(dm_->base_extents_[1] - dm_->base_extents_[0]), 1);
+        cairo_scale(ccontext_,  w/(base_extents_[1] - base_extents_[0]), 1);
 
-        cairo_translate(ccontext_,  -dm_->base_extents_[0], 0);
+        cairo_translate(ccontext_,  -base_extents_[0], 0);
 
-        cairo_scale(ccontext_, dm_->solution_scale_, 1.0);
-        cairo_translate(ccontext_, dm_->center_[0], 0.0);
+        cairo_scale(ccontext_, sv_->solution_scale_, 1.0);
+        cairo_translate(ccontext_, sv_->center_[0], 0.0);
 
         char text[500];
         for(int j = 0; j < 3; ++j)
@@ -203,11 +203,11 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
                     cairo_save(ccontext_);
                     cairo_identity_matrix(ccontext_);
                     put_text(ccontext_, text, coords[0], coords[1]-border_pixels/8, CENTER_X, BOTTOM);
-                    put_text(ccontext_, text, coords[0], dm_->h_-border_pixels+border_pixels/8, CENTER_X, TOP);
+                    put_text(ccontext_, text, coords[0], h-border_pixels+border_pixels/8, CENTER_X, TOP);
 
                     cairo_restore(ccontext_);
                     cairo_move_to(ccontext_, i, border_pixels);
-                    cairo_rel_line_to(ccontext_, 0.0, dm_->h_-2*border_pixels);
+                    cairo_rel_line_to(ccontext_, 0.0, h-2*border_pixels);
 
                     cairo_save(ccontext_);
                     cairo_set_source_rgba (ccontext_, 0.0f, 0.0f, 0.0f, 0.1f);
@@ -220,7 +220,7 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
                 cairo_move_to(ccontext_, i, border_pixels);
                 cairo_rel_line_to(ccontext_, 0, border_pixels*0.25*std::pow(2.0, 1-j));
 
-                cairo_move_to(ccontext_, i, dm_->h_-border_pixels);
+                cairo_move_to(ccontext_, i, h-border_pixels);
                 cairo_rel_line_to(ccontext_, 0, -border_pixels*0.25*std::pow(2.0, 1-j));
 
                 cairo_save(ccontext_);
@@ -241,10 +241,10 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
         int top_screen[2] = { 0, border_pixels };
 
         float bottom_soln[2];
-        int bottom_screen[2] = { 0, dm_->h_-border_pixels };
+        int bottom_screen[2] = { 0, h-border_pixels };
 
-        dm_->query_point(top_screen, top_soln);
-        dm_->query_point(bottom_screen, bottom_soln);
+        query_point(top_screen, top_soln);
+        query_point(bottom_screen, bottom_soln);
 
         float soln_width = top_soln[1]-bottom_soln[1];
         int npot = (int)std::floor(std::log(soln_width)/log(10.0));
@@ -253,13 +253,13 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
         cairo_set_operator(ccontext_, CAIRO_OPERATOR_OVER);
         cairo_set_source_rgba(ccontext_, 0.0, 0.0, 0.0, 1.0);
 
-        cairo_scale(ccontext_,  1, dm_->h_/(dm_->base_extents_[3] - dm_->base_extents_[2]));
+        cairo_scale(ccontext_,  1, h/(base_extents_[3] - base_extents_[2]));
 
-        cairo_translate(ccontext_,  0.0, -dm_->base_extents_[2]);
+        cairo_translate(ccontext_,  0.0, -base_extents_[2]);
 
-        cairo_scale(ccontext_, 1.0, -dm_->solution_scale_);
-        cairo_translate(ccontext_, 0.0, dm_->center_[1]);
-        cairo_scale(ccontext_, 1.0, dm_->aspect_scale_);
+        cairo_scale(ccontext_, 1.0, -sv_->solution_scale_);
+        cairo_translate(ccontext_, 0.0, sv_->center_[1]);
+        cairo_scale(ccontext_, 1.0, sv_->aspect_scale_);
 
         char text[500];
         for(int j = 0; j < 2; ++j)
@@ -280,12 +280,12 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
                     cairo_save(ccontext_);
                     cairo_identity_matrix(ccontext_);
                     put_text(ccontext_, text, coords[0]-border_pixels/8,     coords[1], RIGHT, CENTER_Y);
-                    put_text(ccontext_, text, dm_->w_-coords[0]+border_pixels/8, coords[1], LEFT,  CENTER_Y);
+                    put_text(ccontext_, text, w-coords[0]+border_pixels/8, coords[1], LEFT,  CENTER_Y);
 
                     cairo_restore(ccontext_);
 
                     cairo_move_to(ccontext_, border_pixels, i);
-                    cairo_rel_line_to(ccontext_,  dm_->w_-2*border_pixels, 0.0);
+                    cairo_rel_line_to(ccontext_,  w-2*border_pixels, 0.0);
 
                     cairo_save(ccontext_);
                     cairo_set_source_rgba (ccontext_, 0.0f, 0.0f, 0.0f, 0.1f);
@@ -298,7 +298,7 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
                 cairo_move_to(ccontext_, border_pixels, i);
                 cairo_rel_line_to(ccontext_,  border_pixels*0.25*std::pow(2.0, 1-j), 0.0);
 
-                cairo_move_to(ccontext_, dm_->w_-border_pixels, i);
+                cairo_move_to(ccontext_, w-border_pixels, i);
                 cairo_rel_line_to(ccontext_, -border_pixels*0.25*std::pow(2.0, 1-j), 0.0);
 
                 cairo_save(ccontext_);
@@ -315,11 +315,8 @@ void plot_tex::cairo_grid_ticks(int border_pixels)
 
 void plot_tex::cairo_overlay(int border_pixels)
 {
-    int width =  cairo_image_surface_get_width(csurface_);
-    int height = cairo_image_surface_get_height(csurface_);
-
-    if(width != dm_->w_ || height != dm_->h_)
-        prepare_cairo();
+    int w =  cairo_image_surface_get_width(csurface_);
+    int h = cairo_image_surface_get_height(csurface_);
 
     cairo_save(ccontext_);
 
@@ -327,11 +324,11 @@ void plot_tex::cairo_overlay(int border_pixels)
     cairo_set_source_rgba (ccontext_, 0.3f, 0.3f, 0.3f, 1.0f);
     cairo_paint(ccontext_);
 
-    cairo_rectangle(ccontext_, 0, 0,       dm_->w_, border_pixels);
-    cairo_rectangle(ccontext_, 0, dm_->h_-border_pixels, dm_->w_, border_pixels);
+    cairo_rectangle(ccontext_, 0, 0,       w, border_pixels);
+    cairo_rectangle(ccontext_, 0, h-border_pixels, w, border_pixels);
 
-    cairo_rectangle(ccontext_, 0, border_pixels, border_pixels, dm_->h_-border_pixels*2);
-    cairo_rectangle(ccontext_, dm_->w_-border_pixels, border_pixels, border_pixels, dm_->h_-border_pixels*2);
+    cairo_rectangle(ccontext_, 0, border_pixels, border_pixels, h-border_pixels*2);
+    cairo_rectangle(ccontext_, w-border_pixels, border_pixels, border_pixels, h-border_pixels*2);
 
     cairo_set_operator(ccontext_, CAIRO_OPERATOR_OVER);
     cairo_set_source_rgba (ccontext_, 1.0f, 1.0f, 1.0f, 0.9f);
@@ -353,28 +350,28 @@ void plot_tex::cairo_overlay(int border_pixels)
 
         // NW corner
         inpos[0] = border_pixels; inpos[1] = border_pixels;
-        dm_->query_point(inpos, outpos);
+        query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], RIGHT, BOTTOM);
 
         // NE corner
-        inpos[0] = dm_->w_-border_pixels; inpos[1] = border_pixels;
-        dm_->query_point(inpos, outpos);
+        inpos[0] = w-border_pixels; inpos[1] = border_pixels;
+        query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], LEFT, BOTTOM);
 
         // SE corner
-        inpos[0] = dm_->w_-border_pixels; inpos[1] = dm_->h_-border_pixels;
-        dm_->query_point(inpos, outpos);
+        inpos[0] = w-border_pixels; inpos[1] = h-border_pixels;
+        query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], LEFT, TOP);
 
         // SW corner
-        inpos[0] = border_pixels; inpos[1] = dm_->h_-border_pixels;
-        dm_->query_point(inpos, outpos);
+        inpos[0] = border_pixels; inpos[1] = h-border_pixels;
+        query_point(inpos, outpos);
 
         snprintf(text, 500, "(%4.3f,%4.3f)", outpos[0], outpos[1]);
         put_text(ccontext_, text, inpos[0], inpos[1], RIGHT, TOP);
@@ -383,4 +380,32 @@ void plot_tex::cairo_overlay(int border_pixels)
     cairo_grid_ticks(border_pixels);
 
     cairo_restore(ccontext_);
+}
+
+void plot_tex::zoom(float fac, float dist)
+{
+    sv_->zoom(fac, dist);
+}
+
+void plot_tex::zoom_yb(float fac, float dist)
+{
+    sv_->zoom_yb(fac, dist);
+}
+
+void plot_tex::translate(float fac, float x, float y)
+{
+    sv_->translate(fac, x*(base_extents_[1] - base_extents_[0]), y*(base_extents_[3] - base_extents_[2]));
+}
+
+void plot_tex::query_point(const int pix[2], float val[2]) const
+{
+    //    from (0, w_) x (h_, 0) to (be[0], be[1]) x (be[2] x be[3])
+    int w = cairo_image_surface_get_width(csurface_);
+    int h = cairo_image_surface_get_height(csurface_);
+
+    float screen[2];
+    screen[0] =  pix[0]/(float)w*(base_extents_[1] - base_extents_[0]) + base_extents_[0];
+    screen[1] = -pix[1]/(float)h*(base_extents_[3] - base_extents_[2]) - base_extents_[2];
+
+    sv_->query_point(screen, val);
 }

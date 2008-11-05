@@ -3,10 +3,29 @@
 
 #include <cairo.h>
 
-struct draw_metrics
+struct spatial_view
 {
-    draw_metrics(int w, int h);
-    void dim_update(int neww, int newh);
+    spatial_view();
+
+    void zoom(float fac, float dist);
+    void zoom_yb(float fac, float dist);
+    void translate(float fac, float x, float y);
+
+    void query_point(const float screen[2], float val[2]) const;
+
+    float center_[2];
+    float solution_scale_;
+    float aspect_scale_;
+};
+
+struct plot_tex
+{
+    void reset(int w, int h);
+
+    bool prepare_cairo(int w, int h);
+
+    void cairo_grid_ticks(int border_pixels);
+    void cairo_overlay(int border_pixels);
 
     void zoom(float fac, float dist);
     void zoom_yb(float fac, float dist);
@@ -14,27 +33,13 @@ struct draw_metrics
 
     void query_point(const int pix[2], float val[2]) const;
 
-    float base_extents_[4]; // left, right, bottom, top
-    float center_[2];
-    float solution_scale_;
-    float aspect_scale_;
-
-    int w_;
-    int h_;
-};
-
-struct plot_tex
-{
-    bool prepare_cairo();
-
-    void cairo_grid_ticks(int border_pixels);
-    void cairo_overlay(int border_pixels);
-
     cairo_surface_t * csurface_;
     cairo_t * ccontext_;
 
     bool do_corners_;
 
-    draw_metrics * dm_;
+    float base_extents_[4]; // left, right, bottom, top
+
+    spatial_view * sv_;
 };
 #endif
