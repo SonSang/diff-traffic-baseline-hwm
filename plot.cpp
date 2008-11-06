@@ -85,15 +85,65 @@ void spatial_view::query_point(const float screen[2], float val[2]) const
     val[1] = (screen[1]/solution_scale_ - center_[1])/aspect_scale_;
 }
 
-void cairo_plotter1d::draw(cairo_t * cxt, float l, float r)
+void cairo_plotter1d::draw(cairo_t *cxt, float l, float r, float linewidth, drawtype dt)
 {
-    size_t lo = std::max(std::floor((l + origin)/h), 0.0f);
-    size_t hi = std::min(std::ceil ((r + origin)/h), (float)ncells);
+    size_t lo = std::max(std::floor((l - origin)/h), 0.0f);
+    size_t hi = std::min(std::max(0.0f, std::ceil ((r - origin)/h)+1.0f), (float)ncells);
 
-    for(size_t i = lo; i < hi; ++i)
-        cairo_rectangle(cxt, i*h+origin, 0.0, h, data[i*stride]);
+    float last;
+    switch(dt)
+    {
+    case SMOOTH:
+    default:
+        cairo_move_to(cxt, lo*h+origin, data[lo*stride]);
+        for(size_t i = lo+1; i < hi; ++i)
+            cairo_line_to(cxt, i*h+origin, data[i*stride]);
+        break;
+    case STEPS_CONNECTED:
+        cairo_move_to(cxt, lo*h+origin-h*0.5, data[lo*stride]);
+        last = data[lo*stride];
+        for(size_t i = lo+1; i < hi; ++i)
+        {
+            cairo_rel_line_to(cxt, h, 0);
+            cairo_rel_line_to(cxt, 0, data[i*stride]-last);
+            last = data[i*stride];
+        }
+        cairo_rel_line_to(cxt, h, 0);
+        break;
+    case STEPS_BROKEN:
+    case STEPS_FULL:
+        cairo_move_to(cxt, lo*h+origin-h*0.5, data[lo*stride]);
+        last = data[lo*stride];
+        for(size_t i = lo+1; i < hi; ++i)
+        {
+            cairo_rel_line_to(cxt, h, 0);
+            cairo_rel_move_to(cxt, 0, data[i*stride]-last);
+            last = data[i*stride];
+        }
+        cairo_rel_line_to(cxt, h, 0);
 
+        if(dt == STEPS_BROKEN)
+            break;
+
+        cairo_move_to(cxt, lo*h+origin-h*0.5, 0);
+        cairo_rel_line_to(cxt, 0, data[lo*stride]);
+        for(size_t i = lo; i < hi-1; ++i)
+        {
+            float lowy  = std::min(0.0f, std::min(data[i*stride], data[(i+1)*stride]));
+            float highy = std::max(0.0f, std::max(data[i*stride], data[(i+1)*stride]));
+
+            cairo_move_to(cxt, i*h+origin+h*0.5, lowy);
+            cairo_line_to(cxt, i*h+origin+h*0.5, highy);
+        }
+        cairo_move_to(cxt, (hi-1)*h+origin+h*0.5, 0);
+        cairo_rel_line_to(cxt, 0, data[(hi-1)*stride]);
+    };
+
+    cairo_save(cxt);
+    cairo_identity_matrix(cxt);
+    cairo_set_line_width(cxt, 2.0);
     cairo_stroke(cxt);
+    cairo_restore(cxt);
 }
 
 void plot_tex::reset(int w, int h)
@@ -332,8 +382,24 @@ void plot_tex::cairo_overlay(int border_pixels)
     cairo_save(ccontext_);
 
     cairo_set_operator(ccontext_, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_rgba (ccontext_, 0.3f, 0.3f, 0.3f, 1.0f);
+    cairo_set_source_rgba (ccontext_, 1.0f, 1.0f, 1.0f, 1.0f);
     cairo_paint(ccontext_);
+
+    cairo_set_source_rgba(ccontext_, 0.0f, 0.0f, 0.0f, 1.0f);
+
+    cairo_save(ccontext_);
+    cairo_scale(ccontext_,  w/(base_extents_[1] - base_extents_[0]), -h/(base_extents_[3] - base_extents_[2]));
+    cairo_translate(ccontext_,  -base_extents_[0], base_extents_[2]);
+    cairo_scale(ccontext_, sv_->solution_scale_, sv_->solution_scale_);
+    cairo_translate(ccontext_, sv_->center_[0], sv_->center_[1]);
+    cairo_scale(ccontext_, 1.0, sv_->aspect_scale_);
+    int px[2] = {0, 0};
+    float opt[4];
+    query_point(px, opt);
+    px[0] = w;
+    query_point(px, opt+2);
+    plt_->draw(ccontext_, opt[0], opt[2], 2.0);
+    cairo_restore(ccontext_);
 
     cairo_rectangle(ccontext_, 0, 0,       w, border_pixels);
     cairo_rectangle(ccontext_, 0, h-border_pixels, w, border_pixels);
@@ -342,7 +408,7 @@ void plot_tex::cairo_overlay(int border_pixels)
     cairo_rectangle(ccontext_, w-border_pixels, border_pixels, border_pixels, h-border_pixels*2);
 
     cairo_set_operator(ccontext_, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba (ccontext_, 1.0f, 1.0f, 1.0f, 0.9f);
+    cairo_set_source_rgba (ccontext_, 0.9f, 0.9f, 0.9f, 0.9f);
     cairo_fill(ccontext_);
 
     char text[500];
@@ -350,17 +416,7 @@ void plot_tex::cairo_overlay(int border_pixels)
     cairo_set_font_size(ccontext_, std::max(border_pixels/4, 10));
 
     cairo_select_font_face(ccontext_, "SANS",
-                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-
-    cairo_set_source_rgba(ccontext_, 0.0f, 0.0f, 0.0f, 1.0f);
-
-    cairo_save(ccontext_);
-    cairo_scale(ccontext_,  w/(base_extents_[1] - base_extents_[0]), 1);
-    cairo_translate(ccontext_,  -base_extents_[0], 0);
-    cairo_scale(ccontext_, sv_->solution_scale_, 1.0);
-    cairo_translate(ccontext_, sv_->center_[0], 0.0);
-    plt_->draw(ccontext_, -100.0, 100.0);
-    cairo_restore(ccontext_);
+                           CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
     if(do_corners_)
     {

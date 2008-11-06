@@ -21,7 +21,9 @@ struct spatial_view
 
 struct plotter1d
 {
-    virtual void draw(cairo_t * cxt, float l, float r) = 0;
+    typedef enum {SMOOTH, STEPS_CONNECTED, STEPS_BROKEN, STEPS_FULL} drawtype;
+
+    virtual void draw(cairo_t * cxt, float l, float r, float linewidth, drawtype d=SMOOTH) = 0;
 
     int stride;
     float * data;
@@ -33,7 +35,7 @@ struct plotter1d
 
 struct cairo_plotter1d : public plotter1d
 {
-    virtual void draw(cairo_t * cxt, float l, float r);
+    virtual void draw(cairo_t * cxt, float l, float r, float linewidth, drawtype d=SMOOTH);
 };
 
 struct plot_tex
