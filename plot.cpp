@@ -12,7 +12,7 @@ inline static float ceil_div(float x, float div)
 typedef enum { LEFT, CENTER_X, RIGHT }  txt_align_x;
 typedef enum { TOP, CENTER_Y, BOTTOM }  txt_align_y;
 
-static void put_text(cairo_t * cr, const char * str, float x, float y, txt_align_x align_x, txt_align_y align_y)
+static void put_text(cairo_t *cr, const char *str, float x, float y, txt_align_x align_x, txt_align_y align_y)
 {
     cairo_save (cr);
 

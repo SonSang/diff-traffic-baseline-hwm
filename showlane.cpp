@@ -8,14 +8,13 @@
 #include "plot.hpp"
 
 int border_pixels;
-spatial_view * sv;
+spatial_view *sv;
 plot_tex pt;
 
 struct cairo_window : public Fl_Double_Window
 {
-    cairo_window(int x, int y, int w, int h, const char * label = 0) :
+    cairo_window(int x, int y, int w, int h, const char *label = 0) :
         Fl_Double_Window(x, y, w, h, label)
-
     {
         Fl::visual(FL_RGB);
         Fl_Group::current()->resizable(this);
@@ -25,7 +24,7 @@ struct cairo_window : public Fl_Double_Window
     {
         pt.prepare_cairo(w(), h());
         pt.cairo_overlay(border_pixels);
-        unsigned char * dat = cairo_image_surface_get_data(pt.csurface_);
+        unsigned char *dat = cairo_image_surface_get_data(pt.csurface_);
         fl_draw_image(dat, 0, 0, w(), h(), 4, 0);
     }
 
@@ -126,7 +125,7 @@ struct cairo_window : public Fl_Double_Window
     int lastmouse_[2];
 };
 
-int main(int argc, char * argv[])
+int main(int argc, char *argv[])
 {
     cairo_window cw(0, 0, 500, 500, "Tick test");
 
@@ -136,9 +135,9 @@ int main(int argc, char * argv[])
     border_pixels = 20;
     pt.do_corners_ = true;
 
-    cairo_plotter1d * cp1d = new cairo_plotter1d;
+    cairo_plotter1d *cp1d = new cairo_plotter1d;
     cp1d->stride = 1;
-    cp1d->ncells = 100;
+    cp1d->ncells = 1000;
     cp1d->data = (float*) malloc(sizeof(float) * cp1d->ncells);
     cp1d->h = 10.0/cp1d->ncells;
     cp1d->origin = -5.0f;
@@ -146,7 +145,7 @@ int main(int argc, char * argv[])
     float x = cp1d->origin;
     for(int i = 0; i < cp1d->ncells; ++i)
     {
-        cp1d->data[i] = std::sin(x);
+        cp1d->data[i] = std::sin(10*x);
         x += cp1d->h;
     }
 

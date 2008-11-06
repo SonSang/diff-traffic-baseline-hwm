@@ -35,7 +35,7 @@ struct plotter1d
 
 struct cairo_plotter1d : public plotter1d
 {
-    virtual void draw(cairo_t * cxt, float l, float r, float linewidth, drawtype d=SMOOTH);
+    virtual void draw(cairo_t *cxt, float l, float r, float linewidth, drawtype d=SMOOTH);
 };
 
 struct plot_tex
@@ -53,14 +53,14 @@ struct plot_tex
 
     void query_point(const int pix[2], float val[2]) const;
 
-    cairo_surface_t * csurface_;
-    cairo_t * ccontext_;
+    cairo_surface_t *csurface_;
+    cairo_t *ccontext_;
 
     bool do_corners_;
 
     float base_extents_[4]; // left, right, bottom, top
 
-    spatial_view * sv_;
-    plotter1d * plt_;
+    spatial_view *sv_;
+    plotter1d *plt_;
 };
 #endif
