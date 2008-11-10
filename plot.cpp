@@ -405,7 +405,7 @@ void plot_tex::cairo_overlay(int border_pixels)
     query_point(px, opt);
     px[0] = w;
     query_point(px, opt+2);
-    for(int i = 0; i < plts_.size(); ++i)
+    for(size_t i = 0; i < plts_.size(); ++i)
     {
         cairo_set_source_rgba(ccontext_, plotcolors[i][0], plotcolors[i][1], plotcolors[i][2], plotcolors[i][3]);
         plts_[i]->draw(ccontext_, opt[0], opt[2], 2.0);

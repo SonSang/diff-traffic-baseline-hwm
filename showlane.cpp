@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
         cp1d->origin = -5.0f;
 
         float x = cp1d->origin;
-        for(int i = 0; i < cp1d->ncells; ++i)
+        for(size_t i = 0; i < cp1d->ncells; ++i)
         {
             cp1d->data[i] = std::sin(10*x);
             x += cp1d->h;
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
         cp1d->origin = -5.0f;
 
         float x = cp1d->origin;
-        for(int i = 0; i < cp1d->ncells; ++i)
+        for(size_t i = 0; i < cp1d->ncells; ++i)
         {
             cp1d->data[i] = std::atan(x);
             x += cp1d->h;
