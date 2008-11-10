@@ -135,21 +135,40 @@ int main(int argc, char *argv[])
     border_pixels = 20;
     pt.do_corners_ = true;
 
-    cairo_plotter1d *cp1d = new cairo_plotter1d;
-    cp1d->stride = 1;
-    cp1d->ncells = 1000;
-    cp1d->data = (float*) malloc(sizeof(float) * cp1d->ncells);
-    cp1d->h = 10.0/cp1d->ncells;
-    cp1d->origin = -5.0f;
-
-    float x = cp1d->origin;
-    for(int i = 0; i < cp1d->ncells; ++i)
     {
-        cp1d->data[i] = std::sin(10*x);
-        x += cp1d->h;
-    }
+        cairo_plotter1d *cp1d = new cairo_plotter1d;
+        cp1d->stride = 1;
+        cp1d->ncells = 1000;
+        cp1d->data = (float*) malloc(sizeof(float) * cp1d->ncells);
+        cp1d->h = 10.0/cp1d->ncells;
+        cp1d->origin = -5.0f;
 
-    pt.plt_ = cp1d;
+        float x = cp1d->origin;
+        for(int i = 0; i < cp1d->ncells; ++i)
+        {
+            cp1d->data[i] = std::sin(10*x);
+            x += cp1d->h;
+        }
+
+        pt.plts_.push_back(cp1d);
+    }
+    {
+        cairo_plotter1d *cp1d = new cairo_plotter1d;
+        cp1d->stride = 1;
+        cp1d->ncells = 1000;
+        cp1d->data = (float*) malloc(sizeof(float) * cp1d->ncells);
+        cp1d->h = 10.0/cp1d->ncells;
+        cp1d->origin = -5.0f;
+
+        float x = cp1d->origin;
+        for(int i = 0; i < cp1d->ncells; ++i)
+        {
+            cp1d->data[i] = std::atan(x);
+            x += cp1d->h;
+        }
+
+        pt.plts_.push_back(cp1d);
+    }
 
     cw.show();
 

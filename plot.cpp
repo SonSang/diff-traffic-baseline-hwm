@@ -4,6 +4,12 @@
 #include <cstdio>
 #include <algorithm>
 
+static const float plotcolors[][4] = {{1.0, 0.0, 0.0, 1.0},
+                                      {0.0, 1.0, 0.0, 1.0},
+                                      {0.0, 0.0, 1.0, 1.0}};
+
+static const int num_plotcolors = sizeof(plotcolors)/sizeof(plotcolors[0]);
+
 inline static float ceil_div(float x, float div)
 {
     return div*std::ceil(x/div);
@@ -385,7 +391,8 @@ void plot_tex::cairo_overlay(int border_pixels)
     cairo_set_source_rgba (ccontext_, 1.0f, 1.0f, 1.0f, 1.0f);
     cairo_paint(ccontext_);
 
-    cairo_set_source_rgba(ccontext_, 0.0f, 0.0f, 0.0f, 1.0f);
+    cairo_set_operator(ccontext_, CAIRO_OPERATOR_OVER);
+    //    cairo_set_source_rgba(ccontext_, 0.0f, 0.0f, 0.0f, 1.0f);
 
     cairo_save(ccontext_);
     cairo_scale(ccontext_,  w/(base_extents_[1] - base_extents_[0]), -h/(base_extents_[3] - base_extents_[2]));
@@ -398,7 +405,15 @@ void plot_tex::cairo_overlay(int border_pixels)
     query_point(px, opt);
     px[0] = w;
     query_point(px, opt+2);
-    plt_->draw(ccontext_, opt[0], opt[2], 2.0);
+    for(int i = 0; i < plts_.size(); ++i)
+    {
+        printf("C: %f %f %f %f\n", plotcolors[i][0], plotcolors[i][1], plotcolors[i][2]);
+        cairo_set_source_rgba(ccontext_, plotcolors[i][0], plotcolors[i][1], plotcolors[i][2], plotcolors[i][3]);
+        plts_[i]->draw(ccontext_, opt[0], opt[2], 2.0);
+    }
+
+    printf("num_plotc %d\n", num_plotcolors);
+
     cairo_restore(ccontext_);
 
     cairo_rectangle(ccontext_, 0, 0,       w, border_pixels);

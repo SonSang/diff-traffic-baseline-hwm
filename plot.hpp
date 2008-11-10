@@ -3,6 +3,7 @@
 
 #include <cairo.h>
 #include <cstdlib>
+#include <vector>
 
 struct spatial_view
 {
@@ -61,6 +62,6 @@ struct plot_tex
     float base_extents_[4]; // left, right, bottom, top
 
     spatial_view *sv_;
-    plotter1d *plt_;
+    std::vector<plotter1d*> plts_;
 };
 #endif
