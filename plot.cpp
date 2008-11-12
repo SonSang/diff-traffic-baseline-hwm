@@ -408,7 +408,7 @@ void plot_tex::cairo_overlay(int border_pixels)
     for(size_t i = 0; i < plts_.size(); ++i)
     {
         cairo_set_source_rgba(ccontext_, plotcolors[i][0], plotcolors[i][1], plotcolors[i][2], plotcolors[i][3]);
-        plts_[i]->draw(ccontext_, opt[0], opt[2], 2.0);
+        plts_[i]->draw(ccontext_, opt[0], opt[2], 2.0, plotter1d::STEPS_CONNECTED);
     }
 
     cairo_restore(ccontext_);
