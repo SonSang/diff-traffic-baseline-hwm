@@ -24,6 +24,16 @@ inline float eq_u(float rho, float u_max, float gamma)
     return u_max*(1.0f - std::pow(rho, gamma));
 }
 
+inline float to_y(float rho, float u, float u_max, float gamma)
+{
+    return rho*(u - eq_u(rho, u_max, gamma));
+}
+
+inline float to_u(float rho, float y, float u_max, float gamma)
+{
+    return y/rho + eq_u(rho, u_max, gamma);
+}
+
 inline float inv_eq_u(float u_eq, float inv_u_max, float inv_gamma)
 {
     return std::pow(1.0f - u_eq*inv_u_max, inv_gamma);
@@ -31,8 +41,23 @@ inline float inv_eq_u(float u_eq, float inv_u_max, float inv_gamma)
 
 inline float eq_u_prime(float rho, float u_max, float gamma)
 {
-    return -u_max*std::pow(rho, gamma-1.0f);
+    return -u_max*gamma*std::pow(rho, gamma-1.0f);
 }
+
+// inline float lambda_0(float rho, float u, float u_max, float gamma)
+// {
+//     return u + rho*eq_u_prime(rho, u_max, gamma);
+// }
+
+// inline float lambda_1(float u)
+// {
+//     return u;
+// }
+
+// inline float m_rho(float rho_l, float u_l, float u_r, float u_max, float inv_u_max, float gamma, float inv_gamma)
+// {
+//     return std::pow((u_r + eq_u(rho_l, u_max, gamma) - u_l + u_max)*inv_u_max, inv_gamma);
+// }
 
 struct q
 {
@@ -107,7 +132,7 @@ struct full_q
         const full_q *q_0;
         full_q q_m;
 
-        if(q_l->u > q_r->u)
+        if(q_l->u > q_r->u) // Case 1: left speed is greater than right speed
         {
             // we can simplify this
             q_m = full_q(inv_eq_u(q_r->u - (q_l->u - q_l->u_eq), inv_u_max, inv_gamma),
@@ -126,7 +151,7 @@ struct full_q
             float lambda0_m;
 
             bool case3;
-            if(q_l->u - q_l->u_eq < q_r->u)
+            if(q_l->u - q_l->u_eq < q_r->u) // Case 2:
             {
                 // we can simplify this
                 q_m = full_q(inv_eq_u(q_r->u - (q_l->u - q_l->u_eq), inv_u_max, inv_gamma),
