@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <cstdio>
 
 /** Some equations:
   *equilibrium velocity:
@@ -119,55 +120,74 @@ inline void riemann(riemann_solution *rs,
 
     if(q_l->u > q_r->u) // Case 1: left speed is greater than right speed
     {
+        printf("q_l:\nrho: %10.5f\ny: %10.5f\n", q_l->rho, q_l->y);
+        printf("q_r:\nrho: %10.5f\ny: %10.5f\n", q_r->rho, q_r->y);
+        printf("u_l: %10.5f\n", q_l->u);
+        printf("u_r: %10.5f\n", q_r->u);
+
         // we can simplify this
         q_m.rho = m_rho(q_l->rho, q_l->u,
                         q_r->u,
                         u_max, inv_u_max, gamma, inv_gamma);
+        printf("rho_m: %10.5f\n", q_m.rho);
         q_m.u    = q_r->u;
         q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
         q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
 
+        float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
+        float lambda0_m = lambda_0(q_m.rho, q_m.u, u_max, gamma);
+
         // Rankine-Hugoniot equation
         rs->speeds[0] = (q_m.rho * q_m.u - q_l->rho * q_l->u)/(q_m.rho - q_l->rho);
+
+        printf("lambda0_l: %10.5f\n", lambda0_l);
+        printf("lambda0_m: %10.5f\n", lambda0_m);
+        printf("shock    : %10.5f\n", rs->speeds[0]);
 
         q_0 = (rs->speeds[0] < 0.0f) ? &q_m : q_l;
     }
     else
     {
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
-        float lambda0_m;
 
-        bool case3;
-        if(q_l->u - q_l->u_eq > q_r->u) // Case 2:
+        if(lambda0_l > 0.0f)
         {
-            // we can simplify this
-            q_m.rho = m_rho(q_l->rho, q_l->u,
-                            q_r->u,
-                            u_max, inv_u_max, gamma, inv_gamma);
-            q_m.u    = q_r->u;
-            q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
-            q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
-
-            lambda0_m = lambda_0(q_m.rho, q_m.u, u_max, gamma);
-            case3 = false;
+            q_0 = q_l;
+            rs->speeds[0] = lambda0_l;
         }
         else
         {
-            lambda0_m = q_l->u - q_l->u_eq;
-            case3 = true;
-        }
+            float lambda0_m;
 
-        if(lambda0_l > 0.0f)
-            q_0 = q_l;
-        else // lambda0_l <= 0.0f;
-        {
-            q_0 = &q_m;
+            bool case3;
+            if(q_l->u - q_l->u_eq > q_r->u) // Case 2:
+            {
+                // we can simplify this
+                q_m.rho = m_rho(q_l->rho, q_l->u,
+                                q_r->u,
+                                u_max, inv_u_max, gamma, inv_gamma);
+                q_m.u    = q_r->u;
+                q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
+                q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
+
+                lambda0_m = lambda_0(q_m.rho, q_m.u, u_max, gamma);
+                case3 = false;
+            }
+            else
+            {
+                lambda0_m = q_l->u - q_l->u_eq;
+                case3 = true;
+            }
+
             if(case3 || lambda0_m > 0.0f)
                 transonic_rarefaction(&q_m, q_l,
                                       u_max, gamma, inv_gamma);
+            else
+                q_0 = &q_m;
+
+            rs->speeds[0] = 0.5f*(lambda0_m+lambda0_l);
         }
 
-        rs->speeds[0] = 0.5f*(lambda0_m+lambda0_l);
     }
 
     rs->speeds[1] = lambda_1(q_r->u);
