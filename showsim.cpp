@@ -47,13 +47,13 @@ static float sim_step()
         (*fq[1]) = full_q(data + i,
                           u_max, gamma_c);
 
-        full_q::riemann(rs + i,
-                        fq[0],
-                        fq[1],
-                        u_max,
-                        inv_u_max,
-                        gamma_c,
-                        inv_gamma);
+        riemann(rs + i,
+                fq[0],
+                fq[1],
+                u_max,
+                inv_u_max,
+                gamma_c,
+                inv_gamma);
 
         maxspeed = std::max(maxspeed, std::max(std::abs(rs[i].speeds[0]), std::abs(rs[i].speeds[1])));
 
@@ -67,7 +67,7 @@ static float sim_step()
     float dt = del_h/maxspeed;
     float coeff = dt/maxspeed;
 
-    for(size_t i = 1; i < ncells; ++i)
+    for(size_t i = 0; i < ncells; ++i)
     {
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
@@ -116,15 +116,15 @@ int main(int argc, char * argv[])
     float x = 0.0f;
     for(size_t i = 0; i < ncells; ++i)
     {
-        data[i].rho = 0.3f;
-        data[i].y   = (i < 50) ? 0.2f : 0.1f;
+        data[i].rho = 0.5f;
+        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.2f : 0.1f, u_max, gamma_c);
         x += del_h;
     }
 
     float the_time = 0.0f;
 
     sv = new spatial_view();
-    pt.reset(500, 500);
+    pt.reset(1000, 500);
     pt.sv_ = sv;
     pt.do_corners_ = true;
 
@@ -149,7 +149,7 @@ int main(int argc, char * argv[])
         pt.plts_.push_back(cp1d);
     }
 
-    sim_window cw(0, 0, 500, 500, &pt, "Tick test");
+    sim_window cw(0, 0, 1000, 500, &pt, "Tick test");
 
     cw.show();
 

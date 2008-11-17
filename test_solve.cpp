@@ -37,13 +37,13 @@ static float sim_step()
         (*fq[1]) = full_q(data + i,
                           u_max, gamma_c);
 
-        full_q::riemann(rs + i,
-                        fq[0],
-                        fq[1],
-                        u_max,
-                        inv_u_max,
-                        gamma_c,
-                        inv_gamma);
+        riemann(rs + i,
+                fq[0],
+                fq[1],
+                u_max,
+                inv_u_max,
+                gamma_c,
+                inv_gamma);
 
         maxspeed = std::max(maxspeed, std::max(std::abs(rs[i].speeds[0]), std::abs(rs[i].speeds[1])));
 
