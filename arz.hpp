@@ -57,7 +57,7 @@ inline float lambda_1(float u)
 
 inline float m_rho(float rho_l, float u_l, float u_r, float u_max, float inv_u_max, float gamma, float inv_gamma)
 {
-    return std::pow((u_r + eq_u(rho_l, u_max, gamma) - u_l + u_max)*inv_u_max, inv_gamma);
+    return inv_eq_u((u_r + eq_u(rho_l, u_max, gamma))-u_l, inv_u_max, inv_gamma);
 }
 
 struct q
