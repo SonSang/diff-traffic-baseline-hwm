@@ -19,7 +19,7 @@ showsim_SOURCES = \
 	plotwin.hpp \
 	plot.cpp \
 	plot.hpp \
-	awz.hpp
+	arz.hpp
 
 showsim_CXXFLAGS = $(CAIRO_CFLAGS) $(FLTK_CXXFLAGS) $(AM_CXXFLAGS)
 showsim_LDFLAGS = $(FLTK_LDFLAGS) $(CAIRO_LIBS)
@@ -27,7 +27,7 @@ endif
 
 simtest_SOURCES = \
 	test_solve.cpp \
-	awz.hpp
+	arz.hpp
 
 simtest_CXXFLAGS = $(TS_CXXFLAGS) $(AM_CXXFLAGS)
 simtest_LDADD = $(TS_LDFLAGS)

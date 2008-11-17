@@ -1,4 +1,4 @@
-#include "awz.hpp"
+#include "arz.hpp"
 
 #include <cstdlib>
 #include <cstring>
