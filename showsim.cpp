@@ -39,13 +39,13 @@ static float sim_step()
 
     memset(rs, 0, sizeof(riemann_solution));
 
-    (*fq[0]) = full_q(data,
-                      u_max, gamma_c);
+    fq[0]->from_q(data,
+                  u_max, gamma_c);
 
     for(size_t i = 1; i < ncells; ++i)
     {
-        (*fq[1]) = full_q(data + i,
-                          u_max, gamma_c);
+        fq[1]->from_q(data + i,
+                      u_max, gamma_c);
 
         riemann(rs + i,
                 fq[0],
@@ -117,7 +117,7 @@ int main(int argc, char * argv[])
     for(size_t i = 0; i < ncells; ++i)
     {
         data[i].rho = 0.5f;
-        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.2f : 0.1f, u_max, gamma_c);
+        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.2f : 0.05f, u_max, gamma_c);
         x += del_h;
     }
 
