@@ -131,20 +131,16 @@ inline void riemann(riemann_solution *rs,
     else if(std::abs(q_l->u - q_r->u) < 1e-6)
     {
         q_0 = q_l;
+
+        rs->waves[0].rho = 0.0f;
+        rs->waves[0].y = 0.0f;
     }
     else if(q_l->u > q_r->u) // Case 1: left speed is greater than right speed
     {
-        printf("q_l:\nrho: %10.5f\ny: %10.5f\n", q_l->rho, q_l->y);
-        printf("q_r:\nrho: %10.5f\ny: %10.5f\n", q_r->rho, q_r->y);
-        printf("u_l: %10.5f\n", q_l->u);
-        printf("u_r: %10.5f\n", q_r->u);
-
         // we can simplify this
         q_m.rho = m_rho(q_l->rho, q_l->u,
                         q_r->u,
                         u_max, inv_u_max, gamma, inv_gamma);
-
-        printf("rho_m: %10.5f\n", q_m.rho);
 
         q_m.u    = q_r->u;
         q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
@@ -156,9 +152,8 @@ inline void riemann(riemann_solution *rs,
         // Rankine-Hugoniot equation
         rs->speeds[0] = (q_m.rho * q_m.u - q_l->rho * q_l->u)/(q_m.rho - q_l->rho);
 
-        printf("lambda0_l: %10.5f\n", lambda0_l);
-        printf("lambda0_m: %10.5f\n", lambda0_m);
-        printf("shock    : %10.5f\n", rs->speeds[0]);
+        rs->waves[0].rho = q_m.rho - q_l->rho;
+        rs->waves[0].y   = q_m.y   - q_l->y;
 
         q_0 = (rs->speeds[0] > 0.0f) ? q_l : &q_m;
     }
@@ -208,9 +203,6 @@ inline void riemann(riemann_solution *rs,
     }
 
     rs->speeds[1] = lambda_1(q_r->u);
-
-    rs->waves[0].rho = q_0->rho - q_l->rho;
-    rs->waves[0].y   = q_0->y   - q_l->y;
 
     rs->waves[1].rho = q_r->rho - q_0->rho;
     rs->waves[1].y   = q_r->y   - q_0->y;
