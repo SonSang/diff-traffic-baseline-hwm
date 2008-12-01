@@ -117,7 +117,7 @@ int main(int argc, char * argv[])
     for(size_t i = 0; i < ncells; ++i)
     {
         data[i].rho = 0.2f;
-        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.1f : 0.01f, u_max, gamma_c);
+        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.3f : 0.1f, u_max, gamma_c);
         x += del_h;
     }
 

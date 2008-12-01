@@ -126,7 +126,7 @@ inline void riemann(riemann_solution *rs,
     const full_q *q_0;
     full_q q_m;
 
-    if(std::abs(q_l->u - q_r->u) < 1e-6) // Case 0; u_l = u_r
+    if(std::abs(q_l->u - q_r->u) < 1e-3) // Case 0; u_l = u_r
     {
         rs->speeds[0]    = 0.0f;
         rs->waves[0].rho = 0.0f;
@@ -153,6 +153,26 @@ inline void riemann(riemann_solution *rs,
         rs->waves[0].rho = q_m.rho - q_l->rho;
         rs->waves[0].y   = q_m.y   - q_l->y;
 
+#ifndef NDEBUG
+        float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
+        float lambda0_m = lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
+
+        if(!((lambda0_l > lambda0_m) && (lambda0_l > rs->speeds[0]) && (lambda0_m < rs->speeds[0])))
+        {
+            printf("lambda0_l: %f\n", lambda0_l);
+            printf("lambda0_m: %f\n", lambda0_m);
+            printf("s        : %f\n", rs->speeds[0]);
+            printf("q_l->rho: %f\n   ->u: %f\n   ->u_eq: %f\n   ->y: %f\n", q_l->rho, q_l->u, q_l->u_eq, q_l->y);
+            printf("q_m->rho: %f\n   ->u: %f\n   ->u_eq: %f\n   ->y: %f\n", q_m.rho, q_m.u, q_m.u_eq, q_m.y);
+            printf("q_r->rho: %f\n   ->u: %f\n   ->u_eq: %f\n   ->y: %f\n", q_r->rho, q_r->u, q_r->u_eq, q_r->y);
+        }
+
+        assert(lambda0_l > lambda0_m);
+        assert(lambda0_l > rs->speeds[0]);
+        assert(lambda0_m < rs->speeds[0]);
+
+#endif
+
         rs->speeds[1] = q_r->u;
         rs->waves[1].rho = q_r->rho - q_m.rho;
         rs->waves[1].y   = q_r->y   - q_m.y;
@@ -171,6 +191,8 @@ inline void riemann(riemann_solution *rs,
 
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
+
+        assert(lambda0_l < lambda0_m);
 
         rs->speeds[0] = 0.5f*(lambda0_l + lambda0_m);
         rs->waves[0].rho = q_m.rho - q_l->rho;
