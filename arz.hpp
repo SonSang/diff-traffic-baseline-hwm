@@ -179,7 +179,7 @@ inline void riemann(riemann_solution *rs,
 
         q_0 = (rs->speeds[0] > 0.0f) ? q_l : &q_m;
     }
-    else if(q_l->u + (u_max - q_l->u_eq) < q_r->u) // Case 2
+    else if(q_l->u + (u_max - q_l->u_eq) > q_r->u) // Case 2
     {
         // we can simplify this
         q_m.rho = m_rho(q_l->rho, q_l->u,
