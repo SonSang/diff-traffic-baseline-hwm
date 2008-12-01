@@ -137,7 +137,50 @@ inline void riemann(riemann_solution *rs,
     const full_q *q_0;
     full_q q_m;
 
-    if(std::abs(q_l->u - q_r->u) < 1e-6) // Case 0; u_l = u_r
+    if(q_l->rho == 0.0f)
+    {
+        rs->speeds[0]    = 0.0f;
+        rs->waves[0].rho = 0.0f;
+        rs->waves[0].y   = 0.0f;
+
+        rs->speeds[1]    = q_r->u;
+        rs->waves[1].rho = q_r->rho;
+        rs->waves[1].y   = q_r->y;
+
+        memset(&q_m, 0, sizeof(full_q));
+        q_0 = &q_m;
+    }
+    else if(q_r->rho == 0.0f)
+    {
+        // we can simplify this
+        q_m.from_rho_u(0.0f,
+                       q_l->u + (u_max - q_l->u_eq),
+                       u_max, gamma);
+
+        float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
+        float lambda0_m = q_m.u; //lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
+
+        assert(0.0f < lambda0_m);
+        assert(lambda0_l < lambda0_m);
+
+        rs->speeds[0] = 0.5f*(lambda0_l + lambda0_m);
+        rs->waves[0].rho = q_m.rho - q_l->rho;
+        rs->waves[0].y   = q_m.y   - q_l->y;
+
+        rs->speeds[1] = 0.0f;
+        rs->waves[1].rho = 0.0f;
+        rs->waves[1].y   = 0.0f;
+
+        if(lambda0_l > 0.0f)
+            q_0 = q_l;
+        else
+        {
+            centered_rarefaction(&q_m, q_l,
+                                 u_max, gamma, inv_gamma);
+            q_0 = &q_m;
+        }
+    }
+    else if(std::abs(q_l->u - q_r->u) < 1e-6) // Case 0; u_l = u_r
     {
         rs->speeds[0]    = 0.0f;
         rs->waves[0].rho = 0.0f;
