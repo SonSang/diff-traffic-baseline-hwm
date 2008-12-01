@@ -61,7 +61,9 @@ static float sim_step()
     {
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
-        printf("r: %f y: %f\n", data[i].rho, data[i].y);
+
+        assert(data[i].rho > 0.0f);
+        assert(data[i].y < 0.0f);
     }
 
     return dt;
