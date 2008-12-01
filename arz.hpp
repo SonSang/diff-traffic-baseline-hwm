@@ -101,7 +101,8 @@ inline void centered_rarefaction(full_q *q_e, const full_q *q_l,
                                        u_max, gamma, inv_gamma);
     q_e->u = centered_rarefaction_u(q_l->rho, q_l->u,
                                    u_max, gamma, inv_gamma);
-
+    q_e->u_eq = eq_u(q_e->rho, u_max, gamma);
+    q_e->y = to_y(q_e->rho, q_e->u, u_max, gamma);
 }
 
 struct riemann_solution
