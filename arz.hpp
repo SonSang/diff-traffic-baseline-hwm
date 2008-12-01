@@ -84,10 +84,23 @@ struct full_q
 {
     void from_q(const q *inq, float u_max, float gamma)
     {
-        rho  = inq->rho;
-        y    = inq->y;
+        from_rho_y(inq->rho, inq->y, u_max, gamma);
+    }
+
+    void from_rho_y(float inrho, float iny, float u_max, float gamma)
+    {
+        rho  = inrho;
+        y    = iny;
         u_eq = eq_u(rho, u_max, gamma);
         u    = to_u(rho, y, u_max, gamma);
+    }
+
+    void from_rho_u(float inrho, float inu, float u_max, float gamma)
+    {
+        rho  = inrho;
+        u    = inu;
+        y    = to_y(rho, u, u_max, gamma);
+        u_eq = eq_u(rho, u_max, gamma);
     }
 
     float rho;
@@ -99,12 +112,10 @@ struct full_q
 inline void centered_rarefaction(full_q *q_e, const full_q *q_l,
                                  float u_max, float gamma, float inv_gamma)
 {
-    q_e->rho = centered_rarefaction_rho(q_l->rho, q_l->u,
-                                       u_max, gamma, inv_gamma);
-    q_e->u = centered_rarefaction_u(q_l->rho, q_l->u,
-                                   u_max, gamma, inv_gamma);
-    q_e->u_eq = eq_u(q_e->rho, u_max, gamma);
-    q_e->y = to_y(q_e->rho, q_e->u, u_max, gamma);
+    q_e->from_rho_u(centered_rarefaction_rho(q_l->rho, q_l->u, u_max, gamma, inv_gamma),
+                    centered_rarefaction_u(q_l->rho, q_l->u, u_max, gamma, inv_gamma),
+                    u_max,
+                    gamma);
 }
 
 struct riemann_solution
@@ -126,13 +137,13 @@ inline void riemann(riemann_solution *rs,
     const full_q *q_0;
     full_q q_m;
 
-    if(std::abs(q_l->u - q_r->u) < 1e-3) // Case 0; u_l = u_r
+    if(std::abs(q_l->u - q_r->u) < 1e-6) // Case 0; u_l = u_r
     {
         rs->speeds[0]    = 0.0f;
         rs->waves[0].rho = 0.0f;
         rs->waves[0].y   = 0.0f;
 
-        rs->speeds[1] = q_r->u;
+        rs->speeds[1]    = q_r->u;
         rs->waves[1].rho = q_r->rho - q_l->rho;
         rs->waves[1].y   = q_r->y   - q_l->y;
 
@@ -141,12 +152,11 @@ inline void riemann(riemann_solution *rs,
     else if(q_l->u > q_r->u)
     {
         // we can simplify this
-        q_m.rho = m_rho(q_l->rho, q_l->u,
-                        q_r->u,
-                        u_max, inv_u_max, gamma, inv_gamma);
-        q_m.u    = q_r->u;
-        q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
-        q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
+        q_m.from_rho_u(m_rho(q_l->rho, q_l->u,
+                             q_r->u,
+                             u_max, inv_u_max, gamma, inv_gamma),
+                       q_r->u,
+                       u_max, gamma);
 
         // Rankine-Hugoniot equation
         rs->speeds[0] = (q_m.rho * q_m.u - q_l->rho * q_l->u)/(q_m.rho - q_l->rho);
@@ -182,12 +192,11 @@ inline void riemann(riemann_solution *rs,
     else if(q_l->u + (u_max - q_l->u_eq) > q_r->u) // Case 2
     {
         // we can simplify this
-        q_m.rho = m_rho(q_l->rho, q_l->u,
-                        q_r->u,
-                        u_max, inv_u_max, gamma, inv_gamma);
-        q_m.u    = q_r->u;
-        q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
-        q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
+        q_m.from_rho_u(m_rho(q_l->rho, q_l->u,
+                             q_r->u,
+                             u_max, inv_u_max, gamma, inv_gamma),
+                       q_r->u,
+                       u_max, gamma);
 
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
@@ -216,10 +225,9 @@ inline void riemann(riemann_solution *rs,
     else
     {
         // we can simplify this
-        q_m.rho = 0.0f;
-        q_m.u    = q_l->u + (u_max - q_l->u_eq);
-        q_m.u_eq = u_max;
-        q_m.y    = 0.0f;
+        q_m.from_rho_u(0.0f,
+                       q_l->u + (u_max - q_l->u_eq),
+                       u_max, gamma);
 
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = q_m.u; //lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
@@ -228,6 +236,7 @@ inline void riemann(riemann_solution *rs,
         assert(lambda0_l < lambda0_m);
 
         rs->speeds[0] = 0.5f*(lambda0_l + lambda0_m);
+
         rs->waves[0].rho = q_m.rho - q_l->rho;
         rs->waves[0].y   = q_m.y   - q_l->y;
 
@@ -244,6 +253,8 @@ inline void riemann(riemann_solution *rs,
             q_0 = &q_m;
         }
     }
+
+    assert(rs->speeds[0] < rs->speeds[1]);
 
     rs->fluct_l.rho = q_0->rho*q_0->u - q_l->rho*q_l->u;
     rs->fluct_l.y   = q_0->y  *q_0->u - q_l->y  *q_l->u;
