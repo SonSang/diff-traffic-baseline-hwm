@@ -150,7 +150,7 @@ inline void riemann(riemann_solution *rs,
         rs->waves[1].rho = q_r->rho;
         rs->waves[1].y   = q_r->y;
 
-        memset(&q_m, 0, sizeof(full_q));
+        memset(&q_m, 0, sizeof(q_m));
         q_0 = &q_m;
     }
     else if(q_r->rho == 0.0f)
@@ -300,7 +300,7 @@ inline void riemann(riemann_solution *rs,
         }
     }
 
-    assert(rs->speeds[0] < rs->speeds[1]);
+    //    assert(rs->speeds[0] < rs->speeds[1]);
 
     rs->fluct_l.rho = q_0->rho*q_0->u - q_l->rho*q_l->u;
     rs->fluct_l.y   = q_0->y  *q_0->u - q_l->y  *q_l->u;
