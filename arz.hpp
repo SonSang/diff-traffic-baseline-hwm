@@ -36,7 +36,10 @@ inline float to_y(float rho, float u, float u_max, float gamma)
 
 inline float to_u(float rho, float y, float u_max, float gamma)
 {
-    return y/rho + eq_u(rho, u_max, gamma);
+    if(rho == 0.0f)
+        return 0.0f;
+    else
+        return y/rho + eq_u(rho, u_max, gamma);
 }
 
 inline float inv_eq_u(float u_eq, float inv_u_max, float inv_gamma)
