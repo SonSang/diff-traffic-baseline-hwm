@@ -152,54 +152,38 @@ inline void riemann(riemann_solution *rs,
         // Rankine-Hugoniot equation
         rs->speeds[0] = (q_m.rho * q_m.u - q_l->rho * q_l->u)/(q_m.rho - q_l->rho);
 
-        rs->waves[0].rho = q_m.rho - q_l->rho;
-        rs->waves[0].y   = q_m.y   - q_l->y;
-
         q_0 = (rs->speeds[0] > 0.0f) ? q_l : &q_m;
     }
     else
     {
         // in both case 2 and case 3, if lambda0_l > 0, q_0 = q_l
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
+        float lambda0_m;
 
-        if(lambda0_l > 0.0f)
+        if(q_r->u - (u_max - q_l->u_eq) < q_l->u) // Case 2:
         {
-            q_0 = q_l;
-            rs->speeds[0] = lambda0_l;
+            // we can simplify this
+            q_m.rho = m_rho(q_l->rho, q_l->u,
+                            q_r->u,
+                            u_max, inv_u_max, gamma, inv_gamma);
+            q_m.u    = q_r->u;
+            q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
+            q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
+
+            lambda0_m = lambda_0(q_m.rho, q_m.u, u_max, gamma);
         }
         else
-        {
-            float lambda0_m;
+            lambda0_m = q_l->u + (u_max - q_l->u_eq);
 
-            bool case3;
-            if(q_r->u - (u_max - q_l->u_eq) < q_l->u) // Case 2:
-            {
-                // we can simplify this
-                q_m.rho = m_rho(q_l->rho, q_l->u,
-                                q_r->u,
-                                u_max, inv_u_max, gamma, inv_gamma);
-                q_m.u    = q_r->u;
-                q_m.u_eq = eq_u(q_m.rho, u_max, gamma);
-                q_m.y    = to_y(q_m.rho, q_m.u, u_max, gamma);
+        centered_rarefaction(&q_m, q_l,
+                             u_max, gamma, inv_gamma);
 
-                lambda0_m = lambda_0(q_m.rho, q_m.u, u_max, gamma);
-                case3 = false;
-            }
-            else
-            {
-                lambda0_m = q_l->u + (u_max - q_l->u_eq);
-                case3 = true;
-            }
+        rs->waves[0].rho = q_m.rho - q_l->rho;
+        rs->waves[0].y   = q_m.y   - q_l->y;
 
-            if(case3 || lambda0_m > 0.0f)
-                centered_rarefaction(&q_m, q_l,
-                                     u_max, gamma, inv_gamma);
-            else
-                q_0 = &q_m;
+        rs->speeds[0] = 0.5f*(lambda0_m+lambda0_l);
 
-            rs->speeds[0] = 0.5f*(lambda0_m+lambda0_l);
-        }
-
+        q_0 = lambda0_l > 0.0f ? q_l : &q_m;
     }
 
     rs->speeds[1] = lambda_1(q_r->u);
