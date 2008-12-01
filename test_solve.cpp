@@ -55,7 +55,7 @@ static float sim_step()
     printf("maxspeed: %f\n", maxspeed);
 
     float dt = del_h/maxspeed;
-    float coeff = dt/maxspeed;
+    float coeff = dt/del_h;
 
     for(size_t i = 1; i < ncells; ++i)
     {
