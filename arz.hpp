@@ -321,7 +321,7 @@ inline float MC_limiter(float x)
 {
     if (x <= 0.0f)
         return 0.0f;
-    if (3.0f*x <= 1.0f)
+    if (x <= 1.0f/3.0f)
         return 2.0f*x;
     if (x <= 3.0f)
         return x*0.5f+0.5f;
