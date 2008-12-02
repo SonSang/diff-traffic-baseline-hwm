@@ -85,6 +85,11 @@ static float sim_step()
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
 
+        if(data[i].rho < 0.0f)
+            data[i].rho  = 0.0f;
+        if(data[i].y > 0.0f)
+            data[i].y  = 0.0f;
+
 //         assert(data[i].rho > 0.0f);
 //         assert(data[i].y < 0.0f);
         std::swap(limited[0], limited[1]);
