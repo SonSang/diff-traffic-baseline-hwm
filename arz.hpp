@@ -81,15 +81,6 @@ struct q
 {
     float rho;
     float y;
-
-    float & operator[](int i)
-    {
-        return static_cast<float*>(&rho)[i];
-    }
-    const float & operator[](int i) const
-    {
-        return static_cast<const float*>(&rho)[i];
-    }
 };
 
 struct full_q
@@ -333,39 +324,39 @@ inline q flux_correction(riemann_solution *__restrict__ soln_m,
                          riemann_solution *__restrict__ soln_p,
                          float coeff)
 {
-    q res;
-    memset(&res, 0, sizeof(res));
-    for(int f = 0; f < 2; ++f)
-    {
-        float aspeed = std::abs(soln->speeds[f]);
-        float fcc = 0.5f*aspeed*(1.0f-coeff*aspeed);
+    float aspeed = std::abs(soln->speeds[0]);
+    float fcc = 0.5f*aspeed*(1.0f-coeff*aspeed);
 
-        const q * upwind;
-        if(soln->speeds[f] > 0.0f)
-            upwind = &(soln_m->waves[f]);
-        else
-            upwind = &(soln_p->waves[f]);
+    const q * upwind;
+    if(soln->speeds[0] > 0.0f)
+        upwind = &(soln_m->waves[0]);
+    else
+        upwind = &(soln_p->waves[0]);
 
-        float len = 0.0f;
-        for(int j = 0; j < 2; ++j)
-            len += soln->waves[f][j]*soln->waves[f][j];
-        if(len > 0.0f)
-            len = 1.0f/len;
+    float len = soln->waves[0].rho*soln->waves[0].rho + soln->waves[0].y*soln->waves[0].y;
+    if(len > 0.0f)
+        len = 1.0f/len;
 
-        float theta = 0.0f;
-        for(int j = 0; j < 2; ++j)
-            theta += (*upwind)[j]*soln->waves[f][j];
+    float theta = (*upwind).rho*soln->waves[0].rho + (*upwind).y*soln->waves[0].y;
 
-        theta = MC_limiter(theta*len);
+    theta = MC_limiter(theta*len);
 
-        q lwave;
+    q res = {fcc*theta*soln->waves[0].rho,
+             fcc*theta*soln->waves[0].y};
 
-        for(int j = 0; j < 2; ++j)
-            lwave[j] = theta*soln->waves[f][j];
+    fcc = 0.5f*soln->speeds[1]*(1.0f-coeff*soln->speeds[1]);
 
-        for(int e = 0; e < 2; ++e)
-            res[e] += fcc*lwave[e];
-    }
+    len = soln->waves[1].rho*soln->waves[1].rho + soln->waves[1].y*soln->waves[1].y;
+    if(len > 0.0f)
+        len = 1.0f/len;
+
+    theta = soln_m->waves[1].rho*soln->waves[1].rho + soln_m->waves[1].y*soln->waves[1].y;
+
+    theta = MC_limiter(theta*len);
+
+    res.rho += fcc*theta*soln->waves[1].rho;
+    res.y   += fcc*theta*soln->waves[1].y;
+
     return res;
 }
 #endif
