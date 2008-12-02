@@ -67,13 +67,27 @@ static float sim_step()
     float dt = del_h/maxspeed;
     float coeff = dt/del_h;
 
+    q limited_base[2];
+    q *limited[2] = {limited_base, limited_base+1};
+
+    (*limited[0]) = flux_correction(rs,
+                                    rs + 1,
+                                    rs + 2,
+                                    coeff);
+
     for(size_t i = 0; i < ncells; ++i)
     {
-        data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
-        data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
+        (*limited[1]) = flux_correction(rs + i,
+                                        rs + i + 1,
+                                        rs + i + 2,
+                                        coeff);
+
+        data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
+        data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
 
 //         assert(data[i].rho > 0.0f);
 //         assert(data[i].y < 0.0f);
+        std::swap(limited[0], limited[1]);
     }
 
     return dt;

@@ -81,6 +81,15 @@ struct q
 {
     float rho;
     float y;
+
+    float & operator[](int i)
+    {
+        return static_cast<float*>(&rho)[i];
+    }
+    const float & operator[](int i) const
+    {
+        return static_cast<const float*>(&rho)[i];
+    }
 };
 
 struct full_q
@@ -308,4 +317,55 @@ inline void riemann(riemann_solution *rs,
     rs->fluct_r.y   = q_r->y  *q_r->u - q_0->y  *q_0->u;
 };
 
+inline float MC_limiter(float x)
+{
+    if (x <= 0.0f)
+        return 0.0f;
+    if (3.0f*x <= 1.0f)
+        return 2.0f*x;
+    if (x <= 3.0f)
+        return x*0.5f+0.5f;
+    return 2.0f;
+}
+
+inline q flux_correction(riemann_solution *__restrict__ soln_m,
+                         riemann_solution *__restrict__ soln,
+                         riemann_solution *__restrict__ soln_p,
+                         float coeff)
+{
+    q res;
+    memset(&res, 0, sizeof(res));
+    for(int f = 0; f < 2; ++f)
+    {
+        float aspeed = std::abs(soln->speeds[f]);
+        float fcc = 0.5f*aspeed*(1.0f-coeff*aspeed);
+
+        const q * upwind;
+        if(soln->speeds[f] > 0.0f)
+            upwind = &(soln_m->waves[f]);
+        else
+            upwind = &(soln_p->waves[f]);
+
+        float len = 0.0f;
+        for(int j = 0; j < 2; ++j)
+            len += soln->waves[f][j]*soln->waves[f][j];
+        if(len > 0.0f)
+            len = 1.0f/len;
+
+        float theta = 0.0f;
+        for(int j = 0; j < 2; ++j)
+            theta += (*upwind)[j]*soln->waves[f][j];
+
+        theta = MC_limiter(theta*len);
+
+        q lwave;
+
+        for(int j = 0; j < 2; ++j)
+            lwave[j] = theta*soln->waves[f][j];
+
+        for(int e = 0; e < 2; ++e)
+            res[e] += fcc*lwave[e];
+    }
+    return res;
+}
 #endif
