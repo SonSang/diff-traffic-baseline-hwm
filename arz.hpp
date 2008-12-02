@@ -6,23 +6,6 @@
 #include <cstdio>
 #include <cassert>
 
-/** Some equations:
-  *equilibrium velocity:
-  *\f[ u_{\textrm{eq}}\left(\rho\right) = u_{\textrm{max}}\left(1 - \rho^\gamma\right) \f]
-  *
-  *inverse of above:
-  *\f[ \rho\left(u_{\textrm{eq}}\right) = \left(1 - \frac{u_{\textrm{eq}}}{u_{\textrm{max}}}\right)^{\frac{1}{\gamma}} \f]
-  *
-  *\f[ u'_{\textrm{eq}}\left(\rho\right) = - u_{\textrm{max}}\rho^{\left(\gamma-1\right)} \f]
-  *
-  *u from rho \& y;
-  *\f[ u\left(\rho, y\right) = \frac{y}{\rho} + u_\textrm{eq}\left(\rho\right) \f]
-  *
-  *y from rho \& u:
-  *\f[ y\left(\rho, u\right) = \rho\left(u - u_{\textrm{eq}}\right) \f]
-  printf("q_l->rho: %f\n   ->u: %f\n   ->u_eq: %f\n   ->y: %f", q_l->rho, q_l->u, q_l->u_eq, q_l->y);
-*/
-
 // u_max*rho^gamma = u_max - eq_u
 inline float eq_u(float rho, float u_max, float gamma)
 {
