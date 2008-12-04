@@ -1,3 +1,7 @@
+#ifndef _LANE_HPP_
+#define _LANE_HPP_
+
+#include "intersection.hpp"
 #include <vector>
 
 struct q
@@ -59,3 +63,4 @@ struct lane
     unsigned int ncells;
     q *data;
 };
+#endif
