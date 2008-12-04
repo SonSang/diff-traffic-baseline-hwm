@@ -1,6 +1,7 @@
 *~
 *.o
 .deps/
+doc/
 Makefile
 Makefile.in
 aclocal.m4
