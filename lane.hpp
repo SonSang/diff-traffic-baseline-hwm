@@ -35,18 +35,6 @@ struct lane_end
     intersection_id intersection;
 };
 
-template <class T>
-struct intervals
-{
-    struct entry
-    {
-        float end;
-        T data;
-    };
-
-    std::vector<entry> entries;
-};
-
 typedef intervals<lane_adjacency> adjacency_intervals;
 
 struct lane
