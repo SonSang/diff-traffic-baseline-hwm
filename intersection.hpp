@@ -3,6 +3,8 @@
 
 struct intersection
 {
+    typedef int id;
+    enum {TAPER = -2, DEAD_END = -1};
 };
 
 #endif

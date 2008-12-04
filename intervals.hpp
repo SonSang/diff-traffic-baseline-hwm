@@ -18,6 +18,8 @@
 template <class T>
 struct intervals
 {
+    typedef int entry_id;
+
     //! Stores additional dividers + associated data.
     struct entry
     {
@@ -34,7 +36,7 @@ struct intervals
       \return -1 if the number is covered by base_data, the number of the entry that covers it otherwise.
       This is just linear search right now; something more scalable (like binary search) is conceivably desireable.
     */
-    inline int find(float x) const
+    inline entry_id find(float x) const
     {
         assert(0.0 <= x && x <= 1.0);
 
@@ -63,11 +65,11 @@ struct intervals
     */
     inline void insert(float x, T data)
     {
-        int loc = find(x) + 1;
+        entry_id loc = find(x) + 1;
         printf("loc: %d/%zu\n", loc-1, entries.size());
         entries.resize(entries.size()+1);
 
-        int current = entries.size();
+        entry_id current = entries.size();
         while(current > loc)
         {
             entries[current] = entries[current-1];
@@ -85,7 +87,7 @@ struct intervals
     */
     inline T & operator[](float x)
     {
-        int loc = find(x);
+        entry_id loc = find(x);
         if(loc == -1)
             return base_data;
         else

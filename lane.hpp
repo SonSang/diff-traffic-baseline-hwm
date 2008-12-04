@@ -1,44 +1,38 @@
 #ifndef _LANE_HPP_
 #define _LANE_HPP_
 
+#include "arz.hpp"
+#include "road.hpp"
 #include "intersection.hpp"
+#include "intervals.hpp"
+
 #include <vector>
-
-struct q
-{
-    float rho;
-    float y;
-};
-
-struct road
-{
-    const char * name;
-};
-
-typedef int lane_id;
-#define NO_LANE -1
-
-typedef int entry_id;
-
-struct lane_adjacency
-{
-    lane_id neighbor;
-    entry_id interval_entry;
-};
-
-typedef int intersection_id;
-#define TAPER    -2
-#define DEAD_END -1
 
 struct lane_end
 {
-    intersection_id intersection;
+    intersection::id intersection;
 };
 
-typedef intervals<lane_adjacency> adjacency_intervals;
+struct road_membership
+{
+    road::id parent_road;
+    float interval[2];
+    float lane_position;
+};
+
+typedef intervals<road_membership> road_intervals;
+
+struct adjacency_pair;
+
+#define NO_ADJACENCY 0
+typedef intervals<adjacency_pair*> adjacency_intervals;
 
 struct lane
 {
+    typedef int id;
+
+    road_intervals road_memberships;
+
     adjacency_intervals left;
     adjacency_intervals right;
 
@@ -51,4 +45,17 @@ struct lane
     unsigned int ncells;
     q *data;
 };
+
+struct lane_adjacency
+{
+    lane::id neighbor;
+    adjacency_intervals::entry_id interval_entry;
+};
+
+struct adjacency_pair
+{
+    lane_adjacency left;
+    lane_adjacency right;
+};
+
 #endif
