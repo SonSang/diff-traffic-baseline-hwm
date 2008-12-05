@@ -1,6 +1,6 @@
 AM_CXXFLAGS = $(WARN_FLAGS) $(OPTIMIZE_FLAGS) $(ARCH_FLAGS) $(DEBUG_FLAGS)
 
-bin_PROGRAMS = simtest
+bin_PROGRAMS = simtest lane-test interval-test
 
 if DO_VISUAL
 bin_PROGRAMS += showtest showsim
@@ -31,3 +31,14 @@ simtest_SOURCES = \
 
 simtest_CXXFLAGS = $(TS_CXXFLAGS) $(AM_CXXFLAGS)
 simtest_LDADD = $(TS_LDFLAGS)
+
+lane_test_SOURCES = \
+	lane-test.cpp \
+	road.cpp
+
+lane_test_CXXFLAGS = $(AM_CXXFLAGS)
+
+interval_test_SOURCES = \
+	interval-test.cpp
+
+interval_test_CXXFLAGS = $(AM_CXXFLAGS)
