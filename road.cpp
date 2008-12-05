@@ -4,21 +4,16 @@ void line_rep::locate(point *pt, float t, float offset) const
 {
     int seg = find_segment(t);
 
-    t = (t*lengths.back() - lengths[seg])/(lengths[seg+1]-lengths[seg]);
+    t = t*lengths.back() - lengths[seg];
 
-    pt->x = (1.0-t) * points[seg].x + t * points[seg+1].x;
-    pt->y = (1.0-t) * points[seg].y + t * points[seg+1].y;
+    pt->x = t * normals[seg].x + points[seg].x;
+    pt->y = t * normals[seg].y + points[seg].y;
 }
 
 void line_rep::draw(float start, float stop, float offset) const
 {
 }
 
-//! Find the segment containing x.
-/*
-  \param x A float in [0.0, 1.0].
-  \returns The segment containing x
-*/
 int line_rep::find_segment(float x) const
 {
     assert(x >= 0 && x <= 1.0);
@@ -35,12 +30,7 @@ int line_rep::find_segment(float x) const
     return lengths.size()-2;
 }
 
-//! Fills lengths vector.
-/*!
-  This assumes that points has at least 2 elements in it;
-  we overwrite any existing lengths info with new calculations.
-*/
-void line_rep::calc_lengths()
+void line_rep::calc_rep()
 {
     /*!
       strictly speaking, this will work with points = 1,
@@ -49,22 +39,31 @@ void line_rep::calc_lengths()
     assert(points.size() > 1);
 
     lengths.resize(points.size());
+    normals.resize(points.size()-1);
+    mitres.resize(points.size()-2);
 
     lengths[0] = 0.0f;
     for(int i = 1; i < static_cast<int>(points.size()); ++i)
     {
-        lengths[i] = lengths[i-1] +
-            std::sqrt((points[i].x-points[i-1].x)*(points[i].x-points[i-1].x) + (points[i].y-points[i-1].y)*(points[i].y-points[i-1].y));
+        normals[i-1].x = points[i].x-points[i-1].x;
+        normals[i-1].y = points[i].y-points[i-1].y;
+
+        float len = std::sqrt(normals[i-1].x*normals[i-1].x + normals[i-1].y*normals[i-1].y);
+
+        lengths[i] = lengths[i-1] + len;
+
+        float invlen = 1.0f/len;
+        normals[i-1].x *= invlen;
+        normals[i-1].y *= invlen;
+    }
+    for(int i = 0; i < static_cast<int>(mitres.size()); ++i)
+    {
+        float dot = normals[i].x*normals[i+1].x + normals[i].y*normals[i+1].y;
+
+        mitres[i] = (1.0f - dot)/(1.0f + dot);
     }
 }
 
-//! Create a string representation of line
-/*!
-  Fills buff with the first len characters of rep
-  \param buff An array of at least len characters.
-  \param len  The max. number of characters to write in buff (including trailing \0).
-  \returns The number of written characters (not inluding trailing \0).
-*/
 int line_rep::to_string(char buff[], int len) const
 {
     int offs = 0;
