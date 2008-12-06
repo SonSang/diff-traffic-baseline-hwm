@@ -12,34 +12,39 @@ void line_rep::locate(point *pt, float t, float offset) const
 
 void line_rep::lane_mesh(float range[2], float center_offs, float offsets[2]) const
 {
-    std::vector<point> vrts(points.size()*2);
-    std::vector<quad>  faces(points.size()-1);
+    std::vector<point> vrts;
+    std::vector<quad>  faces;
 
-    float last_mitre = 0.0f;
-    for(int i = 0; i < static_cast<int>(points.size()-1); ++i)
+    int start = find_segment(range[0], center_offs);
+    int end   = find_segment(range[1], center_offs);
+
+    float start_t = range[0]*(clengths.back() + center_offs*cmitres.back()) - (clengths[start] + center_offs*cmitres[start]);
+    float end_t   = range[1]*(clengths.back() + center_offs*cmitres.back()) - (clengths[end]   + center_offs*cmitres[end]);
+
+    vrts.push_back(point(start_t*normals[start].x - offsets[0]*normals[start].y + points[start].x,
+                         start_t*normals[start].y + offsets[0]*normals[start].x + points[start].y));
+
+    vrts.push_back(point(start_t*normals[start].x - offsets[1]*normals[start].y + points[start].x,
+                         start_t*normals[start].y + offsets[1]*normals[start].x + points[start].y));
+
+    for(int c = start+1; c <= end; ++c)
     {
-        float mitre = cmitres[i]-last_mitre;
+        float mitre = cmitres[c]-cmitres[c-1];
+        vrts.push_back(point(offsets[0]*(mitre*normals[c].x - normals[c].y) + points[c].x,
+                             offsets[0]*(mitre*normals[c].y + normals[c].x) + points[c].y));
 
-        vrts[2*i].x = offsets[0]*(mitre*normals[i].x - normals[i].y) + points[i].x;
-        vrts[2*i].y = offsets[0]*(mitre*normals[i].y + normals[i].x) + points[i].y;
-
-        vrts[2*i+1].x = offsets[1]*(mitre*normals[i].x - normals[i].y) + points[i].x;
-        vrts[2*i+1].y = offsets[1]*(mitre*normals[i].y + normals[i].x) + points[i].y;
-
-        last_mitre = cmitres[i];
-    }
-    {
-        int i = points.size()-1;
-        float mitre = cmitres[i]-last_mitre;
-
-        vrts[2*i].x = offsets[0]*(mitre*normals[i-1].x - normals[i-1].y) + points[i].x;
-        vrts[2*i].y = offsets[0]*(mitre*normals[i-1].y + normals[i-1].x) + points[i].y;
-
-        vrts[2*i+1].x = offsets[1]*(mitre*normals[i-1].x - normals[i-1].y) + points[i].x;
-        vrts[2*i+1].y = offsets[1]*(mitre*normals[i-1].y + normals[i-1].x) + points[i].y;
+        vrts.push_back(point(offsets[1]*(mitre*normals[c].x - normals[c].y) + points[c].x,
+                             offsets[1]*(mitre*normals[c].y + normals[c].x) + points[c].y));
     }
 
-    for(int i = 0; i < static_cast<int>(points.size()-1); ++i)
+    vrts.push_back(point(end_t*normals[end].x - offsets[0]*normals[end].y + points[end].x,
+                         end_t*normals[end].y + offsets[0]*normals[end].x + points[end].y));
+
+    vrts.push_back(point(end_t*normals[end].x - offsets[1]*normals[end].y + points[end].x,
+                         end_t*normals[end].y + offsets[1]*normals[end].x + points[end].y));
+
+    faces.resize(1+end-start);
+    for(int i = 0; i < 1+end-start; ++i)
     {
         faces[i].v[0] = 2*i;
         faces[i].v[1] = 2*i+1;

@@ -29,8 +29,24 @@ struct quad
 //! A representation of a road's shape.
 struct line_rep
 {
+
+    //! Determine where a point along the parameterization is.
+    /*
+      \param pt A pointer to a point where the results will be stored.
+      \param x  A float in [0, 1] specifying the parameter to extract
+      \param offset An offset from the polyline along which to place the point.
+                    The convention that the parameterization increases with x,
+                    and the offset increaseses with y
+    */
     void locate(point *pt, float x, float offset) const;
 
+    //! Extract a strip of quads.
+    /*
+      \param range A pair of ordered (<) floats in [0, 1] representing the parameteric range of the road to extract.
+      \param center_offset The offset from the center of the road along which to take the paramterization.
+      \param offsets A pair of offsets defining the extents of the sweep in 'y'.
+      This function isn't air-tight and can generate some bogus meshes, but it's a start
+    */
     void lane_mesh(float range[2], float center_offset, float offsets[2]) const;
 
     void draw(float start, float stop, float offset) const;
