@@ -20,10 +20,18 @@ struct point
     float y;
 };
 
+//! A four-sided simple polygon.
+struct quad
+{
+    int v[4];
+};
+
 //! A representation of a road's shape.
 struct line_rep
 {
     void locate(point *pt, float x, float offset) const;
+
+    void lane_mesh(float range[2], float center_offset, float offsets[2]) const;
 
     void draw(float start, float stop, float offset) const;
 

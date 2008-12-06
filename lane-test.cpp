@@ -5,8 +5,8 @@ int main(int argc, char * argv[])
     line_rep r;
 
     r.points.push_back(point(0.0f, 0.0f));
-    r.points.push_back(point(0.5f, 0.0f));
-    r.points.push_back(point(2.5f, 0.0f));
+    r.points.push_back(point(1.0f, 0.5f));
+    r.points.push_back(point(2.0f, -0.5f));
     r.points.push_back(point(3.0f, 0.0f));
 
     r.calc_rep();
@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 
     float f = 0.5f;
     point p;
-    r.locate(&p, f, 0.0f);
+    r.locate(&p, f, 1.0f);
     printf("locate %f = (%f %f)\n", f, p.x, p.y);
 
     f = 0.0f;
@@ -40,6 +40,10 @@ int main(int argc, char * argv[])
     r.to_string(buff, 1024);
     printf("%s", buff);
 
+    float rng[2] = {0.0f, 1.0f};
+    float offsets[2] = {0.05f, 0.25f};
+
+    r.lane_mesh(rng, 0.0f, offsets);
 
     return 0;
 }
