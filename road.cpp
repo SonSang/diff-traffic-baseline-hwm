@@ -1,5 +1,10 @@
 #include "road.hpp"
 
+float line_rep::offset_length(float offset) const
+{
+    return clengths.back() + offset*cmitres.back();
+}
+
 void line_rep::locate(point *pt, float t, float offset) const
 {
     int seg = find_segment(t, offset);
