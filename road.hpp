@@ -30,9 +30,10 @@ struct line_rep
     //! Find the segment containing x.
     /*
       \param x A float in [0.0, 1.0].
+      \param offset A float representing offset from centerline (+ is 'left')
       \returns The segment containing x
     */
-    int find_segment(float x) const;
+    int find_segment(float x, float offset) const;
 
     //! Builds lengths, normals, and mitres from points
     /*!
@@ -54,9 +55,9 @@ struct line_rep
 
     std::vector<point> points;  //!< Points defining a polyline.
 
-    std::vector<float> lengths; //!< Cumulative lengths of segments.
-    std::vector<point> normals; //!< (#points-1) normalized vectors describing segment direction
-    std::vector<float> mitres;  //!< (#points-2) quantities describing mitre joints at interior points
+    std::vector<float> clengths; //!< Cumulative lengths of segments. (#points)
+    std::vector<point> normals; //!< (#points-1) normalized vectors describing segment direction.
+    std::vector<float> cmitres;  //!< Cumulative quantities describing mitre joints at each point. (#points)
 };
 
 //! Road data structure.

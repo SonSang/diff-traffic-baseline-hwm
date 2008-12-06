@@ -2,32 +2,32 @@
 
 void line_rep::locate(point *pt, float t, float offset) const
 {
-    int seg = find_segment(t);
+    int seg = find_segment(t, offset);
 
-    t = t*lengths.back() - lengths[seg];
+    t = t*(clengths.back() + offset*cmitres.back()) - (clengths[seg] + offset*cmitres[seg]);
 
-    pt->x = t * normals[seg].x + points[seg].x;
-    pt->y = t * normals[seg].y + points[seg].y;
+    pt->x = t * normals[seg].x - offset*normals[seg].y + points[seg].x;
+    pt->y = t * normals[seg].y + offset*normals[seg].x + points[seg].y;
 }
 
 void line_rep::draw(float start, float stop, float offset) const
 {
 }
 
-int line_rep::find_segment(float x) const
+int line_rep::find_segment(float x, float offset) const
 {
     assert(x >= 0 && x <= 1.0);
 
-    x *= lengths.back();
+    x *= clengths.back() + offset*cmitres.back();
 
     int current = 1;
-    while(current < static_cast<int>(lengths.size()))
+    while(current < static_cast<int>(clengths.size()))
     {
-        if(x-lengths[current] < 0.0f)
+        if(x-(clengths[current] + offset*cmitres[current]) < 0.0f)
             return current-1;
         ++current;
     }
-    return lengths.size()-2;
+    return clengths.size()-2;
 }
 
 void line_rep::calc_rep()
@@ -38,11 +38,11 @@ void line_rep::calc_rep()
     */
     assert(points.size() > 1);
 
-    lengths.resize(points.size());
+    clengths.resize(points.size());
     normals.resize(points.size()-1);
-    mitres.resize(points.size()-2);
+    cmitres.resize(points.size());
 
-    lengths[0] = 0.0f;
+    clengths[0] = 0.0f;
     for(int i = 1; i < static_cast<int>(points.size()); ++i)
     {
         normals[i-1].x = points[i].x-points[i-1].x;
@@ -50,25 +50,36 @@ void line_rep::calc_rep()
 
         float len = std::sqrt(normals[i-1].x*normals[i-1].x + normals[i-1].y*normals[i-1].y);
 
-        lengths[i] = lengths[i-1] + len;
+        clengths[i] = clengths[i-1] + len;
 
         float invlen = 1.0f/len;
         normals[i-1].x *= invlen;
         normals[i-1].y *= invlen;
     }
-    for(int i = 0; i < static_cast<int>(mitres.size()); ++i)
+
+    // for the time being, set start mitre to 0.
+    cmitres[0] = 0.0f;
+
+    for(int i = 0; i < static_cast<int>(cmitres.size()-2); ++i)
     {
         float dot = normals[i].x*normals[i+1].x + normals[i].y*normals[i+1].y;
+        float orient =  normals[i].x*normals[i+1].y - normals[i].y*normals[i+1].x;
 
-        mitres[i] = (1.0f - dot)/(1.0f + dot);
+        float mitre = orient*std::sqrt((1.0f - dot)/(1.0f + dot));
+
+        // see write-up for interpretation of this formula.
+        cmitres[i+1] += cmitres[i] + mitre;
     }
+
+    // for the time being, set end mitre to 0.
+    cmitres[cmitres.size()-1] = cmitres[cmitres.size()-2] + 0.0f;
 }
 
 int line_rep::to_string(char buff[], int len) const
 {
     int offs = 0;
     for(int i = 0; i < static_cast<int>(points.size()) && offs < len; ++i)
-        offs += snprintf(buff+offs, len-offs, "%d: (%f, %f) - %f\n", i, points[i].x, points[i].y, lengths[i]);
+        offs += snprintf(buff+offs, len-offs, "%d: (%f, %f) - %f\n", i, points[i].x, points[i].y, clengths[i]);
 
     return offs;
 }

@@ -15,12 +15,12 @@ int main(int argc, char * argv[])
     //[0, 1) [1, 2) [2, 3)
     //   0      1     2
 
-    printf("find seg: %f = %d\n", 0.0,  r.find_segment(0.0));
-    printf("find seg: %f = %d\n", 0.05, r.find_segment(0.05));
-    printf("find seg: %f = %d\n", 0.40, r.find_segment(0.40));
-    printf("find seg: %f = %d\n", 0.70, r.find_segment(0.70));
-    printf("find seg: %f = %d\n", 0.95, r.find_segment(0.95));
-    printf("find seg: %f = %d\n", 1.0,  r.find_segment(1.0));
+    printf("find seg: %f = %d\n", 0.0,  r.find_segment(0.0 , 0.0f));
+    printf("find seg: %f = %d\n", 0.05, r.find_segment(0.05, 0.0f));
+    printf("find seg: %f = %d\n", 0.40, r.find_segment(0.40, 0.0f));
+    printf("find seg: %f = %d\n", 0.70, r.find_segment(0.70, 0.0f));
+    printf("find seg: %f = %d\n", 0.95, r.find_segment(0.95, 0.0f));
+    printf("find seg: %f = %d\n", 1.0,  r.find_segment(1.0 , 0.0f));
 
     float f = 0.5f;
     point p;
