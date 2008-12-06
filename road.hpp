@@ -29,8 +29,8 @@ struct quad
 //! A representation of a road's shape.
 struct line_rep
 {
-    //! Compute length of line put displaced from polyline
-    /*
+    //! Compute length of line displaced from polyline
+    /*!
       \param offset An offset from the polyline along which to place the point.
                     The convention that the parameterization increases with x,
                     and the offset increaseses with y
@@ -38,7 +38,7 @@ struct line_rep
     float offset_length(float offset) const;
 
     //! Determine where a point along the parameterization is.
-    /*
+    /*!
       \param pt A pointer to a point where the results will be stored.
       \param x  A float in [0, 1] specifying the parameter to extract
       \param offset An offset from the polyline along which to place the point.
@@ -48,7 +48,7 @@ struct line_rep
     void locate(point *pt, float x, float offset) const;
 
     //! Extract a strip of quads.
-    /*
+    /*!
       \param range A pair of ordered (<) floats in [0, 1] representing the parameteric range of the road to extract.
       \param center_offset The offset from the center of the road along which to take the paramterization.
       \param offsets A pair of offsets defining the extents of the sweep in 'y'.
@@ -59,7 +59,7 @@ struct line_rep
     void draw(float start, float stop, float offset) const;
 
     //! Find the segment containing x.
-    /*
+    /*!
       \param x A float in [0.0, 1.0].
       \param offset A float representing offset from centerline (+ is 'left')
       \returns The segment containing x
@@ -92,7 +92,7 @@ struct line_rep
 };
 
 //! Road data structure.
-/*
+/*!
   Groups bundles of lanes together, giving them a name and with
   line_rep, a shape
 */
@@ -100,10 +100,8 @@ struct road
 {
     typedef int id;
 
-    const char * name; //!< Road name
-
-    line_rep rep; //!< A description of the road's shape
-
+    const char * name;             //!< Road name
+    line_rep rep;                  //!< A description of the road's shape
     std::vector<int> member_lanes; //<! Lanes in the road
 };
 
