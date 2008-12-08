@@ -1,29 +1,8 @@
-/**
- * section: xmlReader
- * synopsis: Parse an XML file with an xmlReader
- * purpose: Demonstrate the use of xmlReaderForFile() to parse an XML file
- *          and dump the informations about the nodes found in the process.
- *          (Note that the XMLReader functions require libxml2 version later
- *          than 2.6.)
- * usage: reader1 <filename>
- * test: reader1 test2.xml > reader1.tmp ; diff reader1.tmp reader1.res ; rm reader1.tmp
- * author: Daniel Veillard
- * copy: see Copyright for the status of this software.
- */
+#include "xml-util.hpp"
+#include <vector>
 
-#include <stdio.h>
-#include <libxml/xmlreader.h>
-
-#ifdef LIBXML_READER_ENABLED
-
-/**
- * processNode:
- * @reader: the xmlReader
- *
- * Dump information about the current node
- */
-static void
-processNode(xmlTextReaderPtr reader) {
+static void processNode(xmlTextReaderPtr reader)
+{
     const xmlChar *name, *value;
 
     name = xmlTextReaderConstName(reader);
@@ -48,14 +27,227 @@ processNode(xmlTextReaderPtr reader) {
     }
 }
 
-/**
- * streamFile:
- * @filename: the file name to parse
- *
- * Parse and print information about an XML file.
- */
-static void
-streamFile(const char *filename) {
+static int read_lane_pair(xmlTextReaderPtr reader)
+{
+    int in_id;
+    int out_id;
+
+    xmlChar *att = xmlTextReaderGetAttribute(reader, BAD_CAST "in_id");
+    if(!att)
+        return -1;
+    sscanf((const char*) att, "%d", &in_id);
+    free(att);
+
+    att = xmlTextReaderGetAttribute(reader, BAD_CAST "out_id");
+    if(!att)
+        return -1;
+    sscanf((const char*) att, "%d", &out_id);
+    free(att);
+
+    printf("Got lane_pair: %d %d\n", in_id, out_id);
+
+    return 1;
+}
+
+static int read_state(xmlTextReaderPtr reader)
+{
+    int id;
+    float duration;
+
+    xmlChar *att = xmlTextReaderGetAttribute(reader, BAD_CAST "id");
+    if(!att)
+        return -1;
+    sscanf((const char*) att, "%d", &id);
+    free(att);
+
+    att = xmlTextReaderGetAttribute(reader, BAD_CAST "duration");
+    if(!att)
+        return -1;
+    sscanf((const char*) att, "%f", &duration);
+    free(att);
+
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return ret;
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return -1;
+            printf("%s\n", (const char *) name);
+            if(xmlStrEqual(name, BAD_CAST "lane_pair"))
+                read_lane_pair(reader);
+            else
+                return -1;
+        }
+    }
+    while(!is_closing_element(reader, "state"));
+
+    return 1;
+}
+
+static int read_states(xmlTextReaderPtr reader)
+{
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return ret;
+
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return -1;
+            if(xmlStrEqual(name, BAD_CAST "state"))
+                read_state(reader);
+            else
+                return -1;
+        }
+    }
+    while(!is_closing_element(reader, "states"));
+
+    return 1;
+}
+
+static int read_lane(xmlTextReaderPtr reader)
+{
+    char * ref;
+    int local_id;
+
+    xmlChar *att = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
+    if(!att)
+        return -1;
+    ref = strdupa((char *) att);
+    free(att);
+
+    att = xmlTextReaderGetAttribute(reader, BAD_CAST "local_id");
+    if(!att)
+        return -1;
+    sscanf((const char*) att, "%d", &local_id);
+    free(att);
+
+    printf("Got lane: %s, %d\n", ref, local_id);
+
+    return 1;
+}
+
+static int read_incoming(xmlTextReaderPtr reader)
+{
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return ret;
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return -1;
+            if(xmlStrEqual(name, BAD_CAST "lane"))
+                read_lane(reader);
+            else
+                return -1;
+        }
+    }
+    while(!is_closing_element(reader, "incoming"));
+
+    return 1;
+}
+
+static int read_outgoing(xmlTextReaderPtr reader)
+{
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return ret;
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return -1;
+            if(xmlStrEqual(name, BAD_CAST "lane"))
+                read_lane(reader);
+            else
+                return -1;
+        }
+    }
+    while(!is_closing_element(reader, "outgoing"));
+
+    return 1;
+}
+
+static int read_incident(xmlTextReaderPtr reader)
+{
+    bool have_incoming = false;
+    bool have_outgoing = false;
+
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return ret;
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return -1;
+            if(xmlStrEqual(name, BAD_CAST "incoming") && !have_incoming)
+                have_incoming = (read_incoming(reader) == 1);
+            else if(xmlStrEqual(name, BAD_CAST "outgoing") && !have_outgoing)
+                have_outgoing = (read_outgoing(reader) == 1);
+            else
+                return -1;
+        }
+    }
+    while(!is_closing_element(reader, "outgoing"));
+
+    return have_incoming && have_outgoing;
+}
+
+static int read_intersection(xmlTextReaderPtr reader)
+{
+    bool have_states   = false;
+    bool have_incident = false;
+
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return ret;
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return false;
+            if(xmlStrEqual(name, BAD_CAST "states") && !have_states)
+                have_states = (read_states(reader) == 1);
+            else if(xmlStrEqual(name, BAD_CAST "incident") && !have_incident)
+                have_incident = (read_incident(reader) == 1);
+            else
+                return false;
+        }
+    }
+    while(!is_closing_element(reader, "intersection"));
+
+    if(have_states)
+        printf("I have states\n");
+    else
+        printf("I don't have states\n");
+
+    if(have_incident)
+        printf("I have incident\n");
+    else
+        printf("I don't have incident\n");
+
+    return have_states && have_incident;
+}
+
+static void streamFile(const char *filename)
+{
     xmlTextReaderPtr reader;
     int ret;
 
@@ -63,7 +255,13 @@ streamFile(const char *filename) {
     if (reader != NULL) {
         ret = xmlTextReaderRead(reader);
         while (ret == 1) {
-            processNode(reader);
+            if(is_opening_element(reader, "intersection"))
+                if(read_intersection(reader) == 0)
+                {
+                    fprintf(stderr, "failed to read intersection");
+                    ret == -1;
+                    break;
+                }
             ret = xmlTextReaderRead(reader);
         }
         xmlFreeTextReader(reader);
@@ -75,33 +273,12 @@ streamFile(const char *filename) {
     }
 }
 
-int main(int argc, char **argv) {
-    if (argc != 2)
-        return(1);
-
-    /*
-     * this initialize the library and check potential ABI mismatches
-     * between the version it was compiled for and the actual shared
-     * library used.
-     */
-    LIBXML_TEST_VERSION
+int main(int argc, char **argv)
+{
+    LIBXML_TEST_VERSION;
 
     streamFile(argv[1]);
 
-    /*
-     * Cleanup function for the XML library.
-     */
     xmlCleanupParser();
-    /*
-     * this is to debug memory for regression tests
-     */
-    xmlMemoryDump();
     return(0);
 }
-
-#else
-int main(void) {
-    fprintf(stderr, "XInclude support not compiled in\n");
-    exit(1);
-}
-#endif
