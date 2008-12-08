@@ -1,0 +1,19 @@
+<intersection>
+  <incident>
+    <incoming>
+      <lane id="lane0"/>
+      <lane id="lane1"/>
+      <lane id="lane2"/>
+    </incoming>
+    <outgoing>
+      <lane id="lane3"/>
+      <lane id="lane4"/>
+      <lane id="lane5"/>
+    </outgoing>
+  </incident>
+  <states>
+    <state id="0">
+
+    </state>
+  </states>
+</intersection>
