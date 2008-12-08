@@ -1,6 +1,8 @@
 #ifndef _LANE_HPP_
 #define _LANE_HPP_
 
+struct lane;
+
 #include "arz.hpp"
 #include "road.hpp"
 #include "intersection.hpp"
@@ -8,10 +10,24 @@
 
 #include <vector>
 
-//! A container for information about lane teminini and junctions.
+//! Information about a lane's incoming BC
+struct lane_start
+{
+    typedef enum {TAPER_IN, DEAD_END, INTERSECTION} type; //< Types of starts.
+
+    type start_type;       //< The type of this BC.
+    intersection *inters;  //< Reference to the intersection this lane is incident to.
+    int intersect_out_ref; //< Reference to this lane's local id in inters.
+};
+
+//! Information about a lane's outgoing BC
 struct lane_end
 {
-    intersection::id intersection; //< Reference to the intersection this lane is incident to.
+    typedef enum {TAPER_OUT, DEAD_END, INTERSECTION} type; //< Types of ends.
+
+    type end_type;        //< The type of this BC.
+    intersection *inters; //< Reference to the intersection this lane is incident to.
+    int intersect_in_ref;    //< Reference to this lane's local id in inters.
 };
 
 //! Describes the lanes relationship to a parent road.
@@ -49,8 +65,8 @@ struct lane
     adjacency_intervals left;  //< Lane's left neighbors.
     adjacency_intervals right; //< Lane's right neighbors.
 
-    lane_end start; //< 'Source' terminus information.
-    lane_end end;   //< 'Sink' terminus information.
+    lane_start start; //< 'Source' terminus information.
+    lane_end   end;   //< 'Sink' terminus information.
 
     float speedlimit; //< The speedlimit along the lane.
                       //< Constant for the moment, but conceivably could vary
