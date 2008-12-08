@@ -52,6 +52,30 @@ AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_cairo" =
 
 AM_CONDITIONAL(DO_VISUAL, test x"$visual_ok" = xyes)
 
+AC_ARG_ENABLE([xml],
+  [AS_HELP_STRING([--enable-xml],
+    [build components that use xml @<:@default=check@:>@])],
+  [enable_xml=$enableval],
+  [enable_xml=check])
+
+LIBXML2_CFLAGS=
+LIBXML2_LIBS=
+
+AS_IF([test x"$enable_xml" != xno],
+	    [AC_CHECK_PROG(have_libxml2, xml2-config, [yes], [no])
+	     AS_IF([test x"$have_libxml2" = xno -a x"$enable_xml" != xcheck],
+             AC_MSG_FAILURE([--enable-xml given, but test for libxml2 failed!]))])
+
+AS_IF([test x"$enable_xml" != xno -a x"$have_libxml2" = xyes],
+	    [xml_ok=yes
+	     LIBXML2_CFLAGS=`xml2-config --cflags`
+	     LIBXML2_LIBS=`xml2-config --libs`
+	     AC_SUBST([LIBXML2_CFLAGS])
+	     AC_SUBST([LIBXML2_LIBS])],
+      [xml_ok=no])
+
+AM_CONDITIONAL(DO_XML, test x"$xml_ok" = xyes)
+
 # Checks for header files.
 AC_HEADER_STDC
 

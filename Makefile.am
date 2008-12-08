@@ -25,6 +25,16 @@ showsim_CXXFLAGS = $(CAIRO_CFLAGS) $(FLTK_CXXFLAGS) $(AM_CXXFLAGS)
 showsim_LDFLAGS = $(FLTK_LDFLAGS) $(CAIRO_LIBS)
 endif
 
+if DO_XML
+bin_PROGRAMS += xml-test
+
+xml_test_SOURCES = \
+	xml-test.cpp
+
+xml_test_CXXFLAGS = $(LIBXML2_CFLAGS) $(AM_CXXFLAGS)
+xml_test_LDFLAGS = $(LIBXML2_LIBS)
+endif
+
 simtest_SOURCES = \
 	test_solve.cpp \
 	arz.hpp
