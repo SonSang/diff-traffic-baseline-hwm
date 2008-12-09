@@ -2,6 +2,7 @@
 #define _LANE_HPP_
 
 struct lane;
+struct intersection;
 
 #include "arz.hpp"
 #include "road.hpp"
@@ -59,6 +60,8 @@ typedef intervals<adjacency_pair*> adjacency_intervals;
 struct lane
 {
     typedef int id;
+
+    bool xml_read(xmlTextReaderPtr reader);
 
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
 

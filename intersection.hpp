@@ -18,6 +18,8 @@ struct intersection
         std::vector<out_id> out_states;
     };
 
+    bool xml_read(xmlTextReaderPtr reader);
+
     std::vector<lane*> incoming;
     std::vector<lane*> outgoing;
 

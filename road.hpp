@@ -1,6 +1,7 @@
 #ifndef _ROAD_HPP_
 #define _ROAD_HPP_
 
+#include "xml-util.hpp"
 #include <vector>
 #include <cassert>
 #include <cmath>
@@ -99,6 +100,8 @@ struct line_rep
 struct road
 {
     typedef int id;
+
+    bool xml_read(xmlTextReaderPtr reader);
 
     const char * name;             //!< Road name
     line_rep rep;                  //!< A description of the road's shape

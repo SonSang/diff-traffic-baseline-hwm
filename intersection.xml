@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<intersection>
+<intersection id="intersection0">
   <incident>
     <incoming>
       <lane_ref ref="lane0" local_id="0"/>
