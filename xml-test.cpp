@@ -32,17 +32,11 @@ static int read_lane_pair(xmlTextReaderPtr reader)
     int in_id;
     int out_id;
 
-    xmlChar *att = xmlTextReaderGetAttribute(reader, BAD_CAST "in_id");
-    if(!att)
+    if(get_attribute(in_id, reader, "in_id") == -1)
         return -1;
-    sscanf((const char*) att, "%d", &in_id);
-    free(att);
 
-    att = xmlTextReaderGetAttribute(reader, BAD_CAST "out_id");
-    if(!att)
+    if(get_attribute(out_id, reader, "out_id") == -1)
         return -1;
-    sscanf((const char*) att, "%d", &out_id);
-    free(att);
 
     printf("Got lane_pair: %d %d\n", in_id, out_id);
 
@@ -54,17 +48,13 @@ static int read_state(xmlTextReaderPtr reader)
     int id;
     float duration;
 
-    xmlChar *att = xmlTextReaderGetAttribute(reader, BAD_CAST "id");
-    if(!att)
+    if(get_attribute(id, reader, "id") == -1)
         return -1;
-    sscanf((const char*) att, "%d", &id);
-    free(att);
 
-    att = xmlTextReaderGetAttribute(reader, BAD_CAST "duration");
-    if(!att)
+    if(get_attribute(duration, reader, "duration") == -1)
         return -1;
-    sscanf((const char*) att, "%f", &duration);
-    free(att);
+
+    printf("State: id: %d duration: %f\n", id, duration);
 
     do
     {
@@ -114,22 +104,18 @@ static int read_states(xmlTextReaderPtr reader)
 
 static int read_lane(xmlTextReaderPtr reader)
 {
-    char * ref;
+    char * ref = 0;
     int local_id;
 
-    xmlChar *att = xmlTextReaderGetAttribute(reader, BAD_CAST "ref");
-    if(!att)
+    if(get_attribute(ref, reader, "ref") == -1)
         return -1;
-    ref = strdupa((char *) att);
-    free(att);
 
-    att = xmlTextReaderGetAttribute(reader, BAD_CAST "local_id");
-    if(!att)
+    if(get_attribute(local_id, reader, "local_id") == -1)
         return -1;
-    sscanf((const char*) att, "%d", &local_id);
-    free(att);
 
     printf("Got lane: %s, %d\n", ref, local_id);
+
+    free(ref);
 
     return 1;
 }
