@@ -66,10 +66,7 @@ static int read_state(xmlTextReaderPtr reader)
             const xmlChar *name = xmlTextReaderConstName(reader);
             if(!name)
                 return -1;
-            printf("%s\n", (const char *) name);
-            if(xmlStrEqual(name, BAD_CAST "lane_pair"))
-                read_lane_pair(reader);
-            else
+            if(!xmlStrEqual(name, BAD_CAST "lane_pair") || read_lane_pair(reader) != 1)
                 return -1;
         }
     }
@@ -132,9 +129,7 @@ static int read_incoming(xmlTextReaderPtr reader)
             const xmlChar *name = xmlTextReaderConstName(reader);
             if(!name)
                 return -1;
-            if(xmlStrEqual(name, BAD_CAST "lane"))
-                read_lane(reader);
-            else
+            if(!xmlStrEqual(name, BAD_CAST "lane_ref") || read_lane(reader) != 1)
                 return -1;
         }
     }
@@ -155,9 +150,7 @@ static int read_outgoing(xmlTextReaderPtr reader)
             const xmlChar *name = xmlTextReaderConstName(reader);
             if(!name)
                 return -1;
-            if(xmlStrEqual(name, BAD_CAST "lane"))
-                read_lane(reader);
-            else
+            if(!xmlStrEqual(name, BAD_CAST "lane_ref") || read_lane(reader) != 1)
                 return -1;
         }
     }

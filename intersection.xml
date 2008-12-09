@@ -2,14 +2,14 @@
 <intersection>
   <incident>
     <incoming>
-      <lane ref="lane0" local_id="0"/>
-      <lane ref="lane1" local_id="1"/>
-      <lane ref="lane2" local_id="2"/>
+      <lane_ref ref="lane0" local_id="0"/>
+      <lane_ref ref="lane1" local_id="1"/>
+      <lane_ref ref="lane2" local_id="2"/>
     </incoming>
     <outgoing>
-      <lane ref="lane3" local_id="0"/>
-      <lane ref="lane4" local_id="1"/>
-      <lane ref="lane5" local_id="2"/>
+      <lane_ref ref="lane3" local_id="0"/>
+      <lane_ref ref="lane4" local_id="1"/>
+      <lane_ref ref="lane5" local_id="2"/>
     </outgoing>
   </incident>
   <states>
