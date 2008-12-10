@@ -120,4 +120,43 @@ inline bool read_sequence(std::vector<T> & seq, std::map<char *, int> & id_map, 
     return read_sequence(seq, id_map, reader, BAD_CAST item_name, BAD_CAST container_name);
 }
 
+struct xml_elt
+{
+    bool have;
+    const xmlChar *name;
+    void *item;
+    bool (*read_xml)(void *, xmlTextReaderPtr reader);
+};
+
+inline bool read_elements(xmlTextReaderPtr reader, int nelt, xml_elt *elt, const xmlChar *endelt)
+{
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return false;
+
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name)
+                return false;
+
+            bool found = false;
+            for(int i = 0; i < nelt; ++i)
+                if(xmlStrEqual(name, elt[i].name) && !elt[i].have)
+                {
+                    elt[i].have = elt[i].read_xml(elt[i].item, reader);
+                    found = true;
+                    break;
+                }
+
+            if(!found)
+                return false;
+        }
+    }
+    while(!is_closing_element(reader, endelt));
+
+    return true;
+}
 #endif

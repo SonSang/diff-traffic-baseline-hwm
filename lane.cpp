@@ -1,88 +1,104 @@
 #include "lane.hpp"
 
-bool lane::xml_read(xmlTextReaderPtr reader)
-{
-    bool have_start     = false;
-    bool have_end       = false;
-    bool have_road_int  = false;
-    bool have_adjacency = false;
+#define read_dead_end tautology
+#define read_int_ref tautology
+#define read_taper tautology
 
-    if(!get_attribute(speedlimit, reader, "speedlimit"))
+static bool tautology(void *item, xmlTextReaderPtr reader)
+{
+    return true;
+}
+
+static bool read_startend(void *item, xmlTextReaderPtr reader)
+{
+    const xmlChar *name = xmlTextReaderConstName(reader);
+
+    xml_elt read[] =
+        {{false,
+          BAD_CAST "dead_end",
+          item,
+          read_dead_end},
+         {false,
+          BAD_CAST "intersection_ref",
+          item,
+          read_int_ref},
+         {false,
+          BAD_CAST "taper",
+          item,
+          read_taper}};
+
+    if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, name))
         return false;
 
+    return (read[0].have + read[1].have + read[2].have) == 1;
+}
+
+static bool read_road_membership_interval(void *item, xmlTextReaderPtr reader)
+{
     do
     {
         int ret = xmlTextReaderRead(reader);
         if(ret != 1)
             return false;
-
-        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
-        {
-            const xmlChar *name = xmlTextReaderConstName(reader);
-            if(!name)
-                return false;
-
-            if(xmlStrEqual(name, BAD_CAST "start") && !have_start)
-            {
-                do
-                {
-                    ret = xmlTextReaderRead(reader);
-                    if(ret != 1)
-                        return false;
-                }
-                while(!is_closing_element(reader, "start"));
-
-                have_start = true;
-            }
-            else if(xmlStrEqual(name, BAD_CAST "end") && !have_end)
-            {
-                do
-                {
-                    ret = xmlTextReaderRead(reader);
-                    if(ret != 1)
-                        return false;
-                }
-                while(!is_closing_element(reader, "end"));
-
-                have_end = true;
-            }
-            else if(xmlStrEqual(name, BAD_CAST "road_intervals") && !have_road_int)
-            {
-                do
-                {
-                    ret = xmlTextReaderRead(reader);
-                    if(ret != 1)
-                        return false;
-
-                    if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
-                    {
-                        const xmlChar *name = xmlTextReaderConstName(reader);
-                        if(!name)
-                            return false;
-                    }
-
-                }
-                while(!is_closing_element(reader, "road_intervals"));
-
-                have_road_int = true;
-            }
-            else if(xmlStrEqual(name, BAD_CAST "adjacency_intervals") && !have_adjacency)
-            {
-                do
-                {
-                    ret = xmlTextReaderRead(reader);
-                    if(ret != 1)
-                        return false;
-                }
-                while(!is_closing_element(reader, "adjacency_intervals"));
-
-                have_adjacency = true;
-            }
-            else
-                return false;
-        }
     }
-    while(!is_closing_element(reader, "lane"));
+    while(!is_closing_element(reader, "interval"));
 
-    return have_start && have_end && have_road_int && have_adjacency;
+    return true;
+}
+
+static bool read_road_intervals(void *item, xmlTextReaderPtr reader)
+{
+    xml_elt read[] =
+        {{false,
+          BAD_CAST "interval",
+          item,
+          read_road_membership_interval}};
+
+    if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "road_intervals"))
+        return false;
+
+    return read[0].have;
+}
+
+static bool read_adjacency(void *item, xmlTextReaderPtr reader)
+{
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return false;
+    }
+    while(!is_closing_element(reader, "adjacency_intervals"));
+
+    return true;
+}
+
+bool lane::xml_read(xmlTextReaderPtr reader)
+{
+    if(!get_attribute(speedlimit, reader, "speedlimit"))
+        return false;
+
+    xml_elt read[] =
+        {{false,
+          BAD_CAST "start",
+          this,
+          read_startend},
+         {false,
+          BAD_CAST "end",
+          this,
+          read_startend},
+         {false,
+          BAD_CAST "road_intervals",
+          this,
+          read_road_intervals},
+         {false,
+          BAD_CAST "adjacency_intervals",
+          this,
+          read_adjacency}};
+
+    bool status = read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "lane");
+    if(!status)
+        return false;
+
+    return read[0].have && read[1].have && read[2].have && read[3].have;
 }
