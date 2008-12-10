@@ -83,6 +83,8 @@ struct line_rep
     */
     int to_string(char buff[], int len) const;
 
+    void points_string(const char *str);
+
     bool xml_read(xmlTextReaderPtr reader);
 
     float lane_width; //!< Width of lanes.

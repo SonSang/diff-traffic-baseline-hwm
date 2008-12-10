@@ -1,4 +1,5 @@
 #include "road.hpp"
+#include <ctype.h>
 
 float line_rep::offset_length(float offset) const
 {
@@ -139,6 +140,24 @@ int line_rep::to_string(char buff[], int len) const
     return offs;
 }
 
+void line_rep::points_string(const char *str)
+{
+    while(*str)
+    {
+        while(isspace(*str))
+            ++str;
+
+        float x, y;
+        if(sscanf(str, "%f %f", &x, &y) != 2)
+            break;
+
+        points.push_back(point(x, y));
+
+        while(*str && *str != '\n')
+            ++str;
+    }
+}
+
 bool line_rep::xml_read(xmlTextReaderPtr reader)
 {
     do
@@ -158,7 +177,13 @@ bool line_rep::xml_read(xmlTextReaderPtr reader)
                 return false;
 
             const xmlChar *pts = xmlTextReaderConstValue(reader);
-            printf("%s\n", (char*)pts);
+            points_string((const char*) pts);
+
+            if(points.size() == 0)
+            {
+                fprintf(stderr, "No points in line-rep!\n");
+                return false;
+            }
 
             do
             {
