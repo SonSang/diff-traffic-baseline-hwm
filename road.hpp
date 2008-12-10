@@ -83,6 +83,8 @@ struct line_rep
     */
     int to_string(char buff[], int len) const;
 
+    bool xml_read(xmlTextReaderPtr reader);
+
     float lane_width; //!< Width of lanes.
 
     std::vector<point> points;  //!< Points defining a polyline.
@@ -101,9 +103,11 @@ struct road
 {
     typedef int id;
 
+    ~road();
+
     bool xml_read(xmlTextReaderPtr reader);
 
-    const char * name;             //!< Road name
+    char * name;             //!< Road name
     line_rep rep;                  //!< A description of the road's shape
     std::vector<int> member_lanes; //<! Lanes in the road
 };

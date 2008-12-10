@@ -69,9 +69,9 @@ bool network::xml_read(xmlTextReaderPtr reader)
         return false;
     }
 
-    std::map<char *, int> road_refs;
-    std::map<char *, int> lane_refs;
-    std::map<char *, int> intersection_refs;
+    std::map<char*, int> road_refs;
+    std::map<char*, int> lane_refs;
+    std::map<char*, int> intersection_refs;
 
     bool have_roads = false;
     bool have_lanes = false;
@@ -106,7 +106,19 @@ bool network::xml_read(xmlTextReaderPtr reader)
     printf("Read %zu lanes\n", lanes.size());
     printf("Read %zu intersections\n", intersections.size());
 
-    std::map<char *, int>::iterator current = road_refs.begin();
+    std::vector<lane>::iterator lane_itr = lanes.begin();
+    for(; lane_itr != lanes.end(); ++lane_itr)
+    {
+        // fill lane refs
+    }
+
+    std::vector<intersection>::iterator intersection_itr = intersections.begin();
+    for(; intersection_itr != intersections.end(); ++intersection_itr)
+    {
+        // fill intersection refs
+    }
+
+    std::map<char*, int>::iterator current = road_refs.begin();
     for(; current != road_refs.end(); ++current)
         free(current->first);
 
@@ -117,7 +129,6 @@ bool network::xml_read(xmlTextReaderPtr reader)
     current = intersection_refs.begin();
     for(; current != intersection_refs.end(); ++current)
         free(current->first);
-
 
     return ret == 1 && have_roads && have_lanes && have_intersections;
 }

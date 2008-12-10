@@ -139,13 +139,65 @@ int line_rep::to_string(char buff[], int len) const
     return offs;
 }
 
-bool road::xml_read(xmlTextReaderPtr reader)
+bool line_rep::xml_read(xmlTextReaderPtr reader)
 {
     do
     {
         int ret = xmlTextReaderRead(reader);
         if(ret != 1)
             return false;
+
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name || !xmlStrEqual(name, BAD_CAST "points"))
+                return false;
+
+            int ret = xmlTextReaderRead(reader);
+            if(ret != 1 || xmlTextReaderNodeType(reader) != XML_READER_TYPE_TEXT)
+                return false;
+
+            const xmlChar *pts = xmlTextReaderConstValue(reader);
+            printf("%s\n", (char*)pts);
+
+            do
+            {
+                ret = xmlTextReaderRead(reader);
+                if(ret != 1)
+                    return false;
+            }
+            while(!is_closing_element(reader, "points"));
+        }
+    }
+    while(!is_closing_element(reader, "line_rep"));
+
+    return true;
+}
+
+road::~road()
+{
+    free(name);
+}
+
+bool road::xml_read(xmlTextReaderPtr reader)
+{
+    if(!get_attribute(name, reader, "name"))
+        return false;
+
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return false;
+
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+        {
+            const xmlChar *name = xmlTextReaderConstName(reader);
+            if(!name || !xmlStrEqual(name, BAD_CAST "line_rep"))
+                return false;
+
+            rep.xml_read(reader);
+        }
     }
     while(!is_closing_element(reader, "road"));
 
