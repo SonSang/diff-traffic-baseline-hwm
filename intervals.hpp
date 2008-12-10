@@ -4,6 +4,7 @@
 #include <vector>
 #include <cassert>
 #include <cstdio>
+#include "xml-util.hpp"
 
 //! Associates data with intervals that cover the range [0, 1].
 /*!
@@ -103,6 +104,76 @@ struct intervals
     inline const T & operator[](float x) const
     {
         return static_cast<const T &>((*this)[x]);
+    }
+
+    inline bool interval_xml_read(xmlTextReaderPtr reader, const xmlChar *eltname)
+    {
+        bool have_base = false;
+
+        int ret;
+        do
+        {
+            ret = xmlTextReaderRead(reader);
+            if(ret != 1)
+                return false;
+
+            if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+            {
+                const xmlChar *name = xmlTextReaderConstName(reader);
+                if(!name)
+                    return false;
+
+                if(xmlStrEqual(name, BAD_CAST "base") && !have_base)
+                {
+                    do
+                    {
+                        ret = xmlTextReaderRead(reader);
+                        if(ret != 1)
+                            return false;
+
+                        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+                        {
+                            const xmlChar *name = xmlTextReaderConstName(reader);
+                            if(!name || !xmlStrEqual(name, eltname) || !base_data.xml_read(reader))
+                                return false;
+                        }
+                    }
+                    while(!is_closing_element(reader, "base"));
+                }
+                else if(xmlStrEqual(name, BAD_CAST "divider"))
+                {
+                    do
+                    {
+                        ret = xmlTextReaderRead(reader);
+                        if(ret != 1)
+                            return false;
+
+                        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
+                        {
+                            const xmlChar *name = xmlTextReaderConstName(reader);
+                            if(name && xmlStrEqual(name, eltname))
+                            {
+                                float div_val;
+                                T elt;
+
+                                if(!get_attribute(div_val, reader, "value") || !elt.xml_read(reader))
+                                    return false;
+
+                                insert(div_val, elt);
+                            }
+                            else
+                                return false;
+                        }
+                    }
+                    while(!is_closing_element(reader, "divider"));
+                }
+                else
+                    return false;
+            }
+        }
+        while(!is_closing_element(reader, "interval"));
+
+        return have_base;
     }
 
     //! Build a string rep of the structure.
