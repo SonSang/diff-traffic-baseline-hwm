@@ -25,9 +25,6 @@
 	  <base>
 	    <road_membership parent_road_ref="road0" interval_start="0.0" interval_end="1.0" lane_position="0.0"/>
 	  </base>
-	  <divider value="0.5">
-	    <road_membership parent_road_ref="road1" interval_start="0.0" interval_end="1.0" lane_position="0.0"/>
-	  </divider>
 	</interval>
       </road_intervals>
       <adjacency_intervals>

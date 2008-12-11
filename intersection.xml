@@ -3,20 +3,12 @@
   <incident>
     <incoming>
       <lane_ref ref="lane0" local_id="0"/>
-      <lane_ref ref="lane1" local_id="1"/>
-      <lane_ref ref="lane2" local_id="2"/>
     </incoming>
     <outgoing>
-      <lane_ref ref="lane3" local_id="0"/>
-      <lane_ref ref="lane4" local_id="1"/>
-      <lane_ref ref="lane5" local_id="2"/>
     </outgoing>
   </incident>
   <states>
     <state id="0" duration="20">
-      <lane_pair in_id="0" out_id="0"/>
-      <lane_pair in_id="1" out_id="1"/>
-      <lane_pair in_id="2" out_id="2"/>
     </state>
   </states>
 </intersection>
