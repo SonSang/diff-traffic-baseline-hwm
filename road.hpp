@@ -101,9 +101,8 @@ struct road
 
     bool xml_read(xmlTextReaderPtr reader);
 
-    char * name;             //!< Road name
-    line_rep rep;                  //!< A description of the road's shape
-    std::vector<lane_id> member_lanes; //<! Lanes in the road
+    char * name;  //!< Road name
+    line_rep rep; //!< A description of the road's shape
 };
 
 #endif
