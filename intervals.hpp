@@ -67,10 +67,9 @@ struct intervals
     inline void insert(float x, T data)
     {
         entry_id loc = find(x) + 1;
-        printf("loc: %d/%zu\n", loc-1, entries.size());
         entries.resize(entries.size()+1);
 
-        entry_id current = entries.size();
+        entry_id current = entries.size()-1;
         while(current > loc)
         {
             entries[current] = entries[current-1];
