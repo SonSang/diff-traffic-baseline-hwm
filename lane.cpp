@@ -14,15 +14,15 @@ static bool read_startend(void *item, xmlTextReaderPtr reader)
     const xmlChar *name = xmlTextReaderConstName(reader);
 
     xml_elt read[] =
-        {{false,
+        {{0,
           BAD_CAST "dead_end",
           item,
           read_dead_end},
-         {false,
+         {0,
           BAD_CAST "intersection_ref",
           item,
           read_int_ref},
-         {false,
+         {0,
           BAD_CAST "taper",
           item,
           read_taper}};
@@ -30,26 +30,24 @@ static bool read_startend(void *item, xmlTextReaderPtr reader)
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, name))
         return false;
 
-    return (read[0].have + read[1].have + read[2].have) == 1;
+    return (read[0].count + read[1].count + read[2].count) == 1;
+}
+
+bool road_membership::xml_read(xmlTextReaderPtr reader)
+{
+    return true;
 }
 
 static bool read_road_membership_interval(void *item, xmlTextReaderPtr reader)
 {
-    do
-    {
-        int ret = xmlTextReaderRead(reader);
-        if(ret != 1)
-            return false;
-    }
-    while(!is_closing_element(reader, "interval"));
-
-    return true;
+    lane *l = reinterpret_cast<lane*>(item);
+    return l->road_memberships.interval_xml_read(reader, BAD_CAST "road_membership");
 }
 
 static bool read_road_intervals(void *item, xmlTextReaderPtr reader)
 {
     xml_elt read[] =
-        {{false,
+        {{0,
           BAD_CAST "interval",
           item,
           read_road_membership_interval}};
@@ -57,7 +55,7 @@ static bool read_road_intervals(void *item, xmlTextReaderPtr reader)
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "road_intervals"))
         return false;
 
-    return read[0].have;
+    return read[0].count;
 }
 
 static bool read_adjacency(void *item, xmlTextReaderPtr reader)
@@ -79,19 +77,19 @@ bool lane::xml_read(xmlTextReaderPtr reader)
         return false;
 
     xml_elt read[] =
-        {{false,
+        {{0,
           BAD_CAST "start",
           this,
           read_startend},
-         {false,
+         {0,
           BAD_CAST "end",
           this,
           read_startend},
-         {false,
+         {0,
           BAD_CAST "road_intervals",
           this,
           read_road_intervals},
-         {false,
+         {0,
           BAD_CAST "adjacency_intervals",
           this,
           read_adjacency}};
@@ -100,5 +98,5 @@ bool lane::xml_read(xmlTextReaderPtr reader)
     if(!status)
         return false;
 
-    return read[0].have && read[1].have && read[2].have && read[3].have;
+    return read[0].count && read[1].count && read[2].count && read[3].count;
 }

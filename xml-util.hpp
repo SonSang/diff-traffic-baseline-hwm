@@ -122,7 +122,7 @@ inline bool read_sequence(std::vector<T> & seq, std::map<char *, int> & id_map, 
 
 struct xml_elt
 {
-    bool have;
+    int count;
     const xmlChar *name;
     void *item;
     bool (*read_xml)(void *, xmlTextReaderPtr reader);
@@ -144,9 +144,12 @@ inline bool read_elements(xmlTextReaderPtr reader, int nelt, xml_elt *elt, const
 
             bool found = false;
             for(int i = 0; i < nelt; ++i)
-                if(xmlStrEqual(name, elt[i].name) && !elt[i].have)
+                if(xmlStrEqual(name, elt[i].name))
                 {
-                    elt[i].have = elt[i].read_xml(elt[i].item, reader);
+                    if(!elt[i].read_xml(elt[i].item, reader))
+                        return false;
+
+                    ++elt[i].count;
                     found = true;
                     break;
                 }

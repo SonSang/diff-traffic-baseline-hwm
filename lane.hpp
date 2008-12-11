@@ -28,7 +28,7 @@ struct lane_end
 
     type end_type;        //< The type of this BC.
     intersection *inters; //< Reference to the intersection this lane is incident to.
-    int intersect_in_ref;    //< Reference to this lane's local id in inters.
+    int intersect_in_ref; //< Reference to this lane's local id in inters.
 };
 
 //! Describes the lanes relationship to a parent road.
@@ -39,6 +39,8 @@ struct lane_end
  */
 struct road_membership
 {
+    bool xml_read(xmlTextReaderPtr reader);
+
     road::id parent_road; //< Specifies parent road.
     float interval[2];    //< The interval of the parent road's parametrization this structure describes.
     float lane_position;  //< This lane's offset from the centerline of the road. See line_rep for one

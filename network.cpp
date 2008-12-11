@@ -1,7 +1,7 @@
 #include "network.hpp"
 #include <map>
 
-bool network::load_from_xml(const char * filename)
+bool network::load_from_xml(const char *filename)
 {
     xmlTextReaderPtr reader = xmlReaderForFile(filename, NULL, XML_PARSE_XINCLUDE);
     if(!reader)
