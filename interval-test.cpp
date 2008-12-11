@@ -1,4 +1,4 @@
-#include "intervals.hpp"
+#include "network.hpp"
 
 void insert(intervals<float> & x, float num)
 {
