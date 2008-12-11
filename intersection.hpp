@@ -9,6 +9,8 @@ struct intersection
         typedef int out_id;
         enum {STARVATION=-1, STOP=-1};
 
+        bool xml_read(xmlTextReaderPtr reader);
+
         int id;
         float duration;
         std::vector<in_id> in_states;

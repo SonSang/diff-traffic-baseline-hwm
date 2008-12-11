@@ -1,5 +1,4 @@
 #include "network.hpp"
-#include <map>
 
 bool network::load_from_xml(const char *filename)
 {
@@ -69,9 +68,9 @@ bool network::xml_read(xmlTextReaderPtr reader)
         return false;
     }
 
-    std::map<char*, int> road_refs;
-    std::map<char*, int> lane_refs;
-    std::map<char*, int> intersection_refs;
+    std::map<char*, int, ltstr> road_refs;
+    std::map<char*, int, ltstr> lane_refs;
+    std::map<char*, int, ltstr> intersection_refs;
 
     bool have_roads = false;
     bool have_lanes = false;
@@ -109,16 +108,38 @@ bool network::xml_read(xmlTextReaderPtr reader)
     std::vector<lane>::iterator lane_itr = lanes.begin();
     for(; lane_itr != lanes.end(); ++lane_itr)
     {
-        // fill lane refs
+        // convert end points
+        if(lane_itr->start.end_type == lane_end::INTERSECTION)
+            if(!lane_itr->start.inters.retrieve_ptr(intersections, intersection_refs))
+                return false;
+
+        if(lane_itr->end.end_type == lane_end::INTERSECTION)
+            if(!lane_itr->end.inters.retrieve_ptr(intersections, intersection_refs))
+                return false;
+
+        // convert road_memberships
+        road_intervals & ri = lane_itr->road_memberships;
+        if(!ri.base_data.parent_road.retrieve_ptr(roads, road_refs))
+            return false;
+
+        for(int i = 0; i < static_cast<int>(ri.entries.size()); ++i)
+            if(!ri.entries[i].data.parent_road.retrieve_ptr(roads, road_refs))
+                return false;
     }
 
     std::vector<intersection>::iterator intersection_itr = intersections.begin();
     for(; intersection_itr != intersections.end(); ++intersection_itr)
     {
-        // fill intersection refs
+        for(int i = 0; i < static_cast<int>(intersection_itr->incoming.size()); ++i)
+            if(!intersection_itr->incoming[i].retrieve_ptr(lanes, lane_refs))
+                return false;
+
+        for(int i = 0; i < static_cast<int>(intersection_itr->outgoing.size()); ++i)
+            if(!intersection_itr->outgoing[i].retrieve_ptr(lanes, lane_refs))
+                return false;
     }
 
-    std::map<char*, int>::iterator current = road_refs.begin();
+    std::map<char*, int, ltstr>::iterator current = road_refs.begin();
     for(; current != road_refs.end(); ++current)
         free(current->first);
 

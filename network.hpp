@@ -1,30 +1,49 @@
 #ifndef _NETWORK_HPP_
 #define _NETWORK_HPP_
 
-struct road;
-typedef union {
-    road * rp;
-    char * sp;
-} road_id;
-
-struct lane;
-typedef union {
-    lane * lp;
-    char * sp;
-} lane_id;
-
-struct intersection;
-typedef union {
-    intersection * lp;
-    char * sp;
-} intersection_id;
-
 #include <vector>
 #include <map>
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <ctype.h>
+
+struct ltstr
+{
+    inline bool operator()(char* s1, char* s2) const
+    {
+        return strcmp(s1, s2) < 0;
+    }
+};
+
+template <typename T>
+union id
+{
+    T    *dp;
+    char *sp;
+
+    inline bool retrieve_ptr(std::vector<T> &v, std::map<char*, int, ltstr> &m)
+    {
+        std::map<char*, int, ltstr>::iterator res = m.find(sp);
+        if(res == m.end())
+            return false;
+
+        free(sp);
+        dp = &(v[res->second]);
+        return true;
+    }
+};
+
+struct road;
+struct lane;
+struct intersection;
+
+typedef id<road> road_id;
+typedef id<lane> lane_id;
+typedef id<intersection> intersection_id;
+
 #include "xml-util.hpp"
 #include "intervals.hpp"
 #include "arz.hpp"

@@ -79,7 +79,7 @@ inline bool get_attribute(T & res, xmlTextReaderPtr reader, const char *eltname)
 }
 
 template <typename T>
-inline bool read_sequence(std::vector<T> & seq, std::map<char *, int> & id_map, xmlTextReaderPtr reader, const xmlChar * item_name, const xmlChar * container_name)
+inline bool read_sequence(std::vector<T> & seq, std::map<char *, int, ltstr> & id_map, xmlTextReaderPtr reader, const xmlChar * item_name, const xmlChar * container_name)
 {
     int ret;
     do
@@ -115,7 +115,7 @@ inline bool read_sequence(std::vector<T> & seq, std::map<char *, int> & id_map, 
 }
 
 template <typename T>
-inline bool read_sequence(std::vector<T> & seq, std::map<char *, int> & id_map, xmlTextReaderPtr reader, const char * item_name, const char * container_name)
+inline bool read_sequence(std::vector<T> & seq, std::map<char *, int, ltstr> & id_map, xmlTextReaderPtr reader, const char * item_name, const char * container_name)
 {
     return read_sequence(seq, id_map, reader, BAD_CAST item_name, BAD_CAST container_name);
 }

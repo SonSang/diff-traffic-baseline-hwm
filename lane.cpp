@@ -13,31 +13,72 @@ bool interval_xml_read<adjacency_pair*>::xml_read(adjacency_pair *& item, xmlTex
     return true;
 }
 
-#define read_dead_end tautology
-#define read_int_ref tautology
-#define read_taper tautology
-
-static bool tautology(void *item, xmlTextReaderPtr reader)
+static bool read_dead_end(void *item, xmlTextReaderPtr reader)
 {
+    lane_end *le = reinterpret_cast<lane_end*>(item);
+    le->end_type = lane_end::DEAD_END;
     return true;
 }
 
-static bool read_startend(void *item, xmlTextReaderPtr reader)
+static bool read_int_ref(void *item, xmlTextReaderPtr reader)
+{
+    lane_end *le = reinterpret_cast<lane_end*>(item);
+    le->end_type = lane_end::INTERSECTION;
+
+    return get_attribute(le->inters.sp, reader, "ref");
+}
+
+static bool read_taper(void *item, xmlTextReaderPtr reader)
+{
+    lane_end *le = reinterpret_cast<lane_end*>(item);
+    le->end_type = lane_end::TAPER;
+    return true;
+}
+
+static bool read_start(void *item, xmlTextReaderPtr reader)
 {
     const xmlChar *name = xmlTextReaderConstName(reader);
+
+    lane *l = reinterpret_cast<lane*>(item);
 
     xml_elt read[] =
         {{0,
           BAD_CAST "dead_end",
-          item,
+          &(l->start),
           read_dead_end},
          {0,
           BAD_CAST "intersection_ref",
-          item,
+          &(l->start),
           read_int_ref},
          {0,
           BAD_CAST "taper",
-          item,
+          &(l->start),
+          read_taper}};
+
+    if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, name))
+        return false;
+
+    return (read[0].count + read[1].count + read[2].count) == 1;
+}
+
+static bool read_end(void *item, xmlTextReaderPtr reader)
+{
+    const xmlChar *name = xmlTextReaderConstName(reader);
+
+    lane *l = reinterpret_cast<lane*>(item);
+
+    xml_elt read[] =
+        {{0,
+          BAD_CAST "dead_end",
+          &(l->end),
+          read_dead_end},
+         {0,
+          BAD_CAST "intersection_ref",
+          &(l->end),
+          read_int_ref},
+         {0,
+          BAD_CAST "taper",
+          &(l->end),
           read_taper}};
 
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, name))
@@ -143,11 +184,11 @@ bool lane::xml_read(xmlTextReaderPtr reader)
         {{0,
           BAD_CAST "start",
           this,
-          read_startend},
+          read_start},
          {0,
           BAD_CAST "end",
           this,
-          read_startend},
+          read_end},
          {0,
           BAD_CAST "road_intervals",
           this,
@@ -161,5 +202,5 @@ bool lane::xml_read(xmlTextReaderPtr reader)
     if(!status)
         return false;
 
-    return read[0].count && read[1].count && read[2].count && read[3].count;
+    return read[0].count == 1 && read[1].count == 1 && read[2].count == 1 && read[3].count == 1;
 }
