@@ -1,20 +1,10 @@
 #ifndef _LANE_HPP_
 #define _LANE_HPP_
 
-//! Information about a lane's incoming BC
-struct lane_start
-{
-    typedef enum {TAPER_IN, DEAD_END, INTERSECTION} type; //< Types of starts.
-
-    type start_type;       //< The type of this BC.
-    intersection_id inters;  //< Reference to the intersection this lane is incident to.
-    int intersect_out_ref; //< Reference to this lane's local id in inters.
-};
-
 //! Information about a lane's outgoing BC
 struct lane_end
 {
-    typedef enum {TAPER_OUT, DEAD_END, INTERSECTION} type; //< Types of ends.
+    typedef enum {TAPER, DEAD_END, INTERSECTION} type; //< Types of ends.
 
     type end_type;        //< The type of this BC.
     intersection_id inters; //< Reference to the intersection this lane is incident to.
@@ -70,7 +60,7 @@ struct lane
     adjacency_intervals left;  //< Lane's left neighbors.
     adjacency_intervals right; //< Lane's right neighbors.
 
-    lane_start start; //< 'Source' terminus information.
+    lane_end start; //< 'Source' terminus information.
     lane_end   end;   //< 'Sink' terminus information.
 
     float speedlimit; //< The speedlimit along the lane.
