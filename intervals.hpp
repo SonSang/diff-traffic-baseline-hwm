@@ -138,9 +138,15 @@ struct intervals
                         }
                     }
                     while(!is_closing_element(reader, "base"));
+
+                    have_base = true;
                 }
                 else if(xmlStrEqual(name, BAD_CAST "divider"))
                 {
+                    float div_val;
+                    if(!get_attribute(div_val, reader, "value"))
+                        return false;
+
                     do
                     {
                         ret = xmlTextReaderRead(reader);
@@ -152,7 +158,6 @@ struct intervals
                             const xmlChar *name = xmlTextReaderConstName(reader);
                             if(name && xmlStrEqual(name, eltname))
                             {
-                                float div_val;
                                 T elt;
 
                                 if(!get_attribute(div_val, reader, "value") || !elt.xml_read(reader))
