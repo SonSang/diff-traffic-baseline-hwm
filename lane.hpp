@@ -1,23 +1,13 @@
 #ifndef _LANE_HPP_
 #define _LANE_HPP_
 
-struct lane;
-struct intersection;
-
-#include "arz.hpp"
-#include "road.hpp"
-#include "intersection.hpp"
-#include "intervals.hpp"
-
-#include <vector>
-
 //! Information about a lane's incoming BC
 struct lane_start
 {
     typedef enum {TAPER_IN, DEAD_END, INTERSECTION} type; //< Types of starts.
 
     type start_type;       //< The type of this BC.
-    intersection *inters;  //< Reference to the intersection this lane is incident to.
+    intersection_id inters;  //< Reference to the intersection this lane is incident to.
     int intersect_out_ref; //< Reference to this lane's local id in inters.
 };
 
@@ -27,7 +17,7 @@ struct lane_end
     typedef enum {TAPER_OUT, DEAD_END, INTERSECTION} type; //< Types of ends.
 
     type end_type;        //< The type of this BC.
-    intersection *inters; //< Reference to the intersection this lane is incident to.
+    intersection_id inters; //< Reference to the intersection this lane is incident to.
     int intersect_in_ref; //< Reference to this lane's local id in inters.
 };
 
@@ -41,7 +31,7 @@ struct road_membership
 {
     bool xml_read(xmlTextReaderPtr reader);
 
-    road::id parent_road; //< Specifies parent road.
+    road_id parent_road; //< Specifies parent road.
     float interval[2];    //< The interval of the parent road's parametrization this structure describes.
     float lane_position;  //< This lane's offset from the centerline of the road. See line_rep for one
                           //< interpretation of this.
@@ -54,6 +44,21 @@ struct adjacency_pair;
 #define NO_ADJACENCY 0
 typedef intervals<adjacency_pair*> adjacency_intervals;
 
+//! A structure describing a single lane's adjacency info for one entry.
+struct lane_adjacency
+{
+    lane_id neighbor; //< The incident lane.
+    adjacency_intervals::entry_id interval_entry; //< Reference to interval in one of the
+                                                  //< incident lane's adjacency_intervals.
+};
+
+//! Structure  describing an interval where two lanes are adjacent.
+struct adjacency_pair
+{
+    lane_adjacency left;  //< Reference to left lane's adjacency information.
+    lane_adjacency right; //< Reference to right lane's adjacency information.
+};
+
 //! A single continuous road lane
 /*!
   This structure is the basic computational domain of our network.
@@ -61,8 +66,6 @@ typedef intervals<adjacency_pair*> adjacency_intervals;
 */
 struct lane
 {
-    typedef int id;
-
     bool xml_read(xmlTextReaderPtr reader);
 
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
@@ -82,20 +85,4 @@ struct lane
                          //< ncells*h = length.
     q *data;             //< The simulation data.
 };
-
-//! A structure describing a single lane's adjacency info for one entry.
-struct lane_adjacency
-{
-    lane::id neighbor; //< The incident lane.
-    adjacency_intervals::entry_id interval_entry; //< Reference to interval in one of the
-                                                  //< incident lane's adjacency_intervals.
-};
-
-//! Structure  describing an interval where two lanes are adjacent.
-struct adjacency_pair
-{
-    lane_adjacency left;  //< Reference to left lane's adjacency information.
-    lane_adjacency right; //< Reference to right lane's adjacency information.
-};
-
 #endif

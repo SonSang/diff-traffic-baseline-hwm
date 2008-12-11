@@ -1,5 +1,4 @@
-#include "road.hpp"
-#include <ctype.h>
+#include "network.hpp"
 
 float line_rep::offset_length(float offset) const
 {

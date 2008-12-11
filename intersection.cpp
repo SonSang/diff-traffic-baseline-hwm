@@ -1,4 +1,4 @@
-#include "intersection.hpp"
+#include "network.hpp"
 
 bool intersection::xml_read(xmlTextReaderPtr reader)
 {

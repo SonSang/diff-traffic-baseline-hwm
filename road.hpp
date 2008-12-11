@@ -1,12 +1,6 @@
 #ifndef _ROAD_HPP_
 #define _ROAD_HPP_
 
-#include "xml-util.hpp"
-#include <vector>
-#include <cassert>
-#include <cmath>
-#include <cstdio>
-
 //! A simple 2d point.
 struct point
 {
@@ -103,15 +97,13 @@ struct line_rep
 */
 struct road
 {
-    typedef int id;
-
     ~road();
 
     bool xml_read(xmlTextReaderPtr reader);
 
     char * name;             //!< Road name
     line_rep rep;                  //!< A description of the road's shape
-    std::vector<int> member_lanes; //<! Lanes in the road
+    std::vector<lane_id> member_lanes; //<! Lanes in the road
 };
 
 #endif

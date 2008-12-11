@@ -1,9 +1,6 @@
 #ifndef _INTERSECTION_HPP_
 #define _INTERSECTION_HPP_
 
-#include <vector>
-#include "lane.hpp"
-
 struct intersection
 {
     struct state
@@ -20,8 +17,8 @@ struct intersection
 
     bool xml_read(xmlTextReaderPtr reader);
 
-    std::vector<lane*> incoming;
-    std::vector<lane*> outgoing;
+    std::vector<lane_id> incoming;
+    std::vector<lane_id> outgoing;
 
     int current_state;
     std::vector<state> states;
