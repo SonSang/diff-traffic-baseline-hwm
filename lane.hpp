@@ -44,19 +44,16 @@ struct adjacency_pair;
 #define NO_ADJACENCY 0
 typedef intervals<adjacency_pair*> adjacency_intervals;
 
-//! A structure describing a single lane's adjacency info for one entry.
-struct lane_adjacency
-{
-    lane_id neighbor; //< The incident lane.
-    adjacency_intervals::entry_id interval_entry; //< Reference to interval in one of the
-                                                  //< incident lane's adjacency_intervals.
-};
-
 //! Structure  describing an interval where two lanes are adjacent.
 struct adjacency_pair
 {
-    lane_adjacency left;  //< Reference to left lane's adjacency information.
-    lane_adjacency right; //< Reference to right lane's adjacency information.
+    lane_id left_neighbor; //< The left incident lane.
+    lane_id right_neighbor; //< The right incident lane.
+
+    adjacency_intervals::entry_id left_interval; //< Reference to interval in the
+                                                  //< left lane's adjacency_intervals.
+    adjacency_intervals::entry_id right_interval; //< Reference to interval in the
+                                                  //< right lane's adjacency_intervals.
 };
 
 //! A single continuous road lane

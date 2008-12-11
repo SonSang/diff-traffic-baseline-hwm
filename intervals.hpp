@@ -6,6 +6,12 @@
 #include <cstdio>
 #include "xml-util.hpp"
 
+template<typename T>
+struct interval_xml_read
+{
+    static bool xml_read(T & item, xmlTextReaderPtr reader);
+};
+
 //! Associates data with intervals that cover the range [0, 1].
 /*!
   There are n (0+) 'dividers' that split up the range into n + 1 data items:
@@ -19,6 +25,7 @@
 template <class T>
 struct intervals
 {
+    typedef interval_xml_read<T> xml_reader;
     typedef int entry_id;
 
     //! Stores additional dividers + associated data.
@@ -105,7 +112,7 @@ struct intervals
         return static_cast<const T &>((*this)[x]);
     }
 
-    inline bool interval_xml_read(xmlTextReaderPtr reader, const xmlChar *eltname)
+    inline bool xml_read(xmlTextReaderPtr reader, const xmlChar *eltname)
     {
         bool have_base = false;
 
@@ -133,7 +140,7 @@ struct intervals
                         if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
                         {
                             const xmlChar *name = xmlTextReaderConstName(reader);
-                            if(!name || !xmlStrEqual(name, eltname) || !base_data.xml_read(reader))
+                            if(!name || !xmlStrEqual(name, eltname) || !xml_reader::xml_read(base_data, reader))
                                 return false;
                         }
                     }
@@ -160,7 +167,7 @@ struct intervals
                             {
                                 T elt;
 
-                                if(!get_attribute(div_val, reader, "value") || !elt.xml_read(reader))
+                                if(!xml_reader::xml_read(elt, reader))
                                     return false;
 
                                 insert(div_val, elt);
