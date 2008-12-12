@@ -4,10 +4,15 @@ static bool read_lane_ref(void *item, xmlTextReaderPtr reader)
 {
     std::vector<lane_id> *lanev = reinterpret_cast<std::vector<lane_id>*>(item);
 
-    char *ref;
+    char *ref = 0;
     int local_id;
-    if(!get_attribute(ref, reader, "ref") || !get_attribute(local_id, reader, "local_id"))
-        return false;
+
+    boost::fusion::vector<list_matcher<char*>,
+        list_matcher<int> > vl(lm("ref", &ref),
+                               lm("local_id", &local_id));
+
+    if(!read_attributes(vl, reader))
+       return false;
 
     if(local_id >= static_cast<int>(lanev->size()))
         lanev->resize(local_id+1);
@@ -112,8 +117,12 @@ static bool read_lane_pair(void *item, xmlTextReaderPtr reader)
     intersection::state *s = reinterpret_cast<intersection::state*>(item);
 
     int in, out;
-    if(!get_attribute(in, reader, "in_id") || !get_attribute(out, reader, "out_id"))
-        return false;
+    boost::fusion::vector<list_matcher<int>,
+        list_matcher<int> > vl(lm("in_id",  &in),
+                               lm("out_id", &out));
+
+    if(!read_attributes(vl, reader))
+       return false;
 
     s->in_states[in] = out;
     s->out_states[out] = in;
@@ -129,8 +138,14 @@ bool intersection::state::xml_read(xmlTextReaderPtr reader)
           this,
           read_lane_pair}};
 
-    if(!get_attribute(id, reader, "id") || !get_attribute(duration, reader, "duration") ||
-       !read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "state"))
+    boost::fusion::vector<list_matcher<int>,
+        list_matcher<float> > vl(lm("id",       &id),
+                                 lm("duration", &duration));
+
+    if(!read_attributes(vl, reader))
+       return false;
+
+    if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "state"))
         return false;
 
     return true;

@@ -1,6 +1,9 @@
 #ifndef _XML_UTIL_HPP_
 #define _XML_UTIL_HPP_
 
+#include <boost/fusion/container/vector.hpp>
+#include <boost/fusion/include/vector.hpp>
+#include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <libxml/xmlreader.h>
 #include <libxml/xinclude.h>
 #include <cstring>
@@ -54,7 +57,10 @@ inline bool get_attribute(T & res, xmlTextReaderPtr reader, const xmlChar *eltna
 {
     xmlChar *att = xmlTextReaderGetAttribute(reader, eltname);
     if(!att)
+    {
+        printf("no attribute %s\n", (const char*)eltname);
         return false;
+    }
     str_convert<T>(res, att);
     free(att);
 
@@ -100,8 +106,13 @@ inline bool read_sequence(std::vector<T> & seq, std::map<char *, int, ltstr> & i
                 char *id = 0;
                 if(!get_attribute(id, reader, "id"))
                     return false;
+                printf("Trying to add %s...", id);
                 if(id_map.find(id) != id_map.end())
+                {
+                    printf("nope\n");
                     return false;
+                }
+                printf("yup\n");
                 id_map[id] = seq.size()-1;
                 seq[seq.size()-1].xml_read(reader);
             }
@@ -159,6 +170,129 @@ inline bool read_elements(xmlTextReaderPtr reader, int nelt, xml_elt *elt, const
         }
     }
     while(!is_closing_element(reader, endelt));
+
+    return true;
+}
+
+template <typename T>
+struct converter;
+
+template <>
+struct converter<float>
+{
+    static inline bool from_string(float *f, const char *vstr)
+    {
+        return sscanf(vstr, "%f", f) == 1;
+    }
+};
+
+template <>
+struct converter<int>
+{
+    static inline bool from_string(int *f, const char *vstr)
+    {
+        return sscanf(vstr, "%d", f) == 1;
+    }
+};
+
+template <>
+struct converter<char*>
+{
+    static inline bool from_string(char **f, const char *vstr)
+    {
+        return (*f = strdup(vstr));
+    }
+};
+
+template <typename T>
+struct list_matcher
+{
+    list_matcher(const char *n, T *v)
+        : name(n), count(0), val(v)
+    {}
+
+    const char *name;
+
+    int count;
+    T * val;
+
+    inline bool match(const char *nstr, const char *vstr)
+    {
+        if(!count && strcmp(nstr, name) == 0 && converter<T>::from_string(val, vstr))
+        {
+            ++count;
+            return true;
+        }
+        return false;
+    }
+};
+
+template <typename T, int N>
+struct walker
+{
+    static inline bool walk(T &v, const char *nstr, const char *vstr)
+    {
+        if(boost::fusion::at_c<N>(v).match(nstr, vstr))
+            return true;
+        else
+            return walker<T, N-1>::walk(v, nstr, vstr);
+    }
+
+    static inline bool is_full(T &v)
+    {
+        if(boost::fusion::at_c<N>(v).count == 0)
+            return false;
+
+        return walker<T, N-1>::is_full(v);
+    }
+};
+
+template <typename T>
+struct walker<T, 0>
+{
+    static inline bool walk(T & v, const char *nstr, const char *vstr)
+    {
+        return boost::fusion::at_c<0>(v).match(nstr, vstr);
+    }
+
+    static inline bool is_full(T & v)
+    {
+        return boost::fusion::at_c<0>(v).count > 0;
+    }
+};
+
+template <typename T>
+bool walk(T &v, const char *nstr, const char *vstr)
+{
+    return walker<T, boost::fusion::result_of::size<T>::value-1>::walk(v, nstr, vstr);
+}
+
+template <typename T>
+bool is_full(T &v)
+{
+    return walker<T, boost::fusion::result_of::size<T>::value-1>::is_full(v);
+}
+
+template <typename T>
+list_matcher<T> lm(const char *name, T *val)
+{
+    return list_matcher<T>(name, val);
+}
+
+template <typename T>
+inline bool read_attributes(T & v, xmlTextReaderPtr reader)
+{
+    if(xmlTextReaderMoveToFirstAttribute(reader) != 1)
+        return false;
+
+    while(!is_full(v))
+    {
+        walk(v, (const char*)xmlTextReaderConstName(reader), (const char*)xmlTextReaderConstValue(reader));
+        if(xmlTextReaderMoveToNextAttribute(reader) != 1)
+            break;
+    }
+
+    xmlTextReaderMoveToElement(reader);
 
     return true;
 }

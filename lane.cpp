@@ -25,7 +25,9 @@ static bool read_int_ref(void *item, xmlTextReaderPtr reader)
     lane_end *le = reinterpret_cast<lane_end*>(item);
     le->end_type = lane_end::INTERSECTION;
 
-    return get_attribute(le->inters.sp, reader, "ref");
+    boost::fusion::vector<list_matcher<char*> > vl(lm("ref", &(le->inters.sp)));
+
+    return read_attributes(vl, reader);
 }
 
 static bool read_taper(void *item, xmlTextReaderPtr reader)
@@ -169,15 +171,22 @@ static bool read_adjacency(void *item, xmlTextReaderPtr reader)
 
 bool road_membership::xml_read(xmlTextReaderPtr reader)
 {
-    return get_attribute(parent_road.sp, reader, "parent_road_ref") &&
-        get_attribute(interval[0], reader, "interval_start") &&
-        get_attribute(interval[1], reader, "interval_end") &&
-        get_attribute(lane_position, reader, "lane_position");
+    boost::fusion::vector<list_matcher<char*>,
+        list_matcher<float>,
+        list_matcher<float>,
+        list_matcher<float> > vl(lm("parent_road_ref", &(parent_road.sp)),
+                                 lm("interval_start", interval),
+                                 lm("interval_end", interval+1),
+                                 lm("lane_positoin", &lane_position));
+
+    return read_attributes(vl, reader);
 }
 
 bool lane::xml_read(xmlTextReaderPtr reader)
 {
-    if(!get_attribute(speedlimit, reader, "speedlimit"))
+    boost::fusion::vector<list_matcher<float> > vl(lm("speedlimit", &speedlimit));
+
+    if(!read_attributes(vl, reader))
         return false;
 
     xml_elt read[] =

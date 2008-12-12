@@ -205,7 +205,9 @@ road::~road()
 
 bool road::xml_read(xmlTextReaderPtr reader)
 {
-    if(!get_attribute(name, reader, "name"))
+    boost::fusion::vector<list_matcher<char*> > vl(lm("name", &name));
+
+    if(!read_attributes(vl, reader))
         return false;
 
     do

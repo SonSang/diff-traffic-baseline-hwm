@@ -49,22 +49,18 @@ bool network::load_from_xml(const char *filename)
 
 bool network::xml_read(xmlTextReaderPtr reader)
 {
-    float version;
-    if(get_attribute(version, reader, "version") == -1)
-    {
-        fprintf(stderr, "Couldn't get version attribute in network element\n");
-        return false;
-    }
+    float version = 0.0f;
+
+    boost::fusion::vector<list_matcher<float>,
+        list_matcher<char*> > vl(lm("version", &version),
+                                 lm("name", &name));
+
+    if(!read_attributes(vl, reader))
+       return false;
 
     if(version != 1.0f)
     {
         fprintf(stderr, "Network version is %f, expected 1.0f!\n", version);
-        return false;
-    }
-
-    if(get_attribute(name, reader, "name") == -1)
-    {
-        fprintf(stderr, "Couldn't get network name\n");
         return false;
     }
 

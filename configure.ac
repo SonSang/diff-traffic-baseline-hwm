@@ -23,6 +23,8 @@ AC_SUBST([TS_LDFLAGS])
 AC_LANG([C++])
 
 # Checks for libraries.
+AX_BOOST_BASE([1.35.0])
+
 AC_ARG_ENABLE([visual],
   [AS_HELP_STRING([--enable-visual],
     [build graphical viewer components @<:@default=check@:>@])],
