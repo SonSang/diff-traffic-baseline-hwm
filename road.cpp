@@ -5,7 +5,7 @@ float line_rep::offset_length(float offset) const
     return clengths.back() + offset*cmitres.back();
 }
 
-void line_rep::locate(point *pt, float t, float offset) const
+int line_rep::locate(point *pt, float t, float offset) const
 {
     int seg = find_segment(t, offset);
 
@@ -13,6 +13,17 @@ void line_rep::locate(point *pt, float t, float offset) const
 
     pt->x = t * normals[seg].x - offset*normals[seg].y + points[seg].x;
     pt->y = t * normals[seg].y + offset*normals[seg].x + points[seg].y;
+    return seg;
+}
+
+int line_rep::locate_vec(point *pt, point *vec, float t, float offset) const
+{
+    int seg = locate(pt, t, offset);
+
+    vec->x = normals[seg].x;
+    vec->y = normals[seg].y;
+
+    return seg;
 }
 
 void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, float range[2], float center_offs, float offsets[2]) const

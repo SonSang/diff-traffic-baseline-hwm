@@ -40,7 +40,9 @@ struct line_rep
                     The convention that the parameterization increases with x,
                     and the offset increaseses with y
     */
-    void locate(point *pt, float x, float offset) const;
+    int locate(point *pt, float x, float offset) const;
+
+    int locate_vec(point *pt, point *vec, float x, float offset) const;
 
     //! Extract a strip of quads.
     /*!
