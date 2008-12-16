@@ -53,7 +53,7 @@ struct line_rep
     */
     void lane_mesh(std::vector<point> & pts, std::vector<quad> & faces, float range[2], float center_offset, float offsets[2]) const;
 
-    void draw(float start, float stop, float offset) const;
+    void draw() const;
 
     //! Find the segment containing x.
     /*!

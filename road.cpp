@@ -64,17 +64,6 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, 
         faces[i].v[2] = 2*(i+1)+1;
         faces[i].v[3] = 2*(i+1);
     }
-
-    // //    printf("%zu\n", vrts.size());
-    // for(int i = 0; i < static_cast<int>(vrts.size()); ++i)
-    //     printf("v %f %f 0.0\n", vrts[i].x, vrts[i].y);
-    // //    printf("%zu\n", faces.size());
-    // for(int i = 0; i < static_cast<int>(faces.size()); ++i)
-    //     printf("f %d %d %d %d\n", faces[i].v[0]+1, faces[i].v[1]+1, faces[i].v[2]+1, faces[i].v[3]+1);
-}
-
-void line_rep::draw(float start, float stop, float offset) const
-{
 }
 
 int line_rep::find_segment(float x, float offset) const

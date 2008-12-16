@@ -23,6 +23,14 @@ struct road_mesh
     }
 };
 
+void line_rep::draw() const
+{
+    glBegin(GL_LINE_STRIP);
+    foreach(const point & p, points)
+        glVertex2fv(&(p.x));
+    glEnd();
+}
+
 std::vector<road_mesh> rm;
 
 class fltkview : public Fl_Gl_Window
