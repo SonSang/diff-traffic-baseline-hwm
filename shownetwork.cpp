@@ -110,6 +110,20 @@ public:
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
+                    float fx =   2.0f*x/(w()-1) - 1.0f;
+                    float fy = -(2.0f*y/(h()-1) - 1.0f);
+                    float scale = std::pow(2.0f, zoom-1.0f);
+
+                    double update[3] = {
+                        (fx-lastmouse[0])*scale,
+                        (fy-lastmouse[1])*scale,
+                        0.0f
+                    };
+
+                    nav.translate(update);
+
+                    lastmouse[0] = fx;
+                    lastmouse[1] = fy;
                 }
                 else if(Fl::event_button() == FL_MIDDLE_MOUSE)
                 {
