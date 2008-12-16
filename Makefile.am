@@ -27,7 +27,16 @@ showsim_CXXFLAGS = $(CAIRO_CFLAGS) $(FLTK_CXXFLAGS) $(AM_CXXFLAGS)
 showsim_LDFLAGS = $(FLTK_LDFLAGS) $(CAIRO_LIBS) $(AM_LDFLAGS)
 
 shownetwork_SOURCES = \
-	shownetwork.cpp
+	shownetwork.cpp \
+	network.cpp \
+	road.cpp \
+	lane.cpp \
+	intersection.cpp \
+	network.hpp \
+	road.hpp \
+	lane.hpp \
+	intersection.hpp \
+	intervals.hpp
 
 shownetwork_CXXFLAGS = $(FLTK_GL_CXXFLAGS) $(AM_CXXFLAGS)
 shownetwork_LDFLAGS = $(FLTK_GL_LDFLAGS) $(AM_LDFLAGS)

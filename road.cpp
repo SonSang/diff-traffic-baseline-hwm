@@ -15,11 +15,8 @@ void line_rep::locate(point *pt, float t, float offset) const
     pt->y = t * normals[seg].y + offset*normals[seg].x + points[seg].y;
 }
 
-void line_rep::lane_mesh(float range[2], float center_offs, float offsets[2]) const
+void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, float range[2], float center_offs, float offsets[2]) const
 {
-    std::vector<point> vrts;
-    std::vector<quad>  faces;
-
     int start = find_segment(range[0], center_offs);
     int end   = find_segment(range[1], center_offs);
 
@@ -57,12 +54,12 @@ void line_rep::lane_mesh(float range[2], float center_offs, float offsets[2]) co
         faces[i].v[3] = 2*(i+1);
     }
 
-    //    printf("%zu\n", vrts.size());
-    for(int i = 0; i < static_cast<int>(vrts.size()); ++i)
-        printf("v %f %f 0.0\n", vrts[i].x, vrts[i].y);
-    //    printf("%zu\n", faces.size());
-    for(int i = 0; i < static_cast<int>(faces.size()); ++i)
-        printf("f %d %d %d %d\n", faces[i].v[0]+1, faces[i].v[1]+1, faces[i].v[2]+1, faces[i].v[3]+1);
+    // //    printf("%zu\n", vrts.size());
+    // for(int i = 0; i < static_cast<int>(vrts.size()); ++i)
+    //     printf("v %f %f 0.0\n", vrts[i].x, vrts[i].y);
+    // //    printf("%zu\n", faces.size());
+    // for(int i = 0; i < static_cast<int>(faces.size()); ++i)
+    //     printf("f %d %d %d %d\n", faces[i].v[0]+1, faces[i].v[1]+1, faces[i].v[2]+1, faces[i].v[3]+1);
 }
 
 void line_rep::draw(float start, float stop, float offset) const
