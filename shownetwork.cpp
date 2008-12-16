@@ -27,7 +27,7 @@ struct road_mesh
     }
 };
 
-road_mesh rm;
+std::vector<road_mesh> rm;
 
 class fltkview : public Fl_Gl_Window
 {
@@ -63,7 +63,8 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        rm.draw();
+        for(size_t i = 0; i < rm.size(); ++i)
+            rm[i].draw();
 
         glFlush();
         glFinish();
@@ -172,16 +173,21 @@ public:
 int main(int argc, char * argv[])
 {
     line_rep lr;
+
+    lr.points.push_back(point(-0.0f, -1.0f));
     lr.points.push_back(point(0.0f, 0.0f));
     lr.points.push_back(point(1.0f, 0.5f));
     lr.points.push_back(point(2.0f, -0.5f));
     lr.points.push_back(point(3.0f, 0.0f));
-
-    float rng[2] = {0.5f, 0.75f};
-    float offsets[2] = {0.05f, 0.25f};
-
     lr.calc_rep();
-    lr.lane_mesh(rm.vrts, rm.faces, rng, 0.15f, offsets);
+
+    float rng[2] = {0.0f, 1.0f};
+    float offsets[2] = {0.05f, 0.25f};
+    rm.resize(2);
+    lr.lane_mesh(rm[0].vrts, rm[0].faces, rng, 0.15f, offsets);
+    offsets[0] = 0.25f;
+    offsets[1] = 0.45f;
+    lr.lane_mesh(rm[1].vrts, rm[1].faces, rng, 0.15f, offsets);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
 
