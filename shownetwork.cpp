@@ -31,6 +31,8 @@ void line_rep::draw() const
     glEnd();
 }
 
+line_rep lr;
+float t;
 std::vector<road_mesh> rm;
 
 class fltkview : public Fl_Gl_Window
@@ -69,6 +71,24 @@ public:
 
         foreach(const road_mesh & i, rm)
             i.draw();
+
+        glColor3f(1.0f, 0.0f, 0.0f);
+        lr.draw();
+
+        glColor3f(1.0f, 1.0f, 1.0f);
+        point p, n;
+        lr.locate_vec(&p, &n, t, 0.28);
+        glPushMatrix();
+        glTranslatef(p.x, p.y, 0.0f);
+        float mat[16] =
+            { n.x,   n.y, 0.0f, 0.0f,
+              n.y,  -n.x, 0.0f, 0.0f,
+             0.0f,  0.0f, 1.0f, 0.0f,
+             0.0f,  0.0f, 0.0f, 1.0f};
+        glMultMatrixf(mat);
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        glutWireTeapot(0.2f);
+        glPopMatrix();
 
         glFlush();
         glFinish();
@@ -152,6 +172,16 @@ public:
             {
                 switch(Fl::event_key())
                 {
+                case 'z':
+                    t-= 0.01;
+                    if(t < 0.0f)
+                        t = 0.0;
+                    break;
+                case 'a':
+                    t+= 0.01;
+                    if(t > 1.0f)
+                        t = 1.0;
+                    break;
                 default:
                     return Fl_Gl_Window::handle(event);
                 }
@@ -176,9 +206,7 @@ public:
 
 int main(int argc, char * argv[])
 {
-    line_rep lr;
-
-    lr.points.push_back(point(-0.0f, -1.0f));
+    lr.points.push_back(point(0.0f, -1.0f));
     lr.points.push_back(point(0.0f, 0.0f));
     lr.points.push_back(point(1.0f, 0.5f));
     lr.points.push_back(point(2.0f, -0.5f));
@@ -186,12 +214,25 @@ int main(int argc, char * argv[])
     lr.calc_rep();
 
     float rng[2] = {0.0f, 1.0f};
-    float offsets[2] = {0.05f, 0.25f};
-    rm.resize(2);
-    lr.lane_mesh(rm[0].vrts, rm[0].faces, rng, 0.15f, offsets);
+    float offsets[2];
+    t = 0.0f;
+    rm.resize(4);
+
+    offsets[0] = -0.25f;
+    offsets[1] = -0.05f;
+    lr.lane_mesh(rm[0].vrts, rm[0].faces, rng, 0.0f, offsets);
+
+    offsets[0] = -0.50f;
+    offsets[1] = -0.30f;
+    lr.lane_mesh(rm[1].vrts, rm[1].faces, rng, 0.0f, offsets);
+
     offsets[0] = 0.25f;
-    offsets[1] = 0.45f;
-    lr.lane_mesh(rm[1].vrts, rm[1].faces, rng, 0.15f, offsets);
+    offsets[1] = 0.05f;
+    lr.lane_mesh(rm[2].vrts, rm[2].faces, rng, 0.0f, offsets);
+
+    offsets[0] = 0.50f;
+    offsets[1] = 0.30f;
+    lr.lane_mesh(rm[3].vrts, rm[3].faces, rng, 0.0f, offsets);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
 
