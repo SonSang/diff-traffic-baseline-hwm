@@ -9,6 +9,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctype.h>
+#include "boost/foreach.hpp"
+
+#define foreach BOOST_FOREACH
 
 struct ltstr
 {

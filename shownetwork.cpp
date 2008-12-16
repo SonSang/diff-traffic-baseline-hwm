@@ -16,13 +16,9 @@ struct road_mesh
     void draw() const
     {
         glBegin(GL_QUADS);
-        for(int i = 0; i < static_cast<int>(faces.size()); ++i)
-        {
-            glVertex2fv(&(vrts[faces[i].v[0]].x));
-            glVertex2fv(&(vrts[faces[i].v[1]].x));
-            glVertex2fv(&(vrts[faces[i].v[2]].x));
-            glVertex2fv(&(vrts[faces[i].v[3]].x));
-        }
+        foreach(const quad & q, faces)
+            for(int i = 0; i < 4; ++i)
+                glVertex2fv(&(vrts[q.v[i]].x));
         glEnd();
     }
 };
@@ -63,8 +59,8 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        for(size_t i = 0; i < rm.size(); ++i)
-            rm[i].draw();
+        foreach(const road_mesh & i, rm)
+            i.draw();
 
         glFlush();
         glFinish();
