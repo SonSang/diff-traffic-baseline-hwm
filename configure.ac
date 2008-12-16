@@ -43,8 +43,12 @@ AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_cairo" =
 	    [visual_ok=yes
 	     FLTK_CXXFLAGS=`fltk-config --cxxflags`
 	     FLTK_LDFLAGS=`fltk-config --ldflags`
+	     FLTK_GL_CXXFLAGS=`fltk-config --cxxflags --use-gl`
+	     FLTK_GL_LDFLAGS=`fltk-config --ldflags --use-gl`
 	     AC_SUBST([FLTK_CXXFLAGS])
 	     AC_SUBST([FLTK_LDFLAGS])
+	     AC_SUBST([FLTK_GL_CXXFLAGS])
+	     AC_SUBST([FLTK_GL_LDFLAGS])
 	     AC_SUBST([CAIRO_CFLAGS])
 	     AC_SUBST([CAIRO_LDFLAGS])],
       [visual_ok=no])

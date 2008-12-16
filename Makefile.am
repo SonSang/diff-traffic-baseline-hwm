@@ -5,7 +5,7 @@ AM_LDFLAGS = $(LIBXML2_LIBS)
 bin_PROGRAMS = simtest lane-test interval-test xml-test
 
 if DO_VISUAL
-bin_PROGRAMS += showtest showsim
+bin_PROGRAMS += showtest showsim shownetwork
 
 showtest_SOURCES = \
 	showlane.cpp \
@@ -25,6 +25,12 @@ showsim_SOURCES = \
 
 showsim_CXXFLAGS = $(CAIRO_CFLAGS) $(FLTK_CXXFLAGS) $(AM_CXXFLAGS)
 showsim_LDFLAGS = $(FLTK_LDFLAGS) $(CAIRO_LIBS) $(AM_LDFLAGS)
+
+shownetwork_SOURCES = \
+	shownetwork.cpp
+
+shownetwork_CXXFLAGS = $(FLTK_GL_CXXFLAGS) $(AM_CXXFLAGS)
+shownetwork_LDFLAGS = $(FLTK_GL_LDFLAGS) $(AM_LDFLAGS)
 endif
 
 xml_test_SOURCES = \

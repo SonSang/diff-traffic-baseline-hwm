@@ -18,6 +18,7 @@ missing
 showtest
 simtest
 showsim
+shownetwork
 lane-test
 interval-test
 xml-test
