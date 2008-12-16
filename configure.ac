@@ -31,9 +31,6 @@ AC_ARG_ENABLE([visual],
   [enable_visual=$enableval],
   [enable_visual=check])
 
-FLTK_CXXFLAGS=
-FLTK_LDFLAGS=
-
 AS_IF([test x"$enable_visual" != xno],
 	    [AC_CHECK_PROG(have_fltk, fltk-config, [yes], [no])
 	     PKG_CHECK_MODULES([CAIRO], [cairo > 1.6],
