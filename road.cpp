@@ -43,11 +43,11 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, 
     for(int c = start+1; c <= end; ++c)
     {
         float mitre = cmitres[c]-cmitres[c-1];
-        vrts.push_back(point(offsets[0]*(mitre*normals[c].x - normals[c].y) + points[c].x,
-                             offsets[0]*(mitre*normals[c].y + normals[c].x) + points[c].y));
+        vrts.push_back(point(offsets[0]*(mitre*normals[c-1].x - normals[c-1].y) + points[c].x,
+                             offsets[0]*(mitre*normals[c-1].y + normals[c-1].x) + points[c].y));
 
-        vrts.push_back(point(offsets[1]*(mitre*normals[c].x - normals[c].y) + points[c].x,
-                             offsets[1]*(mitre*normals[c].y + normals[c].x) + points[c].y));
+        vrts.push_back(point(offsets[1]*(mitre*normals[c-1].x - normals[c-1].y) + points[c].x,
+                             offsets[1]*(mitre*normals[c-1].y + normals[c-1].x) + points[c].y));
     }
 
     vrts.push_back(point(end_t*normals[end].x - offsets[0]*normals[end].y + points[end].x,
@@ -115,7 +115,7 @@ void line_rep::calc_rep()
     for(int i = 0; i < static_cast<int>(cmitres.size()-2); ++i)
     {
         float dot = normals[i].x*normals[i+1].x + normals[i].y*normals[i+1].y;
-        float orient =  normals[i].x*normals[i+1].y - normals[i].y*normals[i+1].x;
+        float orient =  normals[i].y*normals[i+1].x - normals[i].x*normals[i+1].y;
 
         float mitre = orient*std::sqrt((1.0f - dot)/(1.0f + dot));
 
