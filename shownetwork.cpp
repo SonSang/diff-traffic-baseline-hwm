@@ -33,6 +33,7 @@ void line_rep::draw() const
 
 line_rep lr;
 float t;
+float o;
 std::vector<road_mesh> rm;
 
 class fltkview : public Fl_Gl_Window
@@ -77,7 +78,7 @@ public:
 
         glColor3f(1.0f, 1.0f, 1.0f);
         point p, n;
-        lr.locate_vec(&p, &n, t, 0.28);
+        lr.locate_vec(&p, &n, t, o);
         glPushMatrix();
         glTranslatef(p.x, p.y, 0.0f);
         float mat[16] =
@@ -182,6 +183,12 @@ public:
                     if(t > 1.0f)
                         t = 1.0;
                     break;
+                case 's':
+                    o-= 0.01;
+                    break;
+                case 'x':
+                    o+= 0.01;
+                    break;
                 default:
                     return Fl_Gl_Window::handle(event);
                 }
@@ -216,6 +223,7 @@ int main(int argc, char * argv[])
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];
     t = 0.0f;
+    o = 0.0f;
     rm.resize(4);
 
     offsets[0] = -0.25f;
