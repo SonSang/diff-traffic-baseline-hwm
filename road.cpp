@@ -9,10 +9,10 @@ int line_rep::locate(point *pt, float t, float offset) const
 {
     int seg = find_segment(t, offset);
 
-    t = t*(clengths.back() + 2*offset*cmitres.back()) - (clengths[seg] + 2*offset*cmitres[seg]);
+    t = t*(clengths.back() + 2*offset*cmitres.back()) - (clengths[seg] + offset*(cmitres[seg] + cmitres[seg-1]));
 
-    pt->x = t * normals[seg].x - offset*normals[seg].y + points[seg].x;
-    pt->y = t * normals[seg].y + offset*normals[seg].x + points[seg].y;
+    pt->x = (t - offset*(cmitres[seg]-cmitres[seg-1])) * normals[seg].x - offset*normals[seg].y + points[seg].x;
+    pt->y = (t - offset*(cmitres[seg]-cmitres[seg-1])) * normals[seg].y + offset*normals[seg].x + points[seg].y;
     return seg;
 }
 
@@ -31,8 +31,8 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, 
     int start = find_segment(range[0], center_offs);
     int end   = find_segment(range[1], center_offs);
 
-    float start_t = range[0]*(clengths.back() + center_offs*cmitres.back()) - (clengths[start] + center_offs*cmitres[start]);
-    float end_t   = range[1]*(clengths.back() + center_offs*cmitres.back()) - (clengths[end]   + center_offs*cmitres[end]);
+    float start_t = range[0]*(clengths.back() + 2*center_offs*cmitres.back()) - (clengths[start] + 2*center_offs*cmitres[start]);
+    float end_t   = range[1]*(clengths.back() + 2*center_offs*cmitres.back()) - (clengths[end]   + 2*center_offs*cmitres[end]);
 
     vrts.push_back(point(start_t*normals[start].x - offsets[0]*normals[start].y + points[start].x,
                          start_t*normals[start].y + offsets[0]*normals[start].x + points[start].y));
