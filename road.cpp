@@ -192,6 +192,8 @@ bool line_rep::xml_read(xmlTextReaderPtr reader)
     }
     while(!is_closing_element(reader, "line_rep"));
 
+    calc_rep();
+
     return true;
 }
 
