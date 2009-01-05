@@ -51,7 +51,7 @@ struct line_rep
       \param offsets A pair of offsets defining the extents of the sweep in 'y'.
       This function isn't air-tight and can generate some bogus meshes, but it's a start
     */
-    void lane_mesh(std::vector<point> & pts, std::vector<quad> & faces, float range[2], float center_offset, float offsets[2]) const;
+    void lane_mesh(std::vector<point> & pts, std::vector<quad> & faces, const float range[2], float center_offset, const float offsets[2]) const;
 
     void draw() const;
 

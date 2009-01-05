@@ -26,7 +26,7 @@ int line_rep::locate_vec(point *pt, point *vec, float t, float offset) const
     return seg;
 }
 
-void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, float range[2], float center_offs, float offsets[2]) const
+void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, const float range[2], float center_offs, const float offsets[2]) const
 {
     int start = find_segment(range[0], center_offs);
     int end   = find_segment(range[1], center_offs);
