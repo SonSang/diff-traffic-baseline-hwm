@@ -234,12 +234,22 @@ int main(int argc, char * argv[])
 
     foreach(const lane &la, n.lanes)
     {
-        const road_membership &rom = la.road_memberships.base_data;
-        float offsets[2] = {rom.lane_position-LANE_WIDTH*0.5,
-                            rom.lane_position+LANE_WIDTH*0.5};
+        const road_membership *rom = &(la.road_memberships.base_data);
+        int p = -1;
+        while(1)
+        {
+            float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
+                                rom->lane_position+LANE_WIDTH*0.5};
 
-        rm.push_back(road_mesh());
-        rom.parent_road.dp->rep.lane_mesh(rm.back().vrts, rm.back().faces, rom.interval, rom.lane_position, offsets);
+            rm.push_back(road_mesh());
+            rom->parent_road.dp->rep.lane_mesh(rm.back().vrts, rm.back().faces, rom->interval, rom->lane_position, offsets);
+
+            ++p;
+            if(p >= static_cast<int>(la.road_memberships.entries.size()))
+                break;
+            rom = &(la.road_memberships.entries[p].data);
+        }
+
     }
 
     fltkview mv(0, 0, 500, 500, "fltk View");
