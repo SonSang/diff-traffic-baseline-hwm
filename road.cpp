@@ -199,7 +199,10 @@ bool line_rep::xml_read(xmlTextReaderPtr reader)
 
 road::road(const road &r)
 {
-    name = strdup(r.name);
+    if(r.name)
+        name = strdup(r.name);
+    else
+        name = 0;
     rep = r.rep;
 }
 

@@ -99,7 +99,7 @@ struct line_rep
 */
 struct road
 {
-    road() {}
+    road() : name(0) {}
     road(const road &r);
 
     ~road();
