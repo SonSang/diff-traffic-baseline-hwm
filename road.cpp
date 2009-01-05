@@ -223,8 +223,8 @@ bool road::xml_read(xmlTextReaderPtr reader)
 
         if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT)
         {
-            const xmlChar *name = xmlTextReaderConstName(reader);
-            if(!name || !xmlStrEqual(name, BAD_CAST "line_rep"))
+            const xmlChar *na = xmlTextReaderConstName(reader);
+            if(!na || !xmlStrEqual(na, BAD_CAST "line_rep"))
                 return false;
 
             rep.xml_read(reader);
