@@ -177,7 +177,7 @@ bool road_membership::xml_read(xmlTextReaderPtr reader)
         list_matcher<float> > vl(lm("parent_road_ref", &(parent_road.sp)),
                                  lm("interval_start", interval),
                                  lm("interval_end", interval+1),
-                                 lm("lane_positoin", &lane_position));
+                                 lm("lane_position", &lane_position));
 
     return read_attributes(vl, reader);
 }
