@@ -99,6 +99,9 @@ struct line_rep
 */
 struct road
 {
+    road() {}
+    road(const road &r);
+
     ~road();
 
     bool xml_read(xmlTextReaderPtr reader);

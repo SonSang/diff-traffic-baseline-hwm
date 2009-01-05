@@ -197,6 +197,12 @@ bool line_rep::xml_read(xmlTextReaderPtr reader)
     return true;
 }
 
+road::road(const road &r)
+{
+    name = strdup(r.name);
+    rep = r.rep;
+}
+
 road::~road()
 {
     free(name);
