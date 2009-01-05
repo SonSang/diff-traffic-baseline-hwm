@@ -107,10 +107,15 @@ public:
                 {
                     float fx =   2.0f*x/(w()-1) - 1.0f;
                     float fy = -(2.0f*y/(h()-1) - 1.0f);
-                    nav.get_click(fx, fy, 1.0, true);
+                    nav.get_click(fx, fy);
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
+                    float fx =   2.0f*x/(w()-1) - 1.0f;
+                    float fy = -(2.0f*y/(h()-1) - 1.0f);
+
+                    lastmouse[0] = fx;
+                    lastmouse[1] = fy;
                 }
                 else if(Fl::event_button() == FL_MIDDLE_MOUSE)
                 {
