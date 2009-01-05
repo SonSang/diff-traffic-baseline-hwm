@@ -31,7 +31,6 @@ void line_rep::draw() const
     glEnd();
 }
 
-line_rep lr;
 float t;
 float o;
 std::vector<road_mesh> rm;
@@ -74,22 +73,22 @@ public:
             i.draw();
 
         glColor3f(1.0f, 0.0f, 0.0f);
-        lr.draw();
+        //lr.draw();
 
         glColor3f(1.0f, 1.0f, 1.0f);
-        point p, n;
-        lr.locate_vec(&p, &n, t, o);
-        glPushMatrix();
-        glTranslatef(p.x, p.y, 0.0f);
-        float mat[16] =
-            { n.x,   n.y, 0.0f, 0.0f,
-              n.y,  -n.x, 0.0f, 0.0f,
-             0.0f,  0.0f, 1.0f, 0.0f,
-             0.0f,  0.0f, 0.0f, 1.0f};
-        glMultMatrixf(mat);
-        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        glutWireTeapot(0.2f);
-        glPopMatrix();
+        // point p, n;
+        // lr.locate_vec(&p, &n, t, o);
+        // glPushMatrix();
+        // glTranslatef(p.x, p.y, 0.0f);
+        // float mat[16] =
+        //     { n.x,   n.y, 0.0f, 0.0f,
+        //       n.y,  -n.x, 0.0f, 0.0f,
+        //      0.0f,  0.0f, 1.0f, 0.0f,
+        //      0.0f,  0.0f, 0.0f, 1.0f};
+        // glMultMatrixf(mat);
+        // glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        // glutWireTeapot(0.2f);
+        // glPopMatrix();
 
         glFlush();
         glFinish();
@@ -216,36 +215,32 @@ public:
     float lastmouse[2];
 };
 
+#define LANE_WIDTH 0.1
+
 int main(int argc, char * argv[])
 {
-    lr.points.push_back(point(0.0f, -1.0f));
-    lr.points.push_back(point(0.0f, 0.0f));
-    lr.points.push_back(point(1.0f, 0.5f));
-    lr.points.push_back(point(2.0f, -0.5f));
-    lr.points.push_back(point(3.0f, 0.0f));
-    lr.calc_rep();
+    network n;
+
+    if(!n.load_from_xml(argv[1]))
+    {
+        fprintf(stderr, "Couldn't load %s\n", argv[1]);
+        exit(1);
+    }
 
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];
     t = 0.0f;
     o = 0.0f;
-    rm.resize(4);
 
-    offsets[0] = -0.25f;
-    offsets[1] = -0.05f;
-    lr.lane_mesh(rm[0].vrts, rm[0].faces, rng, 0.0f, offsets);
+    foreach(const lane &la, n.lanes)
+    {
+        const road_membership &rom = la.road_memberships.base_data;
+        float offsets[2] = {rom.lane_position-LANE_WIDTH*0.5,
+                            rom.lane_position+LANE_WIDTH*0.5};
 
-    offsets[0] = -0.50f;
-    offsets[1] = -0.30f;
-    lr.lane_mesh(rm[1].vrts, rm[1].faces, rng, 0.0f, offsets);
-
-    offsets[0] = 0.25f;
-    offsets[1] = 0.05f;
-    lr.lane_mesh(rm[2].vrts, rm[2].faces, rng, 0.0f, offsets);
-
-    offsets[0] = 0.50f;
-    offsets[1] = 0.30f;
-    lr.lane_mesh(rm[3].vrts, rm[3].faces, rng, 0.0f, offsets);
+        rm.push_back(road_mesh());
+        rom.parent_road.dp->rep.lane_mesh(rm.back().vrts, rm.back().faces, rom.interval, rom.lane_position, offsets);
+    }
 
     fltkview mv(0, 0, 500, 500, "fltk View");
 
