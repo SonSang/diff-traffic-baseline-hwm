@@ -15,6 +15,7 @@ fi
 AC_PROG_CXX
 
 AC_SUBST([WARN_FLAGS])
+AC_SUBST([DEBUG_FLAGS])
 AC_SUBST([OPTIMIZE_FLAGS])
 AC_SUBST([ARCH_FLAGS])
 AC_SUBST([TS_CXXFLAGS])
@@ -24,6 +25,18 @@ AC_LANG([C++])
 
 # Checks for libraries.
 AX_BOOST_BASE([1.35.0])
+
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug],
+    [make debugging build @<:@default=no@:>@])],
+  [enable_debug=no],
+  [enable_debug=yes])
+
+AS_IF([test x"$enable_debug" != xno],
+	    [OPTIMIZE_FLAGS="-O3 -funroll-loops"
+	     DEBUG_FLAGS=""],
+	    [OPTIMIZE_FLAGS=""
+             DEBUG_FLAGS="-ggdb -O0 -fno-inline"])
 
 AC_ARG_ENABLE([visual],
   [AS_HELP_STRING([--enable-visual],
@@ -94,7 +107,6 @@ AC_HEADER_STDC
 AC_CHECK_FUNCS([floor memset pow])
 
 WARN_FLAGS="-Wall -Werror -Wno-unused"
-OPTIMIZE_FLAGS="-O3 -funroll-loops"
 ARCH_FLAGS="-march=core2"
 TS_CXXFLAGS="-I/home/sewall/unc/euler-tile/grids"
 TS_LDFLAGS="/home/sewall/unc/euler-tile/grids/libgrids.a"
