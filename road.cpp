@@ -68,8 +68,6 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad>  & faces, 
 
 int line_rep::find_segment(float x, float offset) const
 {
-    assert(x >= 0 && x <= 1.0);
-
     x *= clengths.back() + 2*offset*cmitres.back();
 
     int current = 1;
