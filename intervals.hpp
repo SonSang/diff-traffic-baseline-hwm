@@ -41,10 +41,45 @@ struct intervals
     //! Search structure for entry.
     /*!
       \param x A number in (0.0, 1.0).
+      \param t x rescaled to the found interval
       \return -1 if the number is covered by base_data, the number of the entry that covers it otherwise.
       This is just linear search right now; something more scalable (like binary search) is conceivably desireable.
     */
-    inline entry_id find(float x) const
+    inline entry_id find(float &x) const
+    {
+        assert(0.0 <= x && x <= 1.0);
+
+        if(entries.empty())
+            return -1;
+        else if(x < entries[0].divider)
+        {
+            x /= entries[0].divider;
+            return -1;
+        }
+        else
+        {
+            size_t current = 0;
+            while(x > entries[current].divider)
+            {
+                ++current;
+                if(current >= entries.size())
+                {
+                    x = (x-entries.back().divider)/(1.0-entries.back().divider);
+                    return current-1;
+                }
+            }
+            x = (x-entries[current-1].divider)/(entries[current].divider-entries[current-1].divider);
+            return current-1;
+        }
+    }
+
+    //! Search structure for entry.
+    /*!
+      \param x A number in (0.0, 1.0).
+      \return -1 if the number is covered by base_data, the number of the entry that covers it otherwise.
+      This is just linear search right now; something more scalable (like binary search) is conceivably desireable.
+    */
+    inline entry_id find(const float &x) const
     {
         assert(0.0 <= x && x <= 1.0);
 
@@ -92,7 +127,7 @@ struct intervals
       \param x A number in (0.0, 1.0).
       \returns The associated data for the found interval.
     */
-    inline T & operator[](float x)
+    inline T & operator[](const float &x)
     {
         entry_id loc = find(x);
         if(loc == -1)
@@ -107,9 +142,45 @@ struct intervals
       \param x A number in (0.0, 1.0).
       \returns The associated data for the found interval (as a const).
     */
-    inline const T & operator[](float x) const
+    inline const T & operator[](const float &x) const
     {
-        return static_cast<const T &>((*this)[x]);
+        entry_id loc = find(x);
+        if(loc == -1)
+            return base_data;
+        else
+            return entries[loc].data;
+    }
+
+    //! Modify/retrieve data entry and rescale search param
+    /*!
+      Finds interval containing x and returns assocated data.
+      Also rescales x to the found interval
+      \param x A number in (0.0, 1.0).
+      \returns The associated data for the found interval.
+    */
+    inline T & get_rescale(float &x)
+    {
+        entry_id loc = find(x);
+        if(loc == -1)
+            return base_data;
+        else
+            return entries[loc].data;
+    }
+
+    //! Retrieve data entry and rescale search param
+    /*!
+      Finds interval containing x and returns assocated data.
+      Also rescales x to the found interval
+      \param x A number in (0.0, 1.0).
+      \returns The associated (const) data for the found interval.
+    */
+    inline const T & get_rescale(float &x) const
+    {
+        entry_id loc = find(x);
+        if(loc == -1)
+            return base_data;
+        else
+            return entries[loc].data;
     }
 
     inline bool xml_read(xmlTextReaderPtr reader, const xmlChar *eltname)
