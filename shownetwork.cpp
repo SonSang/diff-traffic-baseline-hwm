@@ -31,8 +31,8 @@ void line_rep::draw() const
     glEnd();
 }
 
+network *net;
 float t;
-float o;
 std::vector<road_mesh> rm;
 
 class fltkview : public Fl_Gl_Window
@@ -69,26 +69,31 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+        glColor3f(1.0f, 1.0f, 1.0f);
         foreach(const road_mesh & i, rm)
             i.draw();
 
-        glColor3f(1.0f, 0.0f, 0.0f);
-        //lr.draw();
+        glColor3f(1.0f, 0.0f, 1.0f);
+        point p, n;
 
-        glColor3f(1.0f, 1.0f, 1.0f);
-        // point p, n;
-        // lr.locate_vec(&p, &n, t, o);
-        // glPushMatrix();
-        // glTranslatef(p.x, p.y, 0.0f);
-        // float mat[16] =
-        //     { n.x,   n.y, 0.0f, 0.0f,
-        //       n.y,  -n.x, 0.0f, 0.0f,
-        //      0.0f,  0.0f, 1.0f, 0.0f,
-        //      0.0f,  0.0f, 0.0f, 1.0f};
-        // glMultMatrixf(mat);
-        // glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        // glutWireTeapot(0.2f);
-        // glPopMatrix();
+        foreach(const lane &la, net->lanes)
+        {
+            float x = t;
+            const road_membership *rom = &(la.road_memberships.get_rescale(x));
+
+            rom->parent_road.dp->rep.locate_vec(&p, &n, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+            glPushMatrix();
+            glTranslatef(p.x, p.y, 0.0f);
+            float mat[16] =
+                { n.x,   n.y, 0.0f, 0.0f,
+                  n.y,  -n.x, 0.0f, 0.0f,
+                 0.0f,  0.0f, 1.0f, 0.0f,
+                 0.0f,  0.0f, 0.0f, 1.0f};
+            glMultMatrixf(mat);
+            glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+            glutWireTeapot(0.05f);
+            glPopMatrix();
+        }
 
         glFlush();
         glFinish();
@@ -187,12 +192,6 @@ public:
                     if(t > 1.0f)
                         t = 1.0;
                     break;
-                case 's':
-                    o-= 0.01;
-                    break;
-                case 'x':
-                    o+= 0.01;
-                    break;
                 default:
                     return Fl_Gl_Window::handle(event);
                 }
@@ -219,9 +218,9 @@ public:
 
 int main(int argc, char * argv[])
 {
-    network n;
+    net = new network;
 
-    if(!n.load_from_xml(argv[1]))
+    if(!net->load_from_xml(argv[1]))
     {
         fprintf(stderr, "Couldn't load %s\n", argv[1]);
         exit(1);
@@ -230,9 +229,8 @@ int main(int argc, char * argv[])
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];
     t = 0.0f;
-    o = 0.0f;
 
-    foreach(const lane &la, n.lanes)
+    foreach(const lane &la, net->lanes)
     {
         const road_membership *rom = &(la.road_memberships.base_data);
         int p = -1;
@@ -249,7 +247,6 @@ int main(int argc, char * argv[])
                 break;
             rom = &(la.road_memberships.entries[p].data);
         }
-
     }
 
     fltkview mv(0, 0, 500, 500, "fltk View");

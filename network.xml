@@ -70,10 +70,10 @@
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road0" interval_start="0.0" interval_end="0.333" lane_position="0.1"/>
+	    <road_membership parent_road_ref="road0" interval_start="0.0" interval_end="0.315" lane_position="0.1"/>
 	  </base>
 	  <divider value="0.5">
-	    <road_membership parent_road_ref="road1" interval_start="0.0" interval_end="1.0" lane_position="0.1"/>
+	    <road_membership parent_road_ref="road1" interval_start="0.05" interval_end="1.0" lane_position="0.1"/>
 	  </divider>
 	</interval>
       </road_intervals>
@@ -104,10 +104,10 @@
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road0" interval_start="0.0" interval_end="0.333" lane_position="-0.1"/>
+	    <road_membership parent_road_ref="road0" interval_start="0.0" interval_end="0.35" lane_position="-0.1"/>
 	  </base>
 	  <divider value="0.5">
-	    <road_membership parent_road_ref="road1" interval_start="0.0" interval_end="1.0" lane_position="-0.1"/>
+	    <road_membership parent_road_ref="road1" interval_start="-0.05" interval_end="1.0" lane_position="-0.1"/>
 	  </divider>
 	</interval>
       </road_intervals>
