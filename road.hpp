@@ -24,11 +24,12 @@ struct quad
 //! A representation of a road's shape.
 struct line_rep
 {
-    //! Compute length of line displaced from polyline
+    //! Compute length of line displaced from polyline.
     /*!
       \param offset An offset from the polyline along which to place the point.
                     The convention that the parameterization increases with x,
-                    and the offset increaseses with y
+                    and the offset increaseses with y.
+      \returns the length of the line
     */
     float offset_length(float offset) const;
 
