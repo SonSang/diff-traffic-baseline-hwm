@@ -55,6 +55,8 @@ struct lane
 {
     bool xml_read(xmlTextReaderPtr reader);
 
+    float calc_length() const;
+
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
 
     adjacency_intervals left;  //< Lane's left neighbors.

@@ -213,3 +213,23 @@ bool lane::xml_read(xmlTextReaderPtr reader)
 
     return read[0].count == 1 && read[1].count == 1 && read[2].count == 1 && read[3].count == 1;
 }
+
+float lane::calc_length() const
+{
+    float length = 0.0f;
+
+    const road_membership *rom = &(road_memberships.base_data);
+    int p = -1;
+    while(1)
+    {
+        length += (rom->interval[1] - rom->interval[0])*rom->parent_road.dp->rep.offset_length(rom->lane_position);
+
+        ++p;
+        if(p >= static_cast<int>(road_memberships.entries.size()))
+            break;
+        rom = &(road_memberships.entries[p].data);
+
+    }
+
+    return length;
+}
