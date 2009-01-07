@@ -8,7 +8,7 @@
 #include "arcball.hpp"
 #include "network.hpp"
 
-#define LANE_WIDTH 0.1
+#define LANE_WIDTH 0.6
 
 struct road_mesh
 {
@@ -41,18 +41,18 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
     point p0(segstart*normals[start].x - offset*normals[start].y + points[start].x,
              segstart*normals[start].y + offset*normals[start].x + points[start].y);
 
-    float progress = range[0]*offset_length(offset);
-    float stop     = range[1]*offset_length(offset);
+    float t0   = range[0]*offset_length(offset);
+    float stop = range[1]*offset_length(offset);
     int segment = start;
 
     int count = 0;
 
     printf("stop: %f\n", stop);
-    while(count*h < stop)
+    while(count*h + t0 < stop)
     {
         if(segment > start)
         {
-            segstart = clengths[segment] + 2*offset*cmitres[segment] - (offset*cmitres[segment]-offset*cmitres[segment-1]);
+            segstart = clengths[segment] + offset*(cmitres[segment]+cmitres[segment-1]);
             float mitre = cmitres[segment]-cmitres[segment-1];
             p0.x = points[segment].x + offset*(-mitre*normals[segment].x - normals[segment].y);
             p0.y = points[segment].y + offset*(-mitre*normals[segment].y + normals[segment].x);
@@ -68,32 +68,33 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
         glMultMatrixf(mat);
         glScalef(1.0f, LANE_WIDTH*0.4f, 1.0f);
 
-        printf("On segment: %d. start = %f, end = %f\n", segment, clengths[segment] + 2*offset*cmitres[segment],
-               clengths[segment+1] + 2*offset*cmitres[segment+1]);
+        printf("On segment: %d. start = %f, end = %f\n", segment, segstart, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]));
 
         bool done = false;
         while(!done)
         {
-            float s = count*h;
+            float s = count*h + t0;
             float e = s + h;
-            if(e > clengths[segment+1] + 2*offset*cmitres[segment+1]- (offset*cmitres[segment+1]-offset*cmitres[segment]))
-            {
-                e = clengths[segment+1] + 2*offset*cmitres[segment+1]- (offset*cmitres[segment+1]-offset*cmitres[segment]);
-                done = true;
-            }
-            else if(e >= stop)
+            if(e >= stop)
             {
                 e = stop;
                 done = true;
                 ++count;
             }
+            else if(e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]))
+            {
+                e = clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]);
+                done = true;
+            }
            else
                 ++count;
 
-            printf("    s: %f e: %f. Count = %d\n", s, e, count);
+            printf("    s: %f e: %f. Count = %d ", s, e, count);
 
             s -= segstart;
             e -= segstart;
+
+            printf("    s: %f e: %f\n", s, e);
 
             if(s < 0.0f)
                 s = 0.0f;

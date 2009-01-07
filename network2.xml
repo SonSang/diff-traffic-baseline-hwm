@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network version="1.0" name="test" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <roads>
+    <road id="road0" name="South Columbia Street">
+      <line_rep>
+	<points>
+	  0.0 0.0
+	  1.0 0.0
+	  1.0 1.0
+	  0.0 1.0
+	</points>
+      </line_rep>
+    </road>
+  </roads>
+  <lanes>
+    <lane id="lane0" speedlimit="40">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road0" interval_start="1.0" interval_end="0.0" lane_position="0.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane1" speedlimit="40">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road0" interval_start="0.6" interval_end="1.0" lane_position="0.1"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+  </lanes>
+  <intersections>
+  </intersections>
+</network>

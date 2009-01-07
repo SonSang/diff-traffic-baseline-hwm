@@ -43,7 +43,7 @@ int main(int argc, char * argv[])
     float rng[2] = {0.5f, 0.75f};
     float offsets[2] = {0.05f, 0.25f};
 
-    r.lane_mesh(rng, 0.15f, offsets);
+    //    r.lane_mesh(rng, 0.15f, offsets);
 
     return 0;
 }
