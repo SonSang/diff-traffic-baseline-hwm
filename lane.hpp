@@ -57,6 +57,8 @@ struct lane
 
     float calc_length() const;
 
+    void draw_data() const;
+
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
 
     adjacency_intervals left;  //< Lane's left neighbors.

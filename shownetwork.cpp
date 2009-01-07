@@ -8,6 +8,8 @@
 #include "arcball.hpp"
 #include "network.hpp"
 
+#define LANE_WIDTH 0.1
+
 struct road_mesh
 {
     std::vector<point> vrts;
@@ -29,6 +31,81 @@ void line_rep::draw() const
     foreach(const point & p, points)
         glVertex2fv(&(p.x));
     glEnd();
+}
+
+int line_rep::draw_data(float offset, const float range[2], float h, const float *data, int stride) const
+{
+    int start = find_segment(range[0], offset);
+    int end   = find_segment(range[1], offset);
+
+    float t0 = range[0]*offset_length(offset) - (clengths[start] + 2*offset*cmitres[start]);
+    point p0(t0*normals[start].x - offset*normals[start].y + points[start].x,
+             t0*normals[start].y + offset*normals[start].x + points[start].y);
+
+    float progress = range[0]*offset_length(offset);
+    float stop     = range[1]*offset_length(offset);
+    int segment = start;
+
+    while(segment < start+1)
+    {
+        if(segment > start)
+        {
+            float mitre = cmitres[segment]-cmitres[segment-1];
+            p0.x = points[segment].x + offset*(-mitre*normals[segment].x - normals[segment].y);
+            p0.y = points[segment].y + offset*(-mitre*normals[segment].y + normals[segment].x);
+        }
+
+        glPushMatrix();
+        glTranslatef(p0.x, p0.y, 0.0f);
+        float mat[16] =
+            { normals[segment].x,  normals[segment].y, 0.0f, 0.0f,
+              normals[segment].y, -normals[segment].x, 0.0f, 0.0f,
+              0.0f,  0.0f, 1.0f, 0.0f,
+              0.0f,  0.0f, 0.0f, 1.0f};
+        glMultMatrixf(mat);
+        glScalef(1.0f, LANE_WIDTH*0.4f, 1.0f);
+
+        int count = 0;
+        while(progress < stop && progress < (clengths[segment+1] + 2*offset*cmitres[segment+1]))
+        {
+            float s = count*h;
+            float e = (count+1)*h;
+
+            glBegin(GL_QUADS);
+            glVertex2f(s, -1.0f);
+            glVertex2f(s,  1.0f);
+            glVertex2f(e,  1.0f);
+            glVertex2f(e, -1.0f);
+            glEnd();
+
+            progress += h;
+            ++count;
+        }
+        glPopMatrix();
+
+        ++segment;
+    }
+
+    return 1;
+}
+
+void lane::draw_data() const
+{
+    const road_membership *rom = &(road_memberships.base_data);
+    int p = -1;
+    while(1)
+    {
+        float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
+                            rom->lane_position+LANE_WIDTH*0.5};
+
+
+        rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, 0.1, 0, 1);
+
+        ++p;
+        if(p >= static_cast<int>(road_memberships.entries.size()))
+            break;
+        rom = &(road_memberships.entries[p].data);
+    }
 }
 
 network *net;
@@ -100,6 +177,9 @@ public:
             glutWireTeapot(0.05f);
             glPopMatrix();
         }
+
+        foreach(const lane &la, net->lanes)
+            la.draw_data();
 
         glFlush();
         glFinish();
@@ -219,8 +299,6 @@ public:
     float zoom;
     float lastmouse[2];
 };
-
-#define LANE_WIDTH 0.1
 
 int main(int argc, char * argv[])
 {

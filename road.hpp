@@ -56,6 +56,8 @@ struct line_rep
 
     void draw() const;
 
+    int draw_data(float offset, const float range[2], float h, const float *data, int stride) const;
+
     //! Find the segment containing x.
     /*!
       \param x A float in [0.0, 1.0].
