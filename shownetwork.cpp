@@ -36,20 +36,23 @@ void line_rep::draw() const
 int line_rep::draw_data(float offset, const float range[2], float h, const float *data, int stride) const
 {
     int start = find_segment(range[0], offset);
-    int end   = find_segment(range[1], offset);
 
-    float t0 = range[0]*offset_length(offset) - (clengths[start] + 2*offset*cmitres[start]);
-    point p0(t0*normals[start].x - offset*normals[start].y + points[start].x,
-             t0*normals[start].y + offset*normals[start].x + points[start].y);
+    float segstart = range[0]*offset_length(offset) - (clengths[start] + 2*offset*cmitres[start]);
+    point p0(segstart*normals[start].x - offset*normals[start].y + points[start].x,
+             segstart*normals[start].y + offset*normals[start].x + points[start].y);
 
     float progress = range[0]*offset_length(offset);
     float stop     = range[1]*offset_length(offset);
     int segment = start;
 
-    while(segment < start+1)
+    int count = 0;
+
+    printf("stop: %f\n", stop);
+    while(count*h < stop)
     {
         if(segment > start)
         {
+            segstart = clengths[segment] + 2*offset*cmitres[segment] - (offset*cmitres[segment]-offset*cmitres[segment-1]);
             float mitre = cmitres[segment]-cmitres[segment-1];
             p0.x = points[segment].x + offset*(-mitre*normals[segment].x - normals[segment].y);
             p0.y = points[segment].y + offset*(-mitre*normals[segment].y + normals[segment].x);
@@ -65,11 +68,35 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
         glMultMatrixf(mat);
         glScalef(1.0f, LANE_WIDTH*0.4f, 1.0f);
 
-        int count = 0;
-        while(progress < stop && progress < (clengths[segment+1] + 2*offset*cmitres[segment+1]))
+        printf("On segment: %d. start = %f, end = %f\n", segment, clengths[segment] + 2*offset*cmitres[segment],
+               clengths[segment+1] + 2*offset*cmitres[segment+1]);
+
+        bool done = false;
+        while(!done)
         {
             float s = count*h;
-            float e = (count+1)*h;
+            float e = s + h;
+            if(e > clengths[segment+1] + 2*offset*cmitres[segment+1]- (offset*cmitres[segment+1]-offset*cmitres[segment]))
+            {
+                e = clengths[segment+1] + 2*offset*cmitres[segment+1]- (offset*cmitres[segment+1]-offset*cmitres[segment]);
+                done = true;
+            }
+            else if(e >= stop)
+            {
+                e = stop;
+                done = true;
+                ++count;
+            }
+           else
+                ++count;
+
+            printf("    s: %f e: %f. Count = %d\n", s, e, count);
+
+            s -= segstart;
+            e -= segstart;
+
+            if(s < 0.0f)
+                s = 0.0f;
 
             glBegin(GL_QUADS);
             glVertex2f(s, -1.0f);
@@ -77,9 +104,6 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
             glVertex2f(e,  1.0f);
             glVertex2f(e, -1.0f);
             glEnd();
-
-            progress += h;
-            ++count;
         }
         glPopMatrix();
 
@@ -98,8 +122,8 @@ void lane::draw_data() const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-
-        rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, 0.1, 0, 1);
+        if(rom->interval[1] > rom->interval[0])
+            rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, 0.1, 0, 1);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
