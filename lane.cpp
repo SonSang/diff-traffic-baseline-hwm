@@ -222,7 +222,7 @@ float lane::calc_length() const
     int p = -1;
     while(1)
     {
-        length += (rom->interval[1] - rom->interval[0])*rom->parent_road.dp->rep.offset_length(rom->lane_position);
+        length += std::abs((rom->interval[1] - rom->interval[0]))*rom->parent_road.dp->rep.offset_length(rom->lane_position);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))

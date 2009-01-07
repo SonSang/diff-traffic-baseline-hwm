@@ -82,6 +82,12 @@ public:
             const road_membership *rom = &(la.road_memberships.get_rescale(x));
 
             rom->parent_road.dp->rep.locate_vec(&p, &n, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+            if(rom->interval[0] > rom->interval[1])
+            {
+                n.x *= -1.0f;
+                n.y *= -1.0f;
+            }
+
             glPushMatrix();
             glTranslatef(p.x, p.y, 0.0f);
             float mat[16] =
