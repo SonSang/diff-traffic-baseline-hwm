@@ -169,3 +169,12 @@ bool intersection::xml_read(xmlTextReaderPtr reader)
 
     return read[0].count == 1 && read[1].count == 1;
 }
+
+int intersection::next_state()
+{
+    ++current_state;
+    if(current_state >= static_cast<int>(states.size()))
+        current_state = 0;
+
+    return current_state;
+}

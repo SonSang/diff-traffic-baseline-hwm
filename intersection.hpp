@@ -19,6 +19,8 @@ struct intersection
 
     bool xml_read(xmlTextReaderPtr reader);
 
+    int next_state();
+
     std::vector<lane_id> incoming;
     std::vector<lane_id> outgoing;
 
