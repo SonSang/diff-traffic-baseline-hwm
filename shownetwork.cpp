@@ -100,7 +100,7 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
                 done = true;
                 ++count;
             }
-            else if(segment + 1 <= static_cast<int>(clengths.size()) && e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0)
+            else if(segment < static_cast<int>(clengths.size())-2 && e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0)
             {
                 printf("done with seg %d, e = %f, segend - t0 = %f\n", segment, e, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
                 e = clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0;
@@ -131,7 +131,7 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
         ++segment;
     }
 
-    return 1;
+    return count;
 }
 
 void lane::draw_data() const
