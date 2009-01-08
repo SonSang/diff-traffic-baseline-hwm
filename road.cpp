@@ -144,7 +144,7 @@ void line_rep::calc_rep()
         float dot = normals[i].x*normals[i+1].x + normals[i].y*normals[i+1].y;
         float orient =  normals[i].y*normals[i+1].x - normals[i].x*normals[i+1].y;
 
-        float mitre = orient*std::sqrt((1.0f - dot)/(1.0f + dot));
+        float mitre = copysign(std::sqrt((1.0f - dot)/(1.0f + dot)), orient);
 
         printf("mitre %d  = %f\n", i, mitre);
         // see write-up for interpretation of this formula.
