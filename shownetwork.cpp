@@ -40,9 +40,13 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
     float t0 = range[0]*offset_length(offset);
     float t1 = range[1]*offset_length(offset);
 
-    float segstart = t0 + (clengths[start] + offset*(cmitres[start]+cmitres[start-1]));
-    point p0(segstart*normals[start].x - offset*normals[start].y + points[start].x,
-             segstart*normals[start].y + offset*normals[start].x + points[start].y);
+    printf("t0 %f\n", t0);
+
+    float segstart = t0 - (clengths[start] + offset*(cmitres[start]+cmitres[start-1]));
+    printf("start segstart: %f\n", segstart);
+    float mitre = cmitres[start]-cmitres[start-1];
+    point p0(segstart*normals[start].x + offset*(-mitre*normals[start].x - normals[start].y) + points[start].x,
+             segstart*normals[start].y + offset*(-mitre*normals[start].y + normals[start].x) + points[start].y);
     segstart = t0;
 
     int segment = start;
@@ -55,7 +59,7 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
         if(segment > start)
         {
             segstart = clengths[segment] + offset*(cmitres[segment]+cmitres[segment-1]);
-            float mitre = cmitres[segment]-cmitres[segment-1];
+            mitre = cmitres[segment]-cmitres[segment-1];
             p0.x = points[segment].x + offset*(-mitre*normals[segment].x - normals[segment].y);
             p0.y = points[segment].y + offset*(-mitre*normals[segment].y + normals[segment].x);
         }
