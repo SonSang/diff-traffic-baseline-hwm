@@ -10,6 +10,33 @@
 
 #define LANE_WIDTH 0.1
 
+void blackbody(float val, float rgb[3])
+{
+   if(val <= 0.0) // clamp low to black
+       rgb[0] = rgb[1] = rgb[2] = 0.0f;
+   else if(val >= 1.0f) // and high to white
+       rgb[0] = rgb[1] = rgb[2] = 1.0f;
+   else if(val < 1.0f/3.0f) // go to [1, 0, 0] over [0, 1/3)
+   {
+       rgb[0] = val*3.0f;
+       rgb[1] = 0.0f;
+       rgb[2] = 0.0f;
+   }
+   else if(val < 2.0f/3.0f)  // go to [1, 1, 0] over [1/3, 2/3)
+   {
+       rgb[0] = 1.0f;
+       rgb[1] = (val-1.0f/3.0f)*3.0f;
+       rgb[2] = 0.0f;
+   }
+   else // go to [1, 1, 1] over [2/3, 1.0)
+   {
+       rgb[0] = 1.0f;
+       rgb[1] = 1.0f;
+       rgb[2] = (val-2.0f/3.0f)*3.0f;
+   }
+   return;
+}
+
 struct road_mesh
 {
     std::vector<point> vrts;
@@ -33,7 +60,7 @@ void line_rep::draw() const
     glEnd();
 }
 
-int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const float *data, int stride) const
+int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const float *data, int stride, int n) const
 {
     float r[2];
     if(range[0] < range[1])
@@ -66,7 +93,8 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     int count = 0;
 
     printf("t1: %f\n", t1);
-    while(count*h + t0 < t1)
+    bool alldone = false;
+    while(!alldone && count*h + t0 < t1)
     {
         if(segment > start)
         {
@@ -93,13 +121,15 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         {
             float s = count*h - leftover;
             float e = s + h;
+            float v = data[(count+incount)*stride];
+            printf("    drawcount = %d\n", count);
             if(e + t0 >= t1)
             {
                 leftover = e - (t1 - t0);
                 e = t1 - t0;
                 printf("   done with all, e + t0 = %f, t1 = %f, leftover = %f\n", e + t0, t1, leftover);
                 done = true;
-                ++count;
+                alldone = true;
             }
             else if(segment < static_cast<int>(clengths.size())-2 && e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0)
             {
@@ -120,6 +150,10 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             if(s < 0.0f)
                 s = 0.0f;
 
+            float rgb[3];
+            blackbody(v, rgb);
+
+            glColor3fv(rgb);
             glBegin(GL_QUADS);
             glVertex2f(s, -1.0f);
             glVertex2f(s,  1.0f);
@@ -132,11 +166,19 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         ++segment;
     }
 
-    return count;
+    return count+incount;
 }
 
 void lane::draw_data() const
 {
+    float h = 0.1;
+    float llen = calc_length();
+
+    int n = std::ceil(llen/h);
+    float data[n];
+    for(int i = 0; i < n; ++i)
+        data[i] = i/(n-1.0);
+
     int count = 0;
     float lenused = 0.0f;
 
@@ -147,7 +189,8 @@ void lane::draw_data() const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, 0.1, 0, 1);
+        printf("count: %d\n", count);
+        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, 0.1, data, 1, n);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
@@ -226,6 +269,7 @@ public:
             glPopMatrix();
         }
 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         foreach(const lane &la, net->lanes)
             la.draw_data();
 
