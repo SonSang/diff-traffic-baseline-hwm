@@ -62,16 +62,19 @@ void line_rep::draw() const
 
 int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const float *data, int stride, int n) const
 {
+    bool backwards;
     float r[2];
     if(range[0] < range[1])
     {
         r[0] = range[0];
         r[1] = range[1];
+        backwards = false;
     }
     else
     {
         r[0] = range[1];
         r[1] = range[0];
+        backwards = true;
     }
 
     int start = find_segment(r[0], offset);
@@ -79,6 +82,18 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     float t0 = r[0]*offset_length(offset);
     float t1 = r[1]*offset_length(offset);
 
+    float ncells = (t1-t0)/h;
+
+    int data_end = std::floor(ncells);
+    float next_leftover;
+    if(backwards)
+    {
+        leftover = h - (ncells - data_end)*h - leftover;
+        next_leftover = h - leftover;
+        printf("leftover: %f\n", leftover);
+    }
+
+    printf("data_end: %f (%d)\n", (t1-t0)/h, data_end);
     printf("t0 %f\n", t0);
 
     float segstart = t0 - (clengths[start] + offset*(cmitres[start]+cmitres[start-1]));
@@ -121,11 +136,15 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         {
             float s = count*h - leftover;
             float e = s + h;
-            float v = data[(count+incount)*stride];
-            printf("    drawcount = %d\n", count);
+            int drawcount = backwards ? (data_end - count + incount)*stride : (count+incount)*stride;
+            float v = data[drawcount];
+            printf("    drawcount = %d dist = %f\n", drawcount, e + t0);
             if(e + t0 >= t1)
             {
-                leftover = e - (t1 - t0);
+                if(backwards)
+                    leftover = next_leftover;
+                else
+                    leftover = e - (t1 - t0);
                 e = t1 - t0;
                 printf("   done with all, e + t0 = %f, t1 = %f, leftover = %f\n", e + t0, t1, leftover);
                 done = true;
@@ -153,6 +172,8 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             float rgb[3];
             blackbody(v, rgb);
 
+            printf("    drawn with s: %f e: %f\n", s, e);
+
             glColor3fv(rgb);
             glBegin(GL_QUADS);
             glVertex2f(s, -1.0f);
@@ -174,10 +195,15 @@ void lane::draw_data() const
     float h = 0.1;
     float llen = calc_length();
 
+    printf("llen %f\n", llen);
+    printf("llen/h %f\n", llen/h);
+
     int n = std::ceil(llen/h);
     float data[n];
     for(int i = 0; i < n; ++i)
         data[i] = i/(n-1.0);
+
+    printf("n: %d\n", n);
 
     int count = 0;
     float lenused = 0.0f;
@@ -190,7 +216,7 @@ void lane::draw_data() const
                             rom->lane_position+LANE_WIDTH*0.5};
 
         printf("count: %d\n", count);
-        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, 0.1, data, 1, n);
+        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, data, 1, n);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
