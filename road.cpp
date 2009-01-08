@@ -55,25 +55,11 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad> & faces, c
     for(int c = start+1; c <= end; ++c)
     {
         float mitre = cmitres[c]-cmitres[c-1];
-        printf("c:%d mitre:   %f\n", c, mitre);
-        printf("     point:   %f %f\n", points[c].x, points[c].y);
-        printf("     normal:  %f %f\n", normals[c].x, normals[c].y);
-        printf("     offsets: %f %f\n", offsets[0], offsets[1]);
         vrts.push_back(point(offsets[0]*(-mitre*normals[c].x - normals[c].y) + points[c].x,
                              offsets[0]*(-mitre*normals[c].y + normals[c].x) + points[c].y));
 
-        printf("    p0: %f %f\n", vrts.back().x, vrts.back().y);
-
-        printf("    v2 p0: %f %f\n", offsets[0]*(mitre*normals[c-1].x - normals[c-1].y) + points[c].x,
-               offsets[0]*(mitre*normals[c-1].y + normals[c-1].x) + points[c].y);
-
         vrts.push_back(point(offsets[1]*(-mitre*normals[c].x - normals[c].y) + points[c].x,
                              offsets[1]*(-mitre*normals[c].y + normals[c].x) + points[c].y));
-
-        printf("    p1: %f %f\n", vrts.back().x, vrts.back().y);
-
-        printf("    v2 p1: %f %f\n", offsets[1]*(mitre*normals[c-1].x - normals[c-1].y) + points[c].x,
-               offsets[1]*(mitre*normals[c-1].y + normals[c-1].x) + points[c].y);
     }
 
     vrts.push_back(point(end_t*normals[end].x - offsets[0]*normals[end].y + points[end].x,
@@ -146,7 +132,6 @@ void line_rep::calc_rep()
 
         float mitre = copysign(std::sqrt((1.0f - dot)/(1.0f + dot)), orient);
 
-        printf("mitre %d  = %f\n", i, mitre);
         // see write-up for interpretation of this formula.
         cmitres[i+1] += cmitres[i] + mitre;
     }
