@@ -8,7 +8,7 @@
 #include "arcball.hpp"
 #include "network.hpp"
 
-#define LANE_WIDTH 0.6
+#define LANE_WIDTH 0.1
 
 struct road_mesh
 {
@@ -37,18 +37,20 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
 {
     int start = find_segment(range[0], offset);
 
-    float segstart = range[0]*offset_length(offset) - (clengths[start] + 2*offset*cmitres[start]);
+    float t0 = range[0]*offset_length(offset);
+    float t1 = range[1]*offset_length(offset);
+
+    float segstart = t0 + (clengths[start] + offset*(cmitres[start]+cmitres[start-1]));
     point p0(segstart*normals[start].x - offset*normals[start].y + points[start].x,
              segstart*normals[start].y + offset*normals[start].x + points[start].y);
+    segstart = t0;
 
-    float t0   = range[0]*offset_length(offset);
-    float stop = range[1]*offset_length(offset);
     int segment = start;
 
     int count = 0;
 
-    printf("stop: %f\n", stop);
-    while(count*h + t0 < stop)
+    printf("t1: %f\n", t1);
+    while(count*h + t0 < t1)
     {
         if(segment > start)
         {
@@ -68,22 +70,24 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
         glMultMatrixf(mat);
         glScalef(1.0f, LANE_WIDTH*0.4f, 1.0f);
 
-        printf("On segment: %d. start = %f, end = %f\n", segment, segstart, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]));
+        printf("On segment: %d. start = %f, end = %f\n", segment, segstart, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
 
         bool done = false;
         while(!done)
         {
-            float s = count*h + t0;
+            float s = count*h;
             float e = s + h;
-            if(e >= stop)
+            if(e + t0 >= t1)
             {
-                e = stop;
+                e = t1 - t0;
+                printf("done with all, e + t0 = %f, t1 = %f\n", e + t0, t1);
                 done = true;
                 ++count;
             }
-            else if(e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]))
+            else if(segment + 1 <= static_cast<int>(clengths.size()) && e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0)
             {
-                e = clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]);
+                printf("done with seg %d, e = %f, segend - t0 = %f\n", segment, e, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
+                e = clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0;
                 done = true;
             }
            else
@@ -91,8 +95,8 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
 
             printf("    s: %f e: %f. Count = %d ", s, e, count);
 
-            s -= segstart;
-            e -= segstart;
+            s -= (segstart - t0);
+            e -= (segstart - t0);
 
             printf("    s: %f e: %f\n", s, e);
 
