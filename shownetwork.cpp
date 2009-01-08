@@ -35,10 +35,22 @@ void line_rep::draw() const
 
 int line_rep::draw_data(float offset, const float range[2], float h, const float *data, int stride) const
 {
-    int start = find_segment(range[0], offset);
+    float r[2];
+    if(range[0] < range[1])
+    {
+        r[0] = range[0];
+        r[1] = range[1];
+    }
+    else
+    {
+        r[0] = range[1];
+        r[1] = range[0];
+    }
 
-    float t0 = range[0]*offset_length(offset);
-    float t1 = range[1]*offset_length(offset);
+    int start = find_segment(r[0], offset);
+
+    float t0 = r[0]*offset_length(offset);
+    float t1 = r[1]*offset_length(offset);
 
     printf("t0 %f\n", t0);
 
@@ -131,8 +143,7 @@ void lane::draw_data() const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        if(rom->interval[1] > rom->interval[0])
-            rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, 0.1, 0, 1);
+        rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, 0.1, 0, 1);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
