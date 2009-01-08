@@ -33,7 +33,7 @@ void line_rep::draw() const
     glEnd();
 }
 
-int line_rep::draw_data(float offset, const float range[2], float h, const float *data, int stride) const
+int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const float *data, int stride) const
 {
     float r[2];
     if(range[0] < range[1])
@@ -91,18 +91,19 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
         bool done = false;
         while(!done)
         {
-            float s = count*h;
+            float s = count*h - leftover;
             float e = s + h;
             if(e + t0 >= t1)
             {
+                leftover = e - (t1 - t0);
                 e = t1 - t0;
-                printf("done with all, e + t0 = %f, t1 = %f\n", e + t0, t1);
+                printf("   done with all, e + t0 = %f, t1 = %f, leftover = %f\n", e + t0, t1, leftover);
                 done = true;
                 ++count;
             }
             else if(segment < static_cast<int>(clengths.size())-2 && e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0)
             {
-                printf("done with seg %d, e = %f, segend - t0 = %f\n", segment, e, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
+                printf("   done with seg %d, e = %f, segend - t0 = %f\n", segment, e, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
                 e = clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0;
                 done = true;
             }
@@ -136,6 +137,9 @@ int line_rep::draw_data(float offset, const float range[2], float h, const float
 
 void lane::draw_data() const
 {
+    int count = 0;
+    float lenused = 0.0f;
+
     const road_membership *rom = &(road_memberships.base_data);
     int p = -1;
     while(1)
@@ -143,7 +147,7 @@ void lane::draw_data() const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, 0.1, 0, 1);
+        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, 0.1, 0, 1);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
