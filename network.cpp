@@ -167,7 +167,10 @@ void network::prepare(float h)
     int total = 0;
 
     foreach(lane &la, lanes)
+    {
+        la.h = h;
         total += la.ncells = la.calc_length()/h;
+    }
 
     printf("Allocating %zu bytes for %d cells...", sizeof(q)*total, total);
     q *d = (q *) malloc(sizeof(q)*total);

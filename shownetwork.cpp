@@ -60,7 +60,7 @@ void line_rep::draw() const
     glEnd();
 }
 
-int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const float *data, int stride, int n) const
+int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const q *data, float speedlimit, float gamma_c, unsigned int n) const
 {
     bool backwards;
     float r[2];
@@ -129,8 +129,9 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         {
             float s = count*h - leftover;
             float e = s + h;
-            int drawcount = backwards ? (data_end - count + incount)*stride : (count+incount)*stride;
-            float v = data[drawcount];
+            int drawcount = backwards ? (data_end - count + incount) : (count+incount);
+            float rho = data[drawcount].rho;
+            float u   = to_u(rho, data[drawcount].y, speedlimit, gamma_c);
             if(e + t0 >= t1)
             {
                 if(backwards)
@@ -157,16 +158,16 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
                 s = 0.0f;
 
             float rgb[3];
-            blackbody(v, rgb);
+            blackbody(u, rgb);
 
             glColor3fv(rgb);
             glBegin(GL_QUAD_STRIP);
             glVertex3f(s, -1.0f, 0);
             glVertex3f(e, -1.0f, 0);
-            glVertex3f(s, -1.0f, v);
-            glVertex3f(e, -1.0f, v);
-            glVertex3f(s,  1.0f, v);
-            glVertex3f(e,  1.0f, v);
+            glVertex3f(s, -1.0f, rho);
+            glVertex3f(e, -1.0f, rho);
+            glVertex3f(s,  1.0f, rho);
+            glVertex3f(e,  1.0f, rho);
             glVertex3f(s,  1.0f, 0);
             glVertex3f(e,  1.0f, 0);
             glEnd();
@@ -179,16 +180,8 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     return count+incount;
 }
 
-void lane::draw_data() const
+void lane::draw_data(float gamma_c) const
 {
-    float h = 0.1;
-    float llen = calc_length();
-
-    int n = std::ceil(llen/h);
-    float data[n];
-    for(int i = 0; i < n; ++i)
-        data[i] = i/(n-1.0);
-
     int count = 0;
     float lenused = 0.0f;
 
@@ -199,7 +192,7 @@ void lane::draw_data() const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, data, 1, n);
+        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, data, speedlimit, gamma_c, ncells);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
@@ -280,7 +273,7 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         foreach(const lane &la, net->lanes)
-            la.draw_data();
+            la.draw_data(net->gamma_c);
 
         glFlush();
         glFinish();
@@ -418,6 +411,15 @@ int main(int argc, char * argv[])
     }
 
     net->prepare(0.1);
+
+    foreach(lane &la, net->lanes)
+    {
+        for(unsigned int i = 0; i < la.ncells; ++i)
+        {
+            la.data[i].rho = i < (la.ncells>>1) ? 0.45 : 0.4;
+            la.data[i].y = to_y(la.data[i].rho, 0.1, la.speedlimit, net->gamma_c);
+        }
+    }
 
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];

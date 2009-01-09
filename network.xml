@@ -94,7 +94,7 @@
     <!-- 	</right> -->
     <!--   </adjacency_intervals> -->
     <!-- </lane> -->
-    <lane id="lane2" speedlimit="40">
+    <lane id="lane2" speedlimit="1.0">
       <start>
     	<dead_end/>
       </start>

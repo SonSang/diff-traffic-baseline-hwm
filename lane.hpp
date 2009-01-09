@@ -57,9 +57,9 @@ struct lane
 
     float calc_length() const;
 
-    void draw_data() const;
+    void draw_data(float gamma_c) const;
 
-    float collect_riemann(float gamma, float inv_gamma);
+    float collect_riemann(float gamma_c, float inv_gamma);
 
     void update(float maxspeed);
 
