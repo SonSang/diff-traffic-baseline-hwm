@@ -92,8 +92,10 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         next_leftover = h - leftover;
     }
 
-    float segstart = t0 - (clengths[start] + offset*(cmitres[start]+cmitres[start-1]));
-    float mitre = cmitres[start]-cmitres[start-1];
+    float last_cmitre = start == 0 ? 0 : cmitres[start-1];
+
+    float segstart = t0 - (clengths[start] + offset*(cmitres[start]+last_cmitre));
+    float mitre = cmitres[start] - last_cmitre;
     point p0(segstart*normals[start].x + offset*(-mitre*normals[start].x - normals[start].y) + points[start].x,
              segstart*normals[start].y + offset*(-mitre*normals[start].y + normals[start].x) + points[start].y);
     segstart = t0;

@@ -9,10 +9,13 @@ int line_rep::locate(point *pt, float t, float offset) const
 {
     int seg = find_segment(t, offset);
 
-    t = t*offset_length(offset) - (clengths[seg] + offset*(cmitres[seg] + cmitres[seg-1]));
+    float last_cmitre = seg == 0 ? 0 : cmitres[seg-1];
+    float mitre = cmitres[seg] - last_cmitre;
 
-    pt->x = (t - offset*(cmitres[seg]-cmitres[seg-1])) * normals[seg].x - offset*normals[seg].y + points[seg].x;
-    pt->y = (t - offset*(cmitres[seg]-cmitres[seg-1])) * normals[seg].y + offset*normals[seg].x + points[seg].y;
+    t = t*offset_length(offset) - (clengths[seg] + offset*(cmitres[seg] + last_cmitre));
+
+    pt->x = (t - offset*mitre) * normals[seg].x - offset*normals[seg].y + points[seg].x;
+    pt->y = (t - offset*mitre) * normals[seg].y + offset*normals[seg].x + points[seg].y;
     return seg;
 }
 
