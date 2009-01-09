@@ -291,6 +291,61 @@ inline void riemann(riemann_solution *rs,
     rs->fluct_r.y   = q_r->y  *q_r->u - q_0->y  *q_0->u;
 };
 
+inline void starvation_riemann(riemann_solution *rs,
+                               const full_q *__restrict__ q_r,
+                               float u_max,
+                               float inv_u_max,
+                               float gamma,
+                               float inv_gamma)
+{
+    if(q_r->rho == 0.0f)
+        memset(rs, 0, sizeof(riemann_solution));
+    else
+    {
+        rs->speeds[0]    = 0.0f;
+        rs->waves[0].rho = 0.0f;
+        rs->waves[0].y   = 0.0f;
+        rs->fluct_l.rho  = 0.0f;
+        rs->fluct_l.y    = 0.0f;
+
+        rs->speeds[1]    = q_r->u;
+        rs->waves[1].rho = q_r->rho;
+        rs->waves[1].y   = q_r->y;
+
+        rs->fluct_r.rho = q_r->rho*q_r->u;
+        rs->fluct_r.y   = q_r->y  *q_r->u;
+    }
+}
+
+inline void stop_riemann(riemann_solution *rs,
+                         const full_q *__restrict__ q_l,
+                         float u_max,
+                         float inv_u_max,
+                         float gamma,
+                         float inv_gamma)
+{
+    full_q q_m;
+
+    q_m.from_rho_u(inv_eq_u(q_l->u_eq - q_l->u, u_max, gamma),
+                   0.0,
+                   u_max, gamma);
+
+    rs->speeds[0]    = 0.0f;
+    if(q_m.rho - q_l->rho != 0.0f)
+        rs->speeds[0] = -q_l->rho * q_l->u/(q_m.rho - q_l->rho);
+
+    rs->waves[0].rho = -q_l->rho;
+    rs->waves[0].y   = -q_l->y;
+    rs->fluct_l.rho  = -q_l->rho * q_l->u;
+    rs->fluct_l.y    = -q_l->y   * q_l->u;
+
+    rs->speeds[1]    = 0.0f;
+    rs->waves[1].rho = 0.0f;
+    rs->waves[1].y   = 0.0f;
+    rs->fluct_r.rho  = 0.0f;
+    rs->fluct_r.y    = 0.0f;
+}
+
 inline float MC_limiter(float x)
 {
     if (x <= 0.0f)
