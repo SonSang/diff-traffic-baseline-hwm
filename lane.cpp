@@ -241,12 +241,27 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
 
     float maxspeed = 0.0f;
 
-    memset(rs, 0, sizeof(riemann_solution));
-
     fq[0]->from_q(data,
                   speedlimit, gamma_c);
 
     float inv_speedlimit = 1.0f/speedlimit;
+
+    if(start.end_type == lane_end::DEAD_END || start.end_type == lane_end::TAPER)
+    {
+        starvation_riemann(rs,
+                           fq[0],
+                           speedlimit,
+                           inv_speedlimit,
+                           gamma_c,
+                           inv_gamma);
+
+        // we know that maxspeed previously was 0, and
+        // that starvation_riemann has a nonnegative speed in speeds[1]
+        // and nothing in speeds[0]
+        maxspeed = rs[0].speeds[1];
+    }
+    else
+        memset(rs, 0, sizeof(riemann_solution));
 
     for(size_t i = 1; i < ncells; ++i)
     {
@@ -266,7 +281,21 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
         std::swap(fq[0], fq[1]);
     }
 
-    memset(rs+ncells, 0, sizeof(riemann_solution));
+    if(end.end_type == lane_end::DEAD_END || end.end_type == lane_end::TAPER)
+    {
+        stop_riemann(rs+ncells,
+                     fq[0],
+                     speedlimit,
+                     inv_speedlimit,
+                     gamma_c,
+                     inv_gamma);
+
+        // we know that stop_riemann has a speed in speeds[0]
+        // and nothing in speeds[1]
+        maxspeed = std::max(maxspeed, std::abs(rs[0].speeds[0]));
+    }
+    else
+        memset(rs+ncells, 0, sizeof(riemann_solution));
 
     return maxspeed;
 }
