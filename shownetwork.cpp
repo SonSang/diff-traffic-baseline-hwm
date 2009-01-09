@@ -232,7 +232,7 @@ public:
 
         glLoadIdentity();
 
-        glTranslatef(0.0f, 0.0f, -std::pow(2.0, zoom));
+        glTranslatef(0.0f, 0.0f, -std::pow(2.0f, zoom));
 
         nav.get_rotation();
         glMultMatrixd(nav.world_mat());

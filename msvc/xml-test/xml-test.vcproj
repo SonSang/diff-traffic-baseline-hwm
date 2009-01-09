@@ -176,31 +176,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\arz.hpp"
+				RelativePath="..\..\arz.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\intersection.hpp"
+				RelativePath="..\..\intersection.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\intervals.hpp"
+				RelativePath="..\..\intervals.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\lane.hpp"
+				RelativePath="..\..\lane.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\network.hpp"
+				RelativePath="..\..\network.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\road.hpp"
+				RelativePath="..\..\road.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\xml-util.hpp"
+				RelativePath="..\..\xml-util.hpp"
 				>
 			</File>
 		</Filter>
@@ -216,23 +216,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\intersection.cpp"
+				RelativePath="..\..\intersection.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\lane.cpp"
+				RelativePath="..\..\lane.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\network.cpp"
+				RelativePath="..\..\network.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\road.cpp"
+				RelativePath="..\..\road.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\xml-test.cpp"
+				RelativePath="..\..\xml-test.cpp"
 				>
 			</File>
 		</Filter>
