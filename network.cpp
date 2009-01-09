@@ -153,4 +153,29 @@ bool network::xml_read(xmlTextReaderPtr reader)
 network::~network()
 {
     free(name);
+    free(lanes[0].data);
+}
+
+void network::prepare(float h)
+{
+    int total = 0;
+
+    foreach(lane &la, lanes)
+        total += la.ncells = la.calc_length()/h;
+
+    printf("Allocating %zu bytes for %d cells...", sizeof(q)*total, total);
+    q *d = (q *) malloc(sizeof(q)*total);
+    if(!d)
+    {
+        fprintf(stderr, "Failed!\n");
+        exit(1);
+    }
+    else
+        printf("Done\n");
+
+    foreach(lane &la, lanes)
+    {
+        la.data = d;
+        d += la.ncells;
+    }
 }

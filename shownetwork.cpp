@@ -405,6 +405,8 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
+    net->prepare(0.1);
+
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];
     t = 0.0f;

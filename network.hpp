@@ -61,6 +61,8 @@ struct network
 
     ~network();
 
+    void prepare(float h);
+
     char * name;
     std::vector<road> roads;
     std::vector<lane> lanes;
