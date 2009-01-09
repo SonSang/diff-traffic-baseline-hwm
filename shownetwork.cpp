@@ -158,11 +158,15 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             blackbody(v, rgb);
 
             glColor3fv(rgb);
-            glBegin(GL_QUADS);
-            glVertex2f(s, -1.0f);
-            glVertex2f(s,  1.0f);
-            glVertex2f(e,  1.0f);
-            glVertex2f(e, -1.0f);
+            glBegin(GL_QUAD_STRIP);
+            glVertex3f(s, -1.0f, 0);
+            glVertex3f(e, -1.0f, 0);
+            glVertex3f(s, -1.0f, v);
+            glVertex3f(e, -1.0f, v);
+            glVertex3f(s,  1.0f, v);
+            glVertex3f(e,  1.0f, v);
+            glVertex3f(s,  1.0f, 0);
+            glVertex3f(e,  1.0f, 0);
             glEnd();
         }
         glPopMatrix();
