@@ -102,9 +102,9 @@ bool network::xml_read(xmlTextReaderPtr reader)
     }
     while(ret == 1 && !is_closing_element(reader, "network"));
 
-    printf("Read %zu roads\n", roads.size());
-    printf("Read %zu lanes\n", lanes.size());
-    printf("Read %zu intersections\n", intersections.size());
+    printf("Read " SIZE_T_FMT " roads\n", roads.size());
+    printf("Read " SIZE_T_FMT " lanes\n", lanes.size());
+    printf("Read " SIZE_T_FMT " intersections\n", intersections.size());
 
     std::vector<lane>::iterator lane_itr = lanes.begin();
     for(; lane_itr != lanes.end(); ++lane_itr)
@@ -172,7 +172,7 @@ void network::prepare(float h)
         total += la.ncells = la.calc_length()/h;
     }
 
-    printf("Allocating %zu bytes for %d cells...", sizeof(q)*total, total);
+    printf("Allocating " SIZE_T_FMT " bytes for %d cells...", sizeof(q)*total, total);
     q *d = (q *) malloc(sizeof(q)*total);
     if(!d)
     {
@@ -188,7 +188,7 @@ void network::prepare(float h)
         d += la.ncells;
     }
 
-    printf("Allocating %zu bytes for %zu riemann solutions...", sizeof(riemann_solution)*(total + lanes.size()), total+lanes.size());
+    printf("Allocating " SIZE_T_FMT " bytes for " SIZE_T_FMT " riemann solutions...", sizeof(riemann_solution)*(total + lanes.size()), total+lanes.size());
     riemann_solution *rs = (riemann_solution *) malloc(sizeof(riemann_solution)*(total + lanes.size()));
     if(!rs)
     {

@@ -9,6 +9,15 @@
 #include <cstring>
 #include <vector>
 #include <map>
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#define __restrict__
+#define copysign _copysign
+#define SIZE_T_FMT "%lu"
+#else
+#define SIZE_T_FMT "%zu"
+#endif
+
 
 inline bool is_opening_element(xmlTextReaderPtr reader, const xmlChar *eltname)
 {
