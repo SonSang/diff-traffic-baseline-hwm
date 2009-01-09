@@ -178,3 +178,19 @@ int intersection::next_state()
 
     return current_state;
 }
+
+lane* intersection::incoming_state(int intern_ref) const
+{
+    const state &cstate = states[current_state];
+
+    int oref = cstate.in_states[intern_ref];
+    return oref == -1 ? 0 : outgoing[oref].dp;
+}
+
+lane* intersection::outgoing_state(int intern_ref) const
+{
+    const state &cstate = states[current_state];
+
+    int oref = cstate.in_states[intern_ref];
+    return oref == -1 ? 0 : outgoing[oref].dp;
+}

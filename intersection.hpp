@@ -13,17 +13,22 @@ struct intersection
 
         int id;
         float duration;
-        std::vector<in_id> in_states;
-        std::vector<out_id> out_states;
-    };
+        std::vector<out_id> in_states; //< Mapping of incoming lane ids to
+                                       //< out ids
+        std::vector<in_id>  out_states;//< Mapping of outgoing lane ids to
+    };                                 //< in ids
 
     bool xml_read(xmlTextReaderPtr reader);
 
     int next_state();
 
-    std::vector<lane_id> incoming;
-    std::vector<lane_id> outgoing;
+    lane* incoming_state(int intern_ref) const;
+    lane* outgoing_state(int intern_ref) const;
 
+    std::vector<lane_id> incoming; //< Lanes that flow
+                                   //< _IN_ to intersection
+    std::vector<lane_id> outgoing; //< Lanes that flow
+                                   //< _OUT_ of intersection
     int current_state;
     std::vector<state> states;
 };
