@@ -63,6 +63,12 @@ struct network
 
     void prepare(float h);
 
+    float sim_step();
+
+    float gamma_c;
+    float inv_gamma;
+    float min_h;
+
     char * name;
     std::vector<road> roads;
     std::vector<lane> lanes;

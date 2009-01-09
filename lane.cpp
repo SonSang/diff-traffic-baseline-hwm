@@ -233,3 +233,71 @@ float lane::calc_length() const
 
     return length;
 }
+
+float lane::collect_riemann(float gamma_c, float inv_gamma)
+{
+    full_q fq_buff[2];
+    full_q * fq[2] = {fq_buff, fq_buff + 1};
+
+    float maxspeed = 0.0f;
+
+    memset(rs, 0, sizeof(riemann_solution));
+
+    fq[0]->from_q(data,
+                  speedlimit, gamma_c);
+
+    float inv_speedlimit = 1.0f/speedlimit;
+
+    for(size_t i = 1; i < ncells; ++i)
+    {
+        fq[1]->from_q(data + i,
+                      speedlimit, gamma_c);
+
+        riemann(rs + i,
+                fq[0],
+                fq[1],
+                speedlimit,
+                inv_speedlimit,
+                gamma_c,
+                inv_gamma);
+
+        maxspeed = std::max(maxspeed, std::max(std::abs(rs[i].speeds[0]), std::abs(rs[i].speeds[1])));
+
+        std::swap(fq[0], fq[1]);
+    }
+
+    memset(rs+ncells, 0, sizeof(riemann_solution));
+
+    return maxspeed;
+}
+
+void lane::update(float dt)
+{
+    float coeff = dt/h;
+
+    q limited_base[2];
+    q *limited[2] = {limited_base, limited_base+1};
+
+    (*limited[0]) = flux_correction(rs,
+                                    rs + 1,
+                                    rs + 2,
+                                    coeff);
+
+    for(size_t i = 0; i < ncells; ++i)
+    {
+        (*limited[1]) = flux_correction(rs + i,
+                                        rs + i + 1,
+                                        rs + i + 2,
+                                        coeff);
+
+        data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
+        data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
+
+        if(data[i].rho < 0.0f)
+            data[i].rho  = 0.0f;
+        if(data[i].y > 0.0f)
+            data[i].y  = 0.0f;
+
+        std::swap(limited[0], limited[1]);
+    }
+}

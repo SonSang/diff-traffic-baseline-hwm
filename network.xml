@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<network version="1.0" name="test" xmlns:xi="http://www.w3.org/2001/XInclude">
+<network version="1.0" name="test" xmlns:xi="http://www.w3.org/2001/XInclude" gamma="0.5">
   <roads>
     <road id="road0" name="South Columbia Street">
       <line_rep>

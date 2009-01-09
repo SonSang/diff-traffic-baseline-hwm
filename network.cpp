@@ -1,4 +1,5 @@
 #include "network.hpp"
+#include "arz.hpp"
 
 bool network::load_from_xml(const char *filename)
 {
@@ -52,8 +53,10 @@ bool network::xml_read(xmlTextReaderPtr reader)
     float version = 0.0f;
 
     boost::fusion::vector<list_matcher<float>,
-        list_matcher<char*> > vl(lm("version", &version),
-                                 lm("name", &name));
+        list_matcher<char*>,
+        list_matcher<float> > vl(lm("version", &version),
+                                 lm("name", &name),
+                                 lm("gamma", &gamma_c));
 
     if(!read_attributes(vl, reader))
        return false;
@@ -63,6 +66,8 @@ bool network::xml_read(xmlTextReaderPtr reader)
         fprintf(stderr, "Network version is %f, expected 1.0f!\n", version);
         return false;
     }
+
+    inv_gamma = 1.0f/gamma_c;
 
     std::map<char*, int, ltstr> road_refs;
     std::map<char*, int, ltstr> lane_refs;
@@ -154,6 +159,7 @@ network::~network()
 {
     free(name);
     free(lanes[0].data);
+    free(lanes[0].rs);
 }
 
 void network::prepare(float h)
@@ -178,4 +184,41 @@ void network::prepare(float h)
         la.data = d;
         d += la.ncells;
     }
+
+    printf("Allocating %zu bytes for %zu riemann solutions...", sizeof(riemann_solution)*(total + lanes.size()), total+lanes.size());
+    riemann_solution *rs = (riemann_solution *) malloc(sizeof(riemann_solution)*(total + lanes.size()));
+    if(!rs)
+    {
+        fprintf(stderr, "Failed!\n");
+        exit(1);
+    }
+    else
+        printf("Done\n");
+
+    foreach(lane &la, lanes)
+    {
+        la.rs = rs;
+        rs += la.ncells + 1;
+    }
+
+    min_h = h; //< Just for now, since we have constant h over all lanes
+}
+
+float network::sim_step()
+{
+    float maxspeed = 0.0f;
+    foreach(lane &la, lanes)
+    {
+        float speed = la.collect_riemann(gamma_c, inv_gamma);
+        maxspeed = std::max(maxspeed, speed);
+    }
+
+    printf("maxspeed: %f\n", maxspeed);
+
+    float dt = min_h/maxspeed;
+
+    foreach(lane &la, lanes)
+        la.update(dt);
+
+    return dt;
 }

@@ -367,6 +367,12 @@ public:
             {
                 switch(Fl::event_key())
                 {
+                case ' ':
+                    {
+                        float dt =  net->sim_step();
+                        printf("dt = %f\n", dt);
+                    }
+                    break;
                 case 'z':
                     t-= 0.01;
                     if(t < 0.0f)

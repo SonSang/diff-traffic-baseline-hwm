@@ -41,7 +41,7 @@ struct adjacency_pair
     lane_id right_neighbor; //< The right incident lane.
 
     adjacency_intervals::entry_id left_interval; //< Reference to interval in the
-                                                  //< left lane's adjacency_intervals.
+                                                 //< left lane's adjacency_intervals.
     adjacency_intervals::entry_id right_interval; //< Reference to interval in the
                                                   //< right lane's adjacency_intervals.
 };
@@ -59,6 +59,10 @@ struct lane
 
     void draw_data() const;
 
+    float collect_riemann(float gamma, float inv_gamma);
+
+    void update(float maxspeed);
+
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
 
     adjacency_intervals left;  //< Lane's left neighbors.
@@ -75,5 +79,6 @@ struct lane
     unsigned int ncells; //< The number of simulation grid cells.
                          //< ncells*h = length.
     q *data;             //< The simulation data.
+    riemann_solution *rs;//< Saved Riemann solutions for this lane.
 };
 #endif
