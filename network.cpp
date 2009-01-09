@@ -135,9 +135,6 @@ bool network::xml_read(xmlTextReaderPtr reader)
                 return false;
     }
 
-    foreach(const lane &la, lanes)
-        printf("%f\n", la.calc_length());
-
     std::map<char*, int, ltstr>::iterator current = road_refs.begin();
     for(; current != road_refs.end(); ++current)
         free(current->first);

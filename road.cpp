@@ -69,8 +69,6 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad> & faces, c
                          end_t*normals[end].y + offsets[1]*normals[end].x + points[end].y));
 
 
-    foreach(const point &pt, vrts)
-        printf("%f %f\n", pt.x, pt.y);
     faces.resize(1+end-start);
     for(int i = 0; i < 1+end-start; ++i)
     {

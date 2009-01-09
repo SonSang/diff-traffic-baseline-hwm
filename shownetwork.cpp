@@ -90,24 +90,17 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     {
         leftover = h - (ncells - data_end)*h - leftover;
         next_leftover = h - leftover;
-        printf("leftover: %f\n", leftover);
     }
 
-    printf("data_end: %f (%d)\n", (t1-t0)/h, data_end);
-    printf("t0 %f\n", t0);
-
     float segstart = t0 - (clengths[start] + offset*(cmitres[start]+cmitres[start-1]));
-    printf("start segstart: %f\n", segstart);
     float mitre = cmitres[start]-cmitres[start-1];
     point p0(segstart*normals[start].x + offset*(-mitre*normals[start].x - normals[start].y) + points[start].x,
              segstart*normals[start].y + offset*(-mitre*normals[start].y + normals[start].x) + points[start].y);
     segstart = t0;
 
     int segment = start;
-
     int count = 0;
 
-    printf("t1: %f\n", t1);
     bool alldone = false;
     while(!alldone && count*h + t0 < t1)
     {
@@ -129,8 +122,6 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         glMultMatrixf(mat);
         glScalef(1.0f, LANE_WIDTH*0.4f, 1.0f);
 
-        printf("On segment: %d. start = %f, end = %f\n", segment, segstart, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
-
         bool done = false;
         while(!done)
         {
@@ -138,7 +129,6 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             float e = s + h;
             int drawcount = backwards ? (data_end - count + incount)*stride : (count+incount)*stride;
             float v = data[drawcount];
-            printf("    drawcount = %d dist = %f\n", drawcount, e + t0);
             if(e + t0 >= t1)
             {
                 if(backwards)
@@ -146,33 +136,26 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
                 else
                     leftover = e - (t1 - t0);
                 e = t1 - t0;
-                printf("   done with all, e + t0 = %f, t1 = %f, leftover = %f\n", e + t0, t1, leftover);
+
                 done = true;
                 alldone = true;
             }
             else if(segment < static_cast<int>(clengths.size())-2 && e > clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0)
             {
-                printf("   done with seg %d, e = %f, segend - t0 = %f\n", segment, e, clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0);
                 e = clengths[segment+1] + offset*(cmitres[segment+1] + cmitres[segment]) - t0;
                 done = true;
             }
            else
                 ++count;
 
-            printf("    s: %f e: %f. Count = %d ", s, e, count);
-
             s -= (segstart - t0);
             e -= (segstart - t0);
-
-            printf("    s: %f e: %f\n", s, e);
 
             if(s < 0.0f)
                 s = 0.0f;
 
             float rgb[3];
             blackbody(v, rgb);
-
-            printf("    drawn with s: %f e: %f\n", s, e);
 
             glColor3fv(rgb);
             glBegin(GL_QUADS);
@@ -195,15 +178,10 @@ void lane::draw_data() const
     float h = 0.1;
     float llen = calc_length();
 
-    printf("llen %f\n", llen);
-    printf("llen/h %f\n", llen/h);
-
     int n = std::ceil(llen/h);
     float data[n];
     for(int i = 0; i < n; ++i)
         data[i] = i/(n-1.0);
-
-    printf("n: %d\n", n);
 
     int count = 0;
     float lenused = 0.0f;
@@ -215,7 +193,6 @@ void lane::draw_data() const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        printf("count: %d\n", count);
         count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, data, 1, n);
 
         ++p;
