@@ -152,6 +152,14 @@ bool network::xml_read(xmlTextReaderPtr reader)
     for(; current != intersection_refs.end(); ++current)
         free(current->first);
 
+    foreach(intersection &inter, intersections)
+    {
+        inter.build_shape(0.1);
+        foreach(const point &pt, inter.shape)
+            printf("<%f, %f> ", pt.x, pt.y);
+        printf("\n");
+    }
+
     return ret == 1 && have_roads && have_lanes && have_intersections;
 }
 

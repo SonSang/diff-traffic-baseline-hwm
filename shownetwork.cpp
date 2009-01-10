@@ -201,6 +201,17 @@ void lane::draw_data(float gamma_c) const
     }
 }
 
+void intersection::draw() const
+{
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glBegin(GL_LINE_LOOP);
+    foreach(const point& pt, shape)
+        glVertex2fv(&(pt.x));
+    glEnd();
+
+}
+
 network *net;
 float t;
 std::vector<road_mesh> rm;
@@ -271,6 +282,9 @@ public:
             glPopMatrix();
         }
 
+
+        foreach(const intersection &is, net->intersections)
+            is.draw();
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         foreach(const lane &la, net->lanes)
             la.draw_data(net->gamma_c);

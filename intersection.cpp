@@ -194,3 +194,103 @@ lane* intersection::outgoing_state(int intern_ref) const
     int oref = cstate.in_states[intern_ref];
     return oref == -1 ? 0 : outgoing[oref].dp;
 }
+
+void intersection::build_shape(float lane_width)
+{
+    shape.resize(2*incoming.size()*outgoing.size());
+
+    for(int i = 0; i < static_cast<int>(incoming.size()); ++i)
+    {
+        const lane *la = incoming[i].dp;
+        const road_membership *rom;
+        if(la->road_memberships.entries.empty())
+            rom = &(la->road_memberships.base_data);
+        else
+            rom = &(la->road_memberships.entries.back().data);
+
+        rom->parent_road.dp->rep.locate(&(shape[2*i]), rom->interval[1], rom->lane_position - 0.5*lane_width);
+        rom->parent_road.dp->rep.locate(&(shape[2*i+1]), rom->interval[1], rom->lane_position + 0.5*lane_width);
+    }
+
+    int incount = static_cast<int>(incoming.size());
+    for(int i = 0; i < static_cast<int>(outgoing.size()); ++i)
+    {
+        const lane *la = outgoing[i].dp;
+        const road_membership *rom = &(la->road_memberships.base_data);
+
+        rom->parent_road.dp->rep.locate(&(shape[2*(i + incount)]), rom->interval[0], rom->lane_position - 0.5*lane_width);
+        rom->parent_road.dp->rep.locate(&(shape[2*(i + incount)+1]), rom->interval[0], rom->lane_position + 0.5*lane_width);
+    }
+
+    convex_hull(shape);
+}
+
+inline bool lt(float l, float r)
+{
+    return (l - r) < -1e-6;
+}
+
+inline bool eq(float l, float r)
+{
+    return std::abs(r - l) < 1e-6;
+}
+
+struct lexicographic
+{
+    inline bool operator()(const point &pt0, const point &pt1) const
+    {
+        return lt(pt0.x, pt1.x) || (eq(pt0.x, pt1.x) && lt(pt0.y, pt1.y));
+    }
+};
+
+inline bool rightturn(const point &pt0, const point &pt1, const point &pt2)
+{
+    float rtval = ((pt1.x-pt0.x)*(pt2.y-pt1.y) - (pt2.x-pt1.x)*(pt1.y-pt0.y));
+    return rtval < -1e-6;
+}
+
+inline void convex_hull(std::vector<point> & pts)
+{
+    lexicographic lx;
+    std::sort(pts.begin(), pts.end(), lx);
+    std::vector<point> newpts;
+    newpts.push_back(pts[0]);
+    int count = 1;
+    while(count < static_cast<int>(pts.size()))
+    {
+        const point &bpt = newpts.back();
+        if(!(eq(bpt.x, pts[count].x) && eq(bpt.y, pts[count].y)))
+            newpts.push_back(pts[count]);
+        ++count;
+    }
+    pts.clear();
+
+    pts.push_back(newpts[0]);
+    pts.push_back(newpts[1]);
+
+    for(count = 2; count < static_cast<int>(newpts.size()); ++count)
+    {
+        pts.push_back(newpts[count]);
+
+        int back = static_cast<int>(pts.size())-1;
+        while(back > 2 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        {
+            std::swap(pts[back], pts[back-1]);
+            pts.resize(back);
+            --back;
+        }
+    }
+
+    for(count = static_cast<int>(newpts.size())-2; count > 1; --count)
+    {
+        pts.push_back(newpts[count]);
+
+        int back = static_cast<int>(pts.size())-1;
+        while(back > 2 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        {
+            std::swap(pts[back], pts[back-1]);
+            pts.resize(back);
+            --back;
+        }
+    }
+}

@@ -1,6 +1,8 @@
 #ifndef _INTERSECTION_HPP_
 #define _INTERSECTION_HPP_
 
+void convex_hull(std::vector<point> & pts);
+
 struct intersection
 {
     struct state
@@ -25,12 +27,18 @@ struct intersection
     lane* incoming_state(int intern_ref) const;
     lane* outgoing_state(int intern_ref) const;
 
+    void build_shape(float lane_width);
+    void draw() const;
+
     std::vector<lane_id> incoming; //< Lanes that flow
                                    //< _IN_ to intersection
     std::vector<lane_id> outgoing; //< Lanes that flow
                                    //< _OUT_ of intersection
     int current_state;
     std::vector<state> states;
+
+    std::vector<point> shape;
+    point center;
 };
 
 #endif
