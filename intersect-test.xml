@@ -68,15 +68,15 @@
     </lane>
     <lane id="lane0b" speedlimit="1.0">
       <start>
-	<dead_end/>
+	<intersection_ref ref="intersection0"/>
       </start>
       <end>
-	<intersection_ref ref="intersection0"/>
+	<dead_end/>
       </end>
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road0" interval_start="0.0" interval_end="1.0" lane_position="0.05"/>
+	    <road_membership parent_road_ref="road0" interval_start="1.0" interval_end="0.0" lane_position="0.05"/>
 	  </base>
 	</interval>
       </road_intervals>
@@ -130,15 +130,15 @@
     </lane>
     <lane id="lane1b" speedlimit="1.0">
       <start>
-	<dead_end/>
+	<intersection_ref ref="intersection0"/>
       </start>
       <end>
-	<intersection_ref ref="intersection0"/>
+	<dead_end/>
       </end>
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road1" interval_start="0.0" interval_end="1.0" lane_position="0.05"/>
+	    <road_membership parent_road_ref="road1" interval_start="1.0" interval_end="0.0" lane_position="0.05"/>
 	  </base>
 	</interval>
       </road_intervals>
@@ -161,10 +161,10 @@
     </lane>
     <lane id="lane2a" speedlimit="1.0">
       <start>
-	<intersection_ref ref="intersection0"/>
+	<dead_end/>
       </start>
       <end>
-	<dead_end/>
+	<intersection_ref ref="intersection0"/>
       </end>
       <road_intervals>
 	<interval>
@@ -200,7 +200,7 @@
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road2" interval_start="0.0" interval_end="1.0" lane_position="0.05"/>
+	    <road_membership parent_road_ref="road2" interval_start="1.0" interval_end="0.0" lane_position="0.05"/>
 	  </base>
 	</interval>
       </road_intervals>
@@ -223,10 +223,10 @@
     </lane>
     <lane id="lane3a" speedlimit="1.0">
       <start>
-	<intersection_ref ref="intersection0"/>
+	<dead_end/>
       </start>
       <end>
-	<dead_end/>
+	<intersection_ref ref="intersection0"/>
       </end>
       <road_intervals>
 	<interval>
@@ -262,7 +262,7 @@
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road3" interval_start="0.0" interval_end="1.0" lane_position="0.05"/>
+	    <road_membership parent_road_ref="road3" interval_start="1.0" interval_end="0.0" lane_position="0.05"/>
 	  </base>
 	</interval>
       </road_intervals>
@@ -289,23 +289,21 @@
       <incident>
 	<incoming>
 	  <lane_ref ref="lane0a" local_id="0"/>
-	  <lane_ref ref="lane0b" local_id="1"/>
-	  <lane_ref ref="lane1a" local_id="2"/>
-	  <lane_ref ref="lane1b" local_id="3"/>
+	  <lane_ref ref="lane1a" local_id="1"/>
+	  <lane_ref ref="lane2b" local_id="2"/>
+	  <lane_ref ref="lane3b" local_id="3"/>
 	</incoming>
 	<outgoing>
-	  <lane_ref ref="lane2a" local_id="0"/>
-	  <lane_ref ref="lane2b" local_id="1"/>
-	  <lane_ref ref="lane3a" local_id="2"/>
-	  <lane_ref ref="lane3b" local_id="3"/>
+	  <lane_ref ref="lane0b" local_id="0"/>
+	  <lane_ref ref="lane1b" local_id="1"/>
+	  <lane_ref ref="lane2a" local_id="2"/>
+	  <lane_ref ref="lane3a" local_id="3"/>
 	</outgoing>
       </incident>
       <states>
 	<state id="0" duration="20">
 	  <lane_pair in_id="0" out_id="2"/>
-	  <lane_pair in_id="1" out_id="3"/>
 	  <lane_pair in_id="2" out_id="0"/>
-	  <lane_pair in_id="3" out_id="1"/>
 	</state>
       </states>
     </intersection>

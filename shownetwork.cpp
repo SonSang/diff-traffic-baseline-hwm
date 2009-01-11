@@ -260,6 +260,11 @@ void intersection::draw() const
         point in_vec;
         point in_pt;
         in_rom->parent_road.dp->rep.locate_vec(&in_pt, &in_vec, in_rom->interval[1], in_rom->lane_position);
+        if(in_rom->interval[0] > in_rom->interval[1])
+        {
+            in_vec.x *= -1.0f;
+            in_vec.y *= -1.0f;
+        }
 
         const lane *out_la = outgoing[st.in_states[i]].dp;
         const road_membership *out_rom;
@@ -268,6 +273,11 @@ void intersection::draw() const
         point out_vec;
         point out_pt;
         out_rom->parent_road.dp->rep.locate_vec(&out_pt, &out_vec, out_rom->interval[0], out_rom->lane_position);
+        if(out_rom->interval[0] > out_rom->interval[1])
+        {
+            out_vec.x *= -1.0f;
+            out_vec.y *= -1.0f;
+        }
 
         point middle;
         intersect_lines(middle,
