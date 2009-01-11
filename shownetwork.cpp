@@ -10,6 +10,40 @@
 
 #define LANE_WIDTH 0.1
 
+void intersect_lines(point &res,
+                     const point &o0, const point &n0,
+                     const point &o1, const point &n1)
+{
+    float a[2] = { n0.y,  n1.y};
+    float b[2] = {-n0.x, -n1.x};
+    float c[2] = {o0.x*n0.y - o0.y*n0.x,
+                  o1.x*n1.y - o1.y*n1.x};
+    if(std::abs(n0.y) < 1e-6)
+    {
+        if(std::abs(n1.y) < 1e-6)
+        {
+            res.x = 0.5f*(o0.x + o1.x);
+            res.y = 0.5f*(o0.y + o1.y);
+            return;
+        }
+        std::swap(a[0], a[1]);
+        std::swap(b[0], b[1]);
+        std::swap(c[0], c[1]);
+    }
+
+    float inva0 = 1.0f/a[0];
+    float denom = b[1] - a[1]*inva0*b[0];
+    if(std::abs(denom) < 1e-6)
+    {
+        res.x = 0.5f*(o0.x + o1.x);
+        res.y = 0.5f*(o0.y + o1.y);
+        return;
+    }
+
+    res.y = (c[1] - a[1]*inva0 * c[0])/denom;
+    res.x = (c[0] - b[0]*res.y)*inva0;
+}
+
 void blackbody(float val, float rgb[3])
 {
    if(val <= 0.0) // clamp low to black
@@ -210,6 +244,41 @@ void intersection::draw() const
         glVertex2fv(&(pt.x));
     glEnd();
 
+    const state &st = states[current_state];
+    for(size_t i = 0; i < st.in_states.size(); ++i)
+    {
+        if(st.in_states[i] < 0)
+            continue;
+
+        const lane *in_la = incoming[i].dp;
+        const road_membership *in_rom;
+        if(in_la->road_memberships.entries.empty())
+            in_rom = &(in_la->road_memberships.base_data);
+        else
+            in_rom = &(in_la->road_memberships.entries.back().data);
+
+        point in_vec;
+        point in_pt;
+        in_rom->parent_road.dp->rep.locate_vec(&in_pt, &in_vec, in_rom->interval[1], in_rom->lane_position);
+
+        const lane *out_la = outgoing[st.in_states[i]].dp;
+        const road_membership *out_rom;
+        out_rom = &(out_la->road_memberships.base_data);
+
+        point out_vec;
+        point out_pt;
+        out_rom->parent_road.dp->rep.locate_vec(&out_pt, &out_vec, out_rom->interval[0], out_rom->lane_position);
+
+        point middle;
+        intersect_lines(middle,
+                        in_pt, in_vec,
+                        out_pt, out_vec);
+        glBegin(GL_LINE_STRIP);
+        glVertex2fv(&(in_pt.x));
+        glVertex2fv(&(middle.x));
+        glVertex2fv(&(out_pt.x));
+        glEnd();
+    }
 }
 
 network *net;
