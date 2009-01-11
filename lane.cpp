@@ -7,10 +7,9 @@ bool interval_xml_read<road_membership>::xml_read(road_membership & item, xmlTex
 }
 
 template <>
-bool interval_xml_read<adjacency_pair*>::xml_read(adjacency_pair *& item, xmlTextReaderPtr reader)
+bool interval_xml_read<adjacency>::xml_read(adjacency &item, xmlTextReaderPtr reader)
 {
-    item = 0;
-    return true;
+    return item.xml_read(reader);
 }
 
 static bool read_dead_end(void *item, xmlTextReaderPtr reader)
@@ -182,6 +181,21 @@ bool road_membership::xml_read(xmlTextReaderPtr reader)
     return read_attributes(vl, reader);
 }
 
+bool adjacency::xml_read(xmlTextReaderPtr reader)
+{
+    boost::fusion::vector<list_matcher<char*>,
+        list_matcher<float>,
+        list_matcher<float> > vl(lm("lane_ref", &(neighbor.sp)),
+                                 lm("interval_start", neighbor_interval),
+                                 lm("interval_end", neighbor_interval+1));
+
+    if(!read_attributes(vl, reader))
+        neighbor.sp = 0;
+
+    printf("lane_ref = %s; i = [%f %f]\n", neighbor.sp, neighbor_interval[0], neighbor_interval[1]);
+    return true;
+};
+
 bool lane::xml_read(xmlTextReaderPtr reader)
 {
     boost::fusion::vector<list_matcher<float> > vl(lm("speedlimit", &speedlimit));
@@ -232,6 +246,24 @@ float lane::calc_length() const
     }
 
     return length;
+}
+
+lane* lane::left_adjacency(float &t) const
+{
+    const adjacency &adj = left.get_rescale(t);
+    if(adj.neighbor.dp)
+        t = (t + adj.neighbor_interval[0])*(adj.neighbor_interval[1]-adj.neighbor_interval[0]);
+
+    return adj.neighbor.dp;
+}
+
+lane* lane::right_adjacency(float &t) const
+{
+    const adjacency &adj = right.get_rescale(t);
+    if(adj.neighbor.dp)
+        t = (t + adj.neighbor_interval[0])*(adj.neighbor_interval[1]-adj.neighbor_interval[0]);
+
+    return adj.neighbor.dp;
 }
 
 float lane::collect_riemann(float gamma_c, float inv_gamma)

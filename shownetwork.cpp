@@ -351,7 +351,6 @@ public:
         foreach(const road_mesh & i, rm)
             i.draw();
 
-        glColor3f(1.0f, 0.0f, 1.0f);
         point p, n;
 
         foreach(const lane &la, net->lanes)
@@ -366,6 +365,7 @@ public:
                 n.y *= -1.0f;
             }
 
+            glColor3f(1.0f, 0.0f, 1.0f);
             glPushMatrix();
             glTranslatef(p.x, p.y, 0.0f);
             float mat[16] =
@@ -375,8 +375,39 @@ public:
                  0.0f,  0.0f, 0.0f, 1.0f};
             glMultMatrixf(mat);
             glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-            glutWireTeapot(0.05f);
+            glutWireTeapot(0.03f);
             glPopMatrix();
+
+            glColor3f(0.0, 1.0, 0.0);
+            x = t;
+            lane* left_lane = la.left_adjacency(x);
+            printf("left %p; #%zu\n", left_lane, (left_lane-&(net->lanes[0]))/sizeof(lane));
+            if(left_lane)
+            {
+                point lp;
+                rom = &(left_lane->road_memberships.get_rescale(x));
+                rom->parent_road.dp->rep.locate(&lp, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+
+
+                glBegin(GL_LINES);
+                glVertex2fv(&(p.x));
+                glVertex2fv(&(lp.x));
+                glEnd();
+            }
+            x = t;
+            lane* right_lane = la.right_adjacency(x);
+            printf("right %p; #%zu\n", right_lane, (right_lane-&(net->lanes[0]))/sizeof(lane));
+            if(right_lane)
+            {
+                point rp;
+                rom = &(right_lane->road_memberships.get_rescale(x));
+                rom->parent_road.dp->rep.locate(&rp, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+
+                glBegin(GL_LINES);
+                glVertex2fv(&(p.x));
+                glVertex2fv(&(rp.x));
+                glEnd();
+            }
         }
 
 

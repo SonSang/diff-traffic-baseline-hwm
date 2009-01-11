@@ -29,21 +29,21 @@ struct road_membership
 
 typedef intervals<road_membership> road_intervals;
 
-struct adjacency_pair;
+struct adjacency;
 
-#define NO_ADJACENCY 0
-typedef intervals<adjacency_pair*> adjacency_intervals;
+typedef intervals<adjacency> adjacency_intervals;
 
-//! Structure  describing an interval where two lanes are adjacent.
-struct adjacency_pair
+//! Structure lane adjacency
+struct adjacency
 {
-    lane_id left_neighbor; //< The left incident lane.
-    lane_id right_neighbor; //< The right incident lane.
+    bool xml_read(xmlTextReaderPtr reader);
 
-    adjacency_intervals::entry_id left_interval; //< Reference to interval in the
-                                                 //< left lane's adjacency_intervals.
-    adjacency_intervals::entry_id right_interval; //< Reference to interval in the
-                                                  //< right lane's adjacency_intervals.
+    static const int NO_ADJACENCY = 0;
+    lane_id neighbor; //< The right incident lane.
+
+    float neighbor_interval[2]; //< The parametric interval
+                               //< in the neighbor corresponding
+                               //< to this adjacency
 };
 
 //! A single continuous road lane
@@ -56,6 +56,9 @@ struct lane
     bool xml_read(xmlTextReaderPtr reader);
 
     float calc_length() const;
+
+    lane* left_adjacency(float &t) const;
+    lane* right_adjacency(float &t) const;
 
     void draw_data(float gamma_c) const;
 

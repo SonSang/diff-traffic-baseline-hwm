@@ -126,6 +126,36 @@ bool network::xml_read(xmlTextReaderPtr reader)
         for(int i = 0; i < static_cast<int>(ri.entries.size()); ++i)
             if(!ri.entries[i].data.parent_road.retrieve_ptr(roads, road_refs))
                 return false;
+
+        // convert left adjacencies
+        adjacency_intervals & ai = lane_itr->left;
+        if(ai.base_data.neighbor.sp && !ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
+            return false;
+
+        for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
+            if(ai.entries[i].data.neighbor.sp && !ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
+            return false;
+
+        // convert right adjacencies
+        ai = lane_itr->right;
+        if(ai.base_data.neighbor.sp)
+        {
+            printf("trying to find %s...", ai.base_data.neighbor.sp);
+            if(!ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
+                return false;
+            printf("%p\n", ai.base_data.neighbor.dp);
+        }
+
+        for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
+        {
+            if(ai.entries[i].data.neighbor.sp)
+            {
+                printf("trying to find %s...", ai.entries[i].data.neighbor.sp);
+                if(!ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
+                    return false;
+                printf("%p\n", ai.entries[i].data.neighbor.dp);
+            }
+        }
     }
 
     std::vector<intersection>::iterator intersection_itr = intersections.begin();
