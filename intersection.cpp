@@ -124,8 +124,8 @@ static bool read_lane_pair(void *item, xmlTextReaderPtr reader)
     if(!read_attributes(vl, reader))
        return false;
 
-    s->in_states[out] = in;
-    s->out_states[in] = out;
+    s->in_states[in] = out;
+    s->out_states[out] = in;
 
     return true;
 }
