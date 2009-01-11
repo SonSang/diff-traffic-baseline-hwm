@@ -246,7 +246,8 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
 
     float inv_speedlimit = 1.0f/speedlimit;
 
-    if(start.end_type == lane_end::DEAD_END || start.end_type == lane_end::TAPER)
+    if(start.end_type == lane_end::DEAD_END || start.end_type == lane_end::TAPER ||
+       start.inters.dp->outgoing_state(start.intersect_in_ref) == 0)
     {
         starvation_riemann(rs,
                            fq[0],
@@ -281,7 +282,8 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
         std::swap(fq[0], fq[1]);
     }
 
-    if(end.end_type == lane_end::DEAD_END || end.end_type == lane_end::TAPER)
+    if(end.end_type == lane_end::DEAD_END || end.end_type == lane_end::TAPER ||
+       end.inters.dp->incoming_state(start.intersect_in_ref) == 0)
     {
         stop_riemann(rs+ncells,
                      fq[0],

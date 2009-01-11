@@ -197,7 +197,7 @@ lane* intersection::outgoing_state(int intern_ref) const
 
 void intersection::build_shape(float lane_width)
 {
-    shape.resize(2*incoming.size()*outgoing.size());
+    shape.resize(2*(outgoing.size()+incoming.size()));
 
     for(int i = 0; i < static_cast<int>(incoming.size()); ++i)
     {
@@ -273,24 +273,25 @@ inline void convex_hull(std::vector<point> & pts)
         pts.push_back(newpts[count]);
 
         int back = static_cast<int>(pts.size())-1;
-        while(back > 2 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
         {
             std::swap(pts[back], pts[back-1]);
-            pts.resize(back);
+            pts.pop_back();
             --back;
         }
     }
 
-    for(count = static_cast<int>(newpts.size())-2; count > 1; --count)
+    for(count = static_cast<int>(newpts.size())-2; count >= 0; --count)
     {
         pts.push_back(newpts[count]);
 
         int back = static_cast<int>(pts.size())-1;
-        while(back > 2 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
         {
             std::swap(pts[back], pts[back-1]);
-            pts.resize(back);
+            pts.pop_back();
             --back;
         }
     }
+    pts.pop_back();
 }
