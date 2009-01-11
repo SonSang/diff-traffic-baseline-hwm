@@ -278,6 +278,24 @@ void intersection::draw() const
         glVertex2fv(&(middle.x));
         glVertex2fv(&(out_pt.x));
         glEnd();
+
+        float len = std::min(std::sqrt((middle.x-in_pt.x)*(middle.x-in_pt.x) + (middle.y-in_pt.y)*(middle.y-in_pt.y)),
+                             std::sqrt((middle.x-out_pt.x)*(middle.x-out_pt.x) + (middle.y-out_pt.y)*(middle.y-out_pt.y)));
+        point o(0.5f*(in_pt.x + middle.x),0.5f*(in_pt.y + middle.y));
+
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(o.x - len*0.1*(in_vec.y + in_vec.x), o.y + len*0.1*(in_vec.x - in_vec.y));
+        glVertex2f(o.x, o.y);
+        glVertex2f(o.x + len*0.1*(in_vec.y - in_vec.x), o.y - len*0.1*(in_vec.x + in_vec.y));
+        glEnd();
+
+        o.x = 0.5f*(out_pt.x + middle.x);
+        o.y = 0.5f*(out_pt.y + middle.y);
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(o.x - len*0.1*(out_vec.y + out_vec.x), o.y + len*0.1*(out_vec.x - out_vec.y));
+        glVertex2f(o.x, o.y);
+        glVertex2f(o.x + len*0.1*(out_vec.y - out_vec.x), o.y - len*0.1*(out_vec.x + out_vec.y));
+        glEnd();
     }
 }
 
