@@ -106,20 +106,21 @@ bool network::xml_read(xmlTextReaderPtr reader)
     printf("Read " SIZE_T_FMT " lanes\n", lanes.size());
     printf("Read " SIZE_T_FMT " intersections\n", intersections.size());
 
-    std::vector<lane>::iterator lane_itr = lanes.begin();
-    for(; lane_itr != lanes.end(); ++lane_itr)
+    for(size_t lc=0; lc < lanes.size(); ++lc)
     {
+        lane &la = lanes[lc];
+
         // convert end points
-        if(lane_itr->start.end_type == lane_end::INTERSECTION)
-            if(!lane_itr->start.inters.retrieve_ptr(intersections, intersection_refs))
+        if(la.start.end_type == lane_end::INTERSECTION)
+            if(!la.start.inters.retrieve_ptr(intersections, intersection_refs))
                 return false;
 
-        if(lane_itr->end.end_type == lane_end::INTERSECTION)
-            if(!lane_itr->end.inters.retrieve_ptr(intersections, intersection_refs))
+        if(la.end.end_type == lane_end::INTERSECTION)
+            if(!la.end.inters.retrieve_ptr(intersections, intersection_refs))
                 return false;
 
         // convert road_memberships
-        road_intervals & ri = lane_itr->road_memberships;
+        road_intervals & ri = la.road_memberships;
         if(!ri.base_data.parent_road.retrieve_ptr(roads, road_refs))
             return false;
 
@@ -128,33 +129,25 @@ bool network::xml_read(xmlTextReaderPtr reader)
                 return false;
 
         // convert left adjacencies
-        adjacency_intervals & ai = lane_itr->left;
-        if(ai.base_data.neighbor.sp && !ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
-            return false;
-
-        for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
-            if(ai.entries[i].data.neighbor.sp && !ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
-            return false;
-
-        // convert right adjacencies
-        ai = lane_itr->right;
-        if(ai.base_data.neighbor.sp)
         {
-            printf("trying to find %s...", ai.base_data.neighbor.sp);
-            if(!ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
+            adjacency_intervals &ai = la.left;
+            if(ai.base_data.neighbor.sp && !ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
                 return false;
-            printf("%p\n", ai.base_data.neighbor.dp);
+
+            for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
+                if(ai.entries[i].data.neighbor.sp && !ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
+                    return false;
         }
 
-        for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
+        // convert right adjacencies
         {
-            if(ai.entries[i].data.neighbor.sp)
-            {
-                printf("trying to find %s...", ai.entries[i].data.neighbor.sp);
-                if(!ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
+            adjacency_intervals &ai = la.right;
+            if(ai.base_data.neighbor.sp && !ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
                     return false;
-                printf("%p\n", ai.entries[i].data.neighbor.dp);
-            }
+
+            for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
+                if(ai.entries[i].data.neighbor.sp && !ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
+                        return false;
         }
     }
 

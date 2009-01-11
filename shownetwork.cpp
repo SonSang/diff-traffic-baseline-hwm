@@ -380,13 +380,15 @@ public:
 
             glColor3f(0.0, 1.0, 0.0);
             x = t;
-            lane* left_lane = la.left_adjacency(x);
-            printf("left %p; #%zu\n", left_lane, (left_lane-&(net->lanes[0]))/sizeof(lane));
+            lane *left_lane = la.left_adjacency(x);
+
             if(left_lane)
             {
                 point lp;
+
                 rom = &(left_lane->road_memberships.get_rescale(x));
-                rom->parent_road.dp->rep.locate(&lp, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+                x = x*(rom->interval[1]-rom->interval[0])+rom->interval[0];
+                rom->parent_road.dp->rep.locate(&lp, x, rom->lane_position);
 
 
                 glBegin(GL_LINES);
@@ -395,13 +397,14 @@ public:
                 glEnd();
             }
             x = t;
-            lane* right_lane = la.right_adjacency(x);
-            printf("right %p; #%zu\n", right_lane, (right_lane-&(net->lanes[0]))/sizeof(lane));
+            lane *right_lane = la.right_adjacency(x);
+
             if(right_lane)
             {
                 point rp;
                 rom = &(right_lane->road_memberships.get_rescale(x));
-                rom->parent_road.dp->rep.locate(&rp, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+                x = x*(rom->interval[1]-rom->interval[0])+rom->interval[0];
+                rom->parent_road.dp->rep.locate(&rp, x, rom->lane_position);
 
                 glBegin(GL_LINES);
                 glVertex2fv(&(p.x));

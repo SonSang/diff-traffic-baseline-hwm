@@ -472,7 +472,7 @@
 	      <base>
 		<lane_adjacency lane_ref="lane0c" interval_start="0.0" interval_end="0.2818"/>
 	      </base>
-	      <divider value="0.3704">
+	      <divider value="0.3167">
 		<lane_adjacency/>
 	      </divider>
 	    </interval>
