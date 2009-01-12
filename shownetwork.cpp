@@ -8,7 +8,7 @@
 #include "arcball.hpp"
 #include "network.hpp"
 
-#define LANE_WIDTH 0.1
+#define LANE_WIDTH 2.5
 
 void intersect_lines(point &res,
                      const point &o0, const point &n0,
@@ -328,7 +328,7 @@ public:
         {
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            gluPerspective(45.0f, (GLfloat)w()/(GLfloat)h(), 0.1f, 100.0f);
+            gluPerspective(45.0f, (GLfloat)w()/(GLfloat)h(), 5.0f, 5000.0f);
 
             glMatrixMode(GL_MODELVIEW);
             glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -375,7 +375,7 @@ public:
                  0.0f,  0.0f, 0.0f, 1.0f};
             glMultMatrixf(mat);
             glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-            glutWireTeapot(0.03f);
+            glutWireTeapot(0.75f);
             glPopMatrix();
 
             glColor3f(0.0, 1.0, 0.0);
@@ -555,14 +555,14 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
-    net->prepare(0.1);
+    net->prepare(2.5);
 
     foreach(lane &la, net->lanes)
     {
         for(unsigned int i = 0; i < la.ncells; ++i)
         {
             la.data[i].rho = i < (la.ncells>>1) ? 0.45 : 0.4;
-            la.data[i].y = to_y(la.data[i].rho, 0.1, la.speedlimit, net->gamma_c);
+            la.data[i].y = to_y(la.data[i].rho, 4.5, la.speedlimit, net->gamma_c);
         }
     }
 
