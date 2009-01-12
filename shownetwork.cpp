@@ -211,7 +211,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         ++segment;
     }
 
-    return count+incount;
+    return count;
 }
 
 void lane::draw_data(float gamma_c) const
