@@ -209,7 +209,6 @@ inline void riemann(riemann_solution *rs,
         assert(lambda0_l > lambda0_m);
         assert(lambda0_l > rs->speeds[0]);
         assert(lambda0_m < rs->speeds[0]);
-
 #endif
 
         rs->speeds[1] = q_r->u;
@@ -283,7 +282,7 @@ inline void riemann(riemann_solution *rs,
         }
     }
 
-    //    assert(rs->speeds[0] < rs->speeds[1]);
+    assert(rs->speeds[0] < rs->speeds[1]);
 
     rs->fluct_l.rho = q_0->rho*q_0->u - q_l->rho*q_l->u;
     rs->fluct_l.y   = q_0->y  *q_0->u - q_l->y  *q_l->u;
