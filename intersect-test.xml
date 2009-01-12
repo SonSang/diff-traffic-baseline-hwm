@@ -58,7 +58,7 @@
     </road>
   </roads>
   <lanes>
-    <lane id="lane0a" speedlimit="1.0">
+    <lane id="lane0a" speedlimit="16.667">
       <start>
 	<dead_end/>
       </start>
@@ -92,7 +92,7 @@
 	</right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane0c" speedlimit="1.0">
+    <lane id="lane0c" speedlimit="16.667">
       <start>
 	<dead_end/>
       </start>
@@ -135,7 +135,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane0b" speedlimit="1.0">
+      <lane id="lane0b" speedlimit="16.667">
 	<start>
 	  <intersection_ref ref="intersection0"/>
 	</start>
@@ -166,7 +166,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane1a" speedlimit="1.0">
+      <lane id="lane1a" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
@@ -197,7 +197,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane1c" speedlimit="1.0">
+      <lane id="lane1c" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
@@ -228,7 +228,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane1b" speedlimit="1.0">
+      <lane id="lane1b" speedlimit="16.667">
 	<start>
 	  <intersection_ref ref="intersection0"/>
 	</start>
@@ -259,7 +259,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane2a" speedlimit="1.0">
+      <lane id="lane2a" speedlimit="16.667">
 	<start>
 	  <intersection_ref ref="intersection0"/>
 	</start>
@@ -290,7 +290,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane2b" speedlimit="1.0">
+      <lane id="lane2b" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
@@ -321,7 +321,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane2d" speedlimit="1.0">
+      <lane id="lane2d" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
@@ -352,7 +352,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane3a" speedlimit="1.0">
+      <lane id="lane3a" speedlimit="16.667">
 	<start>
 	  <intersection_ref ref="intersection0"/>
 	</start>
@@ -383,7 +383,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane3b" speedlimit="1.0">
+      <lane id="lane3b" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
@@ -414,7 +414,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane3d" speedlimit="1.0">
+      <lane id="lane3d" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
@@ -445,7 +445,7 @@
 	  </right>
 	</adjacency_intervals>
       </lane>
-      <lane id="lane4" speedlimit="1.0">
+      <lane id="lane4" speedlimit="16.667">
 	<start>
 	  <dead_end/>
 	</start>
