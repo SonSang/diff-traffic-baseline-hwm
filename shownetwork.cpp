@@ -192,7 +192,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
                 s = 0.0f;
 
             float rgb[3];
-            blackbody(u, rgb);
+            blackbody(u/speedlimit, rgb);
 
             glColor3fv(rgb);
             glBegin(GL_QUAD_STRIP);
