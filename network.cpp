@@ -157,10 +157,14 @@ bool network::xml_read(xmlTextReaderPtr reader)
         for(int i = 0; i < static_cast<int>(intersection_itr->incoming.size()); ++i)
             if(!intersection_itr->incoming[i].retrieve_ptr(lanes, lane_refs))
                 return false;
+            else
+                intersection_itr->incoming[i].dp->end.intersect_in_ref = i;
 
         for(int i = 0; i < static_cast<int>(intersection_itr->outgoing.size()); ++i)
             if(!intersection_itr->outgoing[i].retrieve_ptr(lanes, lane_refs))
                 return false;
+            else
+                intersection_itr->outgoing[i].dp->start.intersect_in_ref = i;
     }
 
     std::map<char*, int, ltstr>::iterator current = road_refs.begin();
