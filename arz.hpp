@@ -325,7 +325,7 @@ inline void stop_riemann(riemann_solution *rs,
 {
     full_q q_m;
 
-    q_m.from_rho_u(inv_eq_u(q_l->u_eq - q_l->u, u_max, gamma),
+    q_m.from_rho_u(inv_eq_u(q_l->u_eq - q_l->u, u_max, inv_gamma),
                    0.0,
                    u_max, gamma);
 
