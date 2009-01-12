@@ -415,12 +415,15 @@ public:
             }
         }
 
-
-        foreach(const intersection &is, net->intersections)
-            is.draw();
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         foreach(const lane &la, net->lanes)
             la.draw_data(net->gamma_c);
+
+        glPushMatrix();
+        glTranslatef(0.0f, 0.0f, 0.01f);
+        foreach(const intersection &is, net->intersections)
+            is.draw();
+        glPopMatrix();
 
         glFlush();
         glFinish();
