@@ -5,6 +5,7 @@
 #include <map>
 #include <cassert>
 #include <cmath>
+#include <cfloat>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

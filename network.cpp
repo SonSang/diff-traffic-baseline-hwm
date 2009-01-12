@@ -193,10 +193,14 @@ void network::prepare(float h)
 {
     int total = 0;
 
+    min_h = FLT_MAX;
     foreach(lane &la, lanes)
     {
         la.h = h;
-        total += la.ncells = la.calc_length()/h;
+        float len = la.calc_length();
+        total += la.ncells = std::floor(la.calc_length()/h);
+        la.h = len/la.ncells;
+        min_h = std::min(min_h, la.h);
     }
 
     printf("Allocating " SIZE_T_FMT " bytes for %d cells...", sizeof(q)*total, total);
@@ -230,8 +234,6 @@ void network::prepare(float h)
         la.rs = rs;
         rs += la.ncells + 1;
     }
-
-    min_h = h; //< Just for now, since we have constant h over all lanes
 }
 
 float network::sim_step()
