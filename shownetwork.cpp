@@ -491,7 +491,7 @@ public:
                 {
                     float fx =   2.0f*x/(w()-1) - 1.0f;
                     float fy = -(2.0f*y/(h()-1) - 1.0f);
-                    float scale = std::pow(2.0f, zoom-1.0f);
+                    float scale = std::pow(1.5f, zoom-1.0f);
                     zoom += scale*(fy-lastmouse[1]);
                     if(zoom > 10.0f)
                         zoom = 10.0f;
