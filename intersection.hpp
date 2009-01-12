@@ -30,6 +30,8 @@ struct intersection
     void build_shape(float lane_width);
     void draw() const;
 
+    float collect_riemann(float gamma_c, float inv_gamma);
+
     std::vector<lane_id> incoming; //< Lanes that flow
                                    //< _IN_ to intersection
     std::vector<lane_id> outgoing; //< Lanes that flow

@@ -225,6 +225,45 @@ void intersection::build_shape(float lane_width)
     convex_hull(shape);
 }
 
+float intersection::collect_riemann(float gamma_c, float inv_gamma)
+{
+    float maxspeed = FLT_MIN;
+    const state &cstate = states[current_state];
+
+    for(int i = 0; i < static_cast<int>(cstate.in_states.size()); ++i)
+    {
+        if(cstate.in_states[i] > -1)
+        {
+            lane *start = incoming[i].dp;
+            lane *end   = outgoing[cstate.in_states[i]].dp;
+
+            full_q q_l;
+            q_l.from_q(start->data + start->ncells - 1,
+                       start->speedlimit,
+                       gamma_c);
+            full_q q_r;
+            q_r.from_q(end->data,
+                       end->speedlimit,
+                       gamma_c);
+
+            riemann(start->rs + start->ncells,
+                    &q_l,
+                    &q_r,
+                    start->speedlimit,
+                    1.0f/start->speedlimit,
+                    gamma_c,
+                    inv_gamma);
+
+            memcpy(end->rs,
+                   start->rs + start->ncells,
+                   sizeof(riemann_solution));
+            maxspeed = std::max(maxspeed, std::max(std::abs(end->rs->speeds[0]), std::abs(end->rs->speeds[1])));
+        }
+    }
+
+    return maxspeed;
+}
+
 inline bool lt(float l, float r)
 {
     return (l - r) < -1e-6;

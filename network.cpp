@@ -249,6 +249,12 @@ float network::sim_step()
         maxspeed = std::max(maxspeed, speed);
     }
 
+    foreach(intersection &is, intersections)
+    {
+        float speed = is.collect_riemann(gamma_c, inv_gamma);
+        maxspeed = std::max(maxspeed, speed);
+    }
+
     printf("maxspeed: %f\n", maxspeed);
 
     float dt = min_h/maxspeed;
