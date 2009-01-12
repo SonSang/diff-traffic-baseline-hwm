@@ -241,7 +241,6 @@ float lane::calc_length() const
         if(p >= static_cast<int>(road_memberships.entries.size()))
             break;
         rom = &(road_memberships.entries[p].data);
-
     }
 
     return length;
@@ -386,5 +385,76 @@ void lane::update(float dt)
         data[i].rho  = 0.0f;
     if(data[i].y > 0.0f)
         data[i].y  = 0.0f;
+}
+
+void lane::advance_carticles(float dt, float gamma_c)
+{
+    float inv_len = 1.0f/(ncells*h);
+
+    for(int i = 0; i < static_cast<int>(carticles[0].size()); ++i)
+    {
+        float pos = carticles[0][i].x*(ncells-1);
+        int cell = std::floor(pos);
+        float cell_u = to_u(data[cell].rho, data[cell].y, speedlimit, gamma_c);
+        float u[2];
+        if(pos - cell < 0.5)
+        {
+            pos = pos - cell + 0.5;
+            u[1] = cell_u;
+            if(cell > 0)
+                u[0] = to_u(data[cell-1].rho, data[cell-1].y, speedlimit, gamma_c);
+            else
+            {
+                lane *prev;
+                if(start.end_type == lane_end::INTERSECTION && (prev = start.inters.dp->outgoing_state(start.intersect_in_ref)))
+                    u[0] = to_u(prev->data[prev->ncells-1].rho, prev->data[prev->ncells-1].y, prev->speedlimit, gamma_c);
+                else
+                    u[0] = u[1];
+            }
+        }
+        else
+        {
+            pos = pos - cell - 0.5;
+            u[0] = cell_u;
+            if(cell < static_cast<int>(ncells-1))
+                u[1] = to_u(data[cell+1].rho, data[cell+1].y, speedlimit, gamma_c);
+            else
+            {
+                lane *next;
+                if(end.end_type == lane_end::INTERSECTION && (next = end.inters.dp->incoming_state(end.intersect_in_ref)))
+                    u[1] = to_u(next->data[0].rho, next->data[0].y, next->speedlimit, gamma_c);
+                else
+                    u[1] = u[0];
+            }
+        }
+
+        carticles[0][i].x += dt*(u[0]*pos + u[1]*(1.0f-pos))*inv_len;
+
+        if(carticles[0][i].x > 1.0)
+        {
+            lane *next;
+            if(end.end_type == lane_end::INTERSECTION)
+            {
+                if((next = end.inters.dp->incoming_state(end.intersect_in_ref)))
+                {
+                    carticles[0][i].x = (carticles[0][i].x - 1.0) * ncells*h/(next->ncells*next->h);
+                    next->carticles[1].push_back(carticles[0][i]);
+                }
+                else
+                {
+                    carticles[0][i].x = 1.0f;
+                    carticles[1].push_back(carticles[0][i]);
+                }
+            }
+        }
+        else
+            carticles[1].push_back(carticles[0][i]);
+    }
+}
+
+void lane::swap_carticles()
+{
+    carticles[0].swap(carticles[1]);
+    carticles[1].clear();
 }
 

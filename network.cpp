@@ -256,5 +256,11 @@ float network::sim_step()
     foreach(lane &la, lanes)
         la.update(dt);
 
+    foreach(lane &la, lanes)
+        la.advance_carticles(dt, gamma_c);
+
+    foreach(lane &la, lanes)
+        la.swap_carticles();
+
     return dt;
 }

@@ -61,10 +61,15 @@ struct lane
     lane* right_adjacency(float &t) const;
 
     void draw_data(float gamma_c) const;
+    void draw_carticles() const;
 
     float collect_riemann(float gamma_c, float inv_gamma);
 
     void update(float maxspeed);
+
+    void advance_carticles(float dt, float gamma_c);
+
+    void swap_carticles();
 
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
 
@@ -83,5 +88,7 @@ struct lane
                          //< ncells*h = length.
     q *data;             //< The simulation data.
     riemann_solution *rs;//< Saved Riemann solutions for this lane.
+
+    std::vector<carticle> carticles[2];
 };
 #endif

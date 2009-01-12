@@ -15,6 +15,14 @@
 
 #define foreach BOOST_FOREACH
 
+struct carticle
+{
+    carticle() {}
+    carticle(float ix) : x(ix) {}
+
+    float x;
+};
+
 struct ltstr
 {
     inline bool operator()(char* s1, char* s2) const

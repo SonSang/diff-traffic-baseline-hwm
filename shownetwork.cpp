@@ -235,6 +235,36 @@ void lane::draw_data(float gamma_c) const
     }
 }
 
+void lane::draw_carticles() const
+{
+    foreach(const carticle &car, carticles[0])
+    {
+        float x = car.x;
+        const road_membership *rom = &(road_memberships.get_rescale(x));
+
+        point p, n;
+        rom->parent_road.dp->rep.locate_vec(&p, &n, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+        if(rom->interval[0] > rom->interval[1])
+        {
+            n.x *= -1.0f;
+            n.y *= -1.0f;
+        }
+
+        glColor3f(0.0f, 1.0f, 1.0f);
+        glPushMatrix();
+        glTranslatef(p.x, p.y, 0.0f);
+        float mat[16] =
+            { n.x,   n.y, 0.0f, 0.0f,
+              n.y,  -n.x, 0.0f, 0.0f,
+              0.0f,  0.0f, 1.0f, 0.0f,
+              0.0f,  0.0f, 0.0f, 1.0f};
+        glMultMatrixf(mat);
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+        glutWireTeapot(0.75f);
+        glPopMatrix();
+    }
+}
+
 void intersection::draw() const
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -415,9 +445,13 @@ public:
             }
         }
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // foreach(const lane &la, net->lanes)
+        //     la.draw_data(net->gamma_c);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         foreach(const lane &la, net->lanes)
-            la.draw_data(net->gamma_c);
+            la.draw_carticles();
 
         glPushMatrix();
         glTranslatef(0.0f, 0.0f, 0.01f);
@@ -569,6 +603,8 @@ int main(int argc, char * argv[])
             la.data[i].rho = i < (la.ncells>>1) ? 0.45 : 0.4;
             la.data[i].y = to_y(la.data[i].rho, 4.5, la.speedlimit, net->gamma_c);
         }
+        for(int j = 0; j < 1; ++j)
+            la.carticles[0].push_back(j+0.9);
     }
 
     float rng[2] = {0.0f, 1.0f};
