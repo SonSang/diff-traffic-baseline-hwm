@@ -320,12 +320,14 @@ public:
     {
         lastmouse[0] = 0.0f;
         lastmouse[1] = 0.0f;
+        this->resizable(this);
     }
 
     void draw()
     {
         if (!valid())
         {
+            glViewport(0, 0, w(), h());
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
             gluPerspective(45.0f, (GLfloat)w()/(GLfloat)h(), 5.0f, 5000.0f);
