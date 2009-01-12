@@ -106,7 +106,7 @@ struct intervals
       \param x A number in (0.0, 1.0).
       \param data The associated data for [x,...).
     */
-    inline void insert(float x, T data)
+    inline void insert(const float &x, T data)
     {
         entry_id loc = find(x) + 1;
         entries.resize(entries.size()+1);
