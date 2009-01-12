@@ -192,7 +192,6 @@ bool adjacency::xml_read(xmlTextReaderPtr reader)
     if(!read_attributes(vl, reader))
         neighbor.sp = 0;
 
-    printf("lane_ref = %s; i = [%f %f]\n", neighbor.sp, neighbor_interval[0], neighbor_interval[1]);
     return true;
 };
 
