@@ -70,12 +70,25 @@ static float sim_step()
     q limited_base[2];
     q *limited[2] = {limited_base, limited_base+1};
 
-    (*limited[0]) = flux_correction(rs,
+    memset(limited[0], 0, sizeof(q));
+
+    (*limited[1]) = flux_correction(rs,
                                     rs + 1,
                                     rs + 2,
                                     coeff);
+    size_t i = 0;
 
-    for(size_t i = 0; i < ncells; ++i)
+    data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
+    data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
+
+    if(data[i].rho < 0.0f)
+        data[i].rho  = 0.0f;
+    if(data[i].y > 0.0f)
+        data[i].y  = 0.0f;
+
+    std::swap(limited[0], limited[1]);
+
+    for(i = 1; i < ncells-1; ++i)
     {
         (*limited[1]) = flux_correction(rs + i,
                                         rs + i + 1,
@@ -94,6 +107,16 @@ static float sim_step()
 //         assert(data[i].y < 0.0f);
         std::swap(limited[0], limited[1]);
     }
+
+    memset(limited[1], 0, sizeof(q));
+
+    data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
+    data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
+
+    if(data[i].rho < 0.0f)
+        data[i].rho  = 0.0f;
+    if(data[i].y > 0.0f)
+        data[i].y  = 0.0f;
 
     return dt;
 }
