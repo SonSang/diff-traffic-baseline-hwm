@@ -252,7 +252,7 @@ lane* lane::left_adjacency(float &t) const
 {
     const adjacency &adj = left.get_rescale(t);
     if(adj.neighbor.dp)
-        t = (t + adj.neighbor_interval[0])*(adj.neighbor_interval[1]-adj.neighbor_interval[0]);
+        t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
 
     return adj.neighbor.dp;
 }
@@ -261,7 +261,7 @@ lane* lane::right_adjacency(float &t) const
 {
     const adjacency &adj = right.get_rescale(t);
     if(adj.neighbor.dp)
-        t = (t + adj.neighbor_interval[0])*(adj.neighbor_interval[1]-adj.neighbor_interval[0]);
+        t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
 
     return adj.neighbor.dp;
 }
