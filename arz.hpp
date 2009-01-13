@@ -23,7 +23,13 @@ inline float to_u(float rho, float y, float u_max, float gamma)
     if(rho < FLT_EPSILON)
         return u_max;
     else
-        return y/rho + eq_u(rho, u_max, gamma);
+    {
+        float res = y/rho + eq_u(rho, u_max, gamma);
+        if(res < FLT_EPSILON)
+            return 0.0f;
+        else
+            return res;
+    }
 }
 
 inline float inv_eq_u(float u_eq, float inv_u_max, float inv_gamma)
@@ -282,8 +288,7 @@ inline void riemann(riemann_solution *rs,
             q_0 = &q_m;
         }
     }
-
-    assert(rs->speeds[0] < rs->speeds[1]);
+    assert(rs->speeds[0] <= rs->speeds[1]);
 
     rs->fluct_l.rho = q_0->rho*q_0->u - q_l->rho*q_l->u;
     rs->fluct_l.y   = q_0->y  *q_0->u - q_l->y  *q_l->u;
