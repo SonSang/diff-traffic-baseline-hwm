@@ -199,6 +199,7 @@ inline void riemann(riemann_solution *rs,
         rs->waves[0].rho = q_m.rho - q_l->rho;
         rs->waves[0].y   = q_m.y   - q_l->y;
 
+#if 0
 #ifndef NDEBUG
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
@@ -216,6 +217,7 @@ inline void riemann(riemann_solution *rs,
         assert(lambda0_l > lambda0_m);
         assert(lambda0_l > rs->speeds[0]);
         assert(lambda0_m < rs->speeds[0]);
+#endif
 #endif
 
         rs->speeds[1] = q_r->u;
