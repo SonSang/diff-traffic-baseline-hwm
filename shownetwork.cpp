@@ -244,6 +244,7 @@ void lane::draw_carticles() const
 
         glColor3f(0.0f, 1.0f, 1.0f);
         glPushMatrix();
+        mat[14] = 0.5f;
         glMultMatrixf(mat);
         glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
         glutWireTeapot(0.75f);
@@ -361,6 +362,7 @@ public:
 
             glColor3f(1.0f, 0.0f, 1.0f);
             glPushMatrix();
+            mat[14] = 0.5f;
             glMultMatrixf(mat);
             glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
             glutWireTeapot(0.75f);
