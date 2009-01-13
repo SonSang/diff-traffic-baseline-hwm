@@ -161,8 +161,8 @@ int main(int argc, char * argv[])
     float x = 0.0f;
     for(size_t i = 0; i < ncells; ++i)
     {
-        data[i].rho = (i < 50) ? 0.2f : 0.0f;
-        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.3f : 0.35f, u_max, gamma_c);
+        data[i].rho = (i < 50) ? 0.4f : 0.4f;
+        data[i].y   = to_y(data[i].rho, (i < 50) ? 0.4f : 0.20f, u_max, gamma_c);
         x += del_h;
     }
 
