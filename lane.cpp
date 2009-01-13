@@ -324,7 +324,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
 
         // we know that stop_riemann has a speed in speeds[0]
         // and nothing in speeds[1]
-        maxspeed = std::max(maxspeed, std::abs(rs[0].speeds[0]));
+        maxspeed = std::max(maxspeed, std::abs(rs[ncells].speeds[0]));
     }
     else
         memset(rs+ncells, 0, sizeof(riemann_solution));
