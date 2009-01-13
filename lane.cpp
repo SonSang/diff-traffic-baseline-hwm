@@ -290,6 +290,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
         // that starvation_riemann has a nonnegative speed in speeds[1]
         // and nothing in speeds[0]
         maxspeed = rs[0].speeds[1];
+        assert(std::isfinite(maxspeed));
     }
     else
         memset(rs, 0, sizeof(riemann_solution));
@@ -308,6 +309,8 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
                 inv_gamma);
 
         maxspeed = std::max(maxspeed, std::max(std::abs(rs[i].speeds[0]), std::abs(rs[i].speeds[1])));
+        assert(std::isfinite(rs[i].speeds[0]));
+        assert(std::isfinite(rs[i].speeds[1]));
 
         std::swap(fq[0], fq[1]);
     }
@@ -325,6 +328,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
         // we know that stop_riemann has a speed in speeds[0]
         // and nothing in speeds[1]
         maxspeed = std::max(maxspeed, std::abs(rs[ncells].speeds[0]));
+        assert(std::isfinite(rs[ncells].speeds[0]));
     }
     else
         memset(rs+ncells, 0, sizeof(riemann_solution));
@@ -351,6 +355,8 @@ void lane::update(float dt)
     data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
     data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
 
+    assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
+
     if(data[i].rho < 0.0f)
         data[i].rho  = 0.0f;
     if(data[i].y > 0.0f)
@@ -368,6 +374,8 @@ void lane::update(float dt)
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
 
+        assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
+
         if(data[i].rho < 0.0f)
             data[i].rho  = 0.0f;
         if(data[i].y > 0.0f)
@@ -380,6 +388,8 @@ void lane::update(float dt)
 
     data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
     data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
+
+    assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
     if(data[i].rho < 0.0f)
         data[i].rho  = 0.0f;
