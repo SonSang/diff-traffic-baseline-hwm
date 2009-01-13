@@ -357,10 +357,10 @@ void lane::update(float dt)
 
     assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
-    if(data[i].rho < 0.0f)
-        data[i].rho  = 0.0f;
-    if(data[i].y > 0.0f)
-        data[i].y  = 0.0f;
+    if(data[i].rho < FLT_EPSILON)
+        data[i].rho  = FLT_EPSILON;
+    if(data[i].y > FLT_EPSILON)
+        data[i].y = FLT_EPSILON;
 
     std::swap(limited[0], limited[1]);
 
@@ -376,10 +376,10 @@ void lane::update(float dt)
 
         assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
-        if(data[i].rho < 0.0f)
-            data[i].rho  = 0.0f;
-        if(data[i].y > 0.0f)
-            data[i].y  = 0.0f;
+        if(data[i].rho < FLT_EPSILON)
+            data[i].rho  = FLT_EPSILON;
+        if(data[i].y > FLT_EPSILON)
+            data[i].y = FLT_EPSILON;
 
         std::swap(limited[0], limited[1]);
     }
@@ -391,10 +391,10 @@ void lane::update(float dt)
 
     assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
-    if(data[i].rho < 0.0f)
-        data[i].rho  = 0.0f;
-    if(data[i].y > 0.0f)
-        data[i].y  = 0.0f;
+    if(data[i].rho < FLT_EPSILON)
+        data[i].rho  = FLT_EPSILON;
+    if(data[i].y > FLT_EPSILON)
+        data[i].y  = FLT_EPSILON;
 }
 
 void lane::advance_carticles(float dt, float gamma_c)

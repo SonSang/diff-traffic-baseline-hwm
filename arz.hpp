@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <cfloat>
 #include <cstdio>
 #include <cassert>
 
@@ -19,7 +20,7 @@ inline float to_y(float rho, float u, float u_max, float gamma)
 
 inline float to_u(float rho, float y, float u_max, float gamma)
 {
-    if(rho == 0.0f)
+    if(rho < FLT_EPSILON)
         return 0.0f;
     else
         return y/rho + eq_u(rho, u_max, gamma);
@@ -123,7 +124,7 @@ inline void riemann(riemann_solution *rs,
     const full_q *q_0;
     full_q q_m;
 
-    if(q_l->rho == 0.0f)
+    if(q_l->rho < FLT_EPSILON)
     {
         rs->speeds[0]    = 0.0f;
         rs->waves[0].rho = 0.0f;
@@ -136,7 +137,7 @@ inline void riemann(riemann_solution *rs,
         memset(&q_m, 0, sizeof(q_m));
         q_0 = &q_m;
     }
-    else if(q_r->rho == 0.0f)
+    else if(q_r->rho < FLT_EPSILON)
     {
         // we can simplify this
         q_m.from_rho_u(0.0f,
@@ -153,7 +154,7 @@ inline void riemann(riemann_solution *rs,
         rs->waves[0].rho = q_m.rho - q_l->rho;
         rs->waves[0].y   = q_m.y   - q_l->y;
 
-        rs->speeds[1] = 0.0f;
+        rs->speeds[1]    = 0.0f;
         rs->waves[1].rho = 0.0f;
         rs->waves[1].y   = 0.0f;
 
@@ -297,7 +298,7 @@ inline void starvation_riemann(riemann_solution *rs,
                                float gamma,
                                float inv_gamma)
 {
-    if(q_r->rho == 0.0f)
+    if(q_r->rho < FLT_EPSILON)
         memset(rs, 0, sizeof(riemann_solution));
     else
     {
@@ -330,7 +331,7 @@ inline void stop_riemann(riemann_solution *rs,
                    u_max, gamma);
 
     rs->speeds[0]    = 0.0f;
-    if(q_m.rho - q_l->rho != 0.0f)
+    if(std::abs(q_m.rho - q_l->rho) > FLT_EPSILON)
         rs->speeds[0] = -q_l->rho * q_l->u/(q_m.rho - q_l->rho);
 
     rs->waves[0].rho = -q_l->rho;
