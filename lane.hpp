@@ -60,6 +60,10 @@ struct lane
     lane* left_adjacency(float &t) const;
     lane* right_adjacency(float &t) const;
 
+    void get_matrix(const float &x, float mat[16]) const;
+    void get_point_and_normal(const float &x, point &pt, point &no) const;
+    void get_point(const float &x, point &pt) const;
+
     void draw_data(float gamma_c) const;
     void draw_carticles() const;
 

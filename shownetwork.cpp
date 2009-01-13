@@ -239,25 +239,11 @@ void lane::draw_carticles() const
 {
     foreach(const carticle &car, carticles[0])
     {
-        float x = car.x;
-        const road_membership *rom = &(road_memberships.get_rescale(x));
-
-        point p, n;
-        rom->parent_road.dp->rep.locate_vec(&p, &n, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
-        if(rom->interval[0] > rom->interval[1])
-        {
-            n.x *= -1.0f;
-            n.y *= -1.0f;
-        }
+        float mat[16];
+        get_matrix(car.x, mat);
 
         glColor3f(0.0f, 1.0f, 1.0f);
         glPushMatrix();
-        glTranslatef(p.x, p.y, 0.0f);
-        float mat[16] =
-            { n.x,   n.y, 0.0f, 0.0f,
-              n.y,  -n.x, 0.0f, 0.0f,
-              0.0f,  0.0f, 1.0f, 0.0f,
-              0.0f,  0.0f, 0.0f, 1.0f};
         glMultMatrixf(mat);
         glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
         glutWireTeapot(0.75f);
@@ -281,33 +267,14 @@ void intersection::draw() const
             continue;
 
         const lane *in_la = incoming[i].dp;
-        const road_membership *in_rom;
-        if(in_la->road_memberships.entries.empty())
-            in_rom = &(in_la->road_memberships.base_data);
-        else
-            in_rom = &(in_la->road_memberships.entries.back().data);
-
         point in_vec;
         point in_pt;
-        in_rom->parent_road.dp->rep.locate_vec(&in_pt, &in_vec, in_rom->interval[1], in_rom->lane_position);
-        if(in_rom->interval[0] > in_rom->interval[1])
-        {
-            in_vec.x *= -1.0f;
-            in_vec.y *= -1.0f;
-        }
+        in_la->get_point_and_normal(1.0, in_pt, in_vec);
 
         const lane *out_la = outgoing[st.in_states[i]].dp;
-        const road_membership *out_rom;
-        out_rom = &(out_la->road_memberships.base_data);
-
         point out_vec;
         point out_pt;
-        out_rom->parent_road.dp->rep.locate_vec(&out_pt, &out_vec, out_rom->interval[0], out_rom->lane_position);
-        if(out_rom->interval[0] > out_rom->interval[1])
-        {
-            out_vec.x *= -1.0f;
-            out_vec.y *= -1.0f;
-        }
+        out_la->get_point_and_normal(0.0, out_pt, out_vec);
 
         point middle;
         intersect_lines(middle,
@@ -387,41 +354,26 @@ public:
 
         foreach(const lane &la, net->lanes)
         {
-            float x = t;
-            const road_membership *rom = &(la.road_memberships.get_rescale(x));
-
-            rom->parent_road.dp->rep.locate_vec(&p, &n, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
-            if(rom->interval[0] > rom->interval[1])
-            {
-                n.x *= -1.0f;
-                n.y *= -1.0f;
-            }
+            float mat[16];
+            la.get_matrix(t, mat);
+            p.x = mat[12];
+            p.y = mat[13];
 
             glColor3f(1.0f, 0.0f, 1.0f);
             glPushMatrix();
-            glTranslatef(p.x, p.y, 0.0f);
-            float mat[16] =
-                { n.x,   n.y, 0.0f, 0.0f,
-                  n.y,  -n.x, 0.0f, 0.0f,
-                 0.0f,  0.0f, 1.0f, 0.0f,
-                 0.0f,  0.0f, 0.0f, 1.0f};
             glMultMatrixf(mat);
             glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
             glutWireTeapot(0.75f);
             glPopMatrix();
 
             glColor3f(0.0, 1.0, 0.0);
-            x = t;
+            float x = t;
             lane *left_lane = la.left_adjacency(x);
 
             if(left_lane)
             {
                 point lp;
-
-                rom = &(left_lane->road_memberships.get_rescale(x));
-                x = x*(rom->interval[1]-rom->interval[0])+rom->interval[0];
-                rom->parent_road.dp->rep.locate(&lp, x, rom->lane_position);
-
+                left_lane->get_point(x, lp);
 
                 glBegin(GL_LINES);
                 glVertex2fv(&(p.x));
@@ -434,9 +386,7 @@ public:
             if(right_lane)
             {
                 point rp;
-                rom = &(right_lane->road_memberships.get_rescale(x));
-                x = x*(rom->interval[1]-rom->interval[0])+rom->interval[0];
-                rom->parent_road.dp->rep.locate(&rp, x, rom->lane_position);
+                right_lane->get_point(x, rp);
 
                 glBegin(GL_LINES);
                 glVertex2fv(&(p.x));

@@ -264,6 +264,38 @@ lane* lane::right_adjacency(float &t) const
     return adj.neighbor.dp;
 }
 
+void lane::get_matrix(const float &t, float mat[16]) const
+{
+    point p, n;
+    get_point_and_normal(t, p, n);
+
+    mat[ 0]=n.x;  mat[ 1]= n.y; mat[ 2]=0.0f;mat[ 3]=0.0f;
+    mat[ 4]=n.y;  mat[ 5]=-n.x; mat[ 6]=0.0f;mat[ 7]=0.0f;
+    mat[ 8]=0.0f; mat[ 9]= 0.0f;mat[10]=1.0f;mat[11]=0.0f;
+    mat[12]=p.x;  mat[13]= p.y; mat[14]=0.0f;mat[15]=1.0f;
+}
+
+void lane::get_point_and_normal(const float &t, point &p, point &n) const
+{
+    float x = t;
+    const road_membership *rom = &(road_memberships.get_rescale(x));
+
+    rom->parent_road.dp->rep.locate_vec(&p, &n, x*(rom->interval[1]-rom->interval[0])+rom->interval[0], rom->lane_position);
+    if(rom->interval[0] > rom->interval[1])
+    {
+        n.x *= -1.0f;
+        n.y *= -1.0f;
+    }
+}
+
+void lane::get_point(const float &t, point &pt) const
+{
+    float x = t;
+    const road_membership *rom = &(road_memberships.get_rescale(x));
+    x = x*(rom->interval[1]-rom->interval[0])+rom->interval[0];
+    rom->parent_road.dp->rep.locate(&pt, x, rom->lane_position);
+}
+
 float lane::collect_riemann(float gamma_c, float inv_gamma)
 {
     full_q fq_buff[2];
