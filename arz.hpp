@@ -21,7 +21,7 @@ inline float to_y(float rho, float u, float u_max, float gamma)
 inline float to_u(float rho, float y, float u_max, float gamma)
 {
     if(rho < FLT_EPSILON)
-        return 0.0f;
+        return u_max;
     else
         return y/rho + eq_u(rho, u_max, gamma);
 }
