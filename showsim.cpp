@@ -53,16 +53,25 @@ static float sim_step()
                       la.u_max, gamma_c);
 
         if(count == 0)
-            memset(la.rs, 0, sizeof(riemann_solution));
+        {
+            //memset(la.rs, 0, sizeof(riemann_solution));
+            starvation_riemann(la.rs,
+                               fq[0],
+                               la.u_max,
+                               1.0f/la.u_max,
+                               gamma_c,
+                               1.0f/gamma_c);
+            maxspeed = std::max(maxspeed, std::max(std::abs(la.rs[0].speeds[0]), std::abs(la.rs[0].speeds[1])));
+        }
         else
         {
-            inhomogeneous_riemann(la.rs,
-                                  fq[1],
-                                  fq[0],
-                                  lanes[count-1].u_max,
-                                  lanes[count].u_max,
-                                  gamma_c,
-                                  1.0f/gamma_c);
+            lebacque_inhomogeneous_riemann(la.rs,
+                                           fq[1],
+                                           fq[0],
+                                           lanes[count-1].u_max,
+                                           lanes[count].u_max,
+                                           gamma_c,
+                                           1.0f/gamma_c);
             maxspeed = std::max(maxspeed, std::max(std::abs(la.rs[0].speeds[0]), std::abs(la.rs[0].speeds[1])));
             assert(std::isfinite(la.rs[0].speeds[0]));
             assert(std::isfinite(la.rs[0].speeds[1]));
@@ -212,7 +221,9 @@ int main(int argc, char * argv[])
         for(size_t i = 0; i < la.ncells; ++i)
         {
             la.data[i].rho = (i < 50) ? 0.4f : 0.4f;
-            la.data[i].y   = to_y(la.data[i].rho, (i < 50) ? 0.4f*la.u_max : 0.20f*la.u_max, la.u_max, gamma_c);
+            //            la.data[i].y   = to_y(la.data[i].rho, (i < 50) ? 0.4f*la.u_max : 0.20f*la.u_max, la.u_max, gamma_c);
+            la.data[i].y   = to_y(la.data[i].rho, 10/3.6f, la.u_max, gamma_c);
+
             x += la.h;
         }
     }
@@ -226,13 +237,14 @@ int main(int argc, char * argv[])
         la.data = (q*) malloc(la.ncells * sizeof (q));
         la.rs = (riemann_solution*) malloc((la.ncells+1) * sizeof (riemann_solution));
         la.h     = 1000.0f/(la.ncells-1);
-        la.u_max = 60.0f/3.6f;
+        la.u_max = 40.0f/3.6f;
 
         float x = 0.0f;
         for(size_t i = 0; i < la.ncells; ++i)
         {
             la.data[i].rho = (i < 50) ? 0.4f : 0.4f;
-            la.data[i].y   = to_y(la.data[i].rho, (i < 50) ? 0.4f*la.u_max : 0.20f*la.u_max, la.u_max, gamma_c);
+            //            la.data[i].y   = to_y(la.data[i].rho, (i < 50) ? 0.4f*la.u_max : 0.20f*la.u_max, la.u_max, gamma_c);
+            la.data[i].y   = to_y(la.data[i].rho, 10/3.6f, la.u_max, gamma_c);
             x += la.h;
         }
     }

@@ -411,6 +411,8 @@ inline void inhomogeneous_riemann(riemann_solution *rs,
 {
     full_q q_m_l, q_m_r;
 
+    printf("q_r->u - q_l->u + q_l->u_eq: %f\n", q_r->u - q_l->u + q_l->u_eq);
+
     q_m_r.from_rho_u(inv_eq_u(q_r->u - q_l->u + q_l->u_eq, 1.0f/u_max_r, inv_gamma),
                      q_r->u,
                      u_max_r,
@@ -422,10 +424,15 @@ inline void inhomogeneous_riemann(riemann_solution *rs,
                      u_max_l,
                      gamma);
 
-    printf("     q_l:        q_m_l:      q_m_r:      q_r\n");
-    printf("rho: %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
-    printf("y:   %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
-    printf("u:   %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
+    printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
+    printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
+    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
+    printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
+    printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
+           lambda_0(q_l->rho, q_l->u, u_max_l, gamma),
+           lambda_0(q_m_l.rho, q_m_l.u, u_max_l, gamma),
+           lambda_0(q_m_r.rho, q_m_r.u, u_max_r, gamma),
+           lambda_0(q_r->rho, q_r->u, u_max_r, gamma));
 
     memset(rs, 0, sizeof(riemann_solution));
 
@@ -436,6 +443,144 @@ inline void inhomogeneous_riemann(riemann_solution *rs,
     }
     else
         rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
+
+    printf("s = %f\n", rs->speeds[0]);
+
+    rs->speeds[1] = q_r->u;
+
+    rs->fluct_l.rho = q_m_l.rho*q_m_l.u - q_l->rho*q_l->u;
+    rs->fluct_l.y   = q_m_l.y  *q_m_l.u - q_l->y  *q_l->u;
+    rs->fluct_r.rho = q_r->rho*q_r->u   - q_m_r.rho*q_m_r.u;
+    rs->fluct_r.y   = q_r->y  *q_r->u   - q_m_r.y  *q_m_r.u;
+};
+
+inline float fundamental_diagram(float rho, float relv, float u_max, float gamma)
+{
+    return rho*(eq_u(rho, u_max, gamma) + relv);
+}
+
+inline float critical_density(float relv, float u_max, float gamma)
+{
+    return std::pow((u_max + relv)/(u_max*(1.0f+gamma)), 1.0f/gamma);
+}
+
+inline float max_flow(float relv, float u_max, float gamma)
+{
+    return fundamental_diagram(critical_density(relv, u_max, gamma), relv, u_max, gamma);
+}
+
+inline float demand(float rho, float relv, float u_max, float gamma)
+{
+    float crit = critical_density(relv, u_max, gamma);
+    if(rho > crit)
+        rho = crit;
+    return fundamental_diagram(rho, relv, u_max, gamma);
+}
+
+struct inv_fd
+{
+    inv_fd(float flow, float relv, float u_max, float gamma) :
+        flow_(flow), relv_(relv), u_max_(u_max), gamma_(gamma)
+    {}
+
+    float operator()(float rho) const
+    {
+        float fd0 = fundamental_diagram(rho, relv_, u_max_, gamma_);
+        return fd0-flow_;
+    }
+
+    float flow_;
+    float relv_;
+    float u_max_;
+    float gamma_;
+};
+
+inline float inv_demand(float flow, float relv, float u_max, float gamma)
+{
+    float crit = critical_density(relv, u_max, gamma);
+    float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
+
+    if(flow >= max_flow)
+        return crit;
+
+    inv_fd solver(flow, relv, u_max, gamma);
+    return secant<inv_fd>(crit*0.3f, crit, crit*0.05f, crit, 5e-8, 500, solver);
+}
+
+inline float inv_supply(float flow, float relv, float u_max, float gamma)
+{
+    float crit = critical_density(relv, u_max, gamma);
+    float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
+
+    if(flow >= max_flow)
+        return crit;
+
+    inv_fd solver(flow, relv, u_max, gamma);
+    return secant<inv_fd>(crit*1.3f, 1.0, crit, 1.0, 5e-8, 500, solver);
+}
+
+inline float supply(float rho, float relv, float u_max, float gamma)
+{
+    float crit = critical_density(relv, u_max, gamma);
+    if(rho <= crit)
+        rho = crit;
+    return fundamental_diagram(rho, relv, u_max, gamma);
+}
+
+inline void lebacque_inhomogeneous_riemann(riemann_solution *rs,
+                                           const full_q *__restrict__ q_l,
+                                           const full_q *__restrict__ q_r,
+                                           float u_max_l,
+                                           float u_max_r,
+                                           float gamma,
+                                           float inv_gamma)
+{
+    full_q q_m_l, q_m_r;
+
+    float rho_m = inv_eq_u(q_r->u - q_l->u + q_l->u_eq, 1.0f/u_max_r, 1.0f/gamma);
+
+    float demand_l = demand(q_l->rho,  q_l->u - q_l->u_eq, u_max_l, gamma);
+    float supply_r = supply(rho_m,     q_l->u - q_l->u_eq, u_max_r, gamma);
+
+    if(demand_l <= supply_r)
+    {
+        q_m_l.rho = q_l->rho;
+        q_m_r.rho = inv_demand(demand_l, q_l->u - q_l->u_eq, u_max_r, gamma);
+    }
+    else
+    {
+        q_m_l.rho = inv_supply(supply_r, q_l->u - q_l->u_eq, u_max_l, gamma);
+        q_m_r.rho = rho_m;
+    }
+
+    q_m_l.u = q_l->u - q_l->u_eq + eq_u(q_m_l.rho, u_max_l, gamma);
+    q_m_r.u = q_l->u - q_l->u_eq + eq_u(q_m_r.rho, u_max_r, gamma);
+
+    q_m_l.y = to_y(q_m_l.rho, q_m_l.u, u_max_l, gamma);
+    q_m_r.y = to_y(q_m_r.rho, q_m_r.u, u_max_r, gamma);
+
+    printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
+    printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
+    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
+    printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
+    printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
+           lambda_0(q_l->rho, q_l->u, u_max_l, gamma),
+           lambda_0(q_m_l.rho, q_m_l.u, u_max_l, gamma),
+           lambda_0(q_m_r.rho, q_m_r.u, u_max_r, gamma),
+           lambda_0(q_r->rho, q_r->u, u_max_r, gamma));
+
+    memset(rs, 0, sizeof(riemann_solution));
+
+    if(std::abs(q_m_l.rho - q_l->rho) < FLT_EPSILON)
+    {
+        printf("numer %f, denom %f\n", (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u),(q_m_l.rho - q_l->rho));
+        rs->speeds[0] = 0.0f;
+    }
+    else
+        rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
+
+    printf("s = %f\n", rs->speeds[0]);
+
     rs->speeds[1] = q_r->u;
 
     rs->fluct_l.rho = q_m_l.rho*q_m_l.u - q_l->rho*q_l->u;

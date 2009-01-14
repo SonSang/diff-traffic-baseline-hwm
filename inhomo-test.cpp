@@ -24,78 +24,78 @@
 //     return xn;
 // }
 
-float fundamental_diagram(float rho, float relv, float u_max, float gamma)
-{
-    return rho*(eq_u(rho, u_max, gamma) + relv);
-}
+// float fundamental_diagram(float rho, float relv, float u_max, float gamma)
+// {
+//     return rho*(eq_u(rho, u_max, gamma) + relv);
+// }
 
-float critical_density(float relv, float u_max, float gamma)
-{
-    return std::pow((u_max + relv)/(u_max*(1.0f+gamma)), 1.0f/gamma);
-}
+// float critical_density(float relv, float u_max, float gamma)
+// {
+//     return std::pow((u_max + relv)/(u_max*(1.0f+gamma)), 1.0f/gamma);
+// }
 
-float max_flow(float relv, float u_max, float gamma)
-{
-    return fundamental_diagram(critical_density(relv, u_max, gamma), relv, u_max, gamma);
-}
+// float max_flow(float relv, float u_max, float gamma)
+// {
+//     return fundamental_diagram(critical_density(relv, u_max, gamma), relv, u_max, gamma);
+// }
 
-float demand(float rho, float relv, float u_max, float gamma)
-{
-    float crit = critical_density(relv, u_max, gamma);
-    if(rho > crit)
-        rho = crit;
-    return fundamental_diagram(rho, relv, u_max, gamma);
-}
+// float demand(float rho, float relv, float u_max, float gamma)
+// {
+//     float crit = critical_density(relv, u_max, gamma);
+//     if(rho > crit)
+//         rho = crit;
+//     return fundamental_diagram(rho, relv, u_max, gamma);
+// }
 
-struct inv_fd
-{
-    inv_fd(float flow, float relv, float u_max, float gamma) :
-        flow_(flow), relv_(relv), u_max_(u_max), gamma_(gamma)
-    {}
+// struct inv_fd
+// {
+//     inv_fd(float flow, float relv, float u_max, float gamma) :
+//         flow_(flow), relv_(relv), u_max_(u_max), gamma_(gamma)
+//     {}
 
-    float operator()(float rho) const
-    {
-        float fd0 = fundamental_diagram(rho, relv_, u_max_, gamma_);
-        return fd0-flow_;
-    }
+//     float operator()(float rho) const
+//     {
+//         float fd0 = fundamental_diagram(rho, relv_, u_max_, gamma_);
+//         return fd0-flow_;
+//     }
 
-    float flow_;
-    float relv_;
-    float u_max_;
-    float gamma_;
-};
+//     float flow_;
+//     float relv_;
+//     float u_max_;
+//     float gamma_;
+// };
 
-float inv_demand(float flow, float relv, float u_max, float gamma)
-{
-    float crit = critical_density(relv, u_max, gamma);
-    float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
+// float inv_demand(float flow, float relv, float u_max, float gamma)
+// {
+//     float crit = critical_density(relv, u_max, gamma);
+//     float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
 
-    if(flow >= max_flow)
-        return crit;
+//     if(flow >= max_flow)
+//         return crit;
 
-    inv_fd solver(flow, relv, u_max, gamma);
-    return secant<inv_fd>(crit*0.3f, crit, crit*0.05f, crit, 5e-8, 500, solver);
-}
+//     inv_fd solver(flow, relv, u_max, gamma);
+//     return secant<inv_fd>(crit*0.3f, crit, crit*0.05f, crit, 5e-8, 500, solver);
+// }
 
-float inv_supply(float flow, float relv, float u_max, float gamma)
-{
-    float crit = critical_density(relv, u_max, gamma);
-    float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
+// float inv_supply(float flow, float relv, float u_max, float gamma)
+// {
+//     float crit = critical_density(relv, u_max, gamma);
+//     float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
 
-    if(flow >= max_flow)
-        return crit;
+//     if(flow >= max_flow)
+//         return crit;
 
-    inv_fd solver(flow, relv, u_max, gamma);
-    return secant<inv_fd>(crit*1.3f, 1.0, crit, 1.0, 5e-8, 500, solver);
-}
+//     inv_fd solver(flow, relv, u_max, gamma);
+//     return secant<inv_fd>(crit*1.3f, 1.0, crit, 1.0, 5e-8, 500, solver);
+// }
 
-float supply(float rho, float relv, float u_max, float gamma)
-{
-    float crit = critical_density(relv, u_max, gamma);
-    if(rho <= crit)
-        rho = crit;
-    return fundamental_diagram(rho, relv, u_max, gamma);
-}
+// float supply(float rho, float relv, float u_max, float gamma)
+// {
+//     float crit = critical_density(relv, u_max, gamma);
+//     if(rho <= crit)
+//         rho = crit;
+//     return fundamental_diagram(rho, relv, u_max, gamma);
+// }
 
 struct inv_rho_ml
 {
