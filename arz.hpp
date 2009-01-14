@@ -401,13 +401,13 @@ inline void stop_riemann(riemann_solution *rs,
     rs->fluct_r.y    = 0.0f;
 }
 
-inline void inhomogenous_riemann(riemann_solution *rs,
-                                 const full_q *__restrict__ q_l,
-                                 const full_q *__restrict__ q_r,
-                                 float u_max_l,
-                                 float u_max_r,
-                                 float gamma,
-                                 float inv_gamma)
+inline void inhomogeneous_riemann(riemann_solution *rs,
+                                  const full_q *__restrict__ q_l,
+                                  const full_q *__restrict__ q_r,
+                                  float u_max_l,
+                                  float u_max_r,
+                                  float gamma,
+                                  float inv_gamma)
 {
     full_q q_m_l, q_m_r;
 
@@ -422,12 +422,20 @@ inline void inhomogenous_riemann(riemann_solution *rs,
                      u_max_l,
                      gamma);
 
-    printf("     q_m_l:      q_m_r\n");
-    printf("rho: %8.5f       %8.5f\n", q_m_l.rho, q_m_r.rho);
-    printf("y:   %8.5f       %8.5f\n", q_m_l.y, q_m_r.y);
-    printf("u:   %8.5f       %8.5f\n", q_m_l.u, q_m_r.u);
+    printf("     q_l:        q_m_l:      q_m_r:      q_r\n");
+    printf("rho: %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
+    printf("y:   %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
+    printf("u:   %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
 
-    rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
+    memset(rs, 0, sizeof(riemann_solution));
+
+    if(std::abs(q_m_l.rho - q_l->rho) < FLT_EPSILON)
+    {
+        printf("numer %f, denom %f\n", (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u),(q_m_l.rho - q_l->rho));
+        rs->speeds[0] = 0.0f;
+    }
+    else
+        rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
     rs->speeds[1] = q_r->u;
 
     rs->fluct_l.rho = q_m_l.rho*q_m_l.u - q_l->rho*q_l->u;

@@ -6,6 +6,7 @@
 
 static const float plotcolors[][4] = {{1.0, 0.0, 0.0, 1.0},
                                       {0.0, 1.0, 0.0, 1.0},
+                                      {0.0, 1.0, 1.0, 1.0},
                                       {0.0, 0.0, 1.0, 1.0}};
 
 static const int num_plotcolors = sizeof(plotcolors)/sizeof(plotcolors[0]);

@@ -214,13 +214,13 @@ int main()
     printf("my u0l = %f\n", rho_mr*fq_r.u/myrho_0l);
 
     riemann_solution rs;
-    inhomogenous_riemann(&rs,
-                         &fq_l,
-                         &fq_r,
-                         speed_l,
-                         speed_r,
-                         gamma_c,
-                         1.0f/gamma_c);
+    inhomogeneous_riemann(&rs,
+                          &fq_l,
+                          &fq_r,
+                          speed_l,
+                          speed_r,
+                          gamma_c,
+                          1.0f/gamma_c);
 
     printf("fluctuation:\n");
     printf("       left:           right:\n");
