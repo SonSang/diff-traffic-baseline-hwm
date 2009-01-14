@@ -1,28 +1,28 @@
 #include "arz.hpp"
 
-template <class f>
-static inline float secant(float x0, float x1, float bottom, float top, float tol, int maxiter, f & fnc)
-{
-    float xn_1 = x0;
-    float xn   = x1;
-    float fn_1 = fnc(xn_1);
-    float fn   = fnc(xn);
-    float denom = fn-fn_1;
-    for(int i = 0; std::abs(fn) > tol && std::abs(denom) > tol && i < maxiter; ++i)
-    {
-        float newxn = xn - (xn - xn_1)/denom * fn;
-        while(newxn <= bottom)
-            newxn = (newxn + xn)*0.5f;
-        while(newxn >= top)
-            newxn = (newxn + xn)*0.5f;
-        xn_1 = xn;
-        xn = newxn;
-        fn_1 = fn;
-        fn = fnc(xn);
-        denom = (fn-fn_1);
-    }
-    return xn;
-}
+// template <class f>
+// static inline float secant(float x0, float x1, float bottom, float top, float tol, int maxiter, f & fnc)
+// {
+//     float xn_1 = x0;
+//     float xn   = x1;
+//     float fn_1 = fnc(xn_1);
+//     float fn   = fnc(xn);
+//     float denom = fn-fn_1;
+//     for(int i = 0; std::abs(fn) > tol && std::abs(denom) > tol && i < maxiter; ++i)
+//     {
+//         float newxn = xn - (xn - xn_1)/denom * fn;
+//         while(newxn <= bottom)
+//             newxn = (newxn + xn)*0.5f;
+//         while(newxn >= top)
+//             newxn = (newxn + xn)*0.5f;
+//         xn_1 = xn;
+//         xn = newxn;
+//         fn_1 = fn;
+//         fn = fnc(xn);
+//         denom = (fn-fn_1);
+//     }
+//     return xn;
+// }
 
 float fundamental_diagram(float rho, float relv, float u_max, float gamma)
 {
@@ -97,19 +97,43 @@ float supply(float rho, float relv, float u_max, float gamma)
     return fundamental_diagram(rho, relv, u_max, gamma);
 }
 
+struct inv_rho_ml
+{
+    inv_rho_ml(float flow_0r, float relv, float u_max_l, float gamma) :
+        flow_0r_(flow_0r), relv_(relv), u_max_l_(u_max_l), gamma_(gamma)
+    {}
+
+    float operator()(float rho_0l) const
+    {
+        return flow_0r_/rho_0l - u_max_l_*(1.0 - std::pow(rho_0l, gamma_)) - relv_;
+    }
+
+    float flow_0r_;
+    float relv_;
+    float u_max_l_;
+    float gamma_;
+};
+
+float myrho_ml(float flow_0r, float relv, float u_max_l, float gamma)
+{
+    inv_rho_ml solver(flow_0r, relv, u_max_l, gamma);
+
+    return secant<inv_rho_ml>(0.3f, 0.7f, 1e-4, 1.0f, 5e-6, 100, solver);
+}
+
 int main()
 {
     const float gamma_c = 0.5f;
 
     float speed_l = 4.0f;
-    float speed_r = 2.0f;
+    float speed_r = 6.0f;
 
     q q_l;
     q_l.rho =  0.2f;
     q_l.y   = -0.1f;
 
     q q_r;
-    q_r.rho =  0.5f;
+    q_r.rho =  0.25f;
     q_r.y   = -0.1f;
 
     full_q fq_l;
@@ -167,14 +191,16 @@ int main()
 
     printf("rho_0l = %f, rho_0r = %f\n", rho_0l, rho_0r);
 
-    printf("u_eq_0l = %f, u_eq_0r = %f\n", eq_u(rho_0l, speed_l, gamma_c),
-           eq_u(rho_0r, speed_r, gamma_c));
+    // printf("u_eq_0l = %f, u_eq_0r = %f\n", eq_u(rho_0l, speed_l, gamma_c),
+    //        eq_u(rho_0r, speed_r, gamma_c));
 
-    printf("u_0l = %f, u_0r = %f\n", fq_l.u - fq_l.u_eq + eq_u(rho_0l, speed_l, gamma_c),
-           fq_l.u - fq_l.u_eq + eq_u(rho_0r, speed_r, gamma_c));
+    // printf("u_0l = %f, u_0r = %f\n", fq_l.u - fq_l.u_eq + eq_u(rho_0l, speed_l, gamma_c),
+    //        fq_l.u - fq_l.u_eq + eq_u(rho_0r, speed_r, gamma_c));
 
-    float u_0l = fq_l.u - fq_l.u_eq + eq_u(rho_0l, speed_l, gamma_c);
-    float u_0r = fq_l.u - fq_l.u_eq + eq_u(rho_0r, speed_r, gamma_c);
+    float u_0l = (fq_r.u*rho_0r)/rho_0l;//fq_l.u - fq_l.u_eq + eq_u(rho_0l, speed_l, gamma_c);
+    float u_0r = fq_r.u;//fq_l.u - fq_l.u_eq + eq_u(rho_0r, speed_r, gamma_c);
+
+    printf("u_0l = %f, u_0r = %f\n", u_0l, u_0r);
 
     float y_0l = to_y(rho_0l, u_0l, speed_l, gamma_c);
     float y_0r = to_y(rho_0r, u_0r, speed_r, gamma_c);
@@ -182,5 +208,24 @@ int main()
     printf("f0 = %f\n", rho_0r*u_0r - rho_0l*u_0l);
     printf("f1 = %f\n", y_0r*u_0r - y_0l*u_0l);
 
+    // my stuff
+    float myrho_0l = myrho_ml(rho_mr*fq_r.u, fq_l.u - fq_l.u_eq, speed_l, gamma_c);
+    printf("my rho0l = %f\n", myrho_0l);
+    printf("my u0l = %f\n", rho_mr*fq_r.u/myrho_0l);
+
+    riemann_solution rs;
+    inhomogenous_riemann(&rs,
+                         &fq_l,
+                         &fq_r,
+                         speed_l,
+                         speed_r,
+                         gamma_c,
+                         1.0f/gamma_c);
+
+    printf("fluctuation:\n");
+    printf("       left:           right:\n");
+    printf("rho:   %8.5f           %8.5f\n", rs.fluct_l.rho, rs.fluct_r.rho);
+    printf("y:     %8.5f           %8.5f\n", rs.fluct_l.y, rs.fluct_r.y);
+    printf("speeds:%8.5f           %8.5f\n", rs.speeds[0], rs.speeds[1]);
     return 0;
 }

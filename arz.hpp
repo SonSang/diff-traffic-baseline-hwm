@@ -7,6 +7,54 @@
 #include <cstdio>
 #include <cassert>
 
+template <class f>
+inline float secant(float x0, float x1, float bottom, float top, float tol, int maxiter, f &fnc)
+{
+    float xn_1 = x0;
+    float xn   = x1;
+    float fn_1 = fnc(xn_1);
+    float fn   = fnc(xn);
+    float denom = fn-fn_1;
+    for(int i = 0; std::abs(fn) > tol && std::abs(denom) > tol && i < maxiter; ++i)
+    {
+        float newxn = xn - (xn - xn_1)/denom * fn;
+        while(newxn <= bottom)
+            newxn = (newxn + xn)*0.5f;
+        while(newxn >= top)
+            newxn = (newxn + xn)*0.5f;
+        xn_1 = xn;
+        xn = newxn;
+        fn_1 = fn;
+        fn = fnc(xn);
+        denom = (fn-fn_1);
+    }
+    return xn;
+}
+
+struct inv_rho_m_l
+{
+    inv_rho_m_l(float flow_m_r, float relv, float u_max_l, float gamma) :
+        flow_m_r_(flow_m_r), relv_(relv), u_max_l_(u_max_l), gamma_(gamma)
+    {}
+
+    float operator()(float rho_m_l) const
+    {
+        return flow_m_r_/rho_m_l - u_max_l_*(1.0 - std::pow(rho_m_l, gamma_)) - relv_;
+    }
+
+    float flow_m_r_;
+    float relv_;
+    float u_max_l_;
+    float gamma_;
+};
+
+inline float rho_m_l_solve(float flow_m_r, float relv, float u_max_l, float gamma)
+{
+    inv_rho_m_l solver(flow_m_r, relv, u_max_l, gamma);
+
+    return secant<inv_rho_m_l>(0.3f, 0.7f, 1e-4f, 1.0f, 5e-6, 100, solver);
+}
+
 // u_max*rho^gamma = u_max - eq_u
 inline float eq_u(float rho, float u_max, float gamma)
 {
@@ -352,6 +400,41 @@ inline void stop_riemann(riemann_solution *rs,
     rs->fluct_r.rho  = 0.0f;
     rs->fluct_r.y    = 0.0f;
 }
+
+inline void inhomogenous_riemann(riemann_solution *rs,
+                                 const full_q *__restrict__ q_l,
+                                 const full_q *__restrict__ q_r,
+                                 float u_max_l,
+                                 float u_max_r,
+                                 float gamma,
+                                 float inv_gamma)
+{
+    full_q q_m_l, q_m_r;
+
+    q_m_r.from_rho_u(inv_eq_u(q_r->u - q_l->u + q_l->u_eq, 1.0f/u_max_r, inv_gamma),
+                     q_r->u,
+                     u_max_r,
+                     gamma);
+
+    float rho_m_l = rho_m_l_solve(q_m_r.rho*q_r->u, q_l->u - q_l->u_eq, u_max_l, gamma);
+    q_m_l.from_rho_u(rho_m_l,
+                     q_m_r.rho*q_r->u/rho_m_l,
+                     u_max_l,
+                     gamma);
+
+    printf("     q_m_l:      q_m_r\n");
+    printf("rho: %8.5f       %8.5f\n", q_m_l.rho, q_m_r.rho);
+    printf("y:   %8.5f       %8.5f\n", q_m_l.y, q_m_r.y);
+    printf("u:   %8.5f       %8.5f\n", q_m_l.u, q_m_r.u);
+
+    rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
+    rs->speeds[1] = q_r->u;
+
+    rs->fluct_l.rho = q_m_l.rho*q_m_l.u - q_l->rho*q_l->u;
+    rs->fluct_l.y   = q_m_l.y  *q_m_l.u - q_l->y  *q_l->u;
+    rs->fluct_r.rho = q_r->rho*q_r->u   - q_m_r.rho*q_m_r.u;
+    rs->fluct_r.y   = q_r->y  *q_r->u   - q_m_r.y  *q_m_r.u;
+};
 
 inline float MC_limiter(float x)
 {
