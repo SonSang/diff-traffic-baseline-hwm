@@ -171,7 +171,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
                 if(backwards)
                     leftover = next_leftover;
                 else
-                    leftover = e - (t1 - t0);
+                    leftover = h - (e - (t1 - t0));
                 e = t1 - t0;
 
                 done = true;
