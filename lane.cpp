@@ -264,6 +264,36 @@ lane* lane::right_adjacency(float &t) const
     return adj.neighbor.dp;
 }
 
+lane* lane::upstream_lane() const
+{
+    switch(start.end_type)
+    {
+    case lane_end::DEAD_END:
+    case lane_end::TAPER:
+        return 0;
+    case lane_end::INTERSECTION:
+        return start.inters.dp->outgoing_state(start.intersect_in_ref);
+    default:
+        assert(0);
+        return 0;
+    };
+}
+
+lane* lane::downstream_lane() const
+{
+    switch(end.end_type)
+    {
+    case lane_end::DEAD_END:
+    case lane_end::TAPER:
+        return 0;
+    case lane_end::INTERSECTION:
+        return end.inters.dp->incoming_state(end.intersect_in_ref);
+    default:
+        assert(0);
+        return 0;
+    };
+}
+
 void lane::get_matrix(const float &t, float mat[16]) const
 {
     point p, n;
@@ -308,8 +338,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
 
     float inv_speedlimit = 1.0f/speedlimit;
 
-    if(start.end_type == lane_end::DEAD_END || start.end_type == lane_end::TAPER ||
-       start.inters.dp->outgoing_state(start.intersect_in_ref) == 0)
+    if(upstream_lane() == 0)
     {
         starvation_riemann(rs,
                            fq[0],
@@ -347,8 +376,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
         std::swap(fq[0], fq[1]);
     }
 
-    if(end.end_type == lane_end::DEAD_END || end.end_type == lane_end::TAPER ||
-       end.inters.dp->incoming_state(end.intersect_in_ref) == 0)
+    if(downstream_lane() == 0)
     {
         stop_riemann(rs+ncells,
                      fq[0],
@@ -448,7 +476,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             else
             {
                 lane *prev;
-                if(start.end_type == lane_end::INTERSECTION && (prev = start.inters.dp->outgoing_state(start.intersect_in_ref)))
+                if((prev = upstream_lane()))
                     u[0] = to_u(prev->data[prev->ncells-1].rho, prev->data[prev->ncells-1].y, prev->speedlimit, gamma_c);
                 else
                     u[0] = u[1];
@@ -463,7 +491,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             else
             {
                 lane *next;
-                if(end.end_type == lane_end::INTERSECTION && (next = end.inters.dp->incoming_state(end.intersect_in_ref)))
+                if((next = downstream_lane()))
                     u[1] = to_u(next->data[0].rho, next->data[0].y, next->speedlimit, gamma_c);
                 else
                     u[1] = u[0];
@@ -477,7 +505,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             lane *next;
             if(end.end_type == lane_end::INTERSECTION)
             {
-                if((next = end.inters.dp->incoming_state(end.intersect_in_ref)))
+                if((next = downstream_lane()))
                 {
                     carticles[0][i].x = (carticles[0][i].x - 1.0) * ncells*h/(next->ncells*next->h);
                     next->carticles[1].push_back(carticles[0][i]);
