@@ -348,7 +348,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
     }
 
     if(end.end_type == lane_end::DEAD_END || end.end_type == lane_end::TAPER ||
-       end.inters.dp->incoming_state(start.intersect_in_ref) == 0)
+       end.inters.dp->incoming_state(end.intersect_in_ref) == 0)
     {
         stop_riemann(rs+ncells,
                      fq[0],
