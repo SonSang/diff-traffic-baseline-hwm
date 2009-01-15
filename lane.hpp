@@ -71,6 +71,10 @@ struct lane
     void draw_data(float gamma_c) const;
     void draw_carticles() const;
 
+    void fill_from_carticles();
+    void reset_data();
+    void fill_y(float gamma_c);
+
     float collect_riemann(float gamma_c, float inv_gamma);
 
     void update(float maxspeed);

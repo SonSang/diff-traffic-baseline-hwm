@@ -17,13 +17,15 @@
 
 #define LANE_WIDTH 2.5f
 #define CAR_LENGTH 4.5f
+#define H (2.0f*CAR_LENGTH)
 
 struct carticle
 {
     carticle() {}
-    carticle(float ix) : x(ix) {}
+    carticle(float ix, float iu) : x(ix), u(iu) {}
 
-    float x;
+    float x; //< Parametric position of carticle along current lane.
+    float u; //< Velocity of carticle.
 };
 
 struct ltstr
@@ -76,6 +78,8 @@ struct network
     ~network();
 
     void prepare(float h);
+
+    void fill_from_carticles();
 
     float sim_step();
 

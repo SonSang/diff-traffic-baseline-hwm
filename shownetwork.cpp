@@ -243,7 +243,10 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             float rgb[3];
             blackbody(u/speedlimit, rgb);
 
+
             glColor3fv(rgb);
+            //            glColor3f(1.0f, 0.0f, 1.0f);
+            //            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glBegin(GL_QUAD_STRIP);
             glVertex3f(s, -1.0f, 0);
             glVertex3f(e, -1.0f, 0);
@@ -670,19 +673,13 @@ int main(int argc, char * argv[])
         fprintf(stderr, "Couldn't load %s\n", argv[1]);
         exit(1);
     }
-    net->calc_bounding_box();
-    net->prepare(2.5);
 
-    foreach(lane &la, net->lanes)
-    {
-        for(unsigned int i = 0; i < la.ncells; ++i)
-        {
-            la.data[i].rho = i < (la.ncells>>1) ? 0.45 : 0.4;
-            la.data[i].y = to_y(la.data[i].rho, 4.5, la.speedlimit, net->gamma_c);
-        }
-        for(int j = 0; j < 1; ++j)
-            la.carticles[0].push_back(j+0.9);
-    }
+    net->calc_bounding_box();
+    net->prepare(H);
+
+    net->lanes[0].carticles[0].push_back(carticle(0.5, 4.5f));
+
+    net->fill_from_carticles();
 
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];

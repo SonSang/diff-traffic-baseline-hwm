@@ -248,6 +248,18 @@ void network::prepare(float h)
     }
 }
 
+void network::fill_from_carticles()
+{
+    foreach(lane &la, lanes)
+        la.reset_data();
+
+    foreach(lane &la, lanes)
+        la.fill_from_carticles();
+
+    foreach(lane &la, lanes)
+        la.fill_y(gamma_c);
+}
+
 float network::sim_step()
 {
     float maxspeed = 0.0f;

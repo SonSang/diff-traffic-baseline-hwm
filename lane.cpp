@@ -339,6 +339,59 @@ void lane::get_point(const float &t, point &pt) const
     rom->parent_road.dp->rep.locate(&pt, x, rom->lane_position);
 }
 
+void lane::fill_from_carticles()
+{
+    float inv_h = 1.0f/h;
+
+    for(size_t i = 0; i < carticles[0].size(); ++i)
+    {
+        float front_pos = carticles[0][i].x*(ncells-1);
+        float back_pos  = front_pos - CAR_LENGTH*inv_h;
+
+        int front_cell = std::floor(front_pos);
+        int back_cell  = std::floor(back_pos);
+
+        assert(front_cell - back_cell <= 1);
+        assert(front_cell < static_cast<int>(ncells));
+
+        float portion = front_pos-front_cell;
+        data[front_cell].rho += portion;
+        data[front_cell].y   += portion*carticles[0][i].u;
+
+        if(back_cell < 0)
+        {
+            lane* up = upstream_lane();
+            if(up)
+            {
+                portion = (back_cell-back_pos)*inv_h*up->h;
+                up->data[up->ncells-1].rho += portion;
+                up->data[up->ncells-1].y   += portion*carticles[0][i].u;
+            }
+        }
+        else
+        {
+            portion = back_cell-back_pos;
+            data[back_cell].rho -= portion;
+            data[back_cell].y   -= portion*carticles[0][i].u;
+        }
+    }
+}
+
+void lane::reset_data()
+{
+    memset(data, 0, sizeof(q)*ncells);
+}
+
+void lane::fill_y(float gamma)
+{
+    for(size_t i = 0; i < ncells; ++i)
+    {
+        if(data[i].rho < FLT_EPSILON)
+            data[i].rho = FLT_EPSILON;
+        data[i].y = to_y(data[i].rho, data[i].y, speedlimit, gamma);
+    }
+}
+
 float lane::collect_riemann(float gamma_c, float inv_gamma)
 {
     full_q fq_buff[2];
