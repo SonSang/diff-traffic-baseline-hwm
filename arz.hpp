@@ -504,7 +504,7 @@ inline float inv_demand(float flow, float relv, float u_max, float gamma)
         return crit;
 
     inv_fd solver(flow, relv, u_max, gamma);
-    return secant<inv_fd>(crit*0.3f, crit, crit*0.05f, crit, 5e-8, 500, solver);
+    return secant<inv_fd>(crit*0.3f, crit, 1e-4, crit, 5e-8, 500, solver);
 }
 
 inline float inv_supply(float flow, float relv, float u_max, float gamma)
