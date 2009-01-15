@@ -24,8 +24,10 @@ struct intersection
 
     int next_state();
 
-    lane* incoming_state(int intern_ref) const;
-    lane* outgoing_state(int intern_ref) const;
+    lane* incoming_state(int intern_ref) const; //< Returns the OUTGOING lane corresponing to
+                                                //< incoming lane intern_ref, or 0 if none
+    lane* outgoing_state(int intern_ref) const;  //< Returns the INCOMING lane corresponing to
+                                                //< OUTGOING lane intern_ref, or 0 if none
 
     void build_shape(float lane_width);
     void draw() const;
