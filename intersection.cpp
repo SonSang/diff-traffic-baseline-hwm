@@ -331,13 +331,13 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
                        end->speedlimit,
                        gamma_c);
 
-            riemann(start->rs + start->ncells,
-                    &q_l,
-                    &q_r,
-                    start->speedlimit,
-                    1.0f/start->speedlimit,
-                    gamma_c,
-                    inv_gamma);
+            lebacque_inhomogeneous_riemann(start->rs + start->ncells,
+                                           &q_l,
+                                           &q_r,
+                                           start->speedlimit,
+                                           end->speedlimit,
+                                           gamma_c,
+                                           inv_gamma);
 
             memcpy(end->rs,
                    start->rs + start->ncells,
