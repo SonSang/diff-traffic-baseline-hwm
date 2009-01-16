@@ -223,6 +223,16 @@ void intersection::build_shape(float lane_width)
     }
 
     convex_hull(shape);
+
+    center.x = center.y = 0.0f;
+
+    foreach(const point &pt, shape)
+    {
+        center.x += pt.x;
+        center.y += pt.y;
+    }
+    center.x /= shape.size();
+    center.y /= shape.size();
 }
 
 float intersection::collect_riemann(float gamma_c, float inv_gamma)
