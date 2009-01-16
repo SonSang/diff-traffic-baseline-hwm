@@ -10,6 +10,17 @@
 
 #define LANE_WIDTH 2.5
 
+static float zooms[10] = { 13.0f,
+                           2.0f,
+                           4.0f,
+                           6.0f,
+                           8.0f,
+                           10.0f,
+                           11.0f,
+                           11.5f,
+                           12.0f,
+                           12.5f};
+
 void intersect_lines(point &res,
                      const point &o0, const point &n0,
                      const point &o1, const point &n1)
@@ -501,6 +512,9 @@ public:
             {
                 switch(Fl::event_key())
                 {
+                case '0' ... '9':
+                    zoom = zooms[Fl::event_key()-'0'];
+                    break;
                 case ' ':
                     {
                         float dt =  net->sim_step();
