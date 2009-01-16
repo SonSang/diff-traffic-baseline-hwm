@@ -1,5 +1,77 @@
 #include "network.hpp"
 
+
+static inline bool lt(float l, float r)
+{
+    return (l - r) < -1e-6;
+}
+
+static inline bool eq(float l, float r)
+{
+    return std::abs(r - l) < 1e-6;
+}
+
+struct lexicographic
+{
+    inline bool operator()(const point &pt0, const point &pt1) const
+    {
+        return lt(pt0.x, pt1.x) || (eq(pt0.x, pt1.x) && lt(pt0.y, pt1.y));
+    }
+};
+
+static inline bool rightturn(const point &pt0, const point &pt1, const point &pt2)
+{
+    float rtval = ((pt1.x-pt0.x)*(pt2.y-pt1.y) - (pt2.x-pt1.x)*(pt1.y-pt0.y));
+    return rtval < -1e-6;
+}
+
+static inline void convex_hull(std::vector<point> & pts)
+{
+    lexicographic lx;
+    std::sort(pts.begin(), pts.end(), lx);
+    std::vector<point> newpts;
+    newpts.push_back(pts[0]);
+    int count = 1;
+    while(count < static_cast<int>(pts.size()))
+    {
+        const point &bpt = newpts.back();
+        if(!(eq(bpt.x, pts[count].x) && eq(bpt.y, pts[count].y)))
+            newpts.push_back(pts[count]);
+        ++count;
+    }
+    pts.clear();
+
+    pts.push_back(newpts[0]);
+    pts.push_back(newpts[1]);
+
+    for(count = 2; count < static_cast<int>(newpts.size()); ++count)
+    {
+        pts.push_back(newpts[count]);
+
+        int back = static_cast<int>(pts.size())-1;
+        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        {
+            std::swap(pts[back], pts[back-1]);
+            pts.pop_back();
+            --back;
+        }
+    }
+
+    for(count = static_cast<int>(newpts.size())-2; count >= 0; --count)
+    {
+        pts.push_back(newpts[count]);
+
+        int back = static_cast<int>(pts.size())-1;
+        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        {
+            std::swap(pts[back], pts[back-1]);
+            pts.pop_back();
+            --back;
+        }
+    }
+    pts.pop_back();
+}
+
 static bool read_lane_ref(void *item, xmlTextReaderPtr reader)
 {
     std::vector<lane_id> *lanev = reinterpret_cast<std::vector<lane_id>*>(item);
@@ -276,75 +348,4 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
     }
 
     return maxspeed;
-}
-
-inline bool lt(float l, float r)
-{
-    return (l - r) < -1e-6;
-}
-
-inline bool eq(float l, float r)
-{
-    return std::abs(r - l) < 1e-6;
-}
-
-struct lexicographic
-{
-    inline bool operator()(const point &pt0, const point &pt1) const
-    {
-        return lt(pt0.x, pt1.x) || (eq(pt0.x, pt1.x) && lt(pt0.y, pt1.y));
-    }
-};
-
-inline bool rightturn(const point &pt0, const point &pt1, const point &pt2)
-{
-    float rtval = ((pt1.x-pt0.x)*(pt2.y-pt1.y) - (pt2.x-pt1.x)*(pt1.y-pt0.y));
-    return rtval < -1e-6;
-}
-
-inline void convex_hull(std::vector<point> & pts)
-{
-    lexicographic lx;
-    std::sort(pts.begin(), pts.end(), lx);
-    std::vector<point> newpts;
-    newpts.push_back(pts[0]);
-    int count = 1;
-    while(count < static_cast<int>(pts.size()))
-    {
-        const point &bpt = newpts.back();
-        if(!(eq(bpt.x, pts[count].x) && eq(bpt.y, pts[count].y)))
-            newpts.push_back(pts[count]);
-        ++count;
-    }
-    pts.clear();
-
-    pts.push_back(newpts[0]);
-    pts.push_back(newpts[1]);
-
-    for(count = 2; count < static_cast<int>(newpts.size()); ++count)
-    {
-        pts.push_back(newpts[count]);
-
-        int back = static_cast<int>(pts.size())-1;
-        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
-        {
-            std::swap(pts[back], pts[back-1]);
-            pts.pop_back();
-            --back;
-        }
-    }
-
-    for(count = static_cast<int>(newpts.size())-2; count >= 0; --count)
-    {
-        pts.push_back(newpts[count]);
-
-        int back = static_cast<int>(pts.size())-1;
-        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
-        {
-            std::swap(pts[back], pts[back-1]);
-            pts.pop_back();
-            --back;
-        }
-    }
-    pts.pop_back();
 }

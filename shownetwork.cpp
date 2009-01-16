@@ -23,7 +23,7 @@ static float zooms[10] = { 13.0f,
 
 static GLuint car_list;
 
-void init_draw_car()
+static void init_draw_car()
 {
     static const float verts[][3] = {{-CAR_LENGTH, -0.5f*LANE_WIDTH, -0.5f},  //0
                                      {       0.0f,-0.25f*LANE_WIDTH, -0.5f},  //1
@@ -56,14 +56,14 @@ void init_draw_car()
     glEndList();
 }
 
-void draw_car()
+static void draw_car()
 {
     glCallList(car_list);
 }
 
-void intersect_lines(point &res,
-                     const point &o0, const point &n0,
-                     const point &o1, const point &n1)
+static void intersect_lines(point &res,
+                            const point &o0, const point &n0,
+                            const point &o1, const point &n1)
 {
     float a[2] = { n0.y,  n1.y};
     float b[2] = {-n0.x, -n1.x};
