@@ -115,13 +115,8 @@ inline bool read_sequence(std::vector<T> & seq, std::map<char *, int, ltstr> & i
                 char *id = 0;
                 if(!get_attribute(id, reader, "id"))
                     return false;
-                printf("Trying to add %s...", id);
                 if(id_map.find(id) != id_map.end())
-                {
-                    printf("nope\n");
                     return false;
-                }
-                printf("yup\n");
                 id_map[id] = seq.size()-1;
                 seq[seq.size()-1].xml_read(reader);
             }

@@ -105,8 +105,6 @@ static bool read_road_intervals(void *item, xmlTextReaderPtr reader)
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "road_intervals"))
         return false;
 
-    printf("Read: %d road intervals\n", read[0].count);
-
     return read[0].count == 1;
 }
 
