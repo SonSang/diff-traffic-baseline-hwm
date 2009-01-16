@@ -25,15 +25,33 @@ static GLuint car_list;
 
 void init_draw_car()
 {
+    static const float verts[][3] = {{-CAR_LENGTH, -0.5f*LANE_WIDTH, -0.5f},  //0
+                                     {       0.0f,-0.25f*LANE_WIDTH, -0.5f},  //1
+                                     {       0.0f, 0.25f*LANE_WIDTH, -0.5f},  //2
+                                     {-CAR_LENGTH,  0.5f*LANE_WIDTH, -0.5f},  //3
+
+                                     {-CAR_LENGTH, -0.5f*LANE_WIDTH, 1.0f},  //4
+                                     {       0.0f,-0.25f*LANE_WIDTH, 1.0f},  //5
+                                     {       0.0f, 0.25f*LANE_WIDTH, 1.0f},  //6
+                                     {-CAR_LENGTH,  0.5f*LANE_WIDTH, 1.0f}}; //7
+
+    static const int faces[6][4] = {{ 0, 1, 2, 3}, // top
+                                    { 4, 5, 6, 7}, // bottom
+                                    { 0, 4, 5, 1}, // left side
+                                    { 0, 3, 7, 4}, // back
+                                    { 2, 6, 7, 3}, // right side
+                                    { 1, 2, 6, 5}};// front
+
+
     car_list = glGenLists(1);
     glPushMatrix();
     glNewList(car_list, GL_COMPILE);
-    glScalef(1.0f, 0.5, 0.5f);
-    glTranslatef(-3.742f, 0.0f, 1.0);
-    glTranslated(0.0, 0.0, 1.5);
-    glScaled(2.0, 2.0, 2.0);
-    glRotated(-270.0, 1.0, 0.0, 0.0 );
-    glutWireTeapot(1.0f);
+    glBegin(GL_QUADS);
+    for(int i = 0; i < 6; ++i)
+        for(int j = 0; j < 4; ++j)
+            glVertex3fv(&(verts[faces[i][j]][0]));
+    glEnd();
+
     glPopMatrix();
     glEndList();
 }

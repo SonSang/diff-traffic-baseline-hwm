@@ -13,6 +13,8 @@
 #include <ctype.h>
 #include "boost/foreach.hpp"
 
+#define CAR_LENGTH 4.5f
+
 #define foreach BOOST_FOREACH
 
 struct carticle
