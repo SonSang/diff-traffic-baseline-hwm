@@ -119,7 +119,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     float ncells = (t1-t0)/h;
 
     int data_end = std::floor(ncells);
-    float next_leftover;
+    float next_leftover = 0.0f;
     if(backwards)
     {
         leftover = h - (ncells - data_end)*h - leftover;
