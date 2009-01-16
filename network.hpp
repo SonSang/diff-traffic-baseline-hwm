@@ -75,9 +75,13 @@ struct network
 
     float sim_step();
 
+    void calc_bounding_box();
+
     float gamma_c;
     float inv_gamma;
     float min_h;
+
+    float bb[4]; //< Minx, maxx, miny, maxy
 
     char * name;
     std::vector<road> roads;

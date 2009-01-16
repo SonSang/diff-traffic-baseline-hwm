@@ -270,3 +270,25 @@ float network::sim_step()
 
     return dt;
 }
+
+void network::calc_bounding_box()
+{
+    bb[0] = bb[2] = FLT_MAX;
+    bb[1] = bb[3] = -FLT_MAX;
+
+    foreach(const road &rd, roads)
+    {
+        foreach(const point &pt, rd.rep.points)
+        {
+            if(pt.x < bb[0])
+                bb[0] = pt.x;
+            else if(pt.x > bb[1])
+                bb[1] = pt.x;
+            if(pt.y < bb[2])
+                bb[2] = pt.y;
+            else if(pt.y > bb[3])
+                bb[3] = pt.y;
+        }
+    }
+    printf("bb[0] = %f bb[1] = %f\nbb[2] = %f bb[3] = %f\n", bb[0], bb[1], bb[2], bb[3]);
+}

@@ -347,6 +347,9 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+        glTranslatef(-(net->bb[0] + net->bb[1])*0.5f,
+                     -(net->bb[2] + net->bb[3])*0.5f,
+                     0.0f);
         glColor3f(1.0f, 1.0f, 1.0f);
         foreach(const road_mesh & i, rm)
             i.draw();
@@ -545,7 +548,7 @@ int main(int argc, char * argv[])
         fprintf(stderr, "Couldn't load %s\n", argv[1]);
         exit(1);
     }
-
+    net->calc_bounding_box();
     net->prepare(2.5);
 
     foreach(lane &la, net->lanes)
@@ -580,6 +583,21 @@ int main(int argc, char * argv[])
                 break;
             rom = &(la.road_memberships.entries[p].data);
         }
+    }
+    const road_mesh *rom = &(rm[0]);
+    net->bb[0] = net->bb[2] = FLT_MAX;
+    net->bb[1] = net->bb[3] = -FLT_MAX;
+
+    foreach(const point &pt, rom->vrts)
+    {
+        if(pt.x < net->bb[0])
+            net->bb[0] = pt.x;
+        else if(pt.x > net->bb[1])
+            net->bb[1] = pt.x;
+        if(pt.y < net->bb[2])
+            net->bb[2] = pt.y;
+        else if(pt.y > net->bb[3])
+            net->bb[3] = pt.y;
     }
 
     fltkview mv(0, 0, 500, 500, "fltk View");
