@@ -628,11 +628,13 @@ public:
                     t-= 0.01;
                     if(t < 0.0f)
                         t = 0.0;
+                    printf("param(t) = %f\n", t);
                     break;
                 case 'a':
                     t+= 0.01;
                     if(t > 1.0f)
                         t = 1.0;
+                    printf("param(t) = %f\n", t);
                     break;
                 default:
                     return Fl_Gl_Window::handle(event);
