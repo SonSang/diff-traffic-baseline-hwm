@@ -244,6 +244,21 @@ float lane::calc_length() const
     return length;
 }
 
+void lane::scale_offsets(float f)
+{
+    road_membership *rom = &(road_memberships.base_data);
+    int p = -1;
+    while(1)
+    {
+        rom->lane_position *= f;
+
+        ++p;
+        if(p >= static_cast<int>(road_memberships.entries.size()))
+            break;
+        rom = &(road_memberships.entries[p].data);
+    }
+}
+
 lane* lane::left_adjacency(float &t) const
 {
     const adjacency &adj = left.get_rescale(t);

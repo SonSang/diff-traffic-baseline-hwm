@@ -184,6 +184,9 @@ bool network::xml_read(xmlTextReaderPtr reader)
     for(; current != intersection_refs.end(); ++current)
         free(current->first);
 
+    foreach(lane &la, lanes)
+        la.scale_offsets(LANE_WIDTH*0.5f);
+
     foreach(intersection &inter, intersections)
         inter.build_shape(LANE_WIDTH);
 
