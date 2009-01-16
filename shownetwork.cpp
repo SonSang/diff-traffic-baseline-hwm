@@ -364,7 +364,12 @@ std::vector<road_mesh> rm;
 class fltkview : public Fl_Gl_Window
 {
 public:
-    fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l), zoom(2.0)
+    fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l), zoom(2.0),
+                                                          draw_data(false),
+                                                          draw_param_obj(false),
+                                                          draw_intersections(true),
+                                                          draw_lanes(true),
+                                                          draw_carticles(true)
     {
         lastmouse[0] = 0.0f;
         lastmouse[1] = 0.0f;
@@ -403,68 +408,83 @@ public:
         glTranslatef(-(net->bb[0] + net->bb[1])*0.5f,
                      -(net->bb[2] + net->bb[3])*0.5f,
                      0.0f);
-        glColor3f(1.0f, 1.0f, 1.0f);
-        foreach(const road_mesh & i, rm)
-            i.draw();
 
-        point p, n;
-
-        foreach(const lane &la, net->lanes)
+        if(draw_lanes)
         {
-            float mat[16];
-            la.get_matrix(t, mat);
-            p.x = mat[12];
-            p.y = mat[13];
+            glColor3f(1.0f, 1.0f, 1.0f);
+            foreach(const road_mesh & i, rm)
+                i.draw();
+        }
 
-            glColor3f(1.0f, 0.0f, 1.0f);
-            glPushMatrix();
-            mat[14] = 0.5f;
-            glMultMatrixf(mat);
-            draw_car();
-            glPopMatrix();
-
-            glColor3f(0.0, 1.0, 0.0);
-            float x = t;
-            lane *left_lane = la.left_adjacency(x);
-
-            if(left_lane)
+        if(draw_param_obj)
+        {
+            foreach(const lane &la, net->lanes)
             {
-                point lp;
-                left_lane->get_point(x, lp);
+                point p, n;
+                float mat[16];
+                la.get_matrix(t, mat);
+                p.x = mat[12];
+                p.y = mat[13];
 
-                glBegin(GL_LINES);
-                glVertex2fv(&(p.x));
-                glVertex2fv(&(lp.x));
-                glEnd();
-            }
-            x = t;
-            lane *right_lane = la.right_adjacency(x);
+                glColor3f(1.0f, 0.0f, 1.0f);
+                glPushMatrix();
+                mat[14] = 0.5f;
+                glMultMatrixf(mat);
+                draw_car();
+                glPopMatrix();
 
-            if(right_lane)
-            {
-                point rp;
-                right_lane->get_point(x, rp);
+                glColor3f(0.0, 1.0, 0.0);
+                float x = t;
+                lane *left_lane = la.left_adjacency(x);
 
-                glBegin(GL_LINES);
-                glVertex2fv(&(p.x));
-                glVertex2fv(&(rp.x));
-                glEnd();
+                if(left_lane)
+                {
+                    point lp;
+                    left_lane->get_point(x, lp);
+
+                    glBegin(GL_LINES);
+                    glVertex2fv(&(p.x));
+                    glVertex2fv(&(lp.x));
+                    glEnd();
+                }
+                x = t;
+                lane *right_lane = la.right_adjacency(x);
+
+                if(right_lane)
+                {
+                    point rp;
+                    right_lane->get_point(x, rp);
+
+                    glBegin(GL_LINES);
+                    glVertex2fv(&(p.x));
+                    glVertex2fv(&(rp.x));
+                    glEnd();
+                }
             }
         }
 
-        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        // foreach(const lane &la, net->lanes)
-        //     la.draw_data(net->gamma_c);
+        if(draw_data)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            foreach(const lane &la, net->lanes)
+                la.draw_data(net->gamma_c);
+        }
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        foreach(const lane &la, net->lanes)
-            la.draw_carticles();
+        if(draw_carticles)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            foreach(const lane &la, net->lanes)
+                la.draw_carticles();
+        }
 
-        glPushMatrix();
-        glTranslatef(0.0f, 0.0f, 0.01f);
-        foreach(const intersection &is, net->intersections)
-            is.draw();
-        glPopMatrix();
+        if(draw_intersections)
+        {
+            glPushMatrix();
+            glTranslatef(0.0f, 0.0f, 0.01f);
+            foreach(const intersection &is, net->intersections)
+                is.draw();
+            glPopMatrix();
+        }
 
         glFlush();
         glFinish();
@@ -553,6 +573,26 @@ public:
             {
                 switch(Fl::event_key())
                 {
+                case 'd':
+                    draw_data = !draw_data;
+                    printf("draw data = %d\n", draw_data);
+                    break;
+                case 'l':
+                    draw_lanes = !draw_lanes;
+                    printf("draw lanes = %d\n", draw_lanes);
+                    break;
+                case 'p':
+                    draw_param_obj = !draw_param_obj;
+                    printf("draw param obj = %d\n", draw_param_obj);
+                    break;
+                case 'i':
+                    draw_intersections = !draw_intersections;
+                    printf("draw intersections = %d\n", draw_intersections);
+                    break;
+                case 'c':
+                    draw_carticles = !draw_carticles;
+                    printf("draw carticles = %d\n", draw_carticles);
+                    break;
                 case '0' ... '9':
                     zoom = zooms[Fl::event_key()-'0'];
                     break;
@@ -614,6 +654,11 @@ public:
     arcball nav;
     float zoom;
     float lastmouse[2];
+    bool draw_data;
+    bool draw_param_obj;
+    bool draw_intersections;
+    bool draw_lanes;
+    bool draw_carticles;
 };
 
 int main(int argc, char * argv[])
