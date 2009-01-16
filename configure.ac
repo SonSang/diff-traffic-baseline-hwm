@@ -13,6 +13,8 @@ fi
 
 # Checks for programs.
 AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_RANLIB
 
 AC_SUBST([WARN_FLAGS])
 AC_SUBST([DEBUG_FLAGS])
