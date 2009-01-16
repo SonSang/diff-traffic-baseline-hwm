@@ -8,8 +8,6 @@
 #include "arcball.hpp"
 #include "network.hpp"
 
-#define LANE_WIDTH 2.5
-
 static float zooms[10] = { 13.0f,
                            2.0f,
                            4.0f,

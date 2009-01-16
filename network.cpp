@@ -184,9 +184,8 @@ bool network::xml_read(xmlTextReaderPtr reader)
     for(; current != intersection_refs.end(); ++current)
         free(current->first);
 
-    // should have lane_width in there instead of hard-coded '0.1'
     foreach(intersection &inter, intersections)
-        inter.build_shape(2.5);
+        inter.build_shape(LANE_WIDTH);
 
     return ret == 1 && have_roads && have_lanes && have_intersections;
 }
