@@ -28,10 +28,12 @@ showsim_LDFLAGS = $(FLTK_LDFLAGS) $(CAIRO_LIBS) $(AM_LDFLAGS)
 
 shownetwork_SOURCES = \
 	shownetwork.cpp \
+	timer.cpp \
 	network.cpp \
 	road.cpp \
 	lane.cpp \
 	intersection.cpp \
+	timer.hpp \
 	network.hpp \
 	road.hpp \
 	lane.hpp \
@@ -44,10 +46,12 @@ endif
 
 xml_test_SOURCES = \
 	xml-test.cpp \
+	timer.cpp \
 	network.cpp \
 	road.cpp \
 	lane.cpp \
 	intersection.cpp \
+	timer.hpp \
 	network.hpp \
 	road.hpp \
 	lane.hpp \

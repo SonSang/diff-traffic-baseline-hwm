@@ -3,6 +3,8 @@
 
 bool network::load_from_xml(const char *filename)
 {
+    timer tim;
+    tim.start();
     xmlTextReaderPtr reader = xmlReaderForFile(filename, NULL, XML_PARSE_XINCLUDE);
     if(!reader)
     {
@@ -44,6 +46,9 @@ bool network::load_from_xml(const char *filename)
 
     xmlFreeTextReader(reader);
     xmlCleanupParser();
+
+    tim.stop();
+    printf("Loaded %s in %lf seconds\n", filename, tim.interval_S());
 
     return status;
 }

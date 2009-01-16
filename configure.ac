@@ -105,6 +105,7 @@ AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_HEADER_STDC
 AC_CHECK_FUNCS([floor memset pow])
+AC_SEARCH_LIBS([clock_gettime], [rt])
 
 WARN_FLAGS="-Wall -Werror -Wno-unused"
 ARCH_FLAGS="-march=core2"
