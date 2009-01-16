@@ -21,6 +21,28 @@ static float zooms[10] = { 13.0f,
                            12.0f,
                            12.5f};
 
+static GLuint car_list;
+
+void init_draw_car()
+{
+    car_list = glGenLists(1);
+    glPushMatrix();
+    glNewList(car_list, GL_COMPILE);
+    glScalef(1.0f, 0.5, 0.5f);
+    glTranslatef(-3.742f, 0.0f, 1.0);
+    glTranslated(0.0, 0.0, 1.5);
+    glScaled(2.0, 2.0, 2.0);
+    glRotated(-270.0, 1.0, 0.0, 0.0 );
+    glutWireTeapot(1.0f);
+    glPopMatrix();
+    glEndList();
+}
+
+void draw_car()
+{
+    glCallList(car_list);
+}
+
 void intersect_lines(point &res,
                      const point &o0, const point &n0,
                      const point &o1, const point &n1)
@@ -257,8 +279,7 @@ void lane::draw_carticles() const
         glPushMatrix();
         mat[14] = 0.5f;
         glMultMatrixf(mat);
-        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-        glutWireTeapot(0.75f);
+        draw_car();
         glPopMatrix();
     }
 }
@@ -345,6 +366,9 @@ public:
             glClearColor(0.0, 0.0, 0.0, 0.0);
 
             glEnable(GL_DEPTH_TEST);
+
+            if(!glIsList(car_list))
+                init_draw_car();
         }
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -378,8 +402,7 @@ public:
             glPushMatrix();
             mat[14] = 0.5f;
             glMultMatrixf(mat);
-            glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-            glutWireTeapot(0.75f);
+            draw_car();
             glPopMatrix();
 
             glColor3f(0.0, 1.0, 0.0);
