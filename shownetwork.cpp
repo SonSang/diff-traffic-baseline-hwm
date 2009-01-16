@@ -562,6 +562,28 @@ public:
                         printf("dt = %f\n", dt);
                     }
                     break;
+                case 's':
+                    {
+                        float scale = std::pow(1.5f, zoom-1.0f);
+                        if(std::isfinite(scale))
+                            zoom += scale*0.2f;
+                        if(!std::isfinite(scale) ||zoom > 17.0f)
+                            zoom = 17.0f;
+                        else if(zoom < FLT_MIN)
+                            zoom = FLT_MIN;
+                    }
+                    break;
+                case 'n':
+                    {
+                        float scale = std::pow(1.5f, zoom-1.0f);
+                        if(std::isfinite(scale))
+                            zoom += -scale*0.02f;
+                        if(!std::isfinite(scale) || zoom > 17.0f)
+                            zoom = 17.0f;
+                        else if(zoom < FLT_MIN)
+                            zoom = FLT_MIN;
+                    }
+                    break;
                 case 'z':
                     t-= 0.01;
                     if(t < 0.0f)
