@@ -119,12 +119,12 @@ struct q
 {
     inline void fix()
     {
-        if(rho < FLT_EPSILON)
+        if(rho < 1e-3)
         {
             rho = 0.0f;
             y = 0.0f;
         }
-        else if(y > FLT_EPSILON)
+        else if(y > -FLT_EPSILON)
             y = 0.0f;
     }
 
