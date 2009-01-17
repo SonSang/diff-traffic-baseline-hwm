@@ -213,8 +213,6 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             float s = count*h - leftover;
             float e = s + h;
             int drawcount = backwards ? (data_end - count + incount) : (count+incount);
-            float rho = data[drawcount].rho;
-            float u   = to_u(rho, data[drawcount].y, speedlimit, gamma_c);
             if(e + t0 >= t1)
             {
                 if(backwards)
@@ -240,23 +238,41 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             if(s < 0.0f)
                 s = 0.0f;
 
-            float rgb[3];
-            blackbody(u/speedlimit, rgb);
+            if(data)
+            {
+                float rgb[3];
+                float rho = data[drawcount].rho;
+                float u   = to_u(rho, data[drawcount].y, speedlimit, gamma_c);
+                blackbody(u/speedlimit, rgb);
 
+                glColor3fv(rgb);
+                glBegin(GL_QUAD_STRIP);
+                glVertex3f(s, -1.0f, 0);
+                glVertex3f(e, -1.0f, 0);
+                glVertex3f(s, -1.0f, rho);
+                glVertex3f(e, -1.0f, rho);
+                glVertex3f(s,  1.0f, rho);
+                glVertex3f(e,  1.0f, rho);
+                glVertex3f(s,  1.0f, 0);
+                glVertex3f(e,  1.0f, 0);
+                glEnd();
 
-            glColor3fv(rgb);
-            //            glColor3f(1.0f, 0.0f, 1.0f);
-            //            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glBegin(GL_QUAD_STRIP);
-            glVertex3f(s, -1.0f, 0);
-            glVertex3f(e, -1.0f, 0);
-            glVertex3f(s, -1.0f, rho);
-            glVertex3f(e, -1.0f, rho);
-            glVertex3f(s,  1.0f, rho);
-            glVertex3f(e,  1.0f, rho);
-            glVertex3f(s,  1.0f, 0);
-            glVertex3f(e,  1.0f, 0);
-            glEnd();
+            }
+            else
+            {
+                glColor3f(1.0f, 0.0f, 1.0f);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glBegin(GL_QUAD_STRIP);
+                glVertex3f(s, -1.0f, 0);
+                glVertex3f(e, -1.0f, 0);
+                glVertex3f(s, -1.0f, 1.0f);
+                glVertex3f(e, -1.0f, 1.0f);
+                glVertex3f(s,  1.0f, 1.0f);
+                glVertex3f(e,  1.0f, 1.0f);
+                glVertex3f(s,  1.0f, 0);
+                glVertex3f(e,  1.0f, 0);
+                glEnd();
+            }
         }
         glPopMatrix();
 
@@ -266,7 +282,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     return count;
 }
 
-void lane::draw_data(float gamma_c) const
+void lane::draw_data(float gamma_c, bool cells) const
 {
     int count = 0;
     float lenused = 0.0f;
@@ -278,7 +294,9 @@ void lane::draw_data(float gamma_c) const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, data, speedlimit, gamma_c, ncells);
+        q *drdata = cells ? 0 : data;
+
+        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, drdata, speedlimit, gamma_c, ncells);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
@@ -369,6 +387,7 @@ class fltkview : public Fl_Gl_Window
 public:
     fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l), zoom(2.0),
                                                           draw_data(false),
+                                                          draw_cells(false),
                                                           draw_param_obj(false),
                                                           draw_intersections(true),
                                                           draw_lanes(true),
@@ -470,7 +489,7 @@ public:
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             foreach(const lane &la, net->lanes)
-                la.draw_data(net->gamma_c);
+                la.draw_data(net->gamma_c, draw_cells);
         }
 
         if(draw_carticles)
@@ -580,6 +599,10 @@ public:
                     draw_data = !draw_data;
                     printf("draw data = %d\n", draw_data);
                     break;
+                case 'e':
+                    draw_cells = !draw_cells;
+                    printf("draw cells = %d\n", draw_cells);
+                    break;
                 case 'l':
                     draw_lanes = !draw_lanes;
                     printf("draw lanes = %d\n", draw_lanes);
@@ -660,6 +683,7 @@ public:
     float zoom;
     float lastmouse[2];
     bool draw_data;
+    bool draw_cells;
     bool draw_param_obj;
     bool draw_intersections;
     bool draw_lanes;
