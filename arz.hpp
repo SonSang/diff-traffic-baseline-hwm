@@ -117,6 +117,17 @@ inline float centered_rarefaction_u(float rho_l, float u_l, float u_max, float g
 
 struct q
 {
+    inline void fix()
+    {
+        if(rho < FLT_EPSILON)
+        {
+            rho = 0.0f;
+            y = 0.0f;
+        }
+        else if(y > FLT_EPSILON)
+            y = 0.0f;
+    }
+
     float rho;
     float y;
 };

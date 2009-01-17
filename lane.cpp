@@ -386,9 +386,8 @@ void lane::fill_y(float gamma)
 {
     for(size_t i = 0; i < ncells; ++i)
     {
-        if(data[i].rho < FLT_EPSILON)
-            data[i].rho = FLT_EPSILON;
         data[i].y = to_y(data[i].rho, data[i].y, speedlimit, gamma);
+        data[i].fix();
     }
 }
 
@@ -483,10 +482,7 @@ void lane::update(float dt)
 
     assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
-    if(data[i].rho < FLT_EPSILON)
-        data[i].rho  = FLT_EPSILON;
-    if(data[i].y > FLT_EPSILON)
-        data[i].y = FLT_EPSILON;
+    data[i].fix();
 
     std::swap(limited[0], limited[1]);
 
@@ -499,13 +495,9 @@ void lane::update(float dt)
 
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho + (*limited[1]).rho - (*limited[0]).rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y   + (*limited[1]).y   - (*limited[0]).y);
-
         assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
-        if(data[i].rho < FLT_EPSILON)
-            data[i].rho  = FLT_EPSILON;
-        if(data[i].y > FLT_EPSILON)
-            data[i].y = FLT_EPSILON;
+        data[i].fix();
 
         std::swap(limited[0], limited[1]);
     }
@@ -517,10 +509,7 @@ void lane::update(float dt)
 
     assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
-    if(data[i].rho < FLT_EPSILON)
-        data[i].rho  = FLT_EPSILON;
-    if(data[i].y > FLT_EPSILON)
-        data[i].y  = FLT_EPSILON;
+    data[i].fix();
 }
 
 void lane::advance_carticles(float dt, float gamma_c)
@@ -529,7 +518,7 @@ void lane::advance_carticles(float dt, float gamma_c)
 
     foreach(carticle &cart, carticles[0])
     {
-        float pos = cart.x*(ncells-1);
+        float pos = cart.x*ncells;
         int cell = std::floor(pos);
         float cell_u = to_u(data[cell].rho, data[cell].y, speedlimit, gamma_c);
         float u[2];

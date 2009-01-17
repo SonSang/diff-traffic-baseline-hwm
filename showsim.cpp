@@ -128,10 +128,7 @@ static float sim_step()
 
         assert(std::isfinite(la.data[i].rho) && std::isfinite(la.data[i].y));
 
-        if(la.data[i].rho < FLT_EPSILON)
-            la.data[i].rho  = FLT_EPSILON;
-        if(la.data[i].y > FLT_EPSILON)
-            la.data[i].y = FLT_EPSILON;
+        la.data[i].fix();
 
         std::swap(limited[0], limited[1]);
 
@@ -147,10 +144,7 @@ static float sim_step()
 
             assert(std::isfinite(la.data[i].rho) && std::isfinite(la.data[i].y));
 
-            if(la.data[i].rho < FLT_EPSILON)
-                la.data[i].rho  = FLT_EPSILON;
-            if(la.data[i].y > FLT_EPSILON)
-                la.data[i].y = FLT_EPSILON;
+            la.data[i].fix();
 
             std::swap(limited[0], limited[1]);
         }
@@ -162,10 +156,7 @@ static float sim_step()
 
         assert(std::isfinite(la.data[i].rho) && std::isfinite(la.data[i].y));
 
-        if(la.data[i].rho < FLT_EPSILON)
-            la.data[i].rho  = FLT_EPSILON;
-        if(la.data[i].y > FLT_EPSILON)
-            la.data[i].y = FLT_EPSILON;
+        la.data[i].fix();
     }
 
     return dt;
