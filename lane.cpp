@@ -603,9 +603,28 @@ void lane::advance_carticles(float dt, float gamma_c)
     }
 }
 
+struct carticle_sort
+{
+    inline bool operator()(const carticle &l, const carticle &r)
+    {
+        return l.x < r.x;
+    }
+};
+
 void lane::swap_carticles()
 {
     carticles[0].swap(carticles[1]);
+    carticle_sort cs;
+    std::sort(carticles[0].begin(), carticles[0].end(), cs);
+
+    if(carticles[0].size() > 1)
+        for(int i = static_cast<int>(carticles[0].size())-2; i >= 0; --i)
+        {
+            assert(i >= 0);
+            assert(i+1 < static_cast<int>(carticles[0].size()));
+            if(carticles[0][i].x > carticles[0][i+1].x - (CAR_LENGTH*1.2f)/(ncells*h))
+                carticles[0][i].x = carticles[0][i+1].x - (CAR_LENGTH*1.2f)/(ncells*h);
+        }
     carticles[1].clear();
 }
 
