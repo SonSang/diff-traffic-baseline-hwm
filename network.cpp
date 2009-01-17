@@ -207,7 +207,8 @@ void network::prepare(float h)
     {
         la.h = h;
         float len = la.calc_length();
-        total += la.ncells = std::floor(la.calc_length()/h);
+        total += la.ncells = std::ceil(len/h);
+        assert(la.ncells > 0);
         la.h = len/la.ncells;
         min_h = std::min(min_h, la.h);
     }
