@@ -345,34 +345,35 @@ void lane::fill_from_carticles()
 
     foreach(carticle &cart, carticles[0])
     {
-        float front_pos = cart.x*(ncells-1);
+        float front_pos = cart.x*ncells;
         float back_pos  = front_pos - CAR_LENGTH*inv_h;
 
         int front_cell = std::floor(front_pos);
         int back_cell  = std::floor(back_pos);
 
         assert(front_cell - back_cell <= 1);
-        assert(front_cell < static_cast<int>(ncells));
-
-        float portion = front_pos-front_cell;
-        data[front_cell].rho += portion;
-        data[front_cell].y   += portion*cart.u;
+        if(front_cell < static_cast<int>(ncells))
+        {
+            float portion = front_pos-front_cell;
+            data[front_cell].rho += portion;
+            data[front_cell].y   += portion*cart.u;
+        }
 
         if(back_cell < 0)
         {
             lane* up = upstream_lane();
             if(up)
             {
-                portion = (back_cell-back_pos)*inv_h*up->h;
+                float portion = (front_cell-back_pos)*inv_h*up->h;
                 up->data[up->ncells-1].rho += portion;
                 up->data[up->ncells-1].y   += portion*cart.u;
             }
         }
         else
         {
-            portion = back_cell-back_pos;
-            data[back_cell].rho -= portion;
-            data[back_cell].y   -= portion*cart.u;
+            float portion = front_cell-back_pos;
+            data[back_cell].rho += portion;
+            data[back_cell].y   += portion*cart.u;
         }
     }
 }
