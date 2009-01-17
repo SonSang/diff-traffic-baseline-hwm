@@ -180,6 +180,9 @@ static bool read_states(void *item, xmlTextReaderPtr reader)
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "states"))
         return false;
 
+    foreach(const intersection::state &st, is->states)
+        assert(st.isvalid(is->incoming.size(), is->outgoing.size()));
+
     return read[0].count > 0;
 }
 
@@ -219,6 +222,19 @@ bool intersection::state::xml_read(xmlTextReaderPtr reader)
 
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "state"))
         return false;
+
+    return true;
+}
+
+bool intersection::state::isvalid(int nincoming, int noutgoing) const
+{
+    foreach(const out_id &oid, in_states)
+        if(oid != STOP || oid >= nincoming)
+            return false;
+
+    foreach(const in_id &iid, out_states)
+        if(iid != STOP || iid >= noutgoing)
+            return false;
 
     return true;
 }

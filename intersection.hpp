@@ -11,6 +11,8 @@ struct intersection
 
         bool xml_read(xmlTextReaderPtr reader);
 
+        bool isvalid(int nincoming, int noutgoing) const;
+
         int id;
         float duration;
         std::vector<out_id> in_states; //< Mapping of incoming lane ids to
