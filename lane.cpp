@@ -1,5 +1,16 @@
 #include "network.hpp"
 
+static inline float rk4(float x, float dtinvlen, const lane *la, float gamma_c)
+{
+    float k[4];
+    k[0] = la->velocity(x,                      gamma_c);
+    k[1] = la->velocity(x + 0.5f*dtinvlen*k[0], gamma_c);
+    k[2] = la->velocity(x + 0.5f*dtinvlen*k[1], gamma_c);
+    k[3] = la->velocity(x +      dtinvlen*k[2], gamma_c);
+
+    return 1.0f/6.0f*dtinvlen*(k[0] + 2.0f*k[1] + 2.0f*k[2] + k[3]);
+}
+
 template <>
 bool interval_xml_read<road_membership>::xml_read(road_membership & item, xmlTextReaderPtr reader)
 {
@@ -339,6 +350,55 @@ void lane::get_point(const float &t, point &pt) const
     rom->parent_road.dp->rep.locate(&pt, x, rom->lane_position);
 }
 
+float lane::velocity(float t, float gamma_c) const
+{
+    float pos = t*ncells - 0.5f;
+    int cell = std::floor(pos);
+    float u[2];
+
+    assert(cell > -2);
+    assert(cell < static_cast<int>(ncells+1));
+
+    if(cell < 0)
+    {
+        const lane *prev = upstream_lane();
+        if(prev)
+        {
+            //* not strictly right, because of difference in 'h'
+            //* between lanes
+            //* but close enough
+            u[0] = to_u(prev->data[prev->ncells-1].rho,
+                        prev->data[prev->ncells-1].y,
+                        prev->speedlimit, gamma_c);
+        }
+        else
+            u[0] = 0.0f;
+    }
+    else
+        u[0] = to_u(data[cell].rho, data[cell].y, speedlimit, gamma_c);
+
+
+    if(cell + 1 >= static_cast<int>(ncells))
+    {
+        const lane *next = downstream_lane();
+        if(next)
+        {
+            //* not strictly right, because of difference in 'h'
+            //* between lanes
+            //* but close enough
+            u[1] = to_u(next->data[0].rho,
+                        next->data[0].y,
+                        next->speedlimit, gamma_c);
+        }
+        else
+            u[1] = 0.0f;
+    }
+    else
+        u[1] = to_u(data[cell+1].rho, data[cell+1].y, speedlimit, gamma_c);
+
+    return u[0] * (pos-cell) + (1.0f - (pos-cell)) * u[1];
+}
+
 void lane::fill_from_carticles()
 {
     float inv_h = 1.0f/h;
@@ -519,42 +579,7 @@ void lane::advance_carticles(float dt, float gamma_c)
 
     foreach(carticle &cart, carticles[0])
     {
-        float pos = cart.x*ncells;
-        int cell = std::floor(pos);
-        float cell_u = to_u(data[cell].rho, data[cell].y, speedlimit, gamma_c);
-        float u[2];
-        if(pos - cell < 0.5)
-        {
-            pos = pos - cell + 0.5;
-            u[1] = cell_u;
-            if(cell > 0)
-                u[0] = to_u(data[cell-1].rho, data[cell-1].y, speedlimit, gamma_c);
-            else
-            {
-                lane *prev;
-                if((prev = upstream_lane()))
-                    u[0] = to_u(prev->data[prev->ncells-1].rho, prev->data[prev->ncells-1].y, prev->speedlimit, gamma_c);
-                else
-                    u[0] = u[1];
-            }
-        }
-        else
-        {
-            pos = pos - cell - 0.5;
-            u[0] = cell_u;
-            if(cell < static_cast<int>(ncells-1))
-                u[1] = to_u(data[cell+1].rho, data[cell+1].y, speedlimit, gamma_c);
-            else
-            {
-                lane *next;
-                if((next = downstream_lane()))
-                    u[1] = to_u(next->data[0].rho, next->data[0].y, next->speedlimit, gamma_c);
-                else
-                    u[1] = u[0];
-            }
-        }
-
-        cart.x += dt*(u[0]*pos + u[1]*(1.0f-pos))*inv_len;
+        cart.x += rk4(cart.x, dt*inv_len, this, gamma_c);
 
         if(cart.x > 1.0)
         {

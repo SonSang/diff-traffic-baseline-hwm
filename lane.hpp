@@ -68,6 +68,8 @@ struct lane
     void get_point_and_normal(const float &x, point &pt, point &no) const;
     void get_point(const float &x, point &pt) const;
 
+    float velocity(float x, float gamma_c) const;
+
     void draw_data(float gamma_c, bool cells) const;
     void draw_carticles() const;
 
