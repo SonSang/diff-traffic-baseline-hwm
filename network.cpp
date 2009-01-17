@@ -111,10 +111,8 @@ bool network::xml_read(xmlTextReaderPtr reader)
     printf("Read " SIZE_T_FMT " lanes\n", lanes.size());
     printf("Read " SIZE_T_FMT " intersections\n", intersections.size());
 
-    for(size_t lc=0; lc < lanes.size(); ++lc)
+    foreach(lane &la, lanes)
     {
-        lane &la = lanes[lc];
-
         // convert end points
         if(la.start.end_type == lane_end::INTERSECTION)
             if(!la.start.inters.retrieve_ptr(intersections, intersection_refs))
@@ -125,12 +123,12 @@ bool network::xml_read(xmlTextReaderPtr reader)
                 return false;
 
         // convert road_memberships
-        road_intervals & ri = la.road_memberships;
+        road_intervals &ri = la.road_memberships;
         if(!ri.base_data.parent_road.retrieve_ptr(roads, road_refs))
             return false;
 
-        for(int i = 0; i < static_cast<int>(ri.entries.size()); ++i)
-            if(!ri.entries[i].data.parent_road.retrieve_ptr(roads, road_refs))
+        foreach(road_intervals::entry &ent, ri.entries)
+            if(!ent.data.parent_road.retrieve_ptr(roads, road_refs))
                 return false;
 
         // convert left adjacencies
@@ -139,8 +137,8 @@ bool network::xml_read(xmlTextReaderPtr reader)
             if(ai.base_data.neighbor.sp && !ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
                 return false;
 
-            for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
-                if(ai.entries[i].data.neighbor.sp && !ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
+            foreach(adjacency_intervals::entry &ent, ai.entries)
+                if(ent.data.neighbor.sp && !ent.data.neighbor.retrieve_ptr(lanes, lane_refs))
                     return false;
         }
 
@@ -150,39 +148,43 @@ bool network::xml_read(xmlTextReaderPtr reader)
             if(ai.base_data.neighbor.sp && !ai.base_data.neighbor.retrieve_ptr(lanes, lane_refs))
                     return false;
 
-            for(int i = 0; i < static_cast<int>(ai.entries.size()); ++i)
-                if(ai.entries[i].data.neighbor.sp && !ai.entries[i].data.neighbor.retrieve_ptr(lanes, lane_refs))
-                        return false;
+            foreach(adjacency_intervals::entry &ent, ai.entries)
+                if(ent.data.neighbor.sp && !ent.data.neighbor.retrieve_ptr(lanes, lane_refs))
+                    return false;
         }
     }
 
-    std::vector<intersection>::iterator intersection_itr = intersections.begin();
-    for(; intersection_itr != intersections.end(); ++intersection_itr)
+    foreach(intersection &inter, intersections)
     {
-        for(int i = 0; i < static_cast<int>(intersection_itr->incoming.size()); ++i)
-            if(!intersection_itr->incoming[i].retrieve_ptr(lanes, lane_refs))
+        int i = 0;
+        foreach(lane_id &lid, inter.incoming)
+        {
+            if(!lid.retrieve_ptr(lanes, lane_refs))
                 return false;
-            else
-                intersection_itr->incoming[i].dp->end.intersect_in_ref = i;
 
-        for(int i = 0; i < static_cast<int>(intersection_itr->outgoing.size()); ++i)
-            if(!intersection_itr->outgoing[i].retrieve_ptr(lanes, lane_refs))
+            lid.dp->end.intersect_in_ref = i;
+            ++i;
+        }
+        i = 0;
+        foreach(lane_id &lid, inter.outgoing)
+        {
+            if(!lid.retrieve_ptr(lanes, lane_refs))
                 return false;
-            else
-                intersection_itr->outgoing[i].dp->start.intersect_in_ref = i;
+
+            lid.dp->start.intersect_in_ref = i;
+            ++i;
+        }
     }
 
-    std::map<char*, int, ltstr>::iterator current = road_refs.begin();
-    for(; current != road_refs.end(); ++current)
-        free(current->first);
+    typedef std::pair<char*const,int> reftype;
+    foreach(reftype &pa, road_refs)
+        free(pa.first);
 
-    current = lane_refs.begin();
-    for(; current != lane_refs.end(); ++current)
-        free(current->first);
+    foreach(reftype &pa, lane_refs)
+        free(pa.first);
 
-    current = intersection_refs.begin();
-    for(; current != intersection_refs.end(); ++current)
-        free(current->first);
+    foreach(reftype &pa, intersection_refs)
+        free(pa.first);
 
     foreach(lane &la, lanes)
         la.scale_offsets(LANE_WIDTH*0.5f);

@@ -343,9 +343,9 @@ void lane::fill_from_carticles()
 {
     float inv_h = 1.0f/h;
 
-    for(size_t i = 0; i < carticles[0].size(); ++i)
+    foreach(carticle &cart, carticles[0])
     {
-        float front_pos = carticles[0][i].x*(ncells-1);
+        float front_pos = cart.x*(ncells-1);
         float back_pos  = front_pos - CAR_LENGTH*inv_h;
 
         int front_cell = std::floor(front_pos);
@@ -356,7 +356,7 @@ void lane::fill_from_carticles()
 
         float portion = front_pos-front_cell;
         data[front_cell].rho += portion;
-        data[front_cell].y   += portion*carticles[0][i].u;
+        data[front_cell].y   += portion*cart.u;
 
         if(back_cell < 0)
         {
@@ -365,14 +365,14 @@ void lane::fill_from_carticles()
             {
                 portion = (back_cell-back_pos)*inv_h*up->h;
                 up->data[up->ncells-1].rho += portion;
-                up->data[up->ncells-1].y   += portion*carticles[0][i].u;
+                up->data[up->ncells-1].y   += portion*cart.u;
             }
         }
         else
         {
             portion = back_cell-back_pos;
             data[back_cell].rho -= portion;
-            data[back_cell].y   -= portion*carticles[0][i].u;
+            data[back_cell].y   -= portion*cart.u;
         }
     }
 }
@@ -527,9 +527,9 @@ void lane::advance_carticles(float dt, float gamma_c)
 {
     float inv_len = 1.0f/(ncells*h);
 
-    for(int i = 0; i < static_cast<int>(carticles[0].size()); ++i)
+    foreach(carticle &cart, carticles[0])
     {
-        float pos = carticles[0][i].x*(ncells-1);
+        float pos = cart.x*(ncells-1);
         int cell = std::floor(pos);
         float cell_u = to_u(data[cell].rho, data[cell].y, speedlimit, gamma_c);
         float u[2];
@@ -564,27 +564,27 @@ void lane::advance_carticles(float dt, float gamma_c)
             }
         }
 
-        carticles[0][i].x += dt*(u[0]*pos + u[1]*(1.0f-pos))*inv_len;
+        cart.x += dt*(u[0]*pos + u[1]*(1.0f-pos))*inv_len;
 
-        if(carticles[0][i].x > 1.0)
+        if(cart.x > 1.0)
         {
             lane *next;
             if(end.end_type == lane_end::INTERSECTION)
             {
                 if((next = downstream_lane()))
                 {
-                    carticles[0][i].x = (carticles[0][i].x - 1.0) * ncells*h/(next->ncells*next->h);
-                    next->carticles[1].push_back(carticles[0][i]);
+                    cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
+                    next->carticles[1].push_back(cart);
                 }
                 else
                 {
-                    carticles[0][i].x = 1.0f;
-                    carticles[1].push_back(carticles[0][i]);
+                    cart.x = 1.0f;
+                    carticles[1].push_back(cart);
                 }
             }
         }
         else
-            carticles[1].push_back(carticles[0][i]);
+            carticles[1].push_back(cart);
     }
 }
 

@@ -154,12 +154,12 @@ static bool read_state(void *item, xmlTextReaderPtr reader)
     intersection::state & new_state = is->states.back();
 
     new_state.in_states.resize(is->incoming.size());
-    for(int i = 0; i < static_cast<int>(is->incoming.size()); ++i)
-        new_state.in_states[i] = intersection::state::STOP;
+    foreach(intersection::state::out_id &oid, new_state.in_states)
+        oid = intersection::state::STOP;
 
     new_state.out_states.resize(is->outgoing.size());
-    for(int i = 0; i < static_cast<int>(is->outgoing.size()); ++i)
-        new_state.out_states[i] = intersection::state::STARVATION;
+    foreach(intersection::state::in_id &iid, new_state.out_states)
+        iid = intersection::state::STARVATION;
 
     return new_state.xml_read(reader);
 }
@@ -271,27 +271,29 @@ void intersection::build_shape(float lane_width)
 {
     shape.resize(2*(outgoing.size()+incoming.size()));
 
-    for(int i = 0; i < static_cast<int>(incoming.size()); ++i)
+    int i = 0;
+    foreach(const lane_id &lid, incoming)
     {
-        const lane *la = incoming[i].dp;
         const road_membership *rom;
-        if(la->road_memberships.entries.empty())
-            rom = &(la->road_memberships.base_data);
+        if(lid.dp->road_memberships.entries.empty())
+            rom = &(lid.dp->road_memberships.base_data);
         else
-            rom = &(la->road_memberships.entries.back().data);
+            rom = &(lid.dp->road_memberships.entries.back().data);
 
         rom->parent_road.dp->rep.locate(&(shape[2*i]), rom->interval[1], rom->lane_position - 0.5*lane_width);
         rom->parent_road.dp->rep.locate(&(shape[2*i+1]), rom->interval[1], rom->lane_position + 0.5*lane_width);
+        ++i;
     }
 
     int incount = static_cast<int>(incoming.size());
-    for(int i = 0; i < static_cast<int>(outgoing.size()); ++i)
+    i = 0;
+    foreach(const lane_id &lid, outgoing)
     {
-        const lane *la = outgoing[i].dp;
-        const road_membership *rom = &(la->road_memberships.base_data);
+        const road_membership *rom = &(lid.dp->road_memberships.base_data);
 
         rom->parent_road.dp->rep.locate(&(shape[2*(i + incount)]), rom->interval[0], rom->lane_position - 0.5*lane_width);
         rom->parent_road.dp->rep.locate(&(shape[2*(i + incount)+1]), rom->interval[0], rom->lane_position + 0.5*lane_width);
+        ++i;
     }
 
     convex_hull(shape);
@@ -312,12 +314,13 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
     float maxspeed = FLT_MIN;
     const state &cstate = states[current_state];
 
-    for(int i = 0; i < static_cast<int>(cstate.in_states.size()); ++i)
+    int i = 0;
+    foreach(const state::out_id &oid, cstate.in_states)
     {
-        if(cstate.in_states[i] > -1)
+        if(oid > state::STOP)
         {
             lane *start = incoming[i].dp;
-            lane *end   = outgoing[cstate.in_states[i]].dp;
+            lane *end   = outgoing[oid].dp;
 
             full_q q_l;
             q_l.from_q(start->data + start->ncells - 1,
@@ -345,6 +348,7 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
 
             maxspeed = std::max(maxspeed, std::max(std::abs(end->rs->speeds[0]), std::abs(end->rs->speeds[1])));
         }
+        ++i;
     }
 
     return maxspeed;
