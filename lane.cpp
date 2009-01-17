@@ -261,6 +261,10 @@ void lane::scale_offsets(float f)
     int p = -1;
     while(1)
     {
+        if(rom->lane_position < 0)
+            rom->lane_position +=  0.5f;
+        else if(rom->lane_position > 0)
+            rom->lane_position += -0.5f;
         rom->lane_position *= f;
 
         ++p;
