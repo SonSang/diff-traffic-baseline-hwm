@@ -47,8 +47,6 @@ struct intervals
     */
     inline entry_id find(float &x) const
     {
-        assert(0.0 <= x && x <= 1.0);
-
         if(entries.empty())
             return -1;
         else if(x < entries[0].divider)
@@ -81,8 +79,6 @@ struct intervals
     */
     inline entry_id find(const float &x) const
     {
-        assert(0.0 <= x && x <= 1.0);
-
         if(entries.empty() || x < entries[0].divider)
             return -1;
         else

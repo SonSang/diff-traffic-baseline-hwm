@@ -23,15 +23,15 @@ static GLuint car_list;
 
 static void init_draw_car()
 {
-    static const float verts[][3] = {{-CAR_LENGTH, -0.5f*LANE_WIDTH, -0.5f},  //0
-                                     {       0.0f,-0.25f*LANE_WIDTH, -0.5f},  //1
-                                     {       0.0f, 0.25f*LANE_WIDTH, -0.5f},  //2
-                                     {-CAR_LENGTH,  0.5f*LANE_WIDTH, -0.5f},  //3
+    static const float verts[][3] = {{-(CAR_LENGTH-CAR_REAR_AXLE), -0.5f*LANE_WIDTH, -0.5f},  //0
+                                     {              CAR_REAR_AXLE,-0.25f*LANE_WIDTH, -0.5f},  //1
+                                     {              CAR_REAR_AXLE, 0.25f*LANE_WIDTH, -0.5f},  //2
+                                     {-(CAR_LENGTH-CAR_REAR_AXLE),  0.5f*LANE_WIDTH, -0.5f},  //3
 
-                                     {-CAR_LENGTH, -0.5f*LANE_WIDTH, 1.0f},  //4
-                                     {       0.0f,-0.25f*LANE_WIDTH, 1.0f},  //5
-                                     {       0.0f, 0.25f*LANE_WIDTH, 1.0f},  //6
-                                     {-CAR_LENGTH,  0.5f*LANE_WIDTH, 1.0f}}; //7
+                                     {-(CAR_LENGTH-CAR_REAR_AXLE), -0.5f*LANE_WIDTH, 1.0f},  //4
+                                     {              CAR_REAR_AXLE,-0.25f*LANE_WIDTH, 1.0f},  //5
+                                     {              CAR_REAR_AXLE, 0.25f*LANE_WIDTH, 1.0f},  //6
+                                     {-(CAR_LENGTH-CAR_REAR_AXLE),  0.5f*LANE_WIDTH, 1.0f}}; //7
 
     static const int faces[6][4] = {{ 0, 1, 2, 3}, // top
                                     { 4, 5, 6, 7}, // bottom
@@ -289,10 +289,12 @@ void lane::draw_data(float gamma_c) const
 
 void lane::draw_carticles() const
 {
+    float offs = CAR_REAR_AXLE/(ncells*h);
+
     foreach(const carticle &car, carticles[0])
     {
         float mat[16];
-        get_matrix(car.x, mat);
+        get_matrix(car.x-offs, mat);
 
         glColor3f(0.0f, 1.0f, 1.0f);
         glPushMatrix();

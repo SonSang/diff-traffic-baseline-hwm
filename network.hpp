@@ -17,6 +17,8 @@
 
 #define LANE_WIDTH 2.5f
 #define CAR_LENGTH 4.5f
+//* This is the position of the car's axle from the FRONT bumper of the car
+#define CAR_REAR_AXLE 3.5f
 #define H (2.0f*CAR_LENGTH)
 
 struct carticle
@@ -24,7 +26,7 @@ struct carticle
     carticle() {}
     carticle(float ix, float iu) : x(ix), u(iu) {}
 
-    float x; //< Parametric position of carticle along current lane.
+    float x; //< Parametric position of carticle's front bumper axle along current lane.
     float u; //< Velocity of carticle.
 };
 
