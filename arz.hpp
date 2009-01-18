@@ -374,7 +374,12 @@ inline void starvation_riemann(riemann_solution *rs,
         rs->fluct_l.rho  = 0.0f;
         rs->fluct_l.y    = 0.0f;
 
-        rs->speeds[1]    = q_r->u;
+        if(q_r->rho < 1e-4)
+        {
+            rs->speeds[1] = 0.0f;
+        }
+        else
+            rs->speeds[1]    = q_r->u;
         rs->waves[1].rho = q_r->rho;
         rs->waves[1].y   = q_r->y;
 
