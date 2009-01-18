@@ -64,7 +64,7 @@ bool network::xml_read(xmlTextReaderPtr reader)
                                  lm("gamma", &gamma_c));
 
     if(!read_attributes(vl, reader))
-       return false;
+        return false;
 
     if(version != 1.0f)
     {

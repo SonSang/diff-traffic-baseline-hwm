@@ -117,7 +117,7 @@ void line_rep::calc_rep()
         float len = std::sqrt(normals[i-1].x*normals[i-1].x + normals[i-1].y*normals[i-1].y);
 
         clengths[i] = clengths[i-1] + len;
-
+        assert(len > FLT_EPSILON);
         float invlen = 1.0f/len;
         normals[i-1].x *= invlen;
         normals[i-1].y *= invlen;
