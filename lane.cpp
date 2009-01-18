@@ -400,7 +400,7 @@ float lane::velocity(float t, float gamma_c) const
     else
         u[1] = to_u(data[cell+1].rho, data[cell+1].y, speedlimit, gamma_c);
 
-    return u[0] * (pos-cell) + (1.0f - (pos-cell)) * u[1];
+    return u[0] * (1.0f - (pos-cell)) + (pos-cell) * u[1];
 }
 
 void lane::fill_from_carticles()
