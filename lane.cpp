@@ -451,6 +451,8 @@ void lane::fill_y(float gamma)
 {
     for(size_t i = 0; i < ncells; ++i)
     {
+        if(data[i].rho > 0.0)
+            data[i].y /= data[i].rho;
         data[i].y = to_y(data[i].rho, data[i].y, speedlimit, gamma);
         data[i].fix();
     }
