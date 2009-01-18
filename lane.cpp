@@ -566,7 +566,7 @@ void lane::advance_carticles(float dt, float gamma_c)
     {
         float rk4_res = rk4(cart.x, dt*inv_len, this, gamma_c);
         cart.x += rk4_res;
-        cart.u = rk4_res/dt;
+        cart.u = rk4_res*(ncells*h)/dt;
 
         if(cart.x > 1.0)
         {
