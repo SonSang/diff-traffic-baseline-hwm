@@ -21,6 +21,40 @@ struct quad
     int v[4];
 };
 
+inline void intersect_lines(point &res,
+                            const point &o0, const point &n0,
+                            const point &o1, const point &n1)
+{
+    float a[2] = { n0.y,  n1.y};
+    float b[2] = {-n0.x, -n1.x};
+    float c[2] = {o0.x*n0.y - o0.y*n0.x,
+                  o1.x*n1.y - o1.y*n1.x};
+    if(std::abs(n0.y) < 1e-6)
+    {
+        if(std::abs(n1.y) < 1e-6)
+        {
+            res.x = 0.5f*(o0.x + o1.x);
+            res.y = 0.5f*(o0.y + o1.y);
+            return;
+        }
+        std::swap(a[0], a[1]);
+        std::swap(b[0], b[1]);
+        std::swap(c[0], c[1]);
+    }
+
+    float inva0 = 1.0f/a[0];
+    float denom = b[1] - a[1]*inva0*b[0];
+    if(std::abs(denom) < 1e-6)
+    {
+        res.x = 0.5f*(o0.x + o1.x);
+        res.y = 0.5f*(o0.y + o1.y);
+        return;
+    }
+
+    res.y = (c[1] - a[1]*inva0 * c[0])/denom;
+    res.x = (c[0] - b[0]*res.y)*inva0;
+}
+
 //! A representation of a road's shape.
 struct line_rep
 {

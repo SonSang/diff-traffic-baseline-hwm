@@ -370,3 +370,62 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
 
     return maxspeed;
 }
+
+void intersection::initialize_state_lanes()
+{
+    foreach(state &st, states)
+    {
+        int count = 0;
+        for(size_t is = 0; is < st.in_states.size(); ++is)
+        {
+            if(st.in_states[is] < 0)
+                continue;
+
+            ++count;
+        }
+
+        st.fict_roads.reserve(count);
+        st.fict_lanes.reserve(count);
+
+        for(size_t is = 0; is < st.in_states.size(); ++is)
+        {
+            if(st.in_states[is] < 0)
+                continue;
+
+            const lane *in_la = incoming[is].dp;
+            point in_vec;
+            point in_pt;
+            in_la->get_point_and_normal(1.0, in_pt, in_vec);
+
+            const lane *out_la = outgoing[st.in_states[is]].dp;
+            point out_vec;
+            point out_pt;
+            out_la->get_point_and_normal(0.0, out_pt, out_vec);
+
+            point middle;
+            intersect_lines(middle,
+                            in_pt, in_vec,
+                            out_pt, out_vec);
+
+            st.fict_roads.push_back(road());
+            road &r = st.fict_roads.back();
+            r.name = strdup("Fictitious intersection road");
+            r.rep.points.push_back(in_pt);
+            r.rep.points.push_back(middle);
+            r.rep.points.push_back(out_pt);
+            r.rep.calc_rep();
+
+            st.fict_lanes.push_back(lane());
+            lane &la = st.fict_lanes.back();
+            la.road_memberships.base_data.parent_road.dp = &r;
+            la.road_memberships.base_data.interval[0] = 0.0f;
+            la.road_memberships.base_data.interval[1] = 1.0f;
+            la.left.base_data.neighbor.dp  = 0;
+            la.right.base_data.neighbor.dp = 0;
+
+            la.start.end_type = lane_end::DEAD_END;
+            la.end.end_type   = lane_end::DEAD_END;
+            la.speedlimit     = out_la->speedlimit;
+        }
+    }
+}

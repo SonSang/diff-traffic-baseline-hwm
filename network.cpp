@@ -190,7 +190,10 @@ bool network::xml_read(xmlTextReaderPtr reader)
         la.scale_offsets(LANE_WIDTH);
 
     foreach(intersection &inter, intersections)
+    {
         inter.build_shape(LANE_WIDTH);
+        inter.initialize_state_lanes();
+    }
 
     return ret == 1 && have_roads && have_lanes && have_intersections;
 }
@@ -218,6 +221,22 @@ void network::prepare(float h)
         min_h = std::min(min_h, la.h);
     }
 
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+            {
+                la.h = h;
+                float len = la.calc_length();
+                total += la.ncells = std::ceil(len/h);
+                assert(la.ncells > 0);
+                la.h = len/la.ncells;
+                min_h = std::min(min_h, la.h);
+            }
+        }
+    }
+
     printf("Allocating " SIZE_T_FMT " bytes for %d cells...", sizeof(q)*total, total);
     q *d = (q *) malloc(sizeof(q)*total);
     if(!d)
@@ -234,6 +253,19 @@ void network::prepare(float h)
         d += la.ncells;
     }
 
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+            {
+                la.data = d;
+                d += la.ncells;
+            }
+        }
+    }
+
+
     printf("Allocating " SIZE_T_FMT " bytes for " SIZE_T_FMT " riemann solutions...", sizeof(riemann_solution)*(total + lanes.size()), total+lanes.size());
     riemann_solution *rs = (riemann_solution *) malloc(sizeof(riemann_solution)*(total + lanes.size()));
     if(!rs)
@@ -248,6 +280,17 @@ void network::prepare(float h)
     {
         la.rs = rs;
         rs += la.ncells + 1;
+    }
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+            {
+                la.rs = rs;
+                rs += la.ncells + 1;
+            }
+        }
     }
 
     printf("Allocating " SIZE_T_FMT " bytes for " SIZE_T_FMT " merge_states...", sizeof(merge_state)*(total + lanes.size()), total+lanes.size());
@@ -265,18 +308,56 @@ void network::prepare(float h)
         la.merge_states = ms;
         ms += la.ncells;
     }
+
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+            {
+                la.merge_states = ms;
+                ms += la.ncells;
+            }
+        }
+    }
 }
 
 void network::fill_from_carticles()
 {
     foreach(lane &la, lanes)
         la.reset_data();
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+                la.reset_data();
+        }
+    }
 
     foreach(lane &la, lanes)
         la.fill_from_carticles();
 
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+                la.fill_from_carticles();
+        }
+    }
+
     foreach(lane &la, lanes)
         la.fill_y(gamma_c);
+
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+                la.fill_y(gamma_c);
+        }
+    }
 }
 
 float network::sim_step()
@@ -301,19 +382,64 @@ float network::sim_step()
     foreach(lane &la, lanes)
         la.update(dt);
 
+    foreach(intersection &is, intersections)
+    {
+        foreach(intersection::state &st, is.states)
+        {
+            foreach(lane &la, st.fict_lanes)
+                la.update(dt);
+        }
+    }
+
     foreach(lane &la, lanes)
         la.clear_merges();
 
-    foreach(lane &la, lanes)
-        la.advance_carticles(dt, gamma_c);
+   foreach(intersection &is, intersections)
+   {
+       foreach(intersection::state &st, is.states)
+       {
+           foreach(lane &la, st.fict_lanes)
+               la.clear_merges();
+       }
+   }
 
-    foreach(lane &la, lanes)
-        la.swap_carticles();
+   foreach(lane &la, lanes)
+       la.advance_carticles(dt, gamma_c);
 
-    foreach(lane &la, lanes)
-        la.apply_merges(dt, gamma_c);
+   foreach(intersection &is, intersections)
+   {
+       foreach(intersection::state &st, is.states)
+       {
+           foreach(lane &la, st.fict_lanes)
+               la.advance_carticles(dt, gamma_c);
+       }
+   }
 
-    return dt;
+   foreach(lane &la, lanes)
+       la.swap_carticles();
+
+   foreach(intersection &is, intersections)
+   {
+       foreach(intersection::state &st, is.states)
+       {
+           foreach(lane &la, st.fict_lanes)
+               la.swap_carticles();
+       }
+   }
+
+   foreach(lane &la, lanes)
+       la.apply_merges(dt, gamma_c);
+
+   foreach(intersection &is, intersections)
+   {
+       foreach(intersection::state &st, is.states)
+       {
+           foreach(lane &la, st.fict_lanes)
+               la.apply_merges(dt, gamma_c);
+       }
+   }
+
+   return dt;
 }
 
 void network::calc_bounding_box()

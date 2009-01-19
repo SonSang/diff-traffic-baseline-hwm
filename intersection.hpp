@@ -18,7 +18,11 @@ struct intersection
         std::vector<out_id> in_states; //< Mapping of incoming lane ids to
                                        //< out ids
         std::vector<in_id>  out_states;//< Mapping of outgoing lane ids to
-    };                                 //< in ids
+                                       //< in ids
+
+        std::vector<road> fict_roads;
+        std::vector<lane> fict_lanes;
+    };
 
     bool xml_read(xmlTextReaderPtr reader);
 
@@ -33,6 +37,8 @@ struct intersection
     void draw() const;
 
     float collect_riemann(float gamma_c, float inv_gamma);
+
+    void initialize_state_lanes();
 
     std::vector<lane_id> incoming; //< Lanes that flow
                                    //< _IN_ to intersection

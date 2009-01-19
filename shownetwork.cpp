@@ -59,40 +59,6 @@ static void draw_car()
     glCallList(car_list);
 }
 
-static void intersect_lines(point &res,
-                            const point &o0, const point &n0,
-                            const point &o1, const point &n1)
-{
-    float a[2] = { n0.y,  n1.y};
-    float b[2] = {-n0.x, -n1.x};
-    float c[2] = {o0.x*n0.y - o0.y*n0.x,
-                  o1.x*n1.y - o1.y*n1.x};
-    if(std::abs(n0.y) < 1e-6)
-    {
-        if(std::abs(n1.y) < 1e-6)
-        {
-            res.x = 0.5f*(o0.x + o1.x);
-            res.y = 0.5f*(o0.y + o1.y);
-            return;
-        }
-        std::swap(a[0], a[1]);
-        std::swap(b[0], b[1]);
-        std::swap(c[0], c[1]);
-    }
-
-    float inva0 = 1.0f/a[0];
-    float denom = b[1] - a[1]*inva0*b[0];
-    if(std::abs(denom) < 1e-6)
-    {
-        res.x = 0.5f*(o0.x + o1.x);
-        res.y = 0.5f*(o0.y + o1.y);
-        return;
-    }
-
-    res.y = (c[1] - a[1]*inva0 * c[0])/denom;
-    res.x = (c[0] - b[0]*res.y)*inva0;
-}
-
 void blackbody(float val, float rgb[3])
 {
    if(val <= 0.0) // clamp low to black
@@ -346,7 +312,7 @@ void lane::draw_carticles() const
 
 void intersection::draw() const
 {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f(0.0f, 1.0f, 0.0f);
     glBegin(GL_LINE_LOOP);
     foreach(const point& pt, shape)
@@ -354,48 +320,24 @@ void intersection::draw() const
     glEnd();
 
     const state &st = states[current_state];
+    int count = 0;
     for(size_t i = 0; i < st.in_states.size(); ++i)
     {
         if(st.in_states[i] < 0)
             continue;
 
-        const lane *in_la = incoming[i].dp;
-        point in_vec;
-        point in_pt;
-        in_la->get_point_and_normal(1.0, in_pt, in_vec);
+        road_mesh rmp;
+        const lane &la = st.fict_lanes[count];
+        const road_membership *rom = &(la.road_memberships.base_data);
 
-        const lane *out_la = outgoing[st.in_states[i]].dp;
-        point out_vec;
-        point out_pt;
-        out_la->get_point_and_normal(0.0, out_pt, out_vec);
+        float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
+                            rom->lane_position+LANE_WIDTH*0.5};
 
-        point middle;
-        intersect_lines(middle,
-                        in_pt, in_vec,
-                        out_pt, out_vec);
-        glBegin(GL_LINE_STRIP);
-        glVertex2fv(&(in_pt.x));
-        glVertex2fv(&(middle.x));
-        glVertex2fv(&(out_pt.x));
-        glEnd();
+        rom->parent_road.dp->rep.lane_mesh(rmp.vrts, rmp.faces, rom->interval, rom->lane_position, offsets);
 
-        float len = std::min(std::sqrt((middle.x-in_pt.x)*(middle.x-in_pt.x) + (middle.y-in_pt.y)*(middle.y-in_pt.y)),
-                             std::sqrt((middle.x-out_pt.x)*(middle.x-out_pt.x) + (middle.y-out_pt.y)*(middle.y-out_pt.y)));
-        point o(0.5f*(in_pt.x + middle.x),0.5f*(in_pt.y + middle.y));
+        rmp.draw();
 
-        glBegin(GL_LINE_STRIP);
-        glVertex2f(o.x - len*0.1*(in_vec.y + in_vec.x), o.y + len*0.1*(in_vec.x - in_vec.y));
-        glVertex2f(o.x, o.y);
-        glVertex2f(o.x + len*0.1*(in_vec.y - in_vec.x), o.y - len*0.1*(in_vec.x + in_vec.y));
-        glEnd();
-
-        o.x = 0.5f*(out_pt.x + middle.x);
-        o.y = 0.5f*(out_pt.y + middle.y);
-        glBegin(GL_LINE_STRIP);
-        glVertex2f(o.x - len*0.1*(out_vec.y + out_vec.x), o.y + len*0.1*(out_vec.x - out_vec.y));
-        glVertex2f(o.x, o.y);
-        glVertex2f(o.x + len*0.1*(out_vec.y - out_vec.x), o.y - len*0.1*(out_vec.x + out_vec.y));
-        glEnd();
+        ++count;
     }
 }
 
