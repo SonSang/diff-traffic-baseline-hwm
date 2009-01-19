@@ -416,7 +416,10 @@ float lane::velocity(float t, float gamma_c) const
 
     float f0 = rho[0]*(1.0f - (pos-cell));
     float f1 = rho[1]*(pos-cell);
-    return (f0*u[0] + f1*u[1])/(f0+f1);
+    float denom = (f0+f1);
+    if(denom < 1e-4)
+        return speedlimit;
+    return (f0*u[0] + f1*u[1])/denom;
 }
 
 void lane::fill_from_carticles()
