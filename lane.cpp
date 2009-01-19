@@ -596,6 +596,17 @@ void lane::update(float dt)
 {
     float coeff = dt/h;
 
+    if(ncells == 1)
+    {
+        int i = 0;
+        data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
+        data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
+
+        assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
+
+        data[i].fix();
+        return;
+    }
     size_t i = 0;
 
     data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
