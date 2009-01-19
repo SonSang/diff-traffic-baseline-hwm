@@ -323,7 +323,7 @@ void intersection::draw() const
     int count = 0;
     for(size_t i = 0; i < st.in_states.size(); ++i)
     {
-        if(st.in_states[i] < 0)
+        if(st.in_states[i].out_ref < 0)
             continue;
 
         road_mesh rmp;

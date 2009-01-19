@@ -156,11 +156,17 @@ static bool read_state(void *item, xmlTextReaderPtr reader)
 
     new_state.in_states.resize(is->incoming.size());
     foreach(intersection::state::out_id &oid, new_state.in_states)
-        oid = intersection::state::STOP;
+    {
+        oid.out_ref = intersection::state::STOP;
+        oid.fict_lane = 0;
+    }
 
     new_state.out_states.resize(is->outgoing.size());
     foreach(intersection::state::in_id &iid, new_state.out_states)
-        iid = intersection::state::STARVATION;
+    {
+        iid.in_ref = intersection::state::STARVATION;
+        iid.fict_lane = 0;
+    }
 
     return new_state.xml_read(reader);
 }
@@ -200,8 +206,8 @@ static bool read_lane_pair(void *item, xmlTextReaderPtr reader)
     if(!read_attributes(vl, reader))
        return false;
 
-    s->in_states[in] = out;
-    s->out_states[out] = in;
+    s->in_states[in].out_ref = out;
+    s->out_states[out].in_ref = in;
 
     return true;
 }
@@ -230,11 +236,11 @@ bool intersection::state::xml_read(xmlTextReaderPtr reader)
 bool intersection::state::isvalid(int nincoming, int noutgoing) const
 {
     foreach(const out_id &oid, in_states)
-        if((oid != STOP && oid < 0) || oid >= noutgoing)
+        if((oid.out_ref != STOP && oid.out_ref < 0) || oid.out_ref >= noutgoing)
             return false;
 
     foreach(const in_id &iid, out_states)
-        if((iid != STARVATION && iid < 0)  || iid >= nincoming)
+        if((iid.in_ref != STARVATION && iid.in_ref < 0)  || iid.in_ref >= nincoming)
             return false;
 
     return true;
@@ -272,7 +278,7 @@ lane* intersection::incoming_state(int intern_ref) const
 {
     const state &cstate = states[current_state];
 
-    int oref = cstate.in_states[intern_ref];
+    int oref = cstate.in_states[intern_ref].out_ref;
     return oref == -1 ? 0 : outgoing[oref].dp;
 }
 
@@ -280,7 +286,7 @@ lane* intersection::outgoing_state(int intern_ref) const
 {
     const state &cstate = states[current_state];
 
-    int iref = cstate.out_states[intern_ref];
+    int iref = cstate.out_states[intern_ref].in_ref;
     return iref == -1 ? 0 : incoming[iref].dp;
 }
 
@@ -334,10 +340,10 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
     int i = 0;
     foreach(const state::out_id &oid, cstate.in_states)
     {
-        if(oid > state::STOP)
+        if(oid.out_ref > state::STOP)
         {
             lane *start = incoming[i].dp;
-            lane *end   = outgoing[oid].dp;
+            lane *end   = outgoing[oid.out_ref].dp;
 
             full_q q_l;
             q_l.from_q(start->data + start->ncells - 1,
@@ -378,7 +384,7 @@ void intersection::initialize_state_lanes()
         int count = 0;
         for(size_t is = 0; is < st.in_states.size(); ++is)
         {
-            if(st.in_states[is] < 0)
+            if(st.in_states[is].out_ref < 0)
                 continue;
 
             ++count;
@@ -389,7 +395,7 @@ void intersection::initialize_state_lanes()
 
         for(size_t is = 0; is < st.in_states.size(); ++is)
         {
-            if(st.in_states[is] < 0)
+            if(st.in_states[is].out_ref < 0)
                 continue;
 
             const lane *in_la = incoming[is].dp;
@@ -397,7 +403,7 @@ void intersection::initialize_state_lanes()
             point in_pt;
             in_la->get_point_and_normal(1.0, in_pt, in_vec);
 
-            const lane *out_la = outgoing[st.in_states[is]].dp;
+            const lane *out_la = outgoing[st.in_states[is].out_ref].dp;
             point out_vec;
             point out_pt;
             out_la->get_point_and_normal(0.0, out_pt, out_vec);
@@ -426,6 +432,10 @@ void intersection::initialize_state_lanes()
             la.start.end_type = lane_end::DEAD_END;
             la.end.end_type   = lane_end::DEAD_END;
             la.speedlimit     = out_la->speedlimit;
+
+            st.in_states[is].fict_lane = &la;
+
+            st.out_states[st.in_states[is].out_ref].fict_lane = &la;
         }
     }
 }

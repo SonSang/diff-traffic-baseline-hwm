@@ -5,8 +5,18 @@ struct intersection
 {
     struct state
     {
-        typedef int in_id;
-        typedef int out_id;
+        struct in_id
+        {
+            int in_ref;
+            lane* fict_lane;
+        };
+
+        struct out_id
+        {
+            int out_ref;
+            lane* fict_lane;
+        };
+
         enum {STARVATION=-1, STOP=-1};
 
         bool xml_read(xmlTextReaderPtr reader);
