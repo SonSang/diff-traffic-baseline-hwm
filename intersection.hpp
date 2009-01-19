@@ -46,6 +46,11 @@ struct intersection
     void build_shape(float lane_width);
     void draw() const;
 
+    void draw_carticles() const;
+    void draw_data(draw_type dtype, float gamma_c) const;
+    void draw_param_data(float t) const;
+    void draw_lanes() const;
+
     float collect_riemann(float gamma_c, float inv_gamma);
 
     void initialize_state_lanes();

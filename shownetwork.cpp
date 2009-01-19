@@ -318,17 +318,20 @@ void intersection::draw() const
     foreach(const point& pt, shape)
         glVertex2fv(&(pt.x));
     glEnd();
+}
 
+void intersection::draw_lanes() const
+{
     const state &st = states[current_state];
-    int count = 0;
     for(size_t i = 0; i < st.in_states.size(); ++i)
     {
-        if(st.in_states[i].out_ref < 0)
+        const lane *la = st.in_states[i].fict_lane;
+        if(!la)
             continue;
 
         road_mesh rmp;
-        const lane &la = st.fict_lanes[count];
-        const road_membership *rom = &(la.road_memberships.base_data);
+
+        const road_membership *rom = &(la->road_memberships.base_data);
 
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
@@ -336,8 +339,82 @@ void intersection::draw() const
         rom->parent_road.dp->rep.lane_mesh(rmp.vrts, rmp.faces, rom->interval, rom->lane_position, offsets);
 
         rmp.draw();
+    }
+}
 
-        ++count;
+void intersection::draw_carticles() const
+{
+    const state &st = states[current_state];
+    for(size_t i = 0; i < st.in_states.size(); ++i)
+    {
+        const lane *la = st.in_states[i].fict_lane;
+        if(!la)
+            continue;
+        la->draw_carticles();
+     }
+ }
+
+void intersection::draw_data(draw_type dtype, float gamma_c) const
+{
+    const state &st = states[current_state];
+    for(size_t i = 0; i < st.in_states.size(); ++i)
+    {
+        const lane *la = st.in_states[i].fict_lane;
+        if(!la)
+            continue;
+        la->draw_data(dtype, gamma_c);
+    }
+}
+
+void intersection::draw_param_data(float t) const
+{
+    const state &st = states[current_state];
+    for(size_t i = 0; i < st.in_states.size(); ++i)
+    {
+        const lane *la = st.in_states[i].fict_lane;
+        if(!la)
+            continue;
+
+        point p, n;
+        float mat[16];
+        la->get_matrix(t, mat);
+        p.x = mat[12];
+        p.y = mat[13];
+
+        glColor3f(1.0f, 0.0f, 1.0f);
+        glPushMatrix();
+        mat[14] = 0.5f;
+        glMultMatrixf(mat);
+        draw_car();
+        glPopMatrix();
+
+        glColor3f(0.0, 1.0, 0.0);
+        float x = t;
+        lane *left_lane = la->left_adjacency(x);
+
+        if(left_lane)
+        {
+            point lp;
+            left_lane->get_point(x, lp);
+
+            glBegin(GL_LINES);
+            glVertex2fv(&(p.x));
+            glVertex2fv(&(lp.x));
+            glEnd();
+        }
+        x = t;
+        lane *right_lane = la->right_adjacency(x);
+
+        if(right_lane)
+        {
+            point rp;
+            right_lane->get_point(x, rp);
+
+            glBegin(GL_LINES);
+            glVertex2fv(&(p.x));
+            glVertex2fv(&(rp.x));
+            glEnd();
+        }
     }
 }
 
@@ -397,8 +474,10 @@ public:
         if(draw_lanes)
         {
             glColor3f(1.0f, 1.0f, 1.0f);
-            foreach(const road_mesh & i, rm)
+            foreach(const road_mesh &i, rm)
                 i.draw();
+            foreach(const intersection &is, net->intersections)
+                is.draw_lanes();
         }
 
         if(draw_param_obj)
@@ -446,6 +525,8 @@ public:
                     glEnd();
                 }
             }
+            foreach(const intersection &is, net->intersections)
+                is.draw_param_data(t);
         }
 
         if(draw_data)
@@ -453,6 +534,8 @@ public:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             foreach(const lane &la, net->lanes)
                 la.draw_data(dtype, net->gamma_c);
+            foreach(const intersection &is, net->intersections)
+                is.draw_data(dtype, net->gamma_c);
         }
 
         if(draw_carticles)
@@ -460,6 +543,8 @@ public:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             foreach(const lane &la, net->lanes)
                 la.draw_carticles();
+            foreach(const intersection &is, net->intersections)
+                is.draw_carticles();
         }
 
         if(draw_intersections)

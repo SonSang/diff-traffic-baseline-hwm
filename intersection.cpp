@@ -278,16 +278,14 @@ lane* intersection::incoming_state(int intern_ref) const
 {
     const state &cstate = states[current_state];
 
-    int oref = cstate.in_states[intern_ref].out_ref;
-    return oref == -1 ? 0 : outgoing[oref].dp;
+    return cstate.in_states[intern_ref].fict_lane;
 }
 
 lane* intersection::outgoing_state(int intern_ref) const
 {
     const state &cstate = states[current_state];
 
-    int iref = cstate.out_states[intern_ref].in_ref;
-    return iref == -1 ? 0 : incoming[iref].dp;
+    return cstate.out_states[intern_ref].fict_lane;
 }
 
 void intersection::build_shape(float lane_width)
