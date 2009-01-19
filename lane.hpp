@@ -77,6 +77,8 @@ struct lane
     void reset_data();
     void fill_y(float gamma_c);
 
+    float merge_factor(float t, float gamma_c) const;
+
     float collect_riemann(float gamma_c, float inv_gamma);
 
     void update(float maxspeed);

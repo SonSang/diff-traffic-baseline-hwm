@@ -302,6 +302,12 @@ float network::sim_step()
         la.update(dt);
 
     foreach(lane &la, lanes)
+    {
+        for(size_t i = 0; i < la.ncells; ++i)
+            la.merge_states[i].direction = la.merge_factor(i/static_cast<float>(la.ncells), gamma_c);
+    }
+
+    foreach(lane &la, lanes)
         la.advance_carticles(dt, gamma_c);
 
     foreach(lane &la, lanes)

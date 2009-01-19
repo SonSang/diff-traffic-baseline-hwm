@@ -470,9 +470,53 @@ void lane::fill_y(float gamma)
     {
         if(data[i].rho > 0.0)
             data[i].y /= data[i].rho;
+
         data[i].y = to_y(data[i].rho, data[i].y, speedlimit, gamma);
         data[i].fix();
     }
+}
+
+float lane::merge_factor(float local_t, float gamma_c) const
+{
+    int mycell = std::floor(local_t*ncells);
+    if(data[mycell].rho <= 1e-4)
+        return 0.0f;
+
+    float u = to_u(data[mycell].rho, data[mycell].y, speedlimit, gamma_c);
+    float ahead_u;
+    if(mycell + 1 < static_cast<int>(ncells))
+        ahead_u = to_u(data[mycell+1].rho, data[mycell+1].y, speedlimit, gamma_c);
+    else
+        return 0.0f;
+
+    if(ahead_u >= u)
+        return 0.0f;
+
+    float left_factor = 0.0f;
+    float right_factor = 0.0f;
+
+    float other_t = local_t;
+    const lane *la = left_adjacency(other_t);
+    if(la)
+    {
+        int othercell = std::floor(other_t*la->ncells);
+        float other_u = to_u(la->data[othercell].rho, la->data[othercell].y, la->speedlimit, gamma_c);
+        left_factor   = other_u > ahead_u ? (other_u - ahead_u)/u : 0.0f;
+    }
+
+    other_t = local_t;
+    la = right_adjacency(other_t);
+    if(la)
+    {
+        int othercell = std::floor(other_t*la->ncells);
+        float other_u = to_u(la->data[othercell].rho, la->data[othercell].y, la->speedlimit, gamma_c);
+        right_factor  = other_u > ahead_u ? (other_u - ahead_u)/u : 0.0f;
+    }
+
+    if(right_factor > left_factor)
+        return -right_factor;
+    else
+        return left_factor;
 }
 
 float lane::collect_riemann(float gamma_c, float inv_gamma)
