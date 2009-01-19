@@ -26,10 +26,14 @@ typedef enum {DATA, CELLS, MERGES} draw_type;
 struct carticle
 {
     carticle() {}
-    carticle(float ix, float iu) : x(ix), u(iu) {}
+    carticle(float ix, float iu) : x(ix), u(iu), y(0.0f), yv(0.0f) {}
+    carticle(float ix, float iu, float iy) : x(ix), u(iu), y(iy), yv(0.0f) {}
+    carticle(float ix, float iu, float iy, float iyv) : x(ix), u(iu), y(iy), yv(iyv) {}
 
     float x; //< Parametric position of carticle's front bumper axle along current lane.
     float u; //< Velocity of carticle.
+    float y; //< Lane change position.
+    float yv; //< Lane change direction.
 };
 
 struct ltstr

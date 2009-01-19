@@ -585,25 +585,51 @@ void lane::advance_carticles(float dt, float gamma_c)
         cart.x += rk4_res;
         cart.u = rk4_res*(ncells*h)/dt;
 
-        if(cart.x > 1.0)
+        float oldy = cart.y;
+        cart.y += 0.1*cart.yv;
+
+        if(cart.y >= 0.5f)
         {
-            lane *next;
-            if(end.end_type == lane_end::INTERSECTION)
-            {
-                if((next = downstream_lane()))
-                {
-                    cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
-                    next->carticles[1].push_back(cart);
-                }
-                else
-                {
-                    cart.x = 1.0f;
-                    carticles[1].push_back(cart);
-                }
-            }
+            cart.y -= 1.0f;
+            lane *llane = lane::left_adjacency(cart.x);
+            assert(llane);
+            llane->carticles[1].push_back(cart);
+        }
+        else if(cart.y <= -0.5f)
+        {
+            cart.y += 1.0f;
+            lane *rlane = lane::right_adjacency(cart.x);
+            assert(rlane);
+            rlane->carticles[1].push_back(cart);
         }
         else
-            carticles[1].push_back(cart);
+        {
+            if(std::abs(cart.y) < FLT_EPSILON || cart.y*oldy < 0.0f)
+            {
+                cart.y = 0.0f;
+                cart.yv = 0.0f;
+            }
+
+            if(cart.x > 1.0)
+            {
+                lane *next;
+                if(end.end_type == lane_end::INTERSECTION)
+                {
+                    if((next = downstream_lane()))
+                    {
+                        cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
+                        next->carticles[1].push_back(cart);
+                    }
+                    else
+                    {
+                        cart.x = 1.0f;
+                        carticles[1].push_back(cart);
+                    }
+                }
+            }
+            else
+                carticles[1].push_back(cart);
+        }
     }
 }
 

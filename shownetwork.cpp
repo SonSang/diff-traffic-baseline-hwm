@@ -336,6 +336,7 @@ void lane::draw_carticles() const
 
         glColor3f(0.0f, 1.0f, 1.0f);
         glPushMatrix();
+        glTranslatef(0.0f, car.y*LANE_WIDTH, 0.0f);
         mat[14] = 0.5f;
         glMultMatrixf(mat);
         draw_car();
@@ -736,7 +737,7 @@ int main(int argc, char * argv[])
     net->calc_bounding_box();
     net->prepare(H);
 
-    net->lanes[0].carticles[0].push_back(carticle(0.5, 4.5f));
+    net->lanes[0].carticles[0].push_back(carticle(0.1, 4.5, 0.0, 1.0));
 
     net->fill_from_carticles();
 
