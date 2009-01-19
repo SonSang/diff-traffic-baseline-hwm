@@ -338,10 +338,11 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
     int i = 0;
     foreach(const state::out_id &oid, cstate.in_states)
     {
-        if(oid.out_ref > state::STOP)
+        lane *la = oid.fict_lane;
+        if(la)
         {
             lane *start = incoming[i].dp;
-            lane *end   = outgoing[oid.out_ref].dp;
+            lane *end   = la;
 
             full_q q_l;
             q_l.from_q(start->data + start->ncells - 1,
@@ -352,6 +353,44 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
                        end->speedlimit,
                        gamma_c);
 
+            lebacque_inhomogeneous_riemann(start->rs + start->ncells,
+                                           &q_l,
+                                           &q_r,
+                                           start->speedlimit,
+                                           end->speedlimit,
+                                           gamma_c,
+                                           inv_gamma);
+
+            memcpy(end->rs,
+                   start->rs + start->ncells,
+                   sizeof(riemann_solution));
+
+            assert(std::isfinite(end->rs->speeds[0]));
+            assert(std::isfinite(end->rs->speeds[1]));
+
+            maxspeed = std::max(maxspeed, std::max(std::abs(end->rs->speeds[0]), std::abs(end->rs->speeds[1])));
+        }
+        ++i;
+    }
+
+    i = 0;
+    foreach(const state::in_id &iid, cstate.out_states)
+    {
+        lane *la = iid.fict_lane;
+        if(la)
+        {
+            lane *start = la;
+            lane *end   = outgoing[i].dp;
+
+            full_q q_l;
+            q_l.from_q(start->data + start->ncells - 1,
+                       start->speedlimit,
+                       gamma_c);
+            full_q q_r;
+            q_r.from_q(end->data,
+                       end->speedlimit,
+                       gamma_c);
+            printf("start: %p, %d\n", start->rs, start->ncells);
             lebacque_inhomogeneous_riemann(start->rs + start->ncells,
                                            &q_l,
                                            &q_r,
