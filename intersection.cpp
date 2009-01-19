@@ -230,11 +230,11 @@ bool intersection::state::xml_read(xmlTextReaderPtr reader)
 bool intersection::state::isvalid(int nincoming, int noutgoing) const
 {
     foreach(const out_id &oid, in_states)
-        if((oid != STOP && oid < 0) || oid >= nincoming)
+        if((oid != STOP && oid < 0) || oid >= noutgoing)
             return false;
 
     foreach(const in_id &iid, out_states)
-        if((iid != STARVATION && iid < 0)  || iid >= noutgoing)
+        if((iid != STARVATION && iid < 0)  || iid >= nincoming)
             return false;
 
     return true;
