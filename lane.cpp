@@ -629,6 +629,13 @@ void lane::advance_carticles(float dt, float gamma_c)
         cart.x += rk4_res;
         cart.u = rk4_res*(ncells*h)/dt;
 
+        if(cart.yv == 0.0f)
+        {
+            float dir = merge_states[static_cast<int>(std::floor(cart.x*ncells))].direction;
+            if(std::abs(dir) > 0.5)
+                cart.yv = copysign(1.0f, dir);
+        }
+
         float oldy = cart.y;
         cart.y += 0.1*cart.yv;
 
