@@ -200,6 +200,7 @@ network::~network()
     free(name);
     free(lanes[0].data);
     free(lanes[0].rs);
+    free(lanes[0].merge_states);
 }
 
 void network::prepare(float h)
@@ -247,6 +248,22 @@ void network::prepare(float h)
     {
         la.rs = rs;
         rs += la.ncells + 1;
+    }
+
+    printf("Allocating " SIZE_T_FMT " bytes for " SIZE_T_FMT " merge_states...", sizeof(merge_state)*(total + lanes.size()), total+lanes.size());
+    merge_state *ms = (merge_state *) malloc(sizeof(merge_state)*(total + lanes.size()));
+    if(!ms)
+    {
+        fprintf(stderr, "Failed!\n");
+        exit(1);
+    }
+    else
+        printf("Done\n");
+
+    foreach(lane &la, lanes)
+    {
+        la.merge_states = ms;
+        ms += la.ncells;
     }
 }
 

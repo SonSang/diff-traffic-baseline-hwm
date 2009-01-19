@@ -19,6 +19,8 @@
 #define CAR_LENGTH 4.5f
 //* This is the position of the car's axle from the FRONT bumper of the car
 #define CAR_REAR_AXLE 3.5f
+
+typedef enum {DATA, CELLS, MERGES} draw_type;
 #define H (2.0f*CAR_LENGTH)
 
 struct carticle
@@ -58,6 +60,7 @@ union id
 
 struct road;
 struct lane;
+struct road_membership;
 struct intersection;
 
 typedef id<road> road_id;

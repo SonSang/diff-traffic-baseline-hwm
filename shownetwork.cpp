@@ -143,8 +143,11 @@ void line_rep::draw() const
     glEnd();
 }
 
-int line_rep::draw_data(float offset, const float range[2], float &leftover, int incount, float h, const q *data, float speedlimit, float gamma_c, unsigned int n) const
+int line_rep::draw_data(draw_type dtype, const road_membership *rom, float &leftover, int incount, const lane *la, float gamma_c) const
 {
+    const float *range = rom->interval;
+    const float offset = rom->lane_position;
+
     bool backwards;
     float r[2];
     if(range[0] < range[1])
@@ -165,14 +168,14 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     float t0 = r[0]*offset_length(offset);
     float t1 = r[1]*offset_length(offset);
 
-    float ncells = (t1-t0)/h;
+    float ncells = (t1-t0)/la->h;
 
     int data_end = std::floor(ncells);
     float next_leftover = 0.0f;
     if(backwards)
     {
-        leftover = h - (ncells - data_end)*h - leftover;
-        next_leftover = h - leftover;
+        leftover = la->h - (ncells - data_end)*la->h - leftover;
+        next_leftover = la->h - leftover;
     }
 
     float last_cmitre = start == 0 ? 0 : cmitres[start-1];
@@ -187,7 +190,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     int count = 0;
 
     bool alldone = false;
-    while(!alldone && count*h + t0 < t1)
+    while(!alldone && count*la->h + t0 < t1)
     {
         if(segment > start)
         {
@@ -210,15 +213,15 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
         bool done = false;
         while(!done)
         {
-            float s = count*h - leftover;
-            float e = s + h;
+            float s = count*la->h - leftover;
+            float e = s + la->h;
             int drawcount = backwards ? (data_end - count + incount) : (count+incount);
             if(e + t0 >= t1)
             {
                 if(backwards)
                     leftover = next_leftover;
                 else
-                    leftover = h - (e - (t1 - t0));
+                    leftover = la->h - (e - (t1 - t0));
                 e = t1 - t0;
 
                 done = true;
@@ -238,40 +241,60 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
             if(s < 0.0f)
                 s = 0.0f;
 
-            if(data)
+            switch(dtype)
             {
-                float rgb[3];
-                float rho = data[drawcount].rho;
-                float u   = to_u(rho, data[drawcount].y, speedlimit, gamma_c);
-                blackbody(u/speedlimit, rgb);
+            case DATA:
+                {
+                    float rgb[3];
+                    float rho = la->data[drawcount].rho;
+                    float u   = to_u(rho, la->data[drawcount].y, la->speedlimit, gamma_c);
+                    blackbody(u/la->speedlimit, rgb);
 
-                glColor3fv(rgb);
-                glBegin(GL_QUAD_STRIP);
-                glVertex3f(s, -1.0f, 0);
-                glVertex3f(e, -1.0f, 0);
-                glVertex3f(s, -1.0f, rho);
-                glVertex3f(e, -1.0f, rho);
-                glVertex3f(s,  1.0f, rho);
-                glVertex3f(e,  1.0f, rho);
-                glVertex3f(s,  1.0f, 0);
-                glVertex3f(e,  1.0f, 0);
-                glEnd();
-
-            }
-            else
-            {
-                glColor3f(1.0f, 0.0f, 1.0f);
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                glBegin(GL_QUAD_STRIP);
-                glVertex3f(s, -1.0f, 0);
-                glVertex3f(e, -1.0f, 0);
-                glVertex3f(s, -1.0f, 1.0f);
-                glVertex3f(e, -1.0f, 1.0f);
-                glVertex3f(s,  1.0f, 1.0f);
-                glVertex3f(e,  1.0f, 1.0f);
-                glVertex3f(s,  1.0f, 0);
-                glVertex3f(e,  1.0f, 0);
-                glEnd();
+                    glColor3fv(rgb);
+                    glBegin(GL_QUAD_STRIP);
+                    glVertex3f(s, -1.0f, 0);
+                    glVertex3f(e, -1.0f, 0);
+                    glVertex3f(s, -1.0f, rho);
+                    glVertex3f(e, -1.0f, rho);
+                    glVertex3f(s,  1.0f, rho);
+                    glVertex3f(e,  1.0f, rho);
+                    glVertex3f(s,  1.0f, 0);
+                    glVertex3f(e,  1.0f, 0);
+                    glEnd();
+                }
+                break;
+            case CELLS:
+            default:
+                {
+                    glColor3f(1.0f, 0.0f, 1.0f);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    glBegin(GL_QUAD_STRIP);
+                    glVertex3f(s, -1.0f, 0);
+                    glVertex3f(e, -1.0f, 0);
+                    glVertex3f(s, -1.0f, 1.0f);
+                    glVertex3f(e, -1.0f, 1.0f);
+                    glVertex3f(s,  1.0f, 1.0f);
+                    glVertex3f(e,  1.0f, 1.0f);
+                    glVertex3f(s,  1.0f, 0);
+                    glVertex3f(e,  1.0f, 0);
+                    glEnd();
+                }
+            case MERGES:
+                {
+                    glColor3f(1.0f, 0.0f, 1.0f);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    glBegin(GL_QUAD_STRIP);
+                    glVertex3f(s, -1.0f, 0);
+                    glVertex3f(e, -1.0f, 0);
+                    glVertex3f(s, -1.0f, la->merge_states[drawcount].direction);
+                    glVertex3f(e, -1.0f, la->merge_states[drawcount].direction);
+                    glVertex3f(s,  1.0f, la->merge_states[drawcount].direction);
+                    glVertex3f(e,  1.0f, la->merge_states[drawcount].direction);
+                    glVertex3f(s,  1.0f, 0);
+                    glVertex3f(e,  1.0f, 0);
+                    glEnd();
+                }
+                break;
             }
         }
         glPopMatrix();
@@ -282,7 +305,7 @@ int line_rep::draw_data(float offset, const float range[2], float &leftover, int
     return count;
 }
 
-void lane::draw_data(float gamma_c, bool cells) const
+void lane::draw_data(draw_type dtype, float gamma_c) const
 {
     int count = 0;
     float lenused = 0.0f;
@@ -294,9 +317,7 @@ void lane::draw_data(float gamma_c, bool cells) const
         float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
                             rom->lane_position+LANE_WIDTH*0.5};
 
-        q *drdata = cells ? 0 : data;
-
-        count += rom->parent_road.dp->rep.draw_data(rom->lane_position, rom->interval, lenused, count, h, drdata, speedlimit, gamma_c, ncells);
+        count += rom->parent_road.dp->rep.draw_data(dtype, rom, lenused, count, this, gamma_c);
 
         ++p;
         if(p >= static_cast<int>(road_memberships.entries.size()))
@@ -387,7 +408,7 @@ class fltkview : public Fl_Gl_Window
 public:
     fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l), zoom(2.0),
                                                           draw_data(false),
-                                                          draw_cells(false),
+                                                          dtype(CELLS),
                                                           draw_param_obj(false),
                                                           draw_intersections(true),
                                                           draw_lanes(true),
@@ -489,7 +510,7 @@ public:
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             foreach(const lane &la, net->lanes)
-                la.draw_data(net->gamma_c, draw_cells);
+                la.draw_data(dtype, net->gamma_c);
         }
 
         if(draw_carticles)
@@ -600,8 +621,21 @@ public:
                     printf("draw data = %d\n", draw_data);
                     break;
                 case 'e':
-                    draw_cells = !draw_cells;
-                    printf("draw cells = %d\n", draw_cells);
+                    if(dtype == DATA)
+                    {
+                        dtype = CELLS;
+                        printf("dtype: CELLS\n");
+                    }
+                    else if(dtype == CELLS)
+                    {
+                        dtype = MERGES;
+                        printf("dtype: MERGES\n");
+                    }
+                    else if(dtype == MERGES)
+                    {
+                        dtype = DATA;
+                        printf("dtype: DATA\n");
+                    }
                     break;
                 case 'l':
                     draw_lanes = !draw_lanes;
@@ -683,7 +717,7 @@ public:
     float zoom;
     float lastmouse[2];
     bool draw_data;
-    bool draw_cells;
+    draw_type dtype;
     bool draw_param_obj;
     bool draw_intersections;
     bool draw_lanes;

@@ -461,6 +461,7 @@ void lane::fill_from_carticles()
 void lane::reset_data()
 {
     memset(data, 0, sizeof(q)*ncells);
+    memset(merge_states, 0, sizeof(merge_state)*ncells);
 }
 
 void lane::fill_y(float gamma)

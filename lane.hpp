@@ -70,7 +70,7 @@ struct lane
 
     float velocity(float x, float gamma_c) const;
 
-    void draw_data(float gamma_c, bool cells) const;
+    void draw_data(draw_type dtype, float gamma_c) const;
     void draw_carticles() const;
 
     void fill_from_carticles();
@@ -102,6 +102,7 @@ struct lane
                          //< ncells*h = length.
     q *data;             //< The simulation data.
     riemann_solution *rs;//< Saved Riemann solutions for this lane.
+    merge_state *merge_states;
 
     std::vector<carticle> carticles[2];
 };

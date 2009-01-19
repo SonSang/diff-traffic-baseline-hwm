@@ -56,7 +56,7 @@ struct line_rep
 
     void draw() const;
 
-    int draw_data(float offset, const float range[2], float &lenused, int count, float h, const q *data, float speedlimit, float gamma_c, unsigned int n) const;
+    int draw_data(draw_type dtype, const road_membership *rom, float &lenused, int count, const lane *la, float gamma_c) const;
 
     //! Find the segment containing x.
     /*!

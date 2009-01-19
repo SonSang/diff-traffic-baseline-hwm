@@ -132,6 +132,11 @@ struct q
     float y;
 };
 
+struct merge_state
+{
+    float direction;
+};
+
 struct full_q
 {
     void from_q(const q *inq, float u_max, float gamma)
