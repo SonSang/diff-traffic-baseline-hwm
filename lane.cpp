@@ -359,6 +359,7 @@ float lane::velocity(float t, float gamma_c) const
     float pos = t*ncells - 0.5f;
     int cell = std::floor(pos);
     float u[2];
+    float rho[2];
 
     assert(cell > -2);
     assert(cell < static_cast<int>(ncells+1));
@@ -374,13 +375,19 @@ float lane::velocity(float t, float gamma_c) const
             u[0] = to_u(prev->data[prev->ncells-1].rho,
                         prev->data[prev->ncells-1].y,
                         prev->speedlimit, gamma_c);
+            rho[0] = prev->data[prev->ncells-1].rho;
         }
         else
+        {
             u[0] = 0.0f;
+            rho[0] = 1.0f;
+        }
     }
     else
+    {
         u[0] = to_u(data[cell].rho, data[cell].y, speedlimit, gamma_c);
-
+        rho[0] = data[cell].rho;
+    }
 
     if(cell + 1 >= static_cast<int>(ncells))
     {
@@ -393,14 +400,23 @@ float lane::velocity(float t, float gamma_c) const
             u[1] = to_u(next->data[0].rho,
                         next->data[0].y,
                         next->speedlimit, gamma_c);
+            rho[1] = next->data[0].rho;
         }
         else
+        {
             u[1] = 0.0f;
+            rho[1] = 1.0f;
+        }
     }
     else
+    {
         u[1] = to_u(data[cell+1].rho, data[cell+1].y, speedlimit, gamma_c);
+        rho[1] = data[cell+1].rho;
+    }
 
-    return u[0] * (1.0f - (pos-cell)) + (pos-cell) * u[1];
+    float f0 = rho[0]*(1.0f - (pos-cell));
+    float f1 = rho[1]*(pos-cell);
+    return (f0*u[0] + f1*u[1])/(f0+f1);
 }
 
 void lane::fill_from_carticles()
