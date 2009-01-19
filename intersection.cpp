@@ -57,12 +57,13 @@ static inline void convex_hull(std::vector<point> & pts)
         }
     }
 
+    int upper_back = static_cast<int>(pts.size());
     for(count = static_cast<int>(newpts.size())-2; count >= 0; --count)
     {
         pts.push_back(newpts[count]);
 
         int back = static_cast<int>(pts.size())-1;
-        while(back > 1 && !rightturn(pts[back-2], pts[back-1], pts[back]))
+        while(back > upper_back && !rightturn(pts[back-2], pts[back-1], pts[back]))
         {
             std::swap(pts[back], pts[back-1]);
             pts.pop_back();
