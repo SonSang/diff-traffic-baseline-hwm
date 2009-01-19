@@ -263,6 +263,20 @@ int line_rep::draw_data(draw_type dtype, const road_membership *rom, float &left
                     glEnd();
                 }
                 break;
+            case MERGES:
+                {
+                    glColor3f(0.0f, 1.0f, 0.0f);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    glBegin(GL_LINES);
+                    glVertex3f((s+e)*0.5f, 0.0f, 0);
+                    glVertex3f((s+e)*0.5f, -la->merge_states[drawcount].direction, 0.0f);
+                    glEnd();
+                    glBegin(GL_LINE_STRIP);
+                    glVertex3f((s+e)*0.5f + 0.1*la->merge_states[drawcount].direction, -0.9*la->merge_states[drawcount].direction, 0.0f);
+                    glVertex3f((s+e)*0.5f,                                                 -la->merge_states[drawcount].direction, 0.0f);
+                    glVertex3f((s+e)*0.5f - 0.1*la->merge_states[drawcount].direction, -0.9*la->merge_states[drawcount].direction, 0.0f);
+                    glEnd();
+                }
             case CELLS:
             default:
                 {
@@ -275,21 +289,6 @@ int line_rep::draw_data(draw_type dtype, const road_membership *rom, float &left
                     glVertex3f(e, -1.0f, 1.0f);
                     glVertex3f(s,  1.0f, 1.0f);
                     glVertex3f(e,  1.0f, 1.0f);
-                    glVertex3f(s,  1.0f, 0);
-                    glVertex3f(e,  1.0f, 0);
-                    glEnd();
-                }
-            case MERGES:
-                {
-                    glColor3f(1.0f, 0.0f, 1.0f);
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                    glBegin(GL_QUAD_STRIP);
-                    glVertex3f(s, -1.0f, 0);
-                    glVertex3f(e, -1.0f, 0);
-                    glVertex3f(s, -1.0f, la->merge_states[drawcount].direction);
-                    glVertex3f(e, -1.0f, la->merge_states[drawcount].direction);
-                    glVertex3f(s,  1.0f, la->merge_states[drawcount].direction);
-                    glVertex3f(e,  1.0f, la->merge_states[drawcount].direction);
                     glVertex3f(s,  1.0f, 0);
                     glVertex3f(e,  1.0f, 0);
                     glEnd();
