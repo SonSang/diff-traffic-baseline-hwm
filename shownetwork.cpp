@@ -269,12 +269,12 @@ int line_rep::draw_data(draw_type dtype, const road_membership *rom, float &left
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                     glBegin(GL_LINES);
                     glVertex3f((s+e)*0.5f, 0.0f, 0);
-                    glVertex3f((s+e)*0.5f, -la->merge_states[drawcount].direction, 0.0f);
+                    glVertex3f((s+e)*0.5f, -la->merge_states[drawcount].transition, 0.0f);
                     glEnd();
                     glBegin(GL_LINE_STRIP);
-                    glVertex3f((s+e)*0.5f + 0.1*la->merge_states[drawcount].direction, -0.9*la->merge_states[drawcount].direction, 0.0f);
-                    glVertex3f((s+e)*0.5f,                                                 -la->merge_states[drawcount].direction, 0.0f);
-                    glVertex3f((s+e)*0.5f - 0.1*la->merge_states[drawcount].direction, -0.9*la->merge_states[drawcount].direction, 0.0f);
+                    glVertex3f((s+e)*0.5f + 0.1*la->merge_states[drawcount].transition, -0.9*la->merge_states[drawcount].transition, 0.0f);
+                    glVertex3f((s+e)*0.5f,                                                 -la->merge_states[drawcount].transition, 0.0f);
+                    glVertex3f((s+e)*0.5f - 0.1*la->merge_states[drawcount].transition, -0.9*la->merge_states[drawcount].transition, 0.0f);
                     glEnd();
                 }
             case CELLS:

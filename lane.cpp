@@ -492,7 +492,7 @@ float lane::merge_factor(float local_t, float gamma_c) const
     else
         return 0.0f;
 
-    if(ahead_u >= u)
+    if(ahead_u >= 0.8*u)
         return 0.0f;
 
     float left_factor = 0.0f;
@@ -504,7 +504,7 @@ float lane::merge_factor(float local_t, float gamma_c) const
     {
         int othercell = std::floor(other_t*la->ncells);
         float other_u = to_u(la->data[othercell].rho, la->data[othercell].y, la->speedlimit, gamma_c);
-        left_factor   = other_u > ahead_u ? (other_u - ahead_u)/u : 0.0f;
+        left_factor   = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
     other_t = local_t;
@@ -513,7 +513,7 @@ float lane::merge_factor(float local_t, float gamma_c) const
     {
         int othercell = std::floor(other_t*la->ncells);
         float other_u = to_u(la->data[othercell].rho, la->data[othercell].y, la->speedlimit, gamma_c);
-        right_factor  = other_u > ahead_u ? (other_u - ahead_u)/u : 0.0f;
+        right_factor  = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
     if(right_factor > left_factor)
@@ -628,19 +628,21 @@ void lane::advance_carticles(float dt, float gamma_c)
 
     foreach(carticle &cart, carticles[0])
     {
-        float rk4_res = rk4(cart.x, dt*inv_len, this, gamma_c);
-        cart.x += rk4_res;
-        cart.u = rk4_res*(ncells*h)/dt;
-
         if(cart.yv == 0.0f)
         {
-            float dir = merge_states[static_cast<int>(std::floor(cart.x*ncells))].direction;
+
+            float dir = merge_factor(cart.x, gamma_c);
             if(std::abs(dir) > 0.5)
                 cart.yv = copysign(1.0f, dir);
         }
 
+        float rk4_res = rk4(cart.x, dt*inv_len, this, gamma_c);
+        cart.x += rk4_res;
+        cart.u = rk4_res*(ncells*h)/dt;
+
         float oldy = cart.y;
         cart.y += 0.1*cart.yv;
+        merge_states[static_cast<int>(std::floor(cart.x*ncells))].transition = 0.1*cart.yv;
 
         if(cart.y >= 0.5f)
         {
@@ -712,3 +714,71 @@ void lane::swap_carticles()
     carticles[1].clear();
 }
 
+void lane::clear_merges()
+{
+    memset(merge_states, 0, sizeof(merge_state)*ncells);
+}
+
+void lane::apply_merges(float dt, float gamma_c)
+{
+    float inv_ncells = 1.0f/ncells;
+    for(size_t i = 0; i < ncells; ++i)
+    {
+        if(merge_states[i].transition > 0.0f)
+        {
+            float param = i*inv_ncells;
+            lane *la = left_adjacency(param);
+            if(la)
+            {
+                int neighbor_cell = std::floor(param*la->ncells);
+                if(merge_states[i].transition > data[i].rho)
+                    merge_states[i].transition = data[i].rho;
+                if(merge_states[i].transition + la->data[neighbor_cell].rho > 1.0)
+                    merge_states[i].transition = 1.0f - la->data[neighbor_cell].rho;
+
+                float my_u = to_u(data[i].rho, data[i].y, speedlimit, gamma_c);
+                float neighbor_u = to_u(la->data[neighbor_cell].rho,
+                                        la->data[neighbor_cell].y,
+                                        la->speedlimit, gamma_c);
+
+                data[i].rho -= merge_states[i].transition;
+                data[i].y    = to_y(data[i].rho, my_u, speedlimit, gamma_c);
+
+                la->data[neighbor_cell].rho += merge_states[i].transition;
+                la->data[neighbor_cell].y    = to_y(la->data[neighbor_cell].rho, (neighbor_u+my_u)*0.5, la->speedlimit, gamma_c);
+
+                data[i].fix();
+                la->data[neighbor_cell].fix();
+            }
+        }
+        else if(merge_states[i].transition < 0.0f)
+        {
+            merge_states[i].transition *= -1;
+
+            float param = i*inv_ncells;
+            lane *la = right_adjacency(param);
+            if(la)
+            {
+                int neighbor_cell = std::floor(param*la->ncells);
+                if(merge_states[i].transition > data[i].rho)
+                    merge_states[i].transition = data[i].rho;
+                if(merge_states[i].transition + la->data[neighbor_cell].rho > 1.0)
+                    merge_states[i].transition = 1.0f - la->data[neighbor_cell].rho;
+
+                float my_u = to_u(data[i].rho, data[i].y, speedlimit, gamma_c);
+                float neighbor_u = to_u(la->data[neighbor_cell].rho,
+                                        la->data[neighbor_cell].y,
+                                        la->speedlimit, gamma_c);
+
+                data[i].rho                    -= merge_states[i].transition;
+                data[i].y    = to_y(data[i].rho, my_u, speedlimit, gamma_c);
+
+                la->data[neighbor_cell].rho += merge_states[i].transition;
+                la->data[neighbor_cell].y    = to_y(la->data[neighbor_cell].rho, (neighbor_u+my_u)*0.5, la->speedlimit, gamma_c);
+
+                data[i].fix();
+                la->data[neighbor_cell].fix();
+            }
+        }
+    }
+}

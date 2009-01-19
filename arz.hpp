@@ -134,7 +134,7 @@ struct q
 
 struct merge_state
 {
-    float direction;
+    float transition;
 };
 
 struct full_q
