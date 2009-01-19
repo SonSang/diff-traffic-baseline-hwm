@@ -209,6 +209,7 @@ network::~network()
 void network::prepare(float h)
 {
     int total = 0;
+    int nlanes = 0;
 
     min_h = FLT_MAX;
     foreach(lane &la, lanes)
@@ -219,6 +220,7 @@ void network::prepare(float h)
         assert(la.ncells > 0);
         la.h = len/la.ncells;
         min_h = std::min(min_h, la.h);
+        ++nlanes;
     }
 
     foreach(intersection &is, intersections)
@@ -233,6 +235,7 @@ void network::prepare(float h)
                 assert(la.ncells > 0);
                 la.h = len/la.ncells;
                 min_h = std::min(min_h, la.h);
+                ++nlanes;
             }
         }
     }
@@ -265,9 +268,8 @@ void network::prepare(float h)
         }
     }
 
-
-    printf("Allocating " SIZE_T_FMT " bytes for " SIZE_T_FMT " riemann solutions...", sizeof(riemann_solution)*(total + lanes.size()), total+lanes.size());
-    riemann_solution *rs = (riemann_solution *) malloc(sizeof(riemann_solution)*(total + lanes.size()));
+    printf("Allocating " SIZE_T_FMT " bytes for %d riemann solutions...", sizeof(riemann_solution)*(total + nlanes), total + nlanes);
+    riemann_solution *rs = (riemann_solution *) malloc(sizeof(riemann_solution)*(total + nlanes));
     if(!rs)
     {
         fprintf(stderr, "Failed!\n");
@@ -293,8 +295,8 @@ void network::prepare(float h)
         }
     }
 
-    printf("Allocating " SIZE_T_FMT " bytes for " SIZE_T_FMT " merge_states...", sizeof(merge_state)*(total + lanes.size()), total+lanes.size());
-    merge_state *ms = (merge_state *) malloc(sizeof(merge_state)*(total + lanes.size()));
+    printf("Allocating " SIZE_T_FMT " bytes for %d merge_states...", sizeof(merge_state)*(total + nlanes), total+nlanes);
+    merge_state *ms = (merge_state *) malloc(sizeof(merge_state)*(total + nlanes));
     if(!ms)
     {
         fprintf(stderr, "Failed!\n");
