@@ -773,6 +773,10 @@ public:
                         t = 1.0;
                     printf("param(t) = %f\n", t);
                     break;
+                case 't':
+                    foreach(intersection &is, net->intersections)
+                        is.next_state();
+                    break;
                 default:
                     return Fl_Gl_Window::handle(event);
                 }
