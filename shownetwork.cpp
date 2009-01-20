@@ -8,6 +8,8 @@
 #include "arcball.hpp"
 #include "network.hpp"
 
+FILE *out_file;
+
 static float zooms[10] = { 13.0f,
                            2.0f,
                            4.0f,
@@ -737,6 +739,7 @@ public:
                     {
                         float dt =  net->sim_step();
                         printf("dt = %f\n", dt);
+                        net->dump_carticles(out_file);
                     }
                     break;
                 case 's':
@@ -807,6 +810,8 @@ public:
 
 int main(int argc, char * argv[])
 {
+    out_file = fopen("output.txt", "w");
+
     net = new network;
 
     if(!net->load_from_xml(argv[1]))
@@ -818,9 +823,21 @@ int main(int argc, char * argv[])
     net->calc_bounding_box();
     net->prepare(H);
 
-    net->lanes[0].carticles[0].push_back(carticle(0.1, 4.5, 0.0, 1.0));
+    int lno = 0;
+    foreach(lane &la, net->lanes)
+    {
+        if(la.h > 0.8*H)
+        {
+            net->add_carticle(lno, 0.1, 4.5);
+            net->add_carticle(lno, 0.5, 4.5);
+            net->add_carticle(lno, 0.8, 4.5);
+        }
+        ++lno;
+    }
 
     net->fill_from_carticles();
+
+    net->dump_carticles(out_file);
 
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];

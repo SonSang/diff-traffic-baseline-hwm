@@ -56,6 +56,7 @@ bool network::load_from_xml(const char *filename)
 bool network::xml_read(xmlTextReaderPtr reader)
 {
     float version = 0.0f;
+    carticle_ids = 0;
 
     boost::fusion::vector<list_matcher<float>,
         list_matcher<char*>,
@@ -208,6 +209,8 @@ network::~network()
 
 void network::prepare(float h)
 {
+    global_time = 0.0f;
+
     int total = 0;
     int nlanes = 0;
 
@@ -441,6 +444,8 @@ float network::sim_step()
        }
    }
 
+   global_time += dt;
+
    return dt;
 }
 
@@ -464,4 +469,41 @@ void network::calc_bounding_box()
         }
     }
     printf("bb[0] = %f bb[1] = %f\nbb[2] = %f bb[3] = %f\n", bb[0], bb[1], bb[2], bb[3]);
+}
+
+int network::add_carticle(int lane, float pos, float u)
+{
+    carticle cart(pos, u);
+    cart.id = carticle_ids++;
+    lanes[lane].carticles[0].push_back(cart);
+
+    return carticle_ids;
+}
+
+void network::dump_carticles(FILE *fp) const
+{
+    int count = 0;
+    foreach(const lane &la, lanes)
+        count += la.carticles[0].size();
+    foreach(const intersection &is, intersections)
+    {
+        foreach(const intersection::state &st, is.states)
+        {
+            foreach(const lane &la, st.fict_lanes)
+                count += la.carticles[0].size();
+        }
+    }
+
+    fprintf(fp, "%f %d\n", global_time, count);
+
+    foreach(const lane &la, lanes)
+        la.dump_carticles(fp);
+    foreach(const intersection &is, intersections)
+    {
+        foreach(const intersection::state &st, is.states)
+        {
+            foreach(const lane &la, st.fict_lanes)
+                la.dump_carticles(fp);
+        }
+    }
 }

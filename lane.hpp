@@ -90,6 +90,8 @@ struct lane
     void clear_merges();
     void apply_merges(float dt, float gamma_c);
 
+    void dump_carticles(FILE *fp) const;
+
     road_intervals road_memberships; //< Helps describe spatial configuration of lane.
 
     adjacency_intervals left;  //< Lane's left neighbors.

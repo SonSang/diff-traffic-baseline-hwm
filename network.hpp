@@ -21,7 +21,7 @@
 #define CAR_REAR_AXLE 3.5f
 
 typedef enum {DATA, CELLS, MERGES} draw_type;
-#define H (2.0f*CAR_LENGTH)
+#define H (2.1f*CAR_LENGTH)
 
 struct carticle
 {
@@ -30,6 +30,7 @@ struct carticle
     carticle(float ix, float iu, float iy) : x(ix), u(iu), y(iy), yv(0.0f) {}
     carticle(float ix, float iu, float iy, float iyv) : x(ix), u(iu), y(iy), yv(iyv) {}
 
+    int id;
     float x; //< Parametric position of carticle's front bumper axle along current lane.
     float u; //< Velocity of carticle.
     float y; //< Lane change position.
@@ -94,9 +95,17 @@ struct network
 
     void calc_bounding_box();
 
+    int add_carticle(int lane, float pos, float u);
+
+    void dump_carticles(FILE *fp) const;
+
     float gamma_c;
     float inv_gamma;
     float min_h;
+
+    float global_time;
+
+    int carticle_ids;
 
     float bb[4]; //< Minx, maxx, miny, maxy
 
