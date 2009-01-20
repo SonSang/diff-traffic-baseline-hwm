@@ -23,15 +23,15 @@ static GLuint car_list;
 
 static void init_draw_car()
 {
-    static const float verts[][3] = {{-(CAR_LENGTH-CAR_REAR_AXLE), -0.5f*LANE_WIDTH, -0.5f},  //0
-                                     {              CAR_REAR_AXLE,-0.25f*LANE_WIDTH, -0.5f},  //1
-                                     {              CAR_REAR_AXLE, 0.25f*LANE_WIDTH, -0.5f},  //2
-                                     {-(CAR_LENGTH-CAR_REAR_AXLE),  0.5f*LANE_WIDTH, -0.5f},  //3
+    static const float verts[][3] = {{-(CAR_LENGTH-CAR_REAR_AXLE), -0.3f*LANE_WIDTH, 0.0f},  //0
+                                     {              CAR_REAR_AXLE,-0.15f*LANE_WIDTH, 0.0f},  //1
+                                     {              CAR_REAR_AXLE, 0.15f*LANE_WIDTH, 0.0f},  //2
+                                     {-(CAR_LENGTH-CAR_REAR_AXLE),  0.3f*LANE_WIDTH, 0.0f},  //3
 
-                                     {-(CAR_LENGTH-CAR_REAR_AXLE), -0.5f*LANE_WIDTH, 1.0f},  //4
-                                     {              CAR_REAR_AXLE,-0.25f*LANE_WIDTH, 1.0f},  //5
-                                     {              CAR_REAR_AXLE, 0.25f*LANE_WIDTH, 1.0f},  //6
-                                     {-(CAR_LENGTH-CAR_REAR_AXLE),  0.5f*LANE_WIDTH, 1.0f}}; //7
+                                     {-(CAR_LENGTH-CAR_REAR_AXLE), -0.3f*LANE_WIDTH, 1.5f},  //4
+                                     {              CAR_REAR_AXLE,-0.15f*LANE_WIDTH, 1.3f},  //5
+                                     {              CAR_REAR_AXLE, 0.15f*LANE_WIDTH, 1.3f},  //6
+                                     {-(CAR_LENGTH-CAR_REAR_AXLE),  0.3f*LANE_WIDTH, 1.5f}}; //7
 
     static const int faces[6][4] = {{ 0, 1, 2, 3}, // top
                                     { 4, 5, 6, 7}, // bottom
@@ -303,7 +303,6 @@ void lane::draw_carticles() const
         glColor3f(0.0f, 1.0f, 1.0f);
         glPushMatrix();
         glTranslatef(0.0f, car.y*LANE_WIDTH, 0.0f);
-        mat[14] = 0.5f;
         glMultMatrixf(mat);
         draw_car();
         glPopMatrix();
@@ -380,10 +379,10 @@ void intersection::draw_param_data(float t) const
         la->get_matrix(t, mat);
         p.x = mat[12];
         p.y = mat[13];
+        p.z = mat[14];
 
         glColor3f(1.0f, 0.0f, 1.0f);
         glPushMatrix();
-        mat[14] = 0.5f;
         glMultMatrixf(mat);
         draw_car();
         glPopMatrix();
@@ -489,10 +488,10 @@ public:
                 la.get_matrix(t, mat);
                 p.x = mat[12];
                 p.y = mat[13];
+                p.z = mat[14];
 
                 glColor3f(1.0f, 0.0f, 1.0f);
                 glPushMatrix();
-                mat[14] = 0.5f;
                 glMultMatrixf(mat);
                 draw_car();
                 glPopMatrix();

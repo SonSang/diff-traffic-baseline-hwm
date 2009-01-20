@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<network version="1.0" name="intersection-test" xmlns:xi="http://www.w3.org/2001/XInclude" gamma="0.5">
+<network version="1.2" name="intersection-test" xmlns:xi="http://www.w3.org/2001/XInclude" gamma="0.5">
   <roads>
     <road id="road0" name="S Columbia Street">
       <line_rep>
 	<points>
-	  -75.0 0.0
-	  75.0 0.0
+	  -75.0 0.0 0.0 0.0
+	  75.0 0.0 1.0 0.0
 	</points>
       </line_rep>
     </road>

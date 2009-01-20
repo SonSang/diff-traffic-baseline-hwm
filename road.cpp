@@ -16,6 +16,13 @@ int line_rep::locate(point *pt, float t, float offset) const
 
     pt->x = (t - offset*mitre) * normals[seg].x - offset*normals[seg].y + points[seg].x;
     pt->y = (t - offset*mitre) * normals[seg].y + offset*normals[seg].x + points[seg].y;
+
+    t /= (clengths[seg+1] - clengths[seg]);
+
+    if (t > 1.0f)
+        t = 1.0f;
+
+    pt->z = (1-t)*points[seg].z + t*points[seg+1].z;
     return seg;
 }
 
@@ -161,11 +168,11 @@ void line_rep::points_string(const char *str)
         while(isspace(*str))
             ++str;
 
-        float x, y;
-        if(sscanf(str, "%f %f", &x, &y) != 2)
+        float x, y, z, o;
+        if(sscanf(str, "%f %f %f %f", &x, &y, &z, &o) != 4)
             break;
 
-        points.push_back(point(x, y));
+        points.push_back(point(x, y, 5.0*z));
 
         while(*str && *str != '\n')
             ++str;

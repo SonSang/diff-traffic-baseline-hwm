@@ -330,7 +330,7 @@ void lane::get_matrix(const float &t, float mat[16]) const
     mat[ 0]=n.x;  mat[ 1]= n.y; mat[ 2]=0.0f;mat[ 3]=0.0f;
     mat[ 4]=n.y;  mat[ 5]=-n.x; mat[ 6]=0.0f;mat[ 7]=0.0f;
     mat[ 8]=0.0f; mat[ 9]= 0.0f;mat[10]=1.0f;mat[11]=0.0f;
-    mat[12]=p.x;  mat[13]= p.y; mat[14]=0.0f;mat[15]=1.0f;
+    mat[12]=p.x;  mat[13]= p.y; mat[14]=p.z ;mat[15]=1.0f;
 }
 
 void lane::get_point_and_normal(const float &t, point &p, point &n) const

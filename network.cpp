@@ -66,9 +66,9 @@ bool network::xml_read(xmlTextReaderPtr reader)
     if(!read_attributes(vl, reader))
         return false;
 
-    if(version != 1.0f)
+    if(version != 1.2f)
     {
-        fprintf(stderr, "Network version is %f, expected 1.0f!\n", version);
+        fprintf(stderr, "Network version is %f, expected 1.2f!\n", version);
         return false;
     }
 

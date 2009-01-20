@@ -8,11 +8,17 @@ struct point
     {}
 
     point(float inx, float iny)
-        : x(inx), y(iny)
+        : x(inx), y(iny), z(0.0f)
     {}
+
+    point(float inx, float iny, float inz)
+        : x(inx), y(iny), z(inz)
+    {}
+
 
     float x;
     float y;
+    float z;
 };
 
 //! A four-sided simple polygon.
