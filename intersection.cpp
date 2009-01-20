@@ -278,14 +278,26 @@ lane* intersection::incoming_state(int intern_ref) const
 {
     const state &cstate = states[current_state];
 
-    return cstate.in_states[intern_ref].fict_lane;
+    if(intern_ref >= 0)
+        return cstate.in_states[intern_ref].fict_lane;
+    else
+    {
+        assert(-intern_ref-1 < static_cast<int>(outgoing.size()));
+        return outgoing[-intern_ref-1].dp;
+    }
 }
 
 lane* intersection::outgoing_state(int intern_ref) const
 {
     const state &cstate = states[current_state];
 
-    return cstate.out_states[intern_ref].fict_lane;
+    if(intern_ref >= 0)
+        return cstate.out_states[intern_ref].fict_lane;
+    else
+    {
+        assert(-intern_ref-1 < static_cast<int>(incoming.size()));
+        return incoming[-intern_ref-1].dp;
+    }
 }
 
 void intersection::build_shape(float lane_width)
@@ -430,6 +442,7 @@ void intersection::initialize_state_lanes()
         st.fict_roads.reserve(count);
         st.fict_lanes.reserve(count);
 
+        count = 0;
         for(size_t is = 0; is < st.in_states.size(); ++is)
         {
             if(st.in_states[is].out_ref < 0)
@@ -466,13 +479,18 @@ void intersection::initialize_state_lanes()
             la.left.base_data.neighbor.dp  = 0;
             la.right.base_data.neighbor.dp = 0;
 
-            la.start.end_type = lane_end::DEAD_END;
-            la.end.end_type   = lane_end::DEAD_END;
+            la.start.end_type  = lane_end::INTERSECTION;
+            la.start.inters.dp = this;
+            la.start.intersect_in_ref = -(is+1);
+            la.end.end_type   = lane_end::INTERSECTION;
+            la.end.inters.dp = this;
+            la.end.intersect_in_ref = -(st.in_states[is].out_ref+1);
             la.speedlimit     = out_la->speedlimit;
 
             st.in_states[is].fict_lane = &la;
 
             st.out_states[st.in_states[is].out_ref].fict_lane = &la;
+            ++count;
         }
     }
 }
