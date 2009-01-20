@@ -459,9 +459,16 @@ void intersection::initialize_state_lanes()
             out_la->get_point_and_normal(0.0, out_pt, out_vec);
 
             point middle;
-            intersect_lines(middle,
-                            in_pt, in_vec,
-                            out_pt, out_vec);
+
+            if(std::abs(out_vec.x*in_vec.x + out_vec.y*in_vec.y) > 0.9f)
+            {
+                middle.x = (in_pt.x + out_pt.x)*0.5;
+                middle.y = (in_pt.y + out_pt.y)*0.5;
+            }
+            else
+                intersect_lines(middle,
+                                in_pt, in_vec,
+                                out_pt, out_vec);
             middle.z = (in_pt.z + out_pt.z)*0.5f;
 
             st.fict_roads.push_back(road());
