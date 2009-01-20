@@ -13,16 +13,13 @@ sys.path.append(os.getcwd())
 
 import traffic
 reload(traffic)
-import nurbs
-reload(nurbs)
+#import nurbs
+#reload(nurbs)
 
 fps = 25.0
 
-#The first line:
-#<Number of lanes (integer)> <Lane width (meters)> <Highway length (meters)> <Width of cars (meters)> <Length of cars (meters)> <Wheelbase (meters)> <Rear axle location (?)>
-
-#The other lines:
-#<Car id (integer)> <Time (seconds)> <X-position (meters)> <Y-position (meters)> <Orientation (angle [0, 2pi) )> <Steering wheel orientation (angle (-pi, pi) )> <velocity (m/s)> <acceleration (m/s^2>)
+#<t (s)> <n cars this step>
+#<Car id (integer)>  <X-position (meters)> <Y-position (meters)> <Z-position (meters)> <X-component of dir> <Y-component of dir> <X-velocity (m/s)> <Y-velocity (m/s)>
 
 available_cars = { 'tbird' :
                        {'body': 'tbird-body',
@@ -164,13 +161,32 @@ def find_mat(matlist, name):
     return None
 
 @print_timing
-def apply_basic_motion(id, carseries, the_road, carobj, wheel_rad):
+def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
     ipo_r = Blender.Ipo.New("Object", "car_%d_root_ipo" % id)
-    zrot_curve = ipo_r.addCurve("dRotZ")
-    lastangle = carseries.orientation[0] * 18.0/math.pi
+
+    ipo_consts = [(Blender.Ipo.OB_LOCX, 'LocX'),
+                  (Blender.Ipo.OB_LOCY, 'LocY'),
+                  (Blender.Ipo.OB_LOCZ, 'LocZ')]
+    ipo_curves = []
+    for ipc in ipo_consts:
+        if ipo_r[ipc[0]] != None:
+            ipo_r[ipc[0]] = None
+        curv = ipo_r.addCurve(ipc[1])
+        ipo_curves.append(curv)
+
+    zoffs = cartype['z-offs']
+    for i in xrange(0, carseries.nrecs()):
+        fr = carseries.time[i]*fps
+
+        ipo_curves[0][fr] = carseries.x[i]
+        ipo_curves[1][fr] = carseries.y[i]
+        ipo_curves[2][fr] = carseries.z[i] + zoffs
+        
+    zrot_curve = ipo_r.addCurve("RotZ")
+    lastangle = math.atan2(carseries.ny[0],carseries.nx[0]) * 18.0/math.pi
     for i in xrange(0, carseries.nrecs()):
         frame = carseries.time[i]*fps
-        angle = carseries.orientation[i] * 18.0/math.pi
+        angle = math.atan2(carseries.ny[i],carseries.nx[i]) * 18.0/math.pi
         if (angle - lastangle) > 18:
             angle = angle-36
         elif (lastangle - angle) > 18:
@@ -181,9 +197,9 @@ def apply_basic_motion(id, carseries, the_road, carobj, wheel_rad):
 
     ipo_s = Blender.Ipo.New("Object", "car_%d_steer_ipo" % id)
     zrot_curve = ipo_s.addCurve("dRotZ")
-    for i in xrange(0, carseries.nrecs()):
-        frame = carseries.time[i]*fps
-        zrot_curve[frame] = carseries.steer_orientation[i] * 18.0/math.pi
+#    for i in xrange(0, carseries.nrecs()):
+#        frame = carseries.time[i]*fps
+#        zrot_curve[frame] = carseries.steer_orientation[i] * 18.0/math.pi
     carobj[1].setIpo(ipo_s)
 
     ipo_d = Blender.Ipo.New("Object", "car_%d_drive_ipo" % id)
@@ -209,32 +225,32 @@ def apply_basic_motion(id, carseries, the_road, carobj, wheel_rad):
     leftmat = find_mat(mats, "leftturn")
     assert leftmat != None
 
-    tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
-    mats[tailmat].setIpo(tail_ipo)
-    t_curve = tail_ipo.addCurve("Emit")
-    frame = carseries.time[0]*fps
-    t_curve[frame] = 0.0
-    t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
-    for bp in carseries.brakepoints:
-        t_curve[bp[0]*fps] = 1.0
-        t_curve[bp[1]*fps] = 0.0
+#    tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
+#    mats[tailmat].setIpo(tail_ipo)
+#    t_curve = tail_ipo.addCurve("Emit")
+#    frame = carseries.time[0]*fps
+#    t_curve[frame] = 0.0
+#    t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+#    for bp in carseries.brakepoints:
+#        t_curve[bp[0]*fps] = 1.0
+#        t_curve[bp[1]*fps] = 0.0
 
-    right_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[rightmat].getName()))
-    mats[rightmat].setIpo(right_ipo)
-    right_curve = right_ipo.addCurve("Emit")
-    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+#    right_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[rightmat].getName()))
+#    mats[rightmat].setIpo(right_ipo)
+#    right_curve = right_ipo.addCurve("Emit")
+#    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+#
+#    left_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[leftmat].getName()))
+#    mats[leftmat].setIpo(left_ipo)
+#    left_curve = left_ipo.addCurve("Emit")
+#    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
 
-    left_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[leftmat].getName()))
-    mats[leftmat].setIpo(left_ipo)
-    left_curve = left_ipo.addCurve("Emit")
-    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
-
-    for lc in carseries.lanechanges:
-        if lc[2] == -1:
-            ccurve = right_curve
-        else :
-            ccurve = left_curve
-        do_blinker(ccurve, lc[0], lc[1], 0.1)
+#    for lc in carseries.lanechanges:
+#        if lc[2] == -1:
+#            ccurve = right_curve
+#        else :
+#            ccurve = left_curve
+#        do_blinker(ccurve, lc[0], lc[1], 0.1)
 
     intime  = carseries.time[ 0]*fps
     outtime = carseries.time[-1]*fps
@@ -248,84 +264,82 @@ def apply_basic_motion(id, carseries, the_road, carobj, wheel_rad):
         layer_curve[intime]  = 1
         layer_curve[outtime] = 0
 
-@print_timing
-def apply_curve_motion(id, cartype, carseries, road_nurb, the_road, carobj, steerobj, wheelblen):
-    ipo = carobj.getIpo()
-    ipo_consts = [(Blender.Ipo.OB_LOCX, 'LocX'),
-                  (Blender.Ipo.OB_LOCY, 'LocY'),
-                  (Blender.Ipo.OB_LOCZ, 'LocZ'),
-                  (Blender.Ipo.OB_ROTX, 'RotX'),
-                  (Blender.Ipo.OB_ROTY, 'RotY'),
-                  (Blender.Ipo.OB_ROTZ, 'RotZ')]
-
-    ipo_curves = []
-    for ipc in ipo_consts:
-        if ipo[ipc[0]] != None:
-            ipo[ipc[0]] = None
-        curv = ipo.addCurve(ipc[1])
-        ipo_curves.append(curv)
-
-    start = road_nurb.knots[ 0]
-    end   = road_nurb.knots[-1]
-
-#    steer_ipo = steerobj.getIpo()
-#    if steer_ipo[Blender.Ipo.OB_ROTZ] != None:
-#        steer_ipo[Blender.Ipo.OB_ROTZ] = None
-#    steer_curve = steer_ipo.addCurve('RotZ')
-
-    len = end-start
-
-    ustep = len/the_road.length
-
-    for i in xrange(0, carseries.nrecs()):
-        fr = carseries.time[i]*fps
-
-        u = start + carseries.x[i]*ustep
-#        pts = road_nurb.ck(u,2)
-        pts = road_nurb.ck(u,1)
-        blpt = Blender.Mathutils.Vector(pts[0])
-        bltan = Blender.Mathutils.Vector(pts[1])
-#        blnorm = Blender.Mathutils.Vector(pts[2])
+#@print_timing
+#def apply_curve_motion(id, cartype, carseries, road_nurb, the_road, carobj, steerobj, wheelblen):
+#    ipo = carobj.getIpo()
+#    ipo_consts = [(Blender.Ipo.OB_LOCX, 'LocX'),
+#                  (Blender.Ipo.OB_LOCY, 'LocY'),
+#                  (Blender.Ipo.OB_LOCZ, 'LocZ'),
+#                  (Blender.Ipo.OB_ROTX, 'RotX'),
+#                  (Blender.Ipo.OB_ROTY, 'RotY'),
+#                  (Blender.Ipo.OB_ROTZ, 'RotZ')]
 #
-#        curvature = blnorm.length
+#    ipo_curves = []
+#    for ipc in ipo_consts:
+#        if ipo[ipc[0]] != None:
+#            ipo[ipc[0]] = None
+#        curv = ipo.addCurve(ipc[1])
+#        ipo_curves.append(curv)
 #
-        bltan = bltan.normalize()
+#    start = road_nurb.knots[ 0]
+#    end   = road_nurb.knots[-1]
+#
+##    steer_ipo = steerobj.getIpo()
+##    if steer_ipo[Blender.Ipo.OB_ROTZ] != None:
+##        steer_ipo[Blender.Ipo.OB_ROTZ] = None
+##    steer_curve = steer_ipo.addCurve('RotZ')
+#
+#    len = end-start
+#
+#    ustep = len/the_road.length
+#
+#    for i in xrange(0, carseries.nrecs()):
+#        fr = carseries.time[i]*fps
+#
+#        u = start + carseries.x[i]*ustep
+##        pts = road_nurb.ck(u,2)
+#        pts = road_nurb.ck(u,1)
+#        blpt = Blender.Mathutils.Vector(pts[0])
+#        bltan = Blender.Mathutils.Vector(pts[1])
+##        blnorm = Blender.Mathutils.Vector(pts[2])
+##
+##        curvature = blnorm.length
+##
+#        bltan = bltan.normalize()
+#
+#        ylocal = Blender.Mathutils.CrossVecs(Blender.Mathutils.Vector([0, 0, 1]), bltan)
+#        ylocal.normalize()
+#        zlocal = Blender.Mathutils.CrossVecs(bltan, ylocal)
+#
+#        yoffs = carseries.y[i] - (the_road.nlanes-1)*the_road.lanewidth*0.5
+#        zoffs = cartype['z-offs']
+#
+#        ipo_curves[0][fr] = blpt[0] + yoffs*ylocal[0] + zoffs*zlocal[0]
+#        ipo_curves[1][fr] = blpt[1] + yoffs*ylocal[1] + zoffs*zlocal[1]
+#        ipo_curves[2][fr] = blpt[2] + yoffs*ylocal[2] + zoffs*zlocal[2]
+#
+#        mat = Blender.Mathutils.Matrix(bltan, ylocal, zlocal)
+#        e = mat.toEuler()
+#
+#        ipo_curves[3][fr] = e.x * 0.1
+#        ipo_curves[4][fr] = e.y * 0.1
+#        ipo_curves[5][fr] = e.z * 0.1
+#
+##        zrot = math.atan(wheelblen*curvature)
+##        steer_curve[fr] = zrot * 18.0 / math.pi
 
-        ylocal = Blender.Mathutils.CrossVecs(Blender.Mathutils.Vector([0, 0, 1]), bltan)
-        ylocal.normalize()
-        zlocal = Blender.Mathutils.CrossVecs(bltan, ylocal)
-
-        yoffs = carseries.y[i] - (the_road.nlanes-1)*the_road.lanewidth*0.5
-        zoffs = cartype['z-offs']
-
-        ipo_curves[0][fr] = blpt[0] + yoffs*ylocal[0] + zoffs*zlocal[0]
-        ipo_curves[1][fr] = blpt[1] + yoffs*ylocal[1] + zoffs*zlocal[1]
-        ipo_curves[2][fr] = blpt[2] + yoffs*ylocal[2] + zoffs*zlocal[2]
-
-        mat = Blender.Mathutils.Matrix(bltan, ylocal, zlocal)
-        e = mat.toEuler()
-
-        ipo_curves[3][fr] = e.x * 0.1
-        ipo_curves[4][fr] = e.y * 0.1
-        ipo_curves[5][fr] = e.z * 0.1
-
-#        zrot = math.atan(wheelblen*curvature)
-#        steer_curve[fr] = zrot * 18.0 / math.pi
-
-def read_car_record(str, cardict):
-    data = str.split()
-    id = int(data[0])
-    rec = [float(x) for x in data[1:]]
-    if(cardict.has_key(id)):
-        the_car = cardict[id]
-        if((rec[0] - the_car.time[-1])*fps < 2.0):
-            return
-    else:
-        the_car = traffic.car(id)
-        cardict[id] = the_car
-
-    for i in it.izip(the_car.__slots__[1:], rec):
-        getattr(the_car, i[0]).append(i[1])
+def read_car_record(fp, t, ncars, cardict):
+    for i in xrange(0, ncars):
+        data = fp.readline().rstrip().split()
+        id = int(data[0])
+        rec = [float(x) for x in data[1:]]
+        if(cardict.has_key(id)):
+            the_car = cardict[id]
+        else:
+            the_car = traffic.car(id)
+            cardict[id] = the_car
+        for i in it.izip(the_car.__slots__[1:], [t] + rec):
+            getattr(the_car, i[0]).append(i[1])
 
 @print_timing
 def load_traffic(file):
@@ -333,41 +347,43 @@ def load_traffic(file):
     try:
         pick = open(froot+".pkc", 'rb')
         print "Loading pickled data from %s" % (froot+".pkc",)
-        (the_road, cars) = cPickle.load(pick)
+        cars = cPickle.load(pick)
         pick.close()
     except:
         print "Loading plaintext data"
         fp = open(file, 'r')
-        the_road = traffic.road(fp.readline())
         cars = dict()
-        for i in fp:
-            read_car_record(i, cars)
+        li = fp.readline().rstrip().split()
+        while li:
+            t    = float(li[0])
+            ncars = int(li[1])
+            read_car_record(fp, t, ncars, cars)
+            li = fp.readline().rstrip().split()
         fp.close()
-        min_int = 1e10
-        min_car = -1
-        max_int = -1
-        max_car = -1
-        print "Processing lanechanges and brakepoints"
-        for i in cars.keys():
-            cars[i].process_lanechanges(2.0, 0.1)
-            cars[i].process_brakepoints()
-            iv = cars[i].interval()
-            if iv < min_int:
-                min_int = iv
-                min_car = i
-            elif iv > max_int:
-                max_int = iv
-                max_car = i
-        print "Slowest car is", max_car, " which takes", max_int, "seconds"
-        print "Fastest car is", min_car, " which takes", min_int, "seconds"
-        print "Pickling data to %s" % (froot+".pkc",)
-        pick = open(froot+".pkc", 'wb')
-        cPickle.dump((the_road, cars), pick)
-        pick.close()
+#        min_int = 1e10
+#        min_car = -1
+#        max_int = -1
+#        max_car = -1
+#        print "Processing lanechanges and brakepoints"
+#        for i in cars.keys():
+#            cars[i].process_lanechanges(2.0, 0.1)
+#            cars[i].process_brakepoints()
+#            iv = cars[i].interval()
+#            if iv < min_int:
+#                min_int = iv
+#                min_car = i
+#            elif iv > max_int:
+#                max_int = iv
+#                max_car = i
+#        print "Slowest car is", max_car, " which takes", max_int, "seconds"
+#        print "Fastest car is", min_car, " which takes", min_int, "seconds"
+#        print "Pickling data to %s" % (froot+".pkc",)
+#        pick = open(froot+".pkc", 'wb')
+#        cPickle.dump((the_road, cars), pick)
+#        pick.close()
 
-    print the_road
     print "Read %d cars" % len(cars.keys())
-    return (the_road, cars)
+    return cars
 
 def build_car(scn, id, color, car, scale):
     print "Grabbing objects..."
@@ -469,46 +485,17 @@ def build_car(scn, id, color, car, scale):
 
 if __name__ == '__main__':
     print "Loading data"
-    (the_road, cars) = load_traffic("/home/sewall/unc/icra08/blender/100cars.txt")
+    cars = load_traffic("/playpen/sewall/traffic/hwm/blender/output.txt")
     print "Data loaded"
+    print cars[3].nx, cars[3].ny
     scn = bpy.data.scenes.active
     scn.setLayers(range(1, 21))
-
-    try:
-        the_bl_road = Blender.Object.Get('road')
-    except:
-        the_bl_road = None
-
-    try:
-        road_curve_obj = Blender.Object.Get('road_curve')
-    except:
-        road_curve_obj = None
-
-    if the_bl_road == None:
-        print "Making road"
-        (road_curve_obj, the_bl_road) = the_road.make_blender_road(scn, road_curve_obj)
-        print "Road done"
-    else:
-        print "Found road"
-
-    print "Building nurb"
-    assert road_curve_obj.getType() == 'Curve'
-    cu = road_curve_obj.getData()
-    assert len(cu) == 1
-    cunurb = cu[0]
-    knots = cunurb.knotsU
-    pts = []
-    road_mat = road_curve_obj.getMatrix()
-    for i in cunurb:
-        temppt = Blender.Mathutils.Vector(i[:3])*road_mat
-        pts.append([temppt[0], temppt[1], temppt[2], i[3]])
-    road_curve_nurb = nurbs.nurb(knots, pts)
 
     #Blender.Registry.RemoveKey('import_traffic')
     cartypes = Blender.Registry.GetKey('import_traffic')
     if cartypes == None:
         cartypes = {}
-
+        
     print "Doing cars"
     random.seed()
     for id in cars.keys():
@@ -528,16 +515,8 @@ if __name__ == '__main__':
             print "Done making car"
             print "Applying basic motion to car"
             wheel_rad = available_cars[car]['wheel-radius']
-            apply_basic_motion(id, cars[id], the_road, ci, wheel_rad)
+            apply_basic_motion(id, available_cars[cartypes[id]], cars[id], ci, wheel_rad)
             print "Done applyng basic motion"
-            car_root = ci[0]
-            car_steer = ci[1]
-
-        print "Applying curve motion to car"
-    #    wheel_baselen = available_cars[cartypes[id]]['wheel_points'][1][0]-available_cars[cartypes[id]]['wheel_points'][0][0]
-    #    print "wheel_baselen", wheel_baselen
-        apply_curve_motion(id, available_cars[cartypes[id]], cars[id], road_curve_nurb, the_road, car_root, car_steer, 0)
-        print "Done applying curve motion"
         print "Done processing car ", id
     print "Cars done"
     Blender.Registry.SetKey('import_traffic', cartypes)
