@@ -796,10 +796,12 @@ void lane::apply_merges(float dt, float gamma_c)
 
 void lane::dump_carticles(FILE *fp) const
 {
+    float offs = CAR_REAR_AXLE/(ncells*h);
+
     foreach(const carticle &ca, carticles[0])
     {
         point pt, n;
-        float param = ca.x;
+        float param = ca.x - offs;
         get_point_and_normal(param, pt, n);
 
         fprintf(fp, "%d %f %f %f %f %f %f %f\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, n.x, n.y, ca.u, ca.yv);
