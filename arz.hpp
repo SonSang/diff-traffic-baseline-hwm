@@ -259,7 +259,11 @@ inline void riemann(riemann_solution *rs,
                        u_max, gamma);
 
         // Rankine-Hugoniot equation
-        rs->speeds[0] = (q_m.rho * q_m.u - q_l->rho * q_l->u)/(q_m.rho - q_l->rho);
+        if(std::abs(q_m.rho * q_m.u - q_l->rho * q_l->u) < 1e-4)
+            rs->speeds[0] = 0.0f;
+        else
+            rs->speeds[0] = (q_m.rho * q_m.u - q_l->rho * q_l->u)/(q_m.rho - q_l->rho);
+
         rs->waves[0].rho = q_m.rho - q_l->rho;
         rs->waves[0].y   = q_m.y   - q_l->y;
 
