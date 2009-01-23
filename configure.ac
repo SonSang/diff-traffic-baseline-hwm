@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 AC_INIT(hwm, 0.01, BUG-REPORT-ADDRESS)
-AC_CONFIG_SRCDIR([showlane.cpp])
+AC_CONFIG_SRCDIR([sim/src/showlane.cpp])
 
 AM_INIT_AUTOMAKE([foreign])
 AM_CONFIG_HEADER([config.h])
@@ -14,7 +14,8 @@ fi
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
-AC_PROG_RANLIB
+#AC_PROG_RANLIB
+AM_PROG_LIBTOOL
 
 AC_SUBST([WARN_FLAGS])
 AC_SUBST([DEBUG_FLAGS])
@@ -94,6 +95,14 @@ AS_IF([test x"$enable_xml" != xno -a x"$have_libxml2" = xyes],
 
 AM_CONDITIONAL(DO_XML, test x"$xml_ok" = xyes)
 
+PKG_CHECK_MODULES(OGRE, [OGRE >= 1.2])
+AC_SUBST(OGRE_CFLAGS)
+AC_SUBST(OGRE_LIBS)
+
+PKG_CHECK_MODULES(OIS, [OIS >= 1.0])
+AC_SUBST(OIS_CFLAGS)
+AC_SUBST(OIS_LIBS)
+
 # Checks for header files.
 AC_HEADER_STDC
 
@@ -117,5 +126,7 @@ TS_LDFLAGS="/home/sewall/unc/euler-tile/grids/libgrids.a"
 AC_CONFIG_FILES([Makefile \
 		 sim/Makefile \
 		 sim/src/Makefile \
+		 ogre/Makefile \
+		 ogre/src/Makefile \
 		 ])
 AC_OUTPUT
