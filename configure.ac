@@ -120,8 +120,6 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 
 WARN_FLAGS="-Wall -Werror -Wno-unused"
 ARCH_FLAGS="-march=core2"
-TS_CXXFLAGS="-I/home/sewall/unc/euler-tile/grids"
-TS_LDFLAGS="/home/sewall/unc/euler-tile/grids/libgrids.a"
 
 AC_CONFIG_FILES([Makefile \
 		 sim/Makefile \

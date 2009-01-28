@@ -2,7 +2,7 @@ INCLUDES = -I$(top_srcdir)/sim/include
 AM_CXXFLAGS = $(WARN_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) $(ARCH_FLAGS) $(DEBUG_FLAGS) $(LIBXML2_CFLAGS) $(BOOST_CPPFLAGS)
 AM_LDFLAGS = $(LIBXML2_LIBS)
 
-bin_PROGRAMS = simtest lane-test interval-test xml-test
+bin_PROGRAMS = lane-test interval-test xml-test
 lib_LIBRARIES = libhwm.a
 
 libhwm_a_SOURCES = \
@@ -66,13 +66,6 @@ xml_test_SOURCES = \
 xml_test_CXXFLAGS = $(AM_CXXFLAGS)
 xml_test_LDFLAGS = $(AM_LDFLAGS)
 xml_test_LDADD = libhwm.a
-
-simtest_SOURCES = \
-	test_solve.cpp \
-	arz.hpp
-
-simtest_CXXFLAGS = $(TS_CXXFLAGS) $(AM_CXXFLAGS)
-simtest_LDADD = $(TS_LDFLAGS) $(AM_LDFLAGS)
 
 lane_test_SOURCES = \
 	lane-test.cpp \

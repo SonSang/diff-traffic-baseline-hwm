@@ -16,7 +16,6 @@ install-sh
 stamp-h1
 missing
 showtest
-simtest
 showsim
 shownetwork
 lane-test
