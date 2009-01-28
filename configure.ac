@@ -14,7 +14,6 @@ fi
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
-#AC_PROG_RANLIB
 AM_PROG_LIBTOOL
 
 AC_SUBST([WARN_FLAGS])
@@ -25,6 +24,68 @@ AC_SUBST([TS_CXXFLAGS])
 AC_SUBST([TS_LDFLAGS])
 
 AC_LANG([C++])
+
+build_doc=no
+AC_MSG_CHECKING([whether to build documentation for this library])
+AC_ARG_ENABLE([build-doc], AC_HELP_STRING([--enable-build-doc],
+	      [build documentation for this library @<:@default=no@:>@]),
+	      [case "${enableval}" in
+		 yes) build_doc=yes ;;
+		 no) build_doc=no ;;
+		 *) AC_MSG_ERROR([bad value ${enableval} for --enable-build-doc])
+		    ;;
+	       esac], [build_doc=no])
+AC_MSG_RESULT([$build_doc])
+AM_CONDITIONAL([BUILD_DOC], [test $build_doc = yes])
+
+AC_ARG_VAR([DOXYGEN], [path to doxygen binary])
+AC_ARG_VAR([LATEX], [path to latex binary])
+AC_ARG_VAR([MAKEINDEX], [path to makeindex binary])
+AC_ARG_VAR([DOT_PATH], [path to the directory containing the dot binary])
+
+if test $build_doc = yes; then
+
+  # doxygen
+  AC_CHECK_PROG([DOXYGEN], [doxygen$EXEEXT], [doxygen$EXEEXT])
+  if test -z "$DOXYGEN"; then
+    AC_MSG_ERROR([--enable-build-doc specified but could not find doxygen binary])
+  fi
+
+  # LaTeX/PDF output
+  PDF_HYPERLINKS=YES
+
+  AC_CHECK_PROG([PDFLATEX], [pdflatex$EXEEXT], [pdflatex$EXEEXT])
+  if test -z "$PDFLATEX"; then
+    AC_MSG_WARN([pdflatex not found,  no latex will be generated])
+    GENERATE_LATEX=NO
+  else
+    AC_CHECK_PROG([MAKEINDEX], [makeindex$EXEEXT], [makeindex$EXEEXT])
+    if test -z "$MAKEINDEX"; then
+      AC_MSG_WARN([makeindex not found, not generating LaTeX output])
+      GENERATE_LATEX=NO
+    else
+      GENERATE_LATEX=YES
+    fi
+  fi
+
+  # Graphs
+  if test -z "$DOT_PATH"; then
+    AC_CHECK_PROG([DOT], [dot$EXEEXT], [dot$EXEEXT])
+  else
+    AC_CHECK_PROG([DOT], [dot$EXEEXT], [dot$EXEEXT], , [$DOT_PATH])
+  fi
+  if test -z "$DOT"; then
+    AC_MSG_WARN([dot not found, not generating graphs])
+    HAVE_DOT=NO
+  else
+    HAVE_DOT=YES
+  fi
+fi
+
+AC_SUBST([GENERATE_LATEX])
+AC_SUBST([PDF_HYPERLINKS])
+AC_SUBST([DOT_PATH])
+AC_SUBST([HAVE_DOT])
 
 # Checks for libraries.
 AX_BOOST_BASE([1.35.0])
@@ -121,10 +182,58 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 WARN_FLAGS="-Wall -Werror -Wno-unused"
 ARCH_FLAGS="-march=core2"
 
+# Summary
+
+echo
+echo "Configuration summary"
+echo "---------------------"
+echo
+echo "CXXFLAGS = $WARN_FLAGS $OPTIMIZE_FLAGS $DEBUG_FLAGS $ARCH_FLAGS $DEBUG_FLAGS $LIBXML2_CFLAGS $BOOST_CPPFLAGS"
+echo "LDFLAGS  = $LIBXML2_LIBS"
+echo
+if test x"$enable_visual" != xno; then
+   echo "Building visual: yes"
+   echo "CAIRO/FLTK_CXXFLAGS = $CAIRO_CFLAGS $FLTK_CXXFLAGS"
+   echo "CAIRO/FLTK_LDFLAGS  = $CAIRO_LIBS $FLTK_LDFLAGS"
+   echo "FLTK_GL_CXXFLAGS    = $FLTK_GL_CXXFLAGS"
+   echo "FLTK_GL_LDFLAGS     = $FLTK_GL_LDFLAGS"
+else
+   echo "Building visual: no"
+fi
+echo
+echo "Building SampleApp: yes"
+echo "OGRE/OIS_CXXFLAGS = $OGRE_CFLAGS $OIS_CFLAGS"
+echo "OGRE/OIS_LDFLAGS  = $OGRE_LIBS $OIS_LIBS"
+echo
+echo "Rebuild documentation: $build_doc"
+if test $build_doc = yes; then
+  if test $GENERATE_LATEX = NO; then
+    echo "  LaTeX output: no"
+  else
+    echo "  LaTeX output: yes"
+  fi
+  if test $HAVE_DOT = NO; then
+    echo "  Graphs: no"
+  else
+    echo "  Graphs: yes"
+  fi
+fi
+echo
+echo "Library to be installed in: $libdir"
+echo "Documentation to be installed in: $docdir"
+echo "Manual pages to be installed in: $mandir"
+echo
+
 AC_CONFIG_FILES([Makefile \
+		 doc/Makefile \
+		 doc/Doxyfile \
 		 sim/Makefile \
 		 sim/src/Makefile \
 		 ogre/Makefile \
-		 ogre/src/Makefile \
-		 ])
+		 ogre/src/Makefile])
 AC_OUTPUT
+
+if test "$srcdir" != .; then
+  echo "copying documentation files in the build directory..."
+  cp -R "$srcdir/doc/api" doc
+fi
