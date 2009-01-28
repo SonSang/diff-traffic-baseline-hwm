@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(hwm, 0.01, BUG-REPORT-ADDRESS)
+AC_INIT(hwm, 0.01, [sewall@cs.unc.edu])
 AC_CONFIG_SRCDIR([sim/src/showlane.cpp])
 
 AM_INIT_AUTOMAKE([foreign])
