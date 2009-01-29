@@ -13,6 +13,7 @@ AC_LANG([C++])
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
+
 AC_CHECK_PROG(have_libxml2, xml2-config, [yes], [no])
 AS_IF([test x"$have_libxml2" != xno],
             [LIBXML2_CFLAGS=`xml2-config --cflags`
@@ -24,7 +25,6 @@ AS_IF([test x"$have_libxml2" != xno],
 # Checks for libraries.
 AX_BOOST_BASE([1.35])
 
-
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -34,17 +34,19 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([clock_gettime floor memset pow sqrt strdup])
+AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 
 AC_CONFIG_FILES([Makefile
                  sim/Makefile
                  sim/src/Makefile
-                 sim/include/Makefile])
+                 sim/include/Makefile
+		 test-progs/Makefile])
 
 AC_OUTPUT
 
 echo "
-  ($PACKAGE_NAME) version $PACKAGE_VERSION
+  $PACKAGE_NAME version $PACKAGE_VERSION
   Prefix.........: $prefix
   Debug Build....: $debug
   Boost CPPFLAGS.: $BOOST_CPPFLAGS
