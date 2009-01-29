@@ -15,16 +15,22 @@ AC_ARG_ENABLE([visual],
   [enable_visual=$enableval],
   [enable_visual=check])
 
-# Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_RANLIB
-
 AC_ARG_ENABLE([build-docs],
   [AS_HELP_STRING([--enable-build-docs],
     [build Doxygen documentation @<:@default=no@:>@])],
   [try_doxygen=$enableval],
   [try_doxygen=no])
+
+AC_ARG_ENABLE([ogre],
+  [AS_HELP_STRING([--enable-ogre],
+    [build Ogre components @<:@default=check@:>@])],
+  [enable_ogre=$enableval],
+  [enable_ogre=check])
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_RANLIB
 
 AC_PROG_TRY_DOXYGEN
 
@@ -72,6 +78,16 @@ AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_cairo" =
 
 AM_CONDITIONAL(DO_VISUAL, test x"$visual_ok" = xyes)
 
+ogre_ok=no
+AS_IF([test x"$enable_ogre" != xno],
+	    [PKG_CHECK_MODULES(OGRE, [OGRE >= 1.2], [have_ogre=yes],[have_ogre=no])
+             PKG_CHECK_MODULES(OIS,  [OIS >= 1.0], [have_ois=yes], [have_ois=no])
+	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno],
+	           [ogre_ok=yes])],
+	    [AC_MSG_FAILURE([--enable-ogre given, but test for ogre and ois failed!])])
+
+AM_CONDITIONAL(DO_OGRE, test x"$ogre_ok" = xyes)
+
 # Checks for libraries.
 AX_BOOST_BASE([1.35])
 
@@ -90,6 +106,9 @@ AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 AC_CONFIG_FILES([Makefile
 		 doc/Doxyfile
 		 doc/Makefile
+ 		 ogre/Makefile
+ 		 ogre/include/Makefile
+ 		 ogre/src/Makefile
                  sim/Makefile
                  sim/src/Makefile
                  sim/include/Makefile
@@ -117,6 +136,17 @@ echo "
 else
 echo "
   Building visual: no"
+fi
+if test -z $DO_OGRE; then
+echo "
+  Building ogre components: yes
+    OGRE_CFLAGS...: $OGRE_CFLAGS
+    OGRE_LIBS.....: $OGRE_LIBS
+    OIS_CFLAGS....: $OIS_CFLAGS
+    OIS_LIBS......: $OIS_LIBS"
+else
+echo "
+  Building ogre components: no"
 fi
 if test x"$try_doxygen" != xno -a -n "$DOXYGEN"; then
 echo "
