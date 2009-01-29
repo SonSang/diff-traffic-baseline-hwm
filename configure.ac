@@ -20,6 +20,26 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
 
+AC_ARG_ENABLE([build-docs],
+  [AS_HELP_STRING([--enable-build-docs],
+    [build Doxygen documentation @<:@default=no@:>@])],
+  [try_doxygen=$enableval],
+  [try_doxygen=no])
+
+AC_PROG_TRY_DOXYGEN
+
+if test -z "$DOXYGEN" -a x"$try_doxygen" != xno ; then
+   echo "-----------------------------------------"
+   echo " No Doxygen program found - continuing"
+   echo " without Doxygen documentation support."
+   echo "-----------------------------------------"
+fi
+
+AS_IF([test x"$try_doxygen" != xno -a -n "$DOXYGEN"],
+  	    [AC_CHECK_PROG(HAVE_DOT, dot, [YES], [NO])])
+
+AM_CONDITIONAL([HAVE_DOXYGEN], [test x"$try_doxygen" != xno -a -n "$DOXYGEN"])
+
 AC_CHECK_PROG(have_libxml2, xml2-config, [yes], [no])
 AS_IF([test x"$have_libxml2" != xno],
             [LIBXML2_CFLAGS=`xml2-config --cflags`
@@ -68,6 +88,8 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 
 AC_CONFIG_FILES([Makefile
+		 doc/Doxyfile
+		 doc/Makefile
                  sim/Makefile
                  sim/src/Makefile
                  sim/include/Makefile
@@ -95,6 +117,14 @@ echo "
 else
 echo "
   Building visual: no"
+fi
+if test x"$try_doxygen" != xno -a -n "$DOXYGEN"; then
+echo "
+  Building documentation: yes
+  Found dot.............: $HAVE_DOT"
+else
+echo "
+  Building documentation: no"
 fi
 echo "
   C++ Compiler...: $CXX $CXXFLAGS $CPPFLAGS
