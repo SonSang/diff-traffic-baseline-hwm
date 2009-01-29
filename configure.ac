@@ -228,8 +228,10 @@ AC_CONFIG_FILES([Makefile \
 		 doc/Makefile \
 		 doc/Doxyfile \
 		 sim/Makefile \
+		 sim/include/Makefile \
 		 sim/src/Makefile \
 		 ogre/Makefile \
+		 ogre/include/Makefile \
 		 ogre/src/Makefile])
 AC_OUTPUT
 

@@ -1,5 +1,4 @@
-INCLUDES = -I$(top_srcdir)/sim/include
-AM_CXXFLAGS = $(WARN_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) $(ARCH_FLAGS) $(DEBUG_FLAGS) $(LIBXML2_CFLAGS) $(BOOST_CPPFLAGS)
+AM_CXXFLAGS = $(WARN_FLAGS) $(OPTIMIZE_FLAGS) $(DEBUG_FLAGS) $(ARCH_FLAGS) $(DEBUG_FLAGS) $(LIBXML2_CFLAGS) $(BOOST_CPPFLAGS) -I$(srcdir)/../include
 AM_LDFLAGS = $(LIBXML2_LIBS)
 
 bin_PROGRAMS = lane-test interval-test xml-test
@@ -23,8 +22,8 @@ bin_PROGRAMS += showtest showsim shownetwork
 
 showtest_SOURCES = \
 	showlane.cpp \
-	plotwin.hpp \
 	plot.cpp \
+	plotwin.hpp \
 	plot.hpp
 
 showtest_CXXFLAGS = $(CAIRO_CFLAGS) $(FLTK_CXXFLAGS) $(AM_CXXFLAGS)
@@ -32,8 +31,8 @@ showtest_LDFLAGS = $(FLTK_LDFLAGS) $(CAIRO_LIBS) $(AM_LDFLAGS)
 
 showsim_SOURCES = \
 	showsim.cpp \
-	plotwin.hpp \
 	plot.cpp \
+	plotwin.hpp \
 	plot.hpp \
 	arz.hpp
 
