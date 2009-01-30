@@ -27,6 +27,14 @@ AC_ARG_ENABLE([ogre],
   [enable_ogre=$enableval],
   [enable_ogre=check])
 
+GIT_VERSION=`./GIT-VERSION-GEN`
+AC_SUBST(GIT_VERSION)
+
+AH_TEMPLATE([GIT_VERSION],
+	    [Git revision of this build])
+
+AC_DEFINE_UNQUOTED(GIT_VERSION, "$GIT_VERSION")
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -117,7 +125,7 @@ AC_CONFIG_FILES([Makefile
 AC_OUTPUT
 
 echo "
-  $PACKAGE_NAME version $PACKAGE_VERSION
+  $PACKAGE_NAME version $PACKAGE_VERSION-$GIT_VERSION
   Prefix.........: $prefix
   Debug Build....: $debug
   Boost CPPFLAGS.: $BOOST_CPPFLAGS
