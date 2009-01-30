@@ -28,46 +28,54 @@ protected:
         mCamera->setAspectRatio(Real(vp->getActualWidth()) / Real(vp->getActualHeight()));
     }
 
-
-
     void createScene(void)
     {
         mSceneMgr->setAmbientLight(ColourValue(0, 0, 0));
-        mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+        //        mSceneMgr->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
 
-        Entity *ent2 = mSceneMgr->createEntity("Car", "tbird-body-mesh.mesh");
-        ent2->setCastShadows(true);
+        MeshPtr bodymesh = MeshManager::getSingleton().load("tbird-body-mesh.mesh",
+                                                            ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        bodymesh->createManualLodLevel(2500, "tbird-body-mesh-lod2.mesh");
+        bodymesh->createManualLodLevel(5000, "tbird-body-mesh-lod3.mesh");
+
+        MeshPtr wheelmesh = MeshManager::getSingleton().load("tbird-wheel-mesh.mesh",
+                                                             ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        wheelmesh->createManualLodLevel(2500, "tbird-wheel-mesh-lod2.mesh");
+        wheelmesh->createManualLodLevel(5000, "tbird-wheel-mesh-lod3.mesh");
+
+        Entity* ent2 = mSceneMgr->createEntity("Car", bodymesh->getName() );
+        //        ent2->setCastShadows(true);
 
         SceneNode *carnode = mSceneMgr->getRootSceneNode()->createChildSceneNode("Car", Vector3(0,  100+0.507+0.751*0.5, 0));
         carnode->scale(100, 100, 100);
         carnode->attachObject(ent2);
 
         {
-            Entity *wheel = mSceneMgr->createEntity("Wheel1", "tbird-wheel-mesh.mesh");
-            wheel->setCastShadows(true);
+            Entity *wheel = mSceneMgr->createEntity("Wheel1", wheelmesh->getName());
+            //            wheel->setCastShadows(true);
 
             SceneNode *wheelnode = carnode->createChildSceneNode("Wheel1", Vector3(0,  -.507, 0.808));
             wheelnode->yaw(Degree(180));
             wheelnode->attachObject(wheel);
         }
         {
-            Entity *wheel = mSceneMgr->createEntity("Wheel2", "tbird-wheel-mesh.mesh");
-            wheel->setCastShadows(true);
+            Entity *wheel = mSceneMgr->createEntity("Wheel2", wheelmesh->getName());
+            //            wheel->setCastShadows(true);
 
             SceneNode *wheelnode = carnode->createChildSceneNode("Wheel2", Vector3(0,  -.507, -0.808));
             wheelnode->attachObject(wheel);
         }
         {
-            Entity *wheel = mSceneMgr->createEntity("Wheel3", "tbird-wheel-mesh.mesh");
-            wheel->setCastShadows(true);
+            Entity *wheel = mSceneMgr->createEntity("Wheel3", wheelmesh->getName());
+            //            wheel->setCastShadows(true);
 
             SceneNode *wheelnode = carnode->createChildSceneNode("Wheel3", Vector3(2.916,  -.507, 0.808));
             wheelnode->yaw(Degree(180));
             wheelnode->attachObject(wheel);
         }
         {
-            Entity *wheel = mSceneMgr->createEntity("Wheel4", "tbird-wheel-mesh.mesh");
-            wheel->setCastShadows(true);
+            Entity *wheel = mSceneMgr->createEntity("Wheel4", wheelmesh->getName());
+            //            wheel->setCastShadows(true);
 
             SceneNode *wheelnode = carnode->createChildSceneNode("Wheel4", Vector3(2.916,  -.507, -0.808));
             wheelnode->attachObject(wheel);
@@ -75,12 +83,10 @@ protected:
 
         mSceneMgr->setSkyBox(true, "Examples/SpaceSkyBox", 5000, false);
 
-
-
         Plane plane(Vector3::UNIT_Y, 0);
         MeshManager::getSingleton().createPlane("ground",
                                                 ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-                                                1500,1500,20,20,true,1,5,5,Vector3::UNIT_Z);
+                                                5000,5000,20,20,true,1,5,5,Vector3::UNIT_Z);
         Entity *ent = mSceneMgr->createEntity("GroundEntity", "ground");
         mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(ent);
         ent->setMaterialName("Examples/Rockwall");
@@ -120,6 +126,8 @@ INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR strCmdLine, INT )
 int main(int argc, char **argv)
 #endif
 {
+    printf("OgreCompVer: %d\n", OGRE_COMP_VER);
+
     // Create application object
     TutorialApplication app;
 
