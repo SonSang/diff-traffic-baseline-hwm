@@ -1,10 +1,10 @@
-EXTRA_DIST = SampleApp.cpp
+EXTRA_DIST = hwm-viewer.cpp
 
 if DO_OGRE
-noinst_PROGRAMS = SampleApp
+noinst_PROGRAMS = hwm-viewer
 
-SampleApp_SOURCES = SampleApp.cpp
+hwm_viewer_SOURCES = hwm-viewer.cpp
 
-SampleApp_CPPFLAGS = -I$(srcdir)/../include $(OGRE_CFLAGS) $(OIS_CFLAGS) -Wno-deprecated
-SampleApp_LDADD = $(OGRE_LIBS) $(OIS_LIBS)
+hwm_viewer_CPPFLAGS = $(OGRE_CFLAGS) $(OIS_CFLAGS) -Wno-deprecated
+hwm_viewer_LDADD = $(OGRE_LIBS) $(OIS_LIBS)
 endif

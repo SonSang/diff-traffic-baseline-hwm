@@ -39,6 +39,7 @@ AC_DEFINE_UNQUOTED(GIT_VERSION, "$GIT_VERSION")
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_PROG_LIBTOOL
 
 AC_PROG_TRY_DOXYGEN
 
@@ -111,7 +112,10 @@ AC_FUNC_MALLOC
 AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 
-AC_CONFIG_FILES([Makefile
+SHAVE_INIT([m4/shave], [disable])
+AC_CONFIG_FILES([m4/shave/shave
+	         m4/shave/shave-libtool
+		 Makefile
 		 doc/Doxyfile
 		 doc/Makefile
  		 ogre/Makefile
