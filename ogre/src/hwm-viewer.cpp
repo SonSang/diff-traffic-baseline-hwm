@@ -93,9 +93,37 @@ struct hwm_viewer
 
     void setup_scene()
     {
-        SceneManager *mgr = root_->createSceneManager(ST_GENERIC, "Default SceneManager");
-        Camera       *cam = mgr->createCamera("Camera");
-        Viewport     *vp  = root_->getAutoCreatedWindow()->addViewport(cam);
+        terrain_scene_manager_ = root_->createSceneManager("TerrainSceneManager", "GroundSceneManager");
+        camera_ = terrain_scene_manager_->createCamera("Camera");
+
+        camera_->setPosition(707, 2500, 528);
+        camera_->lookAt(0,0,0);
+        //        camera_->setOrientation(Quaternion(-0.3486, 0.0122, 0.9365, 0.0329));
+        camera_->setNearClipDistance(1);
+        camera_->setFarClipDistance(1000);
+
+        Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
+
+        terrain_scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
+
+        Light *l = terrain_scene_manager_->createLight("MainLight");
+        l->setPosition(20, 80, 50);
+
+        ColourValue bgcolor(0.93, 0.86, 0.76);
+        terrain_scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 1000);
+        vp->setBackgroundColour(bgcolor);
+
+        std::string terrain_cfg("my_terrain.cfg");
+        terrain_scene_manager_->setWorldGeometry(terrain_cfg);
+
+        if(root_->getRenderSystem()->getCapabilities()->hasCapability(RSC_INFINITE_FAR_PLANE))
+            camera_->setFarClipDistance(0);
+
+        Plane plane;
+        plane.d = 5000;
+        plane.normal = -Vector3::UNIT_Y;
+
+        //root_->showDebugOverlay(true);
     }
 
     void setup_input_system()
@@ -140,6 +168,9 @@ struct hwm_viewer
     // CEGUI::OgreCEGUIRenderer *renderer_;
     // CEGUI::System *system_;
     exit_listener *listener_;
+
+    Camera *camera_;
+    SceneManager *terrain_scene_manager_;
 };
 
 int main(int argc, char **argv)
