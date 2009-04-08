@@ -1,6 +1,7 @@
 #include <Ogre.h>
 #include <OIS/OIS.h>
 #include <boost/foreach.hpp>
+#include "ExampleFrameListener.h"
 
 using namespace Ogre;
 
@@ -29,7 +30,7 @@ struct hwm_viewer
         create_render_window();
         initialize_resource_groups();
         setup_scene();
-        setup_input_system();
+        //        setup_input_system();
         //setup_CEGUI();
         create_frame_listener();
         start_render_loop();
@@ -37,12 +38,13 @@ struct hwm_viewer
 
     ~hwm_viewer()
     {
-        input_manager_->destroyInputObject(keyboard_);
-        OIS::InputManager::destroyInputSystem(input_manager_);
+        // input_manager_->destroyInputObject(keyboard_);
+        // OIS::InputManager::destroyInputSystem(input_manager_);
         // delete renderer_;
         // delete system_;
 
-        delete listener_;
+        delete move_listener_;
+        //    delete e_listener_;
         delete root_;
     }
 
@@ -153,8 +155,10 @@ struct hwm_viewer
 
     void create_frame_listener()
     {
-        listener_ = new exit_listener(keyboard_);
-        root_->addFrameListener(listener_);
+        //   e_listener_ = new exit_listener(keyboard_);
+        //   root_->addFrameListener(e_listener_);
+        move_listener_ = new ExampleFrameListener(root_->getAutoCreatedWindow(), camera_);
+        root_->addFrameListener(move_listener_);
     }
 
     void start_render_loop()
@@ -167,7 +171,8 @@ struct hwm_viewer
     OIS::InputManager *input_manager_;
     // CEGUI::OgreCEGUIRenderer *renderer_;
     // CEGUI::System *system_;
-    exit_listener *listener_;
+    exit_listener *e_listener_;
+    ExampleFrameListener *move_listener_;
 
     Camera *camera_;
     SceneManager *terrain_scene_manager_;
