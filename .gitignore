@@ -6,6 +6,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
+config/
 config.h
 config.h.in
 config.log
@@ -15,10 +16,5 @@ depcomp
 install-sh
 stamp-h1
 missing
-showtest
-showsim
-shownetwork
-lane-test
-interval-test
-xml-test
 libhwm.a
+libhwm_net.a
