@@ -30,7 +30,7 @@ protected:
 			OverlayElement *gui_best  = OverlayManager::getSingleton().getOverlayElement("Core/BestFps");
 			OverlayElement *gui_worst = OverlayManager::getSingleton().getOverlayElement("Core/WorstFps");
 
-			const RenderTarget::FrameStats& stats = window_->getStatistics();
+			const RenderTarget::FrameStats &stats = window_->getStatistics();
 			gui_avg ->setCaption(   avg_fps + StringConverter::toString(stats.avgFPS));
 			gui_curr->setCaption(  curr_fps + StringConverter::toString(stats.lastFPS));
 			gui_best->setCaption(  best_fps + StringConverter::toString(stats.bestFPS)
@@ -129,7 +129,7 @@ public:
 		windowClosed(window_);
 	}
 
-	virtual bool processUnbufferedKeyInput(const FrameEvent& evt)
+	virtual bool processUnbufferedKeyInput(const FrameEvent &evt)
 	{
 
         if(keyboard_->isKeyDown(OIS::KC_C))
@@ -235,7 +235,7 @@ public:
 		return true;
 	}
 
-	virtual bool processUnbufferedMouseInput(const FrameEvent& evt)
+	virtual bool processUnbufferedMouseInput(const FrameEvent &evt)
 	{
 
 		// Rotation factors, may not be used if the second mouse button is pressed
@@ -277,7 +277,7 @@ public:
 	}
 
 	// Override frameRenderingQueued event to process that (don't care about frameEnded)
-	bool frameRenderingQueued(const FrameEvent& evt)
+	bool frameRenderingQueued(const FrameEvent &evt)
 	{
 
 		if(window_->isClosed())	return false;
@@ -347,7 +347,7 @@ public:
 		return true;
 	}
 
-	bool frameEnded(const FrameEvent& evt)
+	bool frameEnded(const FrameEvent &evt)
 	{
 		UpdateStats();
 		return true;
