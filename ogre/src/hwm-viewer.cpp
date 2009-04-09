@@ -11,48 +11,48 @@
 
 using namespace Ogre;
 
-class ExampleFrameListener: public FrameListener, public WindowEventListener
+class hwm_frame_listener: public FrameListener, public WindowEventListener
 {
 protected:
-	virtual void updateStats(void)
+	virtual void update_stats(void)
 	{
-		static String currFps = "Current FPS: ";
-		static String avgFps = "Average FPS: ";
-		static String bestFps = "Best FPS: ";
-		static String worstFps = "Worst FPS: ";
+		static String curr_fps = "Current FPS: ";
+		static String avg_fps = "Average FPS: ";
+		static String best_fps = "Best FPS: ";
+		static String worst_fps = "Worst FPS: ";
 		static String tris = "Triangle Count: ";
 		static String batches = "Batch Count: ";
 
 		// update stats when necessary
 		try {
-			OverlayElement* guiAvg = OverlayManager::getSingleton().getOverlayElement("Core/AverageFps");
-			OverlayElement* guiCurr = OverlayManager::getSingleton().getOverlayElement("Core/CurrFps");
-			OverlayElement* guiBest = OverlayManager::getSingleton().getOverlayElement("Core/BestFps");
-			OverlayElement* guiWorst = OverlayManager::getSingleton().getOverlayElement("Core/WorstFps");
+			OverlayElement *gui_avg   = OverlayManager::getSingleton().getOverlayElement("Core/AverageFps");
+			OverlayElement *gui_curr  = OverlayManager::getSingleton().getOverlayElement("Core/CurrFps");
+			OverlayElement *gui_best  = OverlayManager::getSingleton().getOverlayElement("Core/BestFps");
+			OverlayElement *gui_worst = OverlayManager::getSingleton().getOverlayElement("Core/WorstFps");
 
 			const RenderTarget::FrameStats& stats = mWindow->getStatistics();
-			guiAvg->setCaption(avgFps + StringConverter::toString(stats.avgFPS));
-			guiCurr->setCaption(currFps + StringConverter::toString(stats.lastFPS));
-			guiBest->setCaption(bestFps + StringConverter::toString(stats.bestFPS)
+			gui_avg ->setCaption(   avg_fps + StringConverter::toString(stats.avgFPS));
+			gui_curr->setCaption(  curr_fps + StringConverter::toString(stats.lastFPS));
+			gui_best->setCaption(  best_fps + StringConverter::toString(stats.bestFPS)
 				+" "+StringConverter::toString(stats.bestFrameTime)+" ms");
-			guiWorst->setCaption(worstFps + StringConverter::toString(stats.worstFPS)
+			gui_worst->setCaption(worst_fps + StringConverter::toString(stats.worstFPS)
 				+" "+StringConverter::toString(stats.worstFrameTime)+" ms");
 
-			OverlayElement* guiTris = OverlayManager::getSingleton().getOverlayElement("Core/NumTris");
-			guiTris->setCaption(tris + StringConverter::toString(stats.triangleCount));
+			OverlayElement *gui_tris = OverlayManager::getSingleton().getOverlayElement("Core/NumTris");
+			gui_tris->setCaption(tris + StringConverter::toString(stats.triangleCount));
 
-			OverlayElement* guiBatches = OverlayManager::getSingleton().getOverlayElement("Core/NumBatches");
-			guiBatches->setCaption(batches + StringConverter::toString(stats.batchCount));
+			OverlayElement *gui_batches = OverlayManager::getSingleton().getOverlayElement("Core/NumBatches");
+			gui_batches->setCaption(batches + StringConverter::toString(stats.batchCount));
 
-			OverlayElement* guiDbg = OverlayManager::getSingleton().getOverlayElement("Core/DebugText");
-			guiDbg->setCaption(mDebugText);
+			OverlayElement *gui_dbg = OverlayManager::getSingleton().getOverlayElement("Core/DebugText");
+			gui_dbg->setCaption(mDebugText);
 		}
 		catch(...) { /* ignore */ }
 	}
 
 public:
 	// Constructor takes a RenderWindow because it uses that to determine input context
-	ExampleFrameListener(RenderWindow* win, Camera* cam, bool bufferedKeys = false, bool bufferedMouse = false,
+	hwm_frame_listener(RenderWindow* win, Camera* cam, bool bufferedKeys = false, bool bufferedMouse = false,
 			     bool bufferedJoy = false ) :
 		mCamera(cam), mTranslateVector(Vector3::ZERO), mCurrentSpeed(0), mWindow(win), mStatsOn(true), mNumScreenShots(0),
 		mMoveScale(0.0f), mRotScale(0.0f), mTimeUntilNextToggle(0), mFiltering(TFO_BILINEAR),
@@ -122,7 +122,7 @@ public:
 		}
 	}
 
-	virtual ~ExampleFrameListener()
+	virtual ~hwm_frame_listener()
 	{
 		//Remove ourself as a Window listener
 		WindowEventUtilities::removeWindowEventListener(mWindow, this);
@@ -349,7 +349,7 @@ public:
 
 	bool frameEnded(const FrameEvent& evt)
 	{
-		updateStats();
+		update_stats();
 		return true;
 	}
 
@@ -623,7 +623,7 @@ void createColourCube()
 
     void create_frame_listener()
     {
-        move_listener_ = new ExampleFrameListener(root_->getAutoCreatedWindow(), camera_);
+        move_listener_ = new hwm_frame_listener(root_->getAutoCreatedWindow(), camera_);
         root_->addFrameListener(move_listener_);
     }
 
@@ -637,7 +637,7 @@ void createColourCube()
     OIS::InputManager *input_manager_;
     // CEGUI::OgreCEGUIRenderer *renderer_;
     // CEGUI::System *system_;
-    ExampleFrameListener *move_listener_;
+    hwm_frame_listener *move_listener_;
 
     Camera *camera_;
     SceneManager *scene_manager_;
