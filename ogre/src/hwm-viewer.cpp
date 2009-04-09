@@ -14,7 +14,7 @@ using namespace Ogre;
 class hwm_frame_listener: public FrameListener, public WindowEventListener
 {
 protected:
-	virtual void update_stats(void)
+	virtual void UpdateStats(void)
 	{
 		static String curr_fps = "Current FPS: ";
 		static String avg_fps = "Average FPS: ";
@@ -349,7 +349,7 @@ public:
 
 	bool frameEnded(const FrameEvent& evt)
 	{
-		update_stats();
+		UpdateStats();
 		return true;
 	}
 
