@@ -30,7 +30,7 @@ protected:
 			OverlayElement *gui_best  = OverlayManager::getSingleton().getOverlayElement("Core/BestFps");
 			OverlayElement *gui_worst = OverlayManager::getSingleton().getOverlayElement("Core/WorstFps");
 
-			const RenderTarget::FrameStats& stats = mWindow->getStatistics();
+			const RenderTarget::FrameStats& stats = window_->getStatistics();
 			gui_avg ->setCaption(   avg_fps + StringConverter::toString(stats.avgFPS));
 			gui_curr->setCaption(  curr_fps + StringConverter::toString(stats.lastFPS));
 			gui_best->setCaption(  best_fps + StringConverter::toString(stats.bestFPS)
@@ -45,79 +45,79 @@ protected:
 			gui_batches->setCaption(batches + StringConverter::toString(stats.batchCount));
 
 			OverlayElement *gui_dbg = OverlayManager::getSingleton().getOverlayElement("Core/DebugText");
-			gui_dbg->setCaption(mDebugText);
+			gui_dbg->setCaption(debug_text_);
 		}
 		catch(...) { /* ignore */ }
 	}
 
 public:
 	// Constructor takes a RenderWindow because it uses that to determine input context
-	hwm_frame_listener(RenderWindow* win, Camera* cam, bool bufferedKeys = false, bool bufferedMouse = false,
-			     bool bufferedJoy = false ) :
-		mCamera(cam), mTranslateVector(Vector3::ZERO), mCurrentSpeed(0), mWindow(win), mStatsOn(true), mNumScreenShots(0),
-		mMoveScale(0.0f), mRotScale(0.0f), mTimeUntilNextToggle(0), mFiltering(TFO_BILINEAR),
-		mAniso(1), mSceneDetailIndex(0), mMoveSpeed(500), mRotateSpeed(30), mDebugOverlay(0),
-		mInputManager(0), mMouse(0), mKeyboard(0), mJoy(0)
+	hwm_frame_listener(RenderWindow *win, Camera *cam, bool buffered_keys = false, bool buffered_mouse = false,
+                       bool buffered_joy = false) :
+		camera_(cam), translate_vector_(Vector3::ZERO), current_speed_(0), window_(win), stats_on_(true), num_screen_shots_(0),
+		move_scale_(0.0f), rot_scale_(0.0f), time_until_next_toggle_(0), filtering_(TFO_BILINEAR),
+		aniso_(1), scene_detail_index_(0), move_speed_(500), rotate_speed_(30), debug_overlay_(0),
+		input_manager_(0), mouse_(0), keyboard_(0), joy_(0)
 	{
 
-		mDebugOverlay = OverlayManager::getSingleton().getByName("Core/DebugOverlay");
+		debug_overlay_ = OverlayManager::getSingleton().getByName("Core/DebugOverlay");
 
 		LogManager::getSingletonPtr()->logMessage("*** Initializing OIS ***");
 		OIS::ParamList pl;
-		size_t windowHnd = 0;
-		std::ostringstream windowHndStr;
+		size_t window_hnd = 0;
+		std::ostringstream window_hnd_str;
 
-		win->getCustomAttribute("WINDOW", &windowHnd);
-		windowHndStr << windowHnd;
-		pl.insert(std::make_pair(std::string("WINDOW"), windowHndStr.str()));
+		win->getCustomAttribute("WINDOW", &window_hnd);
+		window_hnd_str << window_hnd;
+		pl.insert(std::make_pair(std::string("WINDOW"), window_hnd_str.str()));
 
-		mInputManager = OIS::InputManager::createInputSystem( pl );
+		input_manager_ = OIS::InputManager::createInputSystem( pl );
 
 		//Create all devices (We only catch joystick exceptions here, as, most people have Key/Mouse)
-		mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject( OIS::OISKeyboard, bufferedKeys ));
-		mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject( OIS::OISMouse, bufferedMouse ));
+		keyboard_ = static_cast<OIS::Keyboard*>(input_manager_->createInputObject( OIS::OISKeyboard, buffered_keys ));
+		mouse_ = static_cast<OIS::Mouse*>(input_manager_->createInputObject( OIS::OISMouse, buffered_mouse ));
 		try {
-			mJoy = static_cast<OIS::JoyStick*>(mInputManager->createInputObject( OIS::OISJoyStick, bufferedJoy ));
+			joy_ = static_cast<OIS::JoyStick*>(input_manager_->createInputObject( OIS::OISJoyStick, buffered_joy ));
 		}
 		catch(...) {
-			mJoy = 0;
+			joy_ = 0;
 		}
 
 		//Set initial mouse clipping size
-		windowResized(mWindow);
+		windowResized(window_);
 
 		showDebugOverlay(true);
 
 		//Register as a Window listener
-		WindowEventUtilities::addWindowEventListener(mWindow, this);
+		WindowEventUtilities::addWindowEventListener(window_, this);
 	}
 
 	//Adjust mouse clipping area
-	virtual void windowResized(RenderWindow* rw)
+	virtual void windowResized(RenderWindow *rw)
 	{
 		unsigned int width, height, depth;
 		int left, top;
 		rw->getMetrics(width, height, depth, left, top);
 
-		const OIS::MouseState &ms = mMouse->getMouseState();
+		const OIS::MouseState &ms = mouse_->getMouseState();
 		ms.width = width;
 		ms.height = height;
 	}
 
 	//Unattach OIS before window shutdown (very important under Linux)
-	virtual void windowClosed(RenderWindow* rw)
+	virtual void windowClosed(RenderWindow *rw)
 	{
 		//Only close for window that created OIS (the main window in these demos)
-		if( rw == mWindow )
+		if( rw == window_ )
 		{
-			if( mInputManager )
+			if( input_manager_ )
 			{
-				mInputManager->destroyInputObject( mMouse );
-				mInputManager->destroyInputObject( mKeyboard );
-				mInputManager->destroyInputObject( mJoy );
+				input_manager_->destroyInputObject( mouse_ );
+				input_manager_->destroyInputObject( keyboard_ );
+				input_manager_->destroyInputObject( joy_ );
 
-				OIS::InputManager::destroyInputSystem(mInputManager);
-				mInputManager = 0;
+				OIS::InputManager::destroyInputSystem(input_manager_);
+				input_manager_ = 0;
 			}
 		}
 	}
@@ -125,111 +125,111 @@ public:
 	virtual ~hwm_frame_listener()
 	{
 		//Remove ourself as a Window listener
-		WindowEventUtilities::removeWindowEventListener(mWindow, this);
-		windowClosed(mWindow);
+		WindowEventUtilities::removeWindowEventListener(window_, this);
+		windowClosed(window_);
 	}
 
 	virtual bool processUnbufferedKeyInput(const FrameEvent& evt)
 	{
 
-        if(mKeyboard->isKeyDown(OIS::KC_C))
+        if(keyboard_->isKeyDown(OIS::KC_C))
         {
             MaterialPtr material = MaterialManager::getSingleton().getByName("Test/ColourTest");
             material->getTechnique(0)->getPass(0)->setAmbient(drand48(), drand48(), drand48());
         }
 
-		if(mKeyboard->isKeyDown(OIS::KC_A))
-			mTranslateVector.x = -mMoveScale;	// Move camera left
+		if(keyboard_->isKeyDown(OIS::KC_A))
+			translate_vector_.x = -move_scale_;	// Move camera left
 
-		if(mKeyboard->isKeyDown(OIS::KC_D))
-			mTranslateVector.x = mMoveScale;	// Move camera RIGHT
+		if(keyboard_->isKeyDown(OIS::KC_D))
+			translate_vector_.x = move_scale_;	// Move camera RIGHT
 
-		if(mKeyboard->isKeyDown(OIS::KC_UP) || mKeyboard->isKeyDown(OIS::KC_W) )
-			mTranslateVector.z = -mMoveScale;	// Move camera forward
+		if(keyboard_->isKeyDown(OIS::KC_UP) || keyboard_->isKeyDown(OIS::KC_W) )
+			translate_vector_.z = -move_scale_;	// Move camera forward
 
-		if(mKeyboard->isKeyDown(OIS::KC_DOWN) || mKeyboard->isKeyDown(OIS::KC_S) )
-			mTranslateVector.z = mMoveScale;	// Move camera backward
+		if(keyboard_->isKeyDown(OIS::KC_DOWN) || keyboard_->isKeyDown(OIS::KC_S) )
+			translate_vector_.z = move_scale_;	// Move camera backward
 
-		if(mKeyboard->isKeyDown(OIS::KC_PGUP))
-			mTranslateVector.y = mMoveScale;	// Move camera up
+		if(keyboard_->isKeyDown(OIS::KC_PGUP))
+			translate_vector_.y = move_scale_;	// Move camera up
 
-		if(mKeyboard->isKeyDown(OIS::KC_PGDOWN))
-			mTranslateVector.y = -mMoveScale;	// Move camera down
+		if(keyboard_->isKeyDown(OIS::KC_PGDOWN))
+			translate_vector_.y = -move_scale_;	// Move camera down
 
-		if(mKeyboard->isKeyDown(OIS::KC_RIGHT))
-			mCamera->yaw(-mRotScale);
+		if(keyboard_->isKeyDown(OIS::KC_RIGHT))
+			camera_->yaw(-rot_scale_);
 
-		if(mKeyboard->isKeyDown(OIS::KC_LEFT))
-			mCamera->yaw(mRotScale);
+		if(keyboard_->isKeyDown(OIS::KC_LEFT))
+			camera_->yaw(rot_scale_);
 
-		if( mKeyboard->isKeyDown(OIS::KC_ESCAPE) || mKeyboard->isKeyDown(OIS::KC_Q) )
+		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
 			return false;
 
-       	if( mKeyboard->isKeyDown(OIS::KC_F) && mTimeUntilNextToggle <= 0 )
+       	if( keyboard_->isKeyDown(OIS::KC_F) && time_until_next_toggle_ <= 0 )
 		{
-			mStatsOn = !mStatsOn;
-			showDebugOverlay(mStatsOn);
-			mTimeUntilNextToggle = 1;
+			stats_on_ = !stats_on_;
+			showDebugOverlay(stats_on_);
+			time_until_next_toggle_ = 1;
 		}
 
-		if( mKeyboard->isKeyDown(OIS::KC_T) && mTimeUntilNextToggle <= 0 )
+		if( keyboard_->isKeyDown(OIS::KC_T) && time_until_next_toggle_ <= 0 )
 		{
-			switch(mFiltering)
+			switch(filtering_)
 			{
 			case TFO_BILINEAR:
-				mFiltering = TFO_TRILINEAR;
-				mAniso = 1;
+				filtering_ = TFO_TRILINEAR;
+				aniso_ = 1;
 				break;
 			case TFO_TRILINEAR:
-				mFiltering = TFO_ANISOTROPIC;
-				mAniso = 8;
+				filtering_ = TFO_ANISOTROPIC;
+				aniso_ = 8;
 				break;
 			case TFO_ANISOTROPIC:
-				mFiltering = TFO_BILINEAR;
-				mAniso = 1;
+				filtering_ = TFO_BILINEAR;
+				aniso_ = 1;
 				break;
 			default: break;
 			}
-			MaterialManager::getSingleton().setDefaultTextureFiltering(mFiltering);
-			MaterialManager::getSingleton().setDefaultAnisotropy(mAniso);
+			MaterialManager::getSingleton().setDefaultTextureFiltering(filtering_);
+			MaterialManager::getSingleton().setDefaultAnisotropy(aniso_);
 
-			showDebugOverlay(mStatsOn);
-			mTimeUntilNextToggle = 1;
+			showDebugOverlay(stats_on_);
+			time_until_next_toggle_ = 1;
 		}
 
-		if(mKeyboard->isKeyDown(OIS::KC_SYSRQ) && mTimeUntilNextToggle <= 0)
+		if(keyboard_->isKeyDown(OIS::KC_SYSRQ) && time_until_next_toggle_ <= 0)
 		{
 			std::stringstream ss;
-			ss << "screenshot_" << ++mNumScreenShots << ".png";
-			mWindow->writeContentsToFile(ss.str());
-			mTimeUntilNextToggle = 0.5;
-			mDebugText = "Saved: " + ss.str();
+			ss << "screenshot_" << ++num_screen_shots_ << ".png";
+			window_->writeContentsToFile(ss.str());
+			time_until_next_toggle_ = 0.5;
+			debug_text_ = "Saved: " + ss.str();
 		}
 
-		if(mKeyboard->isKeyDown(OIS::KC_R) && mTimeUntilNextToggle <=0)
+		if(keyboard_->isKeyDown(OIS::KC_R) && time_until_next_toggle_ <=0)
 		{
-			mSceneDetailIndex = (mSceneDetailIndex+1)%3 ;
-			switch(mSceneDetailIndex) {
-				case 0 : mCamera->setPolygonMode(PM_SOLID); break;
-				case 1 : mCamera->setPolygonMode(PM_WIREFRAME); break;
-				case 2 : mCamera->setPolygonMode(PM_POINTS); break;
+			scene_detail_index_ = (scene_detail_index_+1)%3 ;
+			switch(scene_detail_index_) {
+				case 0 : camera_->setPolygonMode(PM_SOLID); break;
+				case 1 : camera_->setPolygonMode(PM_WIREFRAME); break;
+				case 2 : camera_->setPolygonMode(PM_POINTS); break;
 			}
-			mTimeUntilNextToggle = 0.5;
+			time_until_next_toggle_ = 0.5;
 		}
 
 		static bool displayCameraDetails = false;
-		if(mKeyboard->isKeyDown(OIS::KC_P) && mTimeUntilNextToggle <= 0)
+		if(keyboard_->isKeyDown(OIS::KC_P) && time_until_next_toggle_ <= 0)
 		{
 			displayCameraDetails = !displayCameraDetails;
-			mTimeUntilNextToggle = 0.5;
+			time_until_next_toggle_ = 0.5;
 			if (!displayCameraDetails)
-				mDebugText = "";
+				debug_text_ = "";
 		}
 
 		// Print camera details
 		if(displayCameraDetails)
-			mDebugText = "P: " + StringConverter::toString(mCamera->getDerivedPosition()) +
-						 " " + "O: " + StringConverter::toString(mCamera->getDerivedOrientation());
+			debug_text_ = "P: " + StringConverter::toString(camera_->getDerivedPosition()) +
+                " " + "O: " + StringConverter::toString(camera_->getDerivedOrientation());
 
 		// Return true to continue rendering
 		return true;
@@ -240,16 +240,16 @@ public:
 
 		// Rotation factors, may not be used if the second mouse button is pressed
 		// 2nd mouse button - slide, otherwise rotate
-		const OIS::MouseState &ms = mMouse->getMouseState();
+		const OIS::MouseState &ms = mouse_->getMouseState();
 		if( ms.buttonDown( OIS::MB_Right ) )
 		{
-			mTranslateVector.x += ms.X.rel * 0.13;
-			mTranslateVector.y -= ms.Y.rel * 0.13;
+			translate_vector_.x += ms.X.rel * 0.13;
+			translate_vector_.y -= ms.Y.rel * 0.13;
 		}
 		else
 		{
-			mRotX = Degree(-ms.X.rel * 0.13);
-			mRotY = Degree(-ms.Y.rel * 0.13);
+			rot_x_ = Degree(-ms.X.rel * 0.13);
+			rot_y_ = Degree(-ms.Y.rel * 0.13);
 		}
 
 		return true;
@@ -260,19 +260,19 @@ public:
 		// Make all the changes to the camera
 		// Note that YAW direction is around a fixed axis (freelook style) rather than a natural YAW
 		//(e.g. airplane)
-		mCamera->yaw(mRotX);
-		mCamera->pitch(mRotY);
-		mCamera->moveRelative(mTranslateVector);
+		camera_->yaw(rot_x_);
+		camera_->pitch(rot_y_);
+		camera_->moveRelative(translate_vector_);
 	}
 
 	virtual void showDebugOverlay(bool show)
 	{
-		if (mDebugOverlay)
+		if (debug_overlay_)
 		{
 			if (show)
-				mDebugOverlay->show();
+				debug_overlay_->show();
 			else
-				mDebugOverlay->hide();
+				debug_overlay_->hide();
 		}
 	}
 
@@ -280,68 +280,68 @@ public:
 	bool frameRenderingQueued(const FrameEvent& evt)
 	{
 
-		if(mWindow->isClosed())	return false;
+		if(window_->isClosed())	return false;
 
-		mSpeedLimit = mMoveScale * evt.timeSinceLastFrame;
+		speed_limit_ = move_scale_ * evt.timeSinceLastFrame;
 
 		//Need to capture/update each device
-		mKeyboard->capture();
-		mMouse->capture();
-		if( mJoy ) mJoy->capture();
+		keyboard_->capture();
+		mouse_->capture();
+		if( joy_ ) joy_->capture();
 
-		bool buffJ = (mJoy) ? mJoy->buffered() : true;
+		bool buffJ = (joy_) ? joy_->buffered() : true;
 
-    	Ogre::Vector3 lastMotion = mTranslateVector;
+    	Ogre::Vector3 lastMotion = translate_vector_;
 
 		//Check if one of the devices is not buffered
-		if( !mMouse->buffered() || !mKeyboard->buffered() || !buffJ )
+		if( !mouse_->buffered() || !keyboard_->buffered() || !buffJ )
 		{
 			// one of the input modes is immediate, so setup what is needed for immediate movement
-			if (mTimeUntilNextToggle >= 0)
-				mTimeUntilNextToggle -= evt.timeSinceLastFrame;
+			if (time_until_next_toggle_ >= 0)
+				time_until_next_toggle_ -= evt.timeSinceLastFrame;
 
 			// Move about 100 units per second
-			mMoveScale = mMoveSpeed * evt.timeSinceLastFrame;
+			move_scale_ = move_speed_ * evt.timeSinceLastFrame;
 			// Take about 10 seconds for full rotation
-			mRotScale = mRotateSpeed * evt.timeSinceLastFrame;
+			rot_scale_ = rotate_speed_ * evt.timeSinceLastFrame;
 
-			mRotX = 0;
-			mRotY = 0;
-			mTranslateVector = Ogre::Vector3::ZERO;
+			rot_x_ = 0;
+			rot_y_ = 0;
+			translate_vector_ = Ogre::Vector3::ZERO;
 
 		}
 
 		//Check to see which device is not buffered, and handle it
-		if( !mKeyboard->buffered() )
+		if( !keyboard_->buffered() )
 			if( processUnbufferedKeyInput(evt) == false )
 				return false;
-		if( !mMouse->buffered() )
+		if( !mouse_->buffered() )
 			if( processUnbufferedMouseInput(evt) == false )
 				return false;
 
 		// ramp up / ramp down speed
-    	if (mTranslateVector == Ogre::Vector3::ZERO)
+    	if (translate_vector_ == Ogre::Vector3::ZERO)
 		{
 			// decay (one third speed)
-			mCurrentSpeed -= evt.timeSinceLastFrame * 0.3;
-			mTranslateVector = lastMotion;
+			current_speed_ -= evt.timeSinceLastFrame * 0.3;
+			translate_vector_ = lastMotion;
 		}
 		else
 		{
 			// ramp up
-			mCurrentSpeed += evt.timeSinceLastFrame;
+			current_speed_ += evt.timeSinceLastFrame;
 
 		}
 		// Limit motion speed
-		if (mCurrentSpeed > 1.0)
-			mCurrentSpeed = 1.0;
-		if (mCurrentSpeed < 0.0)
-			mCurrentSpeed = 0.0;
+		if (current_speed_ > 1.0)
+			current_speed_ = 1.0;
+		if (current_speed_ < 0.0)
+			current_speed_ = 0.0;
 
-		mTranslateVector *= mCurrentSpeed;
+		translate_vector_ *= current_speed_;
 
 
-		if( !mMouse->buffered() || !mKeyboard->buffered() || !buffJ )
+		if( !mouse_->buffered() || !keyboard_->buffered() || !buffJ )
 			moveCamera();
 
 		return true;
@@ -354,35 +354,34 @@ public:
 	}
 
 protected:
-	Camera* mCamera;
+	Camera  *camera_;
 
-	Vector3 mTranslateVector;
-	Real mCurrentSpeed;
-	RenderWindow* mWindow;
-	bool mStatsOn;
+	Vector3 translate_vector_;
+	Real current_speed_;
+	RenderWindow *window_;
+	bool stats_on_;
 
-	String mDebugText;
+	String debug_text_;
 
-	unsigned int mNumScreenShots;
-	float mMoveScale;
-	float mSpeedLimit;
-	Degree mRotScale;
+	unsigned int num_screen_shots_;
+	float move_scale_;
+	float speed_limit_;
+	Degree rot_scale_;
 	// just to stop toggles flipping too fast
-	Real mTimeUntilNextToggle ;
-	Radian mRotX, mRotY;
-	TextureFilterOptions mFiltering;
-	int mAniso;
+	Real time_until_next_toggle_;
+	Radian rot_x_, rot_y_;
+	TextureFilterOptions filtering_;
+	int aniso_;
 
-	int mSceneDetailIndex ;
-	Real mMoveSpeed;
-	Degree mRotateSpeed;
-	Overlay* mDebugOverlay;
-
+	int scene_detail_index_;
+	Real move_speed_;
+	Degree rotate_speed_;
+	Overlay *debug_overlay_;
 	//OIS Input devices
-	OIS::InputManager* mInputManager;
-	OIS::Mouse*    mMouse;
-	OIS::Keyboard* mKeyboard;
-	OIS::JoyStick* mJoy;
+	OIS::InputManager *input_manager_;
+	OIS::Mouse    *mouse_;
+	OIS::Keyboard *keyboard_;
+	OIS::JoyStick *joy_;
 };
 
 struct hwm_viewer
