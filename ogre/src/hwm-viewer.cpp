@@ -1,6 +1,7 @@
 #include <Ogre.h>
 #include <OgreStringConverter.h>
 #include <OgreException.h>
+#include "network.hpp"
 
 //Use this define to signify OIS will be used as a DLL
 //(so that dll import/export macros are in effect)
@@ -643,8 +644,37 @@ struct hwm_viewer
 
 int main(int argc, char **argv)
 {
+    network *net = new network;
+
+    if(!net->load_from_xml(argv[1]))
+    {
+        fprintf(stderr, "Couldn't load %s\n", argv[1]);
+        exit(1);
+    }
+
+    foreach(const lane &la, net->lanes)
+    {
+        const road_membership *rom = &(la.road_memberships.base_data);
+        int p = -1;
+        while(1)
+        {
+            float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
+                                rom->lane_position+LANE_WIDTH*0.5};
+
+            rm.push_back(road_mesh());
+            rom->parent_road.dp->rep.lane_mesh(rm.back().vrts, rm.back().faces, rom->interval, rom->lane_position, offsets);
+
+            ++p;
+            if(p >= static_cast<int>(la.road_memberships.entries.size()))
+                break;
+            rom = &(la.road_memberships.entries[p].data);
+        }
+    }
+
     hwm_viewer hv;
     hv.go();
+
+    delete net;
 
     return 0;
 }
