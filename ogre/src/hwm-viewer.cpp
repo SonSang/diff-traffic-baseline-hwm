@@ -387,6 +387,9 @@ protected:
 
 struct hwm_viewer
 {
+    hwm_viewer(network *net) : net_(net)
+    {}
+
     void go()
     {
         create_root();
@@ -394,6 +397,7 @@ struct hwm_viewer
         setup_render_system();
         create_render_window();
         initialize_resource_groups();
+        initialize_network();
         setup_scene();
         //setup_CEGUI();
         create_frame_listener();
@@ -454,6 +458,11 @@ struct hwm_viewer
         ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
     }
 
+    void initialize_network()
+    {
+        net_->prepare(H);
+    }
+
     void setup_scene()
     {
         scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
@@ -479,88 +488,119 @@ struct hwm_viewer
         plane.d = 5000;
         plane.normal = -Vector3::UNIT_Y;
 
-        createColourCube();
 
-        // MaterialPtr material = MaterialManager::getSingleton().create(
-        //                                                               "Test/ColourTest", ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-        // material->getTechnique(0)->getPass(0)->setVertexColourTracking(TVC_AMBIENT);
+        SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+        StaticGeometry *sg = scene_manager_->createStaticGeometry("RoadNetwork");
 
-        SceneNode *node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-        Entity *cube = scene_manager_->createEntity( "cc", "ColourCube" );
-        cube->setMaterialName("Test/ColourTest");
-        node->attachObject( cube );
-        node->translate(0,0,0);
+        network_node->translate(0,0,0);
+        network_node->pitch(Degree(-90));
+
+        float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
+                              FLT_MIN, FLT_MIN, FLT_MIN};
+
+        int count = 0;
+        foreach(const lane &la, net_->lanes)
+        {
+            float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
+                           FLT_MIN, FLT_MIN, FLT_MIN};
+
+            char buff[1024];
+            snprintf(buff, 1024, "lane-%d", count);
+            create_lane_mesh(la,  buff, bb);
+            printf("bb: %f %f %f %f %f %f\n",
+                   bb[0], bb[1], bb[2],
+                   bb[3], bb[4], bb[5]);
+
+            for(int i = 0; i < 3; ++i)
+            {
+                if(bb[i] < static_bb[i])
+                    static_bb[i] = bb[i];
+
+                if(bb[i+3] > static_bb[i+3])
+                    static_bb[i+3] = bb[i+3];
+            }
+
+            char buff2[1024];
+            snprintf(buff2, 1024, "lane-%d-entity", count);
+
+            Entity *lane = scene_manager_->createEntity(buff2, buff);
+            lane->setMaterialName("Test/RoadSurface");
+            sg->addEntity(lane, Vector3(0.0, 0.0, 0.0));
+            SceneNode *lane_node = network_node->createChildSceneNode();
+            // lane_node->attachObject(lane);
+            // lane_node->translate(0,0,0);
+            ++count;
+        }
+
+        Vector3 dims(static_bb[3]-static_bb[0],
+                     static_bb[4]-static_bb[1],
+                     static_bb[5]-static_bb[2]);
+
+        sg->setRegionDimensions(dims);
+        sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
+        sg->build();
     }
 
-    void createColourCube()
+    void create_lane_mesh(const lane &la, const char *name, float bb[6])
     {
+        char buff[1024];
+        snprintf(buff, 1024, "Creating lane mesh %s", name);
+        LogManager::getSingleton().logMessage(buff);
+
         /// Create the mesh via the MeshManager
-        Ogre::MeshPtr msh = MeshManager::getSingleton().createManual("ColourCube", "General");
+        Ogre::MeshPtr msh = MeshManager::getSingleton().createManual(name, "General");
 
         /// Create one submesh
-        SubMesh* sub = msh->createSubMesh();
+        SubMesh *sub = msh->createSubMesh();
 
-        const float sqrt13 = 0.577350269f; /* sqrt(1/3) */
+        std::vector<point> verts;
+        std::vector<quad>  quads;
 
-        /// Define the vertices (8 vertices, each consisting of 2 groups of 3 floats
-        const size_t nVertices = 8;
-        const size_t vbufCount = 3*2*nVertices;
-        float vertices[vbufCount] = {
-			-100.0,100.0,-100.0,        //0 position
-			-sqrt13,sqrt13,-sqrt13,     //0 normal
-			100.0,100.0,-100.0,         //1 position
-			sqrt13,sqrt13,-sqrt13,      //1 normal
-			100.0,-100.0,-100.0,        //2 position
-			sqrt13,-sqrt13,-sqrt13,     //2 normal
-			-100.0,-100.0,-100.0,       //3 position
-			-sqrt13,-sqrt13,-sqrt13,    //3 normal
-			-100.0,100.0,100.0,         //4 position
-			-sqrt13,sqrt13,sqrt13,      //4 normal
-			100.0,100.0,100.0,          //5 position
-			sqrt13,sqrt13,sqrt13,       //5 normal
-			100.0,-100.0,100.0,         //6 position
-			sqrt13,-sqrt13,sqrt13,      //6 normal
-			-100.0,-100.0,100.0,        //7 position
-			-sqrt13,-sqrt13,sqrt13,     //7 normal
-        };
+        const road_membership *rom = &(la.road_memberships.base_data);
+        int p = -1;
+        while(1)
+        {
+            float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
+                                rom->lane_position+LANE_WIDTH*0.5};
 
-        RenderSystem* rs = Root::getSingleton().getRenderSystem();
-        RGBA colours[nVertices];
-        RGBA *pColour = colours;
-        // Use render system to convert colour value since colour packing varies
-        rs->convertColourValue(ColourValue(1.0,0.0,0.0), pColour++); //0 colour
-        rs->convertColourValue(ColourValue(1.0,1.0,0.0), pColour++); //1 colour
-        rs->convertColourValue(ColourValue(0.0,1.0,0.0), pColour++); //2 colour
-        rs->convertColourValue(ColourValue(0.0,0.0,0.0), pColour++); //3 colour
-        rs->convertColourValue(ColourValue(1.0,0.0,1.0), pColour++); //4 colour
-        rs->convertColourValue(ColourValue(1.0,1.0,1.0), pColour++); //5 colour
-        rs->convertColourValue(ColourValue(0.0,1.0,1.0), pColour++); //6 colour
-        rs->convertColourValue(ColourValue(0.0,0.0,1.0), pColour++); //7 colour
+            rom->parent_road.dp->rep.lane_mesh(verts, quads, rom->interval, rom->lane_position, offsets);
 
-        /// Define 12 triangles (two triangles per cube face)
-        /// The values in this table refer to vertices in the above table
-        const size_t ibufCount = 36;
-        unsigned short faces[ibufCount] = {
-			0,2,3,
-			0,1,2,
-			1,6,2,
-			1,5,6,
-			4,6,5,
-			4,7,6,
-			0,7,4,
-			0,3,7,
-			0,5,1,
-			0,4,5,
-			2,7,3,
-			2,6,7
-        };
+            ++p;
+            if(p >= static_cast<int>(la.road_memberships.entries.size()))
+                break;
+            rom = &(la.road_memberships.entries[p].data);
+        }
 
-        /// Create vertex data structure for 8 vertices shared between submeshes
+        /// Define the vertices (each consisting of 2 groups of 3 floats)
+        float *vert_data = (float*)malloc(verts.size()*2*3*sizeof (float));
+        for(size_t i = 0; i < verts.size(); ++i)
+        {
+            vert_data[3*(2*i + 0) + 0] = verts[i].x;
+            if(verts[i].x < bb[0])
+                bb[0] = verts[i].x;
+            else if(verts[i].x > bb[3])
+                bb[3] = verts[i].x;
+            vert_data[3*(2*i + 0) + 1] = verts[i].y;
+            if(verts[i].y < bb[1])
+                bb[1] = verts[i].y;
+            else if(verts[i].y > bb[4])
+                bb[4] = verts[i].y;
+            vert_data[3*(2*i + 0) + 2] = verts[i].z;
+            if(verts[i].z < bb[2])
+                bb[2] = verts[i].z;
+            else if(verts[i].z > bb[5])
+                bb[5] = verts[i].z;
+            vert_data[3*(2*i + 1) + 0] = 0.0f;
+            vert_data[3*(2*i + 1) + 1] = 1.0f;
+            vert_data[3*(2*i + 1) + 2] = 0.0f;
+        }
+
+        /// Create vertex data structure for vertices shared between submeshes
         msh->sharedVertexData = new VertexData();
-        msh->sharedVertexData->vertexCount = nVertices;
+        msh->sharedVertexData->vertexCount = verts.size();
 
         /// Create declaration (memory format) of vertex data
-        VertexDeclaration* decl = msh->sharedVertexData->vertexDeclaration;
+        VertexDeclaration *decl = msh->sharedVertexData->vertexDeclaration;
         size_t offset = 0;
         // 1st buffer
         decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
@@ -573,48 +613,53 @@ struct hwm_viewer
             HardwareBufferManager::getSingleton().createVertexBuffer(
                                                                      offset, msh->sharedVertexData->vertexCount, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
         /// Upload the vertex data to the card
-        vbuf->writeData(0, vbuf->getSizeInBytes(), vertices, true);
+        vbuf->writeData(0, vbuf->getSizeInBytes(), vert_data, true);
 
         /// Set vertex buffer binding so buffer 0 is bound to our vertex buffer
-        VertexBufferBinding* bind = msh->sharedVertexData->vertexBufferBinding;
+        VertexBufferBinding *bind = msh->sharedVertexData->vertexBufferBinding;
         bind->setBinding(0, vbuf);
 
-        // 2nd buffer
-        offset = 0;
-        decl->addElement(1, offset, VET_COLOUR, VES_DIFFUSE);
-        offset += VertexElement::getTypeSize(VET_COLOUR);
-        /// Allocate vertex buffer of the requested number of vertices (vertexCount)
-        /// and bytes per vertex (offset)
-        vbuf = HardwareBufferManager::getSingleton().createVertexBuffer(
-                                                                        offset, msh->sharedVertexData->vertexCount, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-        /// Upload the vertex data to the card
-        vbuf->writeData(0, vbuf->getSizeInBytes(), colours, true);
+        free(vert_data);
 
-        /// Set vertex buffer binding so buffer 1 is bound to our colour buffer
-        bind->setBinding(1, vbuf);
+        unsigned short *faces = (unsigned short*)malloc(quads.size()*3*2*sizeof (unsigned short));
+        for(size_t i = 0; i < quads.size(); ++i)
+        {
+            faces[3*(2*i + 0) + 0] = quads[i].v[0];
+            faces[3*(2*i + 0) + 1] = quads[i].v[1];
+            faces[3*(2*i + 0) + 2] = quads[i].v[2];
+
+            faces[3*(2*i + 1) + 0] = quads[i].v[2];
+            faces[3*(2*i + 1) + 1] = quads[i].v[3];
+            faces[3*(2*i + 1) + 2] = quads[i].v[0];
+        }
 
         /// Allocate index buffer of the requested number of vertices (ibufCount)
         HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
             createIndexBuffer(
                               HardwareIndexBuffer::IT_16BIT,
-                              ibufCount,
+                              quads.size()*3*2,
                               HardwareBuffer::HBU_STATIC_WRITE_ONLY);
 
         /// Upload the index data to the card
         ibuf->writeData(0, ibuf->getSizeInBytes(), faces, true);
 
+        free(faces);
+
         /// Set parameters of the submesh
         sub->useSharedVertices = true;
         sub->indexData->indexBuffer = ibuf;
-        sub->indexData->indexCount = ibufCount;
+        sub->indexData->indexCount = quads.size()*3*2;
         sub->indexData->indexStart = 0;
 
         /// Set bounding information (for culling)
-        msh->_setBounds(AxisAlignedBox(-100,-100,-100,100,100,100));
-        msh->_setBoundingSphereRadius(Math::Sqrt(3*100*100));
+        msh->_setBounds(AxisAlignedBox(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]));
+        msh->_setBoundingSphereRadius(0.5f*std::max(std::max(bb[3]-bb[0], bb[4]-bb[1]), bb[5]-bb[2]));
 
         /// Notify Mesh object that it has been loaded
         msh->load();
+
+        snprintf(buff, 1024, "Done creating lane mesh %s", name);
+        LogManager::getSingleton().logMessage(buff);
     }
 
     // void setup_CEGUI()
@@ -640,6 +685,8 @@ struct hwm_viewer
 
     Camera *camera_;
     SceneManager *scene_manager_;
+
+    network *net_;
 };
 
 int main(int argc, char **argv)
@@ -652,26 +699,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    foreach(const lane &la, net->lanes)
-    {
-        const road_membership *rom = &(la.road_memberships.base_data);
-        int p = -1;
-        while(1)
-        {
-            float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
-                                rom->lane_position+LANE_WIDTH*0.5};
-
-            rm.push_back(road_mesh());
-            rom->parent_road.dp->rep.lane_mesh(rm.back().vrts, rm.back().faces, rom->interval, rom->lane_position, offsets);
-
-            ++p;
-            if(p >= static_cast<int>(la.road_memberships.entries.size()))
-                break;
-            rom = &(la.road_memberships.entries[p].data);
-        }
-    }
-
-    hwm_viewer hv;
+    hwm_viewer hv(net);
     hv.go();
 
     delete net;
