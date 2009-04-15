@@ -9,6 +9,7 @@
 #include <OIS/OIS.h>
 
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 
 using namespace Ogre;
 
@@ -504,9 +505,8 @@ struct hwm_viewer
             float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
                            FLT_MIN, FLT_MIN, FLT_MIN};
 
-            char buff[1024];
-            snprintf(buff, 1024, "lane-%d", count);
-            create_lane_mesh(la,  buff, bb);
+            std::string meshname = boost::str(boost::format("lane-%1%") %  count);
+            create_lane_mesh(la,  meshname, bb);
             printf("bb: %f %f %f %f %f %f\n",
                    bb[0], bb[1], bb[2],
                    bb[3], bb[4], bb[5]);
@@ -520,15 +520,10 @@ struct hwm_viewer
                     static_bb[i+3] = bb[i+3];
             }
 
-            char buff2[1024];
-            snprintf(buff2, 1024, "lane-%d-entity", count);
-
-            Entity *lane = scene_manager_->createEntity(buff2, buff);
+            Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
             lane->setMaterialName("Test/RoadSurface");
             sg->addEntity(lane, Vector3(0.0, 0.0, 0.0));
             SceneNode *lane_node = network_node->createChildSceneNode();
-            // lane_node->attachObject(lane);
-            // lane_node->translate(0,0,0);
             ++count;
         }
 
@@ -541,11 +536,9 @@ struct hwm_viewer
         sg->build();
     }
 
-    void create_lane_mesh(const lane &la, const char *name, float bb[6])
+    void create_lane_mesh(const lane &la, const std::string &name, float bb[6])
     {
-        char buff[1024];
-        snprintf(buff, 1024, "Creating lane mesh %s", name);
-        LogManager::getSingleton().logMessage(buff);
+        LogManager::getSingleton().logMessage(boost::str(boost::format("Creating lane mesh %s") % name));
 
         /// Create the mesh via the MeshManager
         Ogre::MeshPtr msh = MeshManager::getSingleton().createManual(name, "General");
@@ -658,8 +651,7 @@ struct hwm_viewer
         /// Notify Mesh object that it has been loaded
         msh->load();
 
-        snprintf(buff, 1024, "Done creating lane mesh %s", name);
-        LogManager::getSingleton().logMessage(buff);
+        LogManager::getSingleton().logMessage(boost::str(boost::format("Done creating lane mesh %s") % name));
     }
 
     // void setup_CEGUI()
