@@ -603,8 +603,9 @@ struct hwm_viewer
         /// Allocate vertex buffer of the requested number of vertices (vertexCount)
         /// and bytes per vertex (offset)
         HardwareVertexBufferSharedPtr vbuf =
-            HardwareBufferManager::getSingleton().createVertexBuffer(
-                                                                     offset, msh->sharedVertexData->vertexCount, HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+            HardwareBufferManager::getSingleton().createVertexBuffer(offset,
+                                                                     msh->sharedVertexData->vertexCount,
+                                                                     HardwareBuffer::HBU_STATIC_WRITE_ONLY);
         /// Upload the vertex data to the card
         vbuf->writeData(0, vbuf->getSizeInBytes(), vert_data, true);
 
