@@ -1,5 +1,5 @@
 *~
-*.o
+*.lo
 .deps/
 doc/
 Makefile
@@ -16,5 +16,5 @@ depcomp
 install-sh
 stamp-h1
 missing
-libhwm.a
-libhwm_net.a
+libhwm_net.la
+.libs/
