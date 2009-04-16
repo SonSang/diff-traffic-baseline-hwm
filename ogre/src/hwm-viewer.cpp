@@ -469,17 +469,17 @@ struct hwm_viewer
         scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
         camera_ = scene_manager_->createCamera("Camera");
 
-        camera_->setPosition(20, 0, 0);
+        camera_->setPosition(-20, 100, 0);
         camera_->lookAt(0,0,0);
-        camera_->setNearClipDistance(1);
-        camera_->setFarClipDistance(1000);
+        camera_->setNearClipDistance(10);
+        camera_->setFarClipDistance(10000);
 
         Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
 
         scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
 
         Light *l = scene_manager_->createLight("MainLight");
-        l->setPosition(20, 80, 50);
+        l->setPosition(0, 800, 0);
 
         // ColourValue bgcolor(0.93, 0.86, 0.76);
         // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
@@ -489,11 +489,11 @@ struct hwm_viewer
         plane.d = 5000;
         plane.normal = -Vector3::UNIT_Y;
 
-
         SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
         StaticGeometry *sg = scene_manager_->createStaticGeometry("RoadNetwork");
 
         network_node->translate(0,0,0);
+        network_node->scale(10,10,10);
         network_node->pitch(Degree(-90));
 
         float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
@@ -522,8 +522,8 @@ struct hwm_viewer
 
             Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
             lane->setMaterialName("Test/RoadSurface");
-            sg->addEntity(lane, Vector3(0.0, 0.0, 0.0));
             SceneNode *lane_node = network_node->createChildSceneNode();
+            lane_node->attachObject(lane);
             ++count;
         }
 
@@ -531,8 +531,10 @@ struct hwm_viewer
                      static_bb[4]-static_bb[1],
                      static_bb[5]-static_bb[2]);
 
-        sg->setRegionDimensions(dims);
-        sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
+        sg->addSceneNode(network_node);
+        scene_manager_->destroySceneNode(network_node);
+        //        sg->setRegionDimensions(dims);
+        //        sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
         sg->build();
     }
 
