@@ -50,6 +50,8 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad> & faces, c
         r[1] = range[0];
     }
 
+    size_t base_vert = vrts.size();
+
     int start = find_segment(r[0], center_offs);
     int end   = find_segment(r[1], center_offs);
 
@@ -78,14 +80,15 @@ void line_rep::lane_mesh(std::vector<point> & vrts, std::vector<quad> & faces, c
     vrts.push_back(point(end_t*normals[end].x - offsets[1]*normals[end].y + points[end].x,
                          end_t*normals[end].y + offsets[1]*normals[end].x + points[end].y));
 
+    size_t base_face = faces.size();
 
-    faces.resize(1+end-start);
+    faces.resize(base_face + 1+end-start);
     for(int i = 0; i < 1+end-start; ++i)
     {
-        faces[i].v[0] = 2*i;
-        faces[i].v[1] = 2*i+1;
-        faces[i].v[2] = 2*(i+1)+1;
-        faces[i].v[3] = 2*(i+1);
+        faces[base_face + i].v[0] = base_vert + 2*i;
+        faces[base_face + i].v[1] = base_vert + 2*i+1;
+        faces[base_face + i].v[2] = base_vert + 2*(i+1)+1;
+        faces[base_face + i].v[3] = base_vert + 2*(i+1);
     }
 }
 
