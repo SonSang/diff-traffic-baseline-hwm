@@ -505,9 +505,6 @@ struct hwm_viewer
 
             std::string meshname = boost::str(boost::format("lane-%1%") %  count);
             create_lane_mesh(la,  meshname, bb);
-            printf("bb: %f %f %f %f %f %f\n",
-                   bb[0], bb[1], bb[2],
-                   bb[3], bb[4], bb[5]);
 
             for(int i = 0; i < 3; ++i)
             {
