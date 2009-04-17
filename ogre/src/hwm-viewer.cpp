@@ -485,15 +485,13 @@ struct hwm_viewer
         // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
         // vp->setBackgroundColour(bgcolor);
 
-        Plane plane;
-        plane.d = 5000;
-        plane.normal = -Vector3::UNIT_Y;
-
         SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-        StaticGeometry *sg = scene_manager_->createStaticGeometry("RoadNetwork");
+        StaticGeometry *net_sg = scene_manager_->createStaticGeometry("RoadNetwork");
+
+        float network_node_scale = 10.0f;
 
         network_node->translate(0,0,0);
-        network_node->scale(10,10,10);
+        network_node->scale(network_node_scale, network_node_scale, network_node_scale);
         network_node->pitch(Degree(-90));
 
         float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
@@ -527,15 +525,35 @@ struct hwm_viewer
             ++count;
         }
 
-        Vector3 dims(static_bb[3]-static_bb[0],
-                     static_bb[4]-static_bb[1],
-                     static_bb[5]-static_bb[2]);
+        for(int i = 0; i < 6; ++i)
+            static_bb[i] *= network_node_scale;
 
-        sg->addSceneNode(network_node);
+        float y_low  = static_bb[1];
+        float y_high = static_bb[4];
+        static_bb[1] = -static_bb[5];
+        static_bb[4] = -static_bb[2];
+        static_bb[5] = y_high;
+        static_bb[2] = y_low;
+
+        Vector3 dims(std::max(static_bb[3]-static_bb[0], 1.0f),
+                     std::max(static_bb[4]-static_bb[1], 1.0f),
+                     std::max(static_bb[5]-static_bb[2], 1.0f));
+
+        net_sg->addSceneNode(network_node);
         scene_manager_->destroySceneNode(network_node);
-        //        sg->setRegionDimensions(dims);
-        //        sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
-        sg->build();
+
+        net_sg->setRegionDimensions(dims);
+        net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
+        net_sg->build();
+
+        StaticGeometry *ground_sg = scene_manager_->createStaticGeometry("Ground");
+        Entity         *ground    = scene_manager_->createEntity("ground-plane", "Plane.mesh");
+        ground->setMaterialName("Material.001");
+        ground_sg->addEntity(ground, Vector3(0,-1, 0));
+
+        ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
+        ground_sg->setOrigin(Vector3(-100000, -1, -100000));
+        ground_sg->build();
     }
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6])
