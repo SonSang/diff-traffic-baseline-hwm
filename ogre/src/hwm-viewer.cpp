@@ -497,13 +497,13 @@ struct hwm_viewer
         network_node->pitch(Degree(-90));
 
         float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-                              FLT_MIN, FLT_MIN, FLT_MIN};
+                              -FLT_MAX, -FLT_MAX, -FLT_MAX};
 
         int count = 0;
         foreach(const lane &la, net_->lanes)
         {
             float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-                           FLT_MIN, FLT_MIN, FLT_MIN};
+                           -FLT_MAX, -FLT_MAX, -FLT_MAX};
 
             std::string meshname = boost::str(boost::format("lane-%1%") %  count);
             create_lane_mesh(la,  meshname, bb);
