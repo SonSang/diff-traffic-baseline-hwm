@@ -669,12 +669,12 @@ struct hwm_viewer
         for(size_t i = 0; i < quads.size(); ++i)
         {
             faces[3*(2*i + 0) + 0] = quads[i].v[0];
-            faces[3*(2*i + 0) + 1] = quads[i].v[1];
-            faces[3*(2*i + 0) + 2] = quads[i].v[2];
+            faces[3*(2*i + 0) + 1] = quads[i].v[2];
+            faces[3*(2*i + 0) + 2] = quads[i].v[1];
 
             faces[3*(2*i + 1) + 0] = quads[i].v[2];
-            faces[3*(2*i + 1) + 1] = quads[i].v[3];
-            faces[3*(2*i + 1) + 2] = quads[i].v[0];
+            faces[3*(2*i + 1) + 1] = quads[i].v[0];
+            faces[3*(2*i + 1) + 2] = quads[i].v[3];
         }
 
         /// Allocate index buffer of the requested number of vertices (ibufCount)
