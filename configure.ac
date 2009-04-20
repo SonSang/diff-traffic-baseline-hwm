@@ -27,6 +27,9 @@ AC_ARG_ENABLE([ogre],
   [enable_ogre=$enableval],
   [enable_ogre=check])
 
+AC_SUBST(CAELUM_CFLAGS)
+AC_SUBST(CAELUM_LIBS)
+
 GIT_VERSION=`./GIT-VERSION-GEN`
 AC_SUBST(GIT_VERSION)
 
@@ -155,7 +158,9 @@ echo "
     OGRE_CFLAGS...: $OGRE_CFLAGS
     OGRE_LIBS.....: $OGRE_LIBS
     OIS_CFLAGS....: $OIS_CFLAGS
-    OIS_LIBS......: $OIS_LIBS"
+    OIS_LIBS......: $OIS_LIBS
+    CAELUM_CFLAGS.: $CAELUM_CFLAGS
+    CAELUM_LIBS...: $CAELUM_LIBS"
 else
 echo "
   Building ogre components: no"

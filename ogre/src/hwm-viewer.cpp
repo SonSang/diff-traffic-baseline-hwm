@@ -1,6 +1,7 @@
 #include <Ogre.h>
 #include <OgreStringConverter.h>
 #include <OgreException.h>
+#include "Caelum.h"
 #include "network.hpp"
 
 //Use this define to signify OIS will be used as a DLL
@@ -388,7 +389,7 @@ protected:
 
 struct hwm_viewer
 {
-    hwm_viewer(network *net) : net_(net)
+    hwm_viewer(network *net) : net_(net), caelum_system_(0)
     {}
 
     void go()
@@ -400,6 +401,7 @@ struct hwm_viewer
         initialize_resource_groups();
         initialize_network();
         setup_scene();
+        start_caelum();
         //setup_CEGUI();
         create_frame_listener();
         start_render_loop();
@@ -411,6 +413,11 @@ struct hwm_viewer
         // delete system_;
 
         delete move_listener_;
+        if(caelum_system_)
+        {
+            caelum_system_->shutdown(false);
+            caelum_system_ = 0;
+        }
         delete root_;
     }
 
@@ -448,6 +455,15 @@ struct hwm_viewer
 
     }
 
+    void start_caelum()
+    {
+        caelum_system_ = new Caelum::CaelumSystem(root_, scene_manager_, Caelum::CaelumSystem::CAELUM_COMPONENTS_DEFAULT);
+        root_->addFrameListener(caelum_system_);
+        root_->getAutoCreatedWindow()->getViewport(0)->getTarget()->addListener(caelum_system_);
+        // Set time acceleration.
+        caelum_system_->getUniversalClock ()->setTimeScale (512);
+    }
+
     void create_render_window()
     {
         root_->initialise(true, "hwm viewer");
@@ -472,14 +488,18 @@ struct hwm_viewer
         camera_->setPosition(-20, 100, 0);
         camera_->lookAt(0,0,0);
         camera_->setNearClipDistance(10);
-        camera_->setFarClipDistance(10000);
+        camera_->setFarClipDistance(0);
 
         Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
 
-        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
+        //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
 
-        Light *l = scene_manager_->createLight("MainLight");
-        l->setPosition(0, 800, 0);
+        // Light *l = scene_manager_->createLight("MainLight");
+        // l->setType(Light::LT_POINT);
+        // l->setPosition(0, 800, 0);
+        // l->setAttenuation(2000, 1.0, 0.0, 0.0);
+        // l->setDiffuseColour(1.0, 1.0, 1.0);
+        //l->setSpecularColour(1.0, 1.0, 1.0);
 
         // ColourValue bgcolor(0.93, 0.86, 0.76);
         // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
@@ -543,14 +563,26 @@ struct hwm_viewer
         net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
         net_sg->build();
 
-        StaticGeometry *ground_sg = scene_manager_->createStaticGeometry("Ground");
-        Entity         *ground    = scene_manager_->createEntity("ground-plane", "Plane.mesh");
-        ground->setMaterialName("Material.001");
-        ground_sg->addEntity(ground, Vector3(0,-1, 0));
+        //        StaticGeometry *ground_sg = scene_manager_->createStaticGeometry("Ground");
 
-        ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
-        ground_sg->setOrigin(Vector3(-100000, -1, -100000));
-        ground_sg->build();
+		Plane plane;
+		plane.normal = Vector3::UNIT_Y;
+		plane.d = 1;
+		MeshManager::getSingleton().createPlane("Myplane",
+			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
+                                                1500,1500,20,20,true,1,10,10,Vector3::UNIT_Z);
+		Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
+
+        ground->setMaterialName("Examples/GrassFloor");
+
+        SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+        ground_node->attachObject(ground);
+
+        // ground_sg->addEntity(ground, Vector3(0,-1, 0));
+
+        // ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
+        // ground_sg->setOrigin(Vector3(-100000, -1, -100000));
+        // ground_sg->build();
     }
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6])
@@ -689,6 +721,7 @@ struct hwm_viewer
     Root *root_;
     OIS::Keyboard *keyboard_;
     OIS::InputManager *input_manager_;
+    Caelum::CaelumSystem *caelum_system_;
     // CEGUI::OgreCEGUIRenderer *renderer_;
     // CEGUI::System *system_;
     hwm_frame_listener *move_listener_;
