@@ -462,6 +462,7 @@ struct hwm_viewer
         root_->getAutoCreatedWindow()->getViewport(0)->getTarget()->addListener(caelum_system_);
         // Set time acceleration.
         caelum_system_->getUniversalClock ()->setTimeScale (512);
+        caelum_system_->setManageSceneFog(false);
     }
 
     void create_render_window()
