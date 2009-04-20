@@ -14,6 +14,12 @@
 
 using namespace Ogre;
 
+struct anim_car
+{
+    SceneNode *root_;
+    SceneNode *wheels_[4];
+};
+
 class hwm_frame_listener: public FrameListener, public WindowEventListener
 {
 protected:
@@ -493,6 +499,8 @@ struct hwm_viewer
 
         Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
 
+        scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+        //        scene_manager_->setShadowTextureSize(1 << 11);
         //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
 
         // Light *l = scene_manager_->createLight("MainLight");
@@ -571,7 +579,7 @@ struct hwm_viewer
 		plane.d = 1;
 		MeshManager::getSingleton().createPlane("Myplane",
 			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-                                                1500,1500,20,20,true,1,10,10,Vector3::UNIT_Z);
+                                                15000,15000,20,20,true,1,10,10,Vector3::UNIT_Z);
 		Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
 
         ground->setMaterialName("Examples/GrassFloor");
@@ -584,6 +592,60 @@ struct hwm_viewer
         // ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
         // ground_sg->setOrigin(Vector3(-100000, -1, -100000));
         // ground_sg->build();
+
+        lane_cars_.push_back(anim_car());
+        create_car(lane_cars_.back());
+    }
+
+    void create_car(anim_car &ac)
+    {
+        MeshPtr bodymesh = MeshManager::getSingleton().load("tbird-body-mesh.mesh",
+                                                            ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        bodymesh->createManualLodLevel(2500, "tbird-body-mesh-lod2.mesh");
+        bodymesh->createManualLodLevel(5000, "tbird-body-mesh-lod3.mesh");
+
+        MeshPtr wheelmesh = MeshManager::getSingleton().load("tbird-wheel-mesh.mesh",
+                                                             ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        wheelmesh->createManualLodLevel(2500, "tbird-wheel-mesh-lod2.mesh");
+        wheelmesh->createManualLodLevel(5000, "tbird-wheel-mesh-lod3.mesh");
+
+        Entity* ent2 = scene_manager_->createEntity("Car", bodymesh->getName() );
+        ent2->setCastShadows(true);
+
+        ac.root_ = scene_manager_->getRootSceneNode()->createChildSceneNode("Car", Vector3(0,  8+0.507+0.751*0.5, 0));
+        ac.root_->scale(8, 8, 8);
+        ac.root_->attachObject(ent2);
+
+        {
+            Entity *wheel = scene_manager_->createEntity("Wheel1", wheelmesh->getName());
+            wheel->setCastShadows(true);
+
+            ac.wheels_[0] = ac.root_->createChildSceneNode("Wheel1", Vector3(0,  -.507, 0.808));
+            ac.wheels_[0]->yaw(Degree(180));
+            ac.wheels_[0]->attachObject(wheel);
+        }
+        {
+            Entity *wheel = scene_manager_->createEntity("Wheel2", wheelmesh->getName());
+            wheel->setCastShadows(true);
+
+            ac.wheels_[1] = ac.root_->createChildSceneNode("Wheel2", Vector3(0,  -.507, -0.808));
+            ac.wheels_[1]->attachObject(wheel);
+        }
+        {
+            Entity *wheel = scene_manager_->createEntity("Wheel3", wheelmesh->getName());
+            wheel->setCastShadows(true);
+
+            ac.wheels_[2] = ac.root_->createChildSceneNode("Wheel3", Vector3(2.916,  -.507, 0.808));
+            ac.wheels_[2]->yaw(Degree(180));
+            ac.wheels_[2]->attachObject(wheel);
+        }
+        {
+            Entity *wheel = scene_manager_->createEntity("Wheel4", wheelmesh->getName());
+            wheel->setCastShadows(true);
+
+            ac.wheels_[3] = ac.root_->createChildSceneNode("Wheel4", Vector3(2.916,  -.507, -0.808));
+            ac.wheels_[3]->attachObject(wheel);
+        }
     }
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6])
@@ -730,6 +792,8 @@ struct hwm_viewer
     SceneManager *scene_manager_;
 
     network *net_;
+
+    std::vector<anim_car> lane_cars_;
 
     Caelum::CaelumSystem *caelum_system_;
 };
