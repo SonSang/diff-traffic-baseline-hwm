@@ -27,9 +27,6 @@ AC_ARG_ENABLE([ogre],
   [enable_ogre=$enableval],
   [enable_ogre=check])
 
-AC_SUBST(CAELUM_CFLAGS)
-AC_SUBST(CAELUM_LIBS)
-
 GIT_VERSION=`./GIT-VERSION-GEN`
 AC_SUBST(GIT_VERSION)
 
@@ -92,11 +89,12 @@ AM_CONDITIONAL(DO_VISUAL, test x"$visual_ok" = xyes)
 
 ogre_ok=no
 AS_IF([test x"$enable_ogre" != xno],
-	    [PKG_CHECK_MODULES(OGRE, [OGRE >= 1.2], [have_ogre=yes],[have_ogre=no])
-             PKG_CHECK_MODULES(OIS,  [OIS >= 1.0], [have_ois=yes], [have_ois=no])
-	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno],
+	    [PKG_CHECK_MODULES(OGRE,    [OGRE >= 1.2],   [have_ogre=yes],   [have_ogre=no])
+             PKG_CHECK_MODULES(OIS,     [OIS >= 1.0],    [have_ois=yes],    [have_ois=no])
+	     PKG_CHECK_MODULES(CAELUM,  [Caelum >= 0.4.0], [have_caelum=yes], [have_caelum=no])
+	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno -a x"have_caelum" != xno],
 	           [ogre_ok=yes])],
-	    [AC_MSG_FAILURE([--enable-ogre given, but test for ogre and ois failed!])])
+	    [AC_MSG_FAILURE([--enable-ogre given, but test for ogre, ois, or caelum failed!])])
 
 AM_CONDITIONAL(DO_OGRE, test x"$ogre_ok" = xyes)
 
