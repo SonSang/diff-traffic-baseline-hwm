@@ -722,7 +722,6 @@ struct hwm_viewer
     Root *root_;
     OIS::Keyboard *keyboard_;
     OIS::InputManager *input_manager_;
-    Caelum::CaelumSystem *caelum_system_;
     // CEGUI::OgreCEGUIRenderer *renderer_;
     // CEGUI::System *system_;
     hwm_frame_listener *move_listener_;
@@ -731,6 +730,8 @@ struct hwm_viewer
     SceneManager *scene_manager_;
 
     network *net_;
+
+    Caelum::CaelumSystem *caelum_system_;
 };
 
 int main(int argc, char **argv)
