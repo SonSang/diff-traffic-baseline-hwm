@@ -66,7 +66,7 @@ public:
 		camera_(cam), translate_vector_(Vector3::ZERO), current_speed_(0), window_(win), stats_on_(true), num_screen_shots_(0),
 		move_scale_(0.0f), rot_scale_(0.0f), time_until_next_toggle_(0), filtering_(TFO_BILINEAR),
 		aniso_(1), scene_detail_index_(0), move_speed_(500), rotate_speed_(30), debug_overlay_(0),
-		input_manager_(0), mouse_(0), keyboard_(0), joy_(0)
+		input_manager_(0), mouse_(0), keyboard_(0), joy_(0), t_(0)
 	{
 
 		debug_overlay_ = OverlayManager::getSingleton().getByName("Core/DebugOverlay");
@@ -170,6 +170,34 @@ public:
 
 		if(keyboard_->isKeyDown(OIS::KC_LEFT))
 			camera_->yaw(rot_scale_);
+
+        bool update_cars = false;
+		if(keyboard_->isKeyDown(OIS::KC_Y))
+        {
+            update_cars = true;
+            t_ += 0.1;
+        }
+
+		if(keyboard_->isKeyDown(OIS::KC_H))
+        {
+            update_cars = true;
+            t_ -= 0.1;
+        }
+
+        if(update_cars)
+        {
+            // std::vector<anim_car>::iterator ac_it = hwm_v_->lane_cars_->start();
+            // std::vector<lane>::iterator     la_it = hwm_v_->net_->lanes->start();
+            // for(;   ac_it != hwm_v_->lane_cars_->end() &&
+            //         la_it != hwm_v_->net_->lanes->end();
+            //     ++ac_it, ++la_it)
+            // {
+            //     point pt,n;
+            //     float x = t_;
+            //     la_it->get_point_and_normal(x, pt, n);
+            //     ac_it->root_.setPosition(pt[0], pt[1], pt[2]);
+            // }
+        }
 
 		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
 			return false;
@@ -363,6 +391,8 @@ public:
 	}
 
 protected:
+    //    hwm_viewer *hwm_v_;
+
 	Camera  *camera_;
 
 	Vector3 translate_vector_;
@@ -391,6 +421,8 @@ protected:
 	OIS::Mouse    *mouse_;
 	OIS::Keyboard *keyboard_;
 	OIS::JoyStick *joy_;
+
+    float t_;
 };
 
 struct hwm_viewer
