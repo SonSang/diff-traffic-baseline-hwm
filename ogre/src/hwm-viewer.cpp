@@ -1,13 +1,4 @@
-#include <Ogre.h>
-#include <OgreStringConverter.h>
-#include <OgreException.h>
-#include "Caelum.h"
-#include "network.hpp"
-
-//Use this define to signify OIS will be used as a DLL
-//(so that dll import/export macros are in effect)
-#define OIS_DYNAMIC_LIB
-#include <OIS/OIS.h>
+#include "hwm-viewer.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
@@ -186,17 +177,17 @@ public:
 
         if(update_cars)
         {
-            // std::vector<anim_car>::iterator ac_it = hwm_v_->lane_cars_->start();
-            // std::vector<lane>::iterator     la_it = hwm_v_->net_->lanes->start();
-            // for(;   ac_it != hwm_v_->lane_cars_->end() &&
-            //         la_it != hwm_v_->net_->lanes->end();
-            //     ++ac_it, ++la_it)
-            // {
-            //     point pt,n;
-            //     float x = t_;
-            //     la_it->get_point_and_normal(x, pt, n);
-            //     ac_it->root_.setPosition(pt[0], pt[1], pt[2]);
-            // }
+            std::vector<anim_car>::iterator ac_it = hwm_v_->lane_cars_.begin();
+            std::vector<lane>::iterator     la_it = hwm_v_->net_->lanes.begin();
+            for(;   ac_it != hwm_v_->lane_cars_.end() &&
+                    la_it != hwm_v_->net_->lanes.end();
+                ++ac_it, ++la_it)
+            {
+                point pt,n;
+                float x = t_;
+                la_it->get_point_and_normal(x, pt, n);
+                ac_it->root_->setPosition(pt.x, pt.y, pt.z);
+            }
         }
 
 		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
@@ -391,7 +382,7 @@ public:
 	}
 
 protected:
-    //    hwm_viewer *hwm_v_;
+    hwm_viewer *hwm_v_;
 
 	Camera  *camera_;
 
@@ -425,410 +416,406 @@ protected:
     float t_;
 };
 
-struct hwm_viewer
+hwm_viewer::hwm_viewer(network *net) : net_(net), caelum_system_(0)
+{}
+
+void hwm_viewer::go()
 {
-    hwm_viewer(network *net) : net_(net), caelum_system_(0)
-    {}
+    create_root();
+    define_resources();
+    setup_render_system();
+    create_render_window();
+    initialize_resource_groups();
+    initialize_network();
+    setup_scene();
+    start_caelum();
+    //setup_CEGUI();
+    create_frame_listener();
+    start_render_loop();
+}
 
-    void go()
+hwm_viewer::~hwm_viewer()
+{
+    // delete renderer_;
+    // delete system_;
+
+    delete move_listener_;
+    if(caelum_system_)
     {
-        create_root();
-        define_resources();
-        setup_render_system();
-        create_render_window();
-        initialize_resource_groups();
-        initialize_network();
-        setup_scene();
-        start_caelum();
-        //setup_CEGUI();
-        create_frame_listener();
-        start_render_loop();
+        caelum_system_->shutdown(false);
+        caelum_system_ = 0;
     }
+    delete root_;
+}
 
-    ~hwm_viewer()
+void hwm_viewer::create_root()
+{
+    root_ = new Root();
+}
+
+void hwm_viewer::define_resources()
+{
+    String sec_name, type_name, arch_name;
+    ConfigFile cf;
+    cf.load("resources.cfg");
+
+    ConfigFile::SectionIterator seci = cf.getSectionIterator();
+    while(seci.hasMoreElements())
     {
-        // delete renderer_;
-        // delete system_;
-
-        delete move_listener_;
-        if(caelum_system_)
+        sec_name = seci.peekNextKey();
+        ConfigFile::SettingsMultiMap *settings = seci.getNext();
+        ConfigFile::SettingsMultiMap::iterator i;
+        for(i = settings->begin(); i != settings->end(); ++i)
         {
-            caelum_system_->shutdown(false);
-            caelum_system_ = 0;
-        }
-        delete root_;
-    }
-
-    void create_root()
-    {
-        root_ = new Root();
-    }
-
-    void define_resources()
-    {
-        String sec_name, type_name, arch_name;
-        ConfigFile cf;
-        cf.load("resources.cfg");
-
-        ConfigFile::SectionIterator seci = cf.getSectionIterator();
-        while(seci.hasMoreElements())
-        {
-            sec_name = seci.peekNextKey();
-            ConfigFile::SettingsMultiMap *settings = seci.getNext();
-            ConfigFile::SettingsMultiMap::iterator i;
-            for(i = settings->begin(); i != settings->end(); ++i)
-            {
-                type_name = i->first;
-                arch_name = i->second;
-                ResourceGroupManager::getSingleton().addResourceLocation(arch_name, type_name, sec_name);
-            }
+            type_name = i->first;
+            arch_name = i->second;
+            ResourceGroupManager::getSingleton().addResourceLocation(arch_name, type_name, sec_name);
         }
     }
+}
 
-    void setup_render_system()
+void hwm_viewer::setup_render_system()
+{
+    if(!root_->restoreConfig() && !root_->showConfigDialog())
+        throw Exception(52, "User cancelled the config dialog!",
+                        "hwm_viewer::setup_render_system()");
+
+}
+
+void hwm_viewer::start_caelum()
+{
+    caelum_system_ = new Caelum::CaelumSystem(root_, scene_manager_, Caelum::CaelumSystem::CAELUM_COMPONENTS_DEFAULT);
+    root_->addFrameListener(caelum_system_);
+    root_->getAutoCreatedWindow()->getViewport(0)->getTarget()->addListener(caelum_system_);
+    // Set time acceleration.
+    caelum_system_->getUniversalClock ()->setTimeScale (512);
+    caelum_system_->setManageSceneFog(false);
+}
+
+void hwm_viewer::create_render_window()
+{
+    root_->initialise(true, "hwm viewer");
+}
+
+void hwm_viewer::initialize_resource_groups()
+{
+    TextureManager::getSingleton().setDefaultNumMipmaps(5);
+    ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+}
+
+void hwm_viewer::initialize_network()
+{
+    net_->prepare(H);
+}
+
+void hwm_viewer::setup_scene()
+{
+    scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
+    camera_ = scene_manager_->createCamera("Camera");
+
+    camera_->setPosition(-20, 100, 0);
+    camera_->lookAt(0,0,0);
+    camera_->setNearClipDistance(10);
+    camera_->setFarClipDistance(0);
+
+    Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
+
+    scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+    //        scene_manager_->setShadowTextureSize(1 << 11);
+    //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
+
+    // Light *l = scene_manager_->createLight("MainLight");
+    // l->setType(Light::LT_POINT);
+    // l->setPosition(0, 800, 0);
+    // l->setAttenuation(2000, 1.0, 0.0, 0.0);
+    // l->setDiffuseColour(1.0, 1.0, 1.0);
+    //l->setSpecularColour(1.0, 1.0, 1.0);
+
+    // ColourValue bgcolor(0.93, 0.86, 0.76);
+    // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
+    // vp->setBackgroundColour(bgcolor);
+
+    SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+    StaticGeometry *net_sg = scene_manager_->createStaticGeometry("RoadNetwork");
+
+    float network_node_scale = 10.0f;
+
+    network_node->translate(0,0,0);
+    network_node->scale(network_node_scale, network_node_scale, network_node_scale);
+    network_node->pitch(Degree(-90));
+
+    float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
+                          -FLT_MAX, -FLT_MAX, -FLT_MAX};
+
+    int count = 0;
+    foreach(const lane &la, net_->lanes)
     {
-        if(!root_->restoreConfig() && !root_->showConfigDialog())
-            throw Exception(52, "User cancelled the config dialog!",
-                            "hwm_viewer::setup_render_system()");
+        float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
+                       -FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-    }
+        std::string meshname = boost::str(boost::format("lane-%1%") %  count);
+        create_lane_mesh(la,  meshname, bb);
 
-    void start_caelum()
-    {
-        caelum_system_ = new Caelum::CaelumSystem(root_, scene_manager_, Caelum::CaelumSystem::CAELUM_COMPONENTS_DEFAULT);
-        root_->addFrameListener(caelum_system_);
-        root_->getAutoCreatedWindow()->getViewport(0)->getTarget()->addListener(caelum_system_);
-        // Set time acceleration.
-        caelum_system_->getUniversalClock ()->setTimeScale (512);
-        caelum_system_->setManageSceneFog(false);
-    }
-
-    void create_render_window()
-    {
-        root_->initialise(true, "hwm viewer");
-    }
-
-    void initialize_resource_groups()
-    {
-        TextureManager::getSingleton().setDefaultNumMipmaps(5);
-        ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
-    }
-
-    void initialize_network()
-    {
-        net_->prepare(H);
-    }
-
-    void setup_scene()
-    {
-        scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
-        camera_ = scene_manager_->createCamera("Camera");
-
-        camera_->setPosition(-20, 100, 0);
-        camera_->lookAt(0,0,0);
-        camera_->setNearClipDistance(10);
-        camera_->setFarClipDistance(0);
-
-        Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
-
-        scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
-        //        scene_manager_->setShadowTextureSize(1 << 11);
-        //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
-
-        // Light *l = scene_manager_->createLight("MainLight");
-        // l->setType(Light::LT_POINT);
-        // l->setPosition(0, 800, 0);
-        // l->setAttenuation(2000, 1.0, 0.0, 0.0);
-        // l->setDiffuseColour(1.0, 1.0, 1.0);
-        //l->setSpecularColour(1.0, 1.0, 1.0);
-
-        // ColourValue bgcolor(0.93, 0.86, 0.76);
-        // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
-        // vp->setBackgroundColour(bgcolor);
-
-        SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-        StaticGeometry *net_sg = scene_manager_->createStaticGeometry("RoadNetwork");
-
-        float network_node_scale = 10.0f;
-
-        network_node->translate(0,0,0);
-        network_node->scale(network_node_scale, network_node_scale, network_node_scale);
-        network_node->pitch(Degree(-90));
-
-        float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-                              -FLT_MAX, -FLT_MAX, -FLT_MAX};
-
-        int count = 0;
-        foreach(const lane &la, net_->lanes)
+        for(int i = 0; i < 3; ++i)
         {
-            float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-                           -FLT_MAX, -FLT_MAX, -FLT_MAX};
+            if(bb[i] < static_bb[i])
+                static_bb[i] = bb[i];
 
-            std::string meshname = boost::str(boost::format("lane-%1%") %  count);
-            create_lane_mesh(la,  meshname, bb);
-
-            for(int i = 0; i < 3; ++i)
-            {
-                if(bb[i] < static_bb[i])
-                    static_bb[i] = bb[i];
-
-                if(bb[i+3] > static_bb[i+3])
-                    static_bb[i+3] = bb[i+3];
-            }
-
-            Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
-            lane->setMaterialName("Test/RoadSurface");
-            SceneNode *lane_node = network_node->createChildSceneNode();
-            lane_node->attachObject(lane);
-            ++count;
+            if(bb[i+3] > static_bb[i+3])
+                static_bb[i+3] = bb[i+3];
         }
 
-        for(int i = 0; i < 6; ++i)
-            static_bb[i] *= network_node_scale;
+        Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
+        lane->setMaterialName("Test/RoadSurface");
+        SceneNode *lane_node = network_node->createChildSceneNode();
+        lane_node->attachObject(lane);
+        ++count;
+    }
 
-        float y_low  = static_bb[1];
-        float y_high = static_bb[4];
-        static_bb[1] = -static_bb[5];
-        static_bb[4] = -static_bb[2];
-        static_bb[5] = y_high;
-        static_bb[2] = y_low;
+    for(int i = 0; i < 6; ++i)
+        static_bb[i] *= network_node_scale;
 
-        Vector3 dims(std::max(static_bb[3]-static_bb[0], 1.0f),
-                     std::max(static_bb[4]-static_bb[1], 1.0f),
-                     std::max(static_bb[5]-static_bb[2], 1.0f));
+    float y_low  = static_bb[1];
+    float y_high = static_bb[4];
+    static_bb[1] = -static_bb[5];
+    static_bb[4] = -static_bb[2];
+    static_bb[5] = y_high;
+    static_bb[2] = y_low;
 
-        net_sg->addSceneNode(network_node);
-        scene_manager_->destroySceneNode(network_node);
+    Vector3 dims(std::max(static_bb[3]-static_bb[0], 1.0f),
+                 std::max(static_bb[4]-static_bb[1], 1.0f),
+                 std::max(static_bb[5]-static_bb[2], 1.0f));
 
-        net_sg->setRegionDimensions(dims);
-        net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
-        net_sg->build();
+    net_sg->addSceneNode(network_node);
+    scene_manager_->destroySceneNode(network_node);
 
-        //        StaticGeometry *ground_sg = scene_manager_->createStaticGeometry("Ground");
+    net_sg->setRegionDimensions(dims);
+    net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
+    net_sg->build();
 
-		Plane plane;
-		plane.normal = Vector3::UNIT_Y;
-		plane.d = 1;
-		MeshManager::getSingleton().createPlane("Myplane",
-			ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-                                                15000,15000,20,20,true,1,10,10,Vector3::UNIT_Z);
-		Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
+    //        StaticGeometry *ground_sg = scene_manager_->createStaticGeometry("Ground");
 
-        ground->setMaterialName("Examples/GrassFloor");
+    Plane plane;
+    plane.normal = Vector3::UNIT_Y;
+    plane.d = 1;
+    MeshManager::getSingleton().createPlane("Myplane",
+                                            ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
+                                            15000,15000,20,20,true,1,10,10,Vector3::UNIT_Z);
+    Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
 
-        SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-        ground_node->attachObject(ground);
+    ground->setMaterialName("Examples/GrassFloor");
 
-        // ground_sg->addEntity(ground, Vector3(0,-1, 0));
+    SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+    ground_node->attachObject(ground);
 
-        // ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
-        // ground_sg->setOrigin(Vector3(-100000, -1, -100000));
-        // ground_sg->build();
+    // ground_sg->addEntity(ground, Vector3(0,-1, 0));
 
+    // ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
+    // ground_sg->setOrigin(Vector3(-100000, -1, -100000));
+    // ground_sg->build();
+
+    car_model tbird;
+
+    tbird.bodymesh_ = MeshManager::getSingleton().load("tbird-body-mesh.mesh",
+                                                        ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    tbird.bodymesh_->createManualLodLevel(2500, "tbird-body-mesh-lod2.mesh");
+    tbird.bodymesh_->createManualLodLevel(5000, "tbird-body-mesh-lod3.mesh");
+
+    tbird.wheelmesh_ = MeshManager::getSingleton().load("tbird-wheel-mesh.mesh",
+                                                         ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+    tbird.wheelmesh_->createManualLodLevel(2500, "tbird-wheel-mesh-lod2.mesh");
+    tbird.wheelmesh_->createManualLodLevel(5000, "tbird-wheel-mesh-lod3.mesh");
+
+    count = 0;
+    foreach(const lane &la, net_->lanes)
+    {
         lane_cars_.push_back(anim_car());
-        create_car(lane_cars_.back());
+        create_car(tbird, boost::str(boost::format("Car-%1%") % count), lane_cars_.back());
+        ++count;
     }
+}
 
-    void create_car(anim_car &ac)
+void hwm_viewer::create_car(const car_model &cm, const std::string &name, anim_car &ac)
+{
+
+    std::string body_name(boost::str(boost::format("%1%-body") % name));
+
+    Entity* ent2 = scene_manager_->createEntity(body_name, cm.bodymesh_->getName() );
+    ent2->setCastShadows(true);
+
+    ac.root_ = scene_manager_->getRootSceneNode()->createChildSceneNode(body_name, Vector3(0,  8+0.507+0.751*0.5, 0));
+    ac.root_->scale(8, 8, 8);
+    ac.root_->attachObject(ent2);
+
     {
-        MeshPtr bodymesh = MeshManager::getSingleton().load("tbird-body-mesh.mesh",
-                                                            ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-        bodymesh->createManualLodLevel(2500, "tbird-body-mesh-lod2.mesh");
-        bodymesh->createManualLodLevel(5000, "tbird-body-mesh-lod3.mesh");
+        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 0));
+        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
+        wheel->setCastShadows(true);
 
-        MeshPtr wheelmesh = MeshManager::getSingleton().load("tbird-wheel-mesh.mesh",
-                                                             ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-        wheelmesh->createManualLodLevel(2500, "tbird-wheel-mesh-lod2.mesh");
-        wheelmesh->createManualLodLevel(5000, "tbird-wheel-mesh-lod3.mesh");
-
-        Entity* ent2 = scene_manager_->createEntity("Car", bodymesh->getName() );
-        ent2->setCastShadows(true);
-
-        ac.root_ = scene_manager_->getRootSceneNode()->createChildSceneNode("Car", Vector3(0,  8+0.507+0.751*0.5, 0));
-        ac.root_->scale(8, 8, 8);
-        ac.root_->attachObject(ent2);
-
-        {
-            Entity *wheel = scene_manager_->createEntity("Wheel1", wheelmesh->getName());
-            wheel->setCastShadows(true);
-
-            ac.wheels_[0] = ac.root_->createChildSceneNode("Wheel1", Vector3(0,  -.507, 0.808));
-            ac.wheels_[0]->yaw(Degree(180));
-            ac.wheels_[0]->attachObject(wheel);
-        }
-        {
-            Entity *wheel = scene_manager_->createEntity("Wheel2", wheelmesh->getName());
-            wheel->setCastShadows(true);
-
-            ac.wheels_[1] = ac.root_->createChildSceneNode("Wheel2", Vector3(0,  -.507, -0.808));
-            ac.wheels_[1]->attachObject(wheel);
-        }
-        {
-            Entity *wheel = scene_manager_->createEntity("Wheel3", wheelmesh->getName());
-            wheel->setCastShadows(true);
-
-            ac.wheels_[2] = ac.root_->createChildSceneNode("Wheel3", Vector3(2.916,  -.507, 0.808));
-            ac.wheels_[2]->yaw(Degree(180));
-            ac.wheels_[2]->attachObject(wheel);
-        }
-        {
-            Entity *wheel = scene_manager_->createEntity("Wheel4", wheelmesh->getName());
-            wheel->setCastShadows(true);
-
-            ac.wheels_[3] = ac.root_->createChildSceneNode("Wheel4", Vector3(2.916,  -.507, -0.808));
-            ac.wheels_[3]->attachObject(wheel);
-        }
+        ac.wheels_[0] = ac.root_->createChildSceneNode(wheel_name, Vector3(0,  -.507, 0.808));
+        ac.wheels_[0]->yaw(Degree(180));
+        ac.wheels_[0]->attachObject(wheel);
     }
-
-    void create_lane_mesh(const lane &la, const std::string &name, float bb[6])
     {
-        LogManager::getSingleton().logMessage(boost::str(boost::format("Creating lane mesh %s") % name));
+        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 1));
+        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
+        wheel->setCastShadows(true);
 
-        /// Create the mesh via the MeshManager
-        Ogre::MeshPtr msh = MeshManager::getSingleton().createManual(name, "General");
-
-        /// Create one submesh
-        SubMesh *sub = msh->createSubMesh();
-
-        std::vector<point> verts;
-        std::vector<quad>  quads;
-
-        const road_membership *rom = &(la.road_memberships.base_data);
-        int p = -1;
-        while(1)
-        {
-            float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
-                                rom->lane_position+LANE_WIDTH*0.5};
-
-            rom->parent_road.dp->rep.lane_mesh(verts, quads, rom->interval, rom->lane_position, offsets);
-
-            ++p;
-            if(p >= static_cast<int>(la.road_memberships.entries.size()))
-                break;
-            rom = &(la.road_memberships.entries[p].data);
-        }
-
-        /// Define the vertices (each consisting of 2 groups of 3 floats)
-        float *vert_data = (float*)malloc(verts.size()*2*3*sizeof (float));
-        for(size_t i = 0; i < verts.size(); ++i)
-        {
-            vert_data[3*(2*i + 0) + 0] = verts[i].x;
-            if(verts[i].x < bb[0])
-                bb[0] = verts[i].x;
-            else if(verts[i].x > bb[3])
-                bb[3] = verts[i].x;
-            vert_data[3*(2*i + 0) + 1] = verts[i].y;
-            if(verts[i].y < bb[1])
-                bb[1] = verts[i].y;
-            else if(verts[i].y > bb[4])
-                bb[4] = verts[i].y;
-            vert_data[3*(2*i + 0) + 2] = verts[i].z;
-            if(verts[i].z < bb[2])
-                bb[2] = verts[i].z;
-            else if(verts[i].z > bb[5])
-                bb[5] = verts[i].z;
-            vert_data[3*(2*i + 1) + 0] = 0.0f;
-            vert_data[3*(2*i + 1) + 1] = 1.0f;
-            vert_data[3*(2*i + 1) + 2] = 0.0f;
-        }
-
-        /// Create vertex data structure for vertices shared between submeshes
-        msh->sharedVertexData = new VertexData();
-        msh->sharedVertexData->vertexCount = verts.size();
-
-        /// Create declaration (memory format) of vertex data
-        VertexDeclaration *decl = msh->sharedVertexData->vertexDeclaration;
-        size_t offset = 0;
-        // 1st buffer
-        decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
-        offset += VertexElement::getTypeSize(VET_FLOAT3);
-        decl->addElement(0, offset, VET_FLOAT3, VES_NORMAL);
-        offset += VertexElement::getTypeSize(VET_FLOAT3);
-        /// Allocate vertex buffer of the requested number of vertices (vertexCount)
-        /// and bytes per vertex (offset)
-        HardwareVertexBufferSharedPtr vbuf =
-            HardwareBufferManager::getSingleton().createVertexBuffer(offset,
-                                                                     msh->sharedVertexData->vertexCount,
-                                                                     HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-        /// Upload the vertex data to the card
-        vbuf->writeData(0, vbuf->getSizeInBytes(), vert_data, true);
-
-        /// Set vertex buffer binding so buffer 0 is bound to our vertex buffer
-        VertexBufferBinding *bind = msh->sharedVertexData->vertexBufferBinding;
-        bind->setBinding(0, vbuf);
-
-        free(vert_data);
-
-        unsigned short *faces = (unsigned short*)malloc(quads.size()*3*2*sizeof (unsigned short));
-        for(size_t i = 0; i < quads.size(); ++i)
-        {
-            faces[3*(2*i + 0) + 0] = quads[i].v[0];
-            faces[3*(2*i + 0) + 1] = quads[i].v[2];
-            faces[3*(2*i + 0) + 2] = quads[i].v[1];
-
-            faces[3*(2*i + 1) + 0] = quads[i].v[2];
-            faces[3*(2*i + 1) + 1] = quads[i].v[0];
-            faces[3*(2*i + 1) + 2] = quads[i].v[3];
-        }
-
-        /// Allocate index buffer of the requested number of vertices (ibufCount)
-        HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
-            createIndexBuffer(
-                              HardwareIndexBuffer::IT_16BIT,
-                              quads.size()*3*2,
-                              HardwareBuffer::HBU_STATIC_WRITE_ONLY);
-
-        /// Upload the index data to the card
-        ibuf->writeData(0, ibuf->getSizeInBytes(), faces, true);
-
-        free(faces);
-
-        /// Set parameters of the submesh
-        sub->useSharedVertices = true;
-        sub->indexData->indexBuffer = ibuf;
-        sub->indexData->indexCount = quads.size()*3*2;
-        sub->indexData->indexStart = 0;
-
-        /// Set bounding information (for culling)
-        msh->_setBounds(AxisAlignedBox(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]));
-        msh->_setBoundingSphereRadius(0.5f*std::max(std::max(bb[3]-bb[0], bb[4]-bb[1]), bb[5]-bb[2]));
-
-        /// Notify Mesh object that it has been loaded
-        msh->load();
-
-        LogManager::getSingleton().logMessage(boost::str(boost::format("Done creating lane mesh %s") % name));
+        ac.wheels_[1] = ac.root_->createChildSceneNode(wheel_name, Vector3(0,  -.507, -0.808));
+        ac.wheels_[1]->attachObject(wheel);
     }
-
-    // void setup_CEGUI()
-    // {}
-
-    void create_frame_listener()
     {
-        move_listener_ = new hwm_frame_listener(root_->getAutoCreatedWindow(), camera_);
-        root_->addFrameListener(move_listener_);
-    }
+        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 2));
+        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
+        wheel->setCastShadows(true);
 
-    void start_render_loop()
+        ac.wheels_[2] = ac.root_->createChildSceneNode(wheel_name, Vector3(2.916,  -.507, 0.808));
+        ac.wheels_[2]->yaw(Degree(180));
+        ac.wheels_[2]->attachObject(wheel);
+    }
     {
-        root_->startRendering();
+        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 3));
+        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
+        wheel->setCastShadows(true);
+
+        ac.wheels_[3] = ac.root_->createChildSceneNode(wheel_name, Vector3(2.916,  -.507, -0.808));
+        ac.wheels_[3]->attachObject(wheel);
+    }
+}
+
+void hwm_viewer::create_lane_mesh(const lane &la, const std::string &name, float bb[6])
+{
+    LogManager::getSingleton().logMessage(boost::str(boost::format("Creating lane mesh %s") % name));
+
+    /// Create the mesh via the MeshManager
+    Ogre::MeshPtr msh = MeshManager::getSingleton().createManual(name, "General");
+
+    /// Create one submesh
+    SubMesh *sub = msh->createSubMesh();
+
+    std::vector<point> verts;
+    std::vector<quad>  quads;
+
+    const road_membership *rom = &(la.road_memberships.base_data);
+    int p = -1;
+    while(1)
+    {
+        float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
+                            rom->lane_position+LANE_WIDTH*0.5};
+
+        rom->parent_road.dp->rep.lane_mesh(verts, quads, rom->interval, rom->lane_position, offsets);
+
+        ++p;
+        if(p >= static_cast<int>(la.road_memberships.entries.size()))
+            break;
+        rom = &(la.road_memberships.entries[p].data);
     }
 
-    Root *root_;
-    OIS::Keyboard *keyboard_;
-    OIS::InputManager *input_manager_;
-    // CEGUI::OgreCEGUIRenderer *renderer_;
-    // CEGUI::System *system_;
-    hwm_frame_listener *move_listener_;
+    /// Define the vertices (each consisting of 2 groups of 3 floats)
+    float *vert_data = (float*)malloc(verts.size()*2*3*sizeof (float));
+    for(size_t i = 0; i < verts.size(); ++i)
+    {
+        vert_data[3*(2*i + 0) + 0] = verts[i].x;
+        if(verts[i].x < bb[0])
+            bb[0] = verts[i].x;
+        else if(verts[i].x > bb[3])
+            bb[3] = verts[i].x;
+        vert_data[3*(2*i + 0) + 1] = verts[i].y;
+        if(verts[i].y < bb[1])
+            bb[1] = verts[i].y;
+        else if(verts[i].y > bb[4])
+            bb[4] = verts[i].y;
+        vert_data[3*(2*i + 0) + 2] = verts[i].z;
+        if(verts[i].z < bb[2])
+            bb[2] = verts[i].z;
+        else if(verts[i].z > bb[5])
+            bb[5] = verts[i].z;
+        vert_data[3*(2*i + 1) + 0] = 0.0f;
+        vert_data[3*(2*i + 1) + 1] = 1.0f;
+        vert_data[3*(2*i + 1) + 2] = 0.0f;
+    }
 
-    Camera *camera_;
-    SceneManager *scene_manager_;
+    /// Create vertex data structure for vertices shared between submeshes
+    msh->sharedVertexData = new VertexData();
+    msh->sharedVertexData->vertexCount = verts.size();
 
-    network *net_;
+    /// Create declaration (memory format) of vertex data
+    VertexDeclaration *decl = msh->sharedVertexData->vertexDeclaration;
+    size_t offset = 0;
+    // 1st buffer
+    decl->addElement(0, offset, VET_FLOAT3, VES_POSITION);
+    offset += VertexElement::getTypeSize(VET_FLOAT3);
+    decl->addElement(0, offset, VET_FLOAT3, VES_NORMAL);
+    offset += VertexElement::getTypeSize(VET_FLOAT3);
+    /// Allocate vertex buffer of the requested number of vertices (vertexCount)
+    /// and bytes per vertex (offset)
+    HardwareVertexBufferSharedPtr vbuf =
+        HardwareBufferManager::getSingleton().createVertexBuffer(offset,
+                                                                 msh->sharedVertexData->vertexCount,
+                                                                 HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+    /// Upload the vertex data to the card
+    vbuf->writeData(0, vbuf->getSizeInBytes(), vert_data, true);
 
-    std::vector<anim_car> lane_cars_;
+    /// Set vertex buffer binding so buffer 0 is bound to our vertex buffer
+    VertexBufferBinding *bind = msh->sharedVertexData->vertexBufferBinding;
+    bind->setBinding(0, vbuf);
 
-    Caelum::CaelumSystem *caelum_system_;
-};
+    free(vert_data);
+
+    unsigned short *faces = (unsigned short*)malloc(quads.size()*3*2*sizeof (unsigned short));
+    for(size_t i = 0; i < quads.size(); ++i)
+    {
+        faces[3*(2*i + 0) + 0] = quads[i].v[0];
+        faces[3*(2*i + 0) + 1] = quads[i].v[2];
+        faces[3*(2*i + 0) + 2] = quads[i].v[1];
+
+        faces[3*(2*i + 1) + 0] = quads[i].v[2];
+        faces[3*(2*i + 1) + 1] = quads[i].v[0];
+        faces[3*(2*i + 1) + 2] = quads[i].v[3];
+    }
+
+    /// Allocate index buffer of the requested number of vertices (ibufCount)
+    HardwareIndexBufferSharedPtr ibuf = HardwareBufferManager::getSingleton().
+        createIndexBuffer(
+                          HardwareIndexBuffer::IT_16BIT,
+                          quads.size()*3*2,
+                          HardwareBuffer::HBU_STATIC_WRITE_ONLY);
+
+    /// Upload the index data to the card
+    ibuf->writeData(0, ibuf->getSizeInBytes(), faces, true);
+
+    free(faces);
+
+    /// Set parameters of the submesh
+    sub->useSharedVertices = true;
+    sub->indexData->indexBuffer = ibuf;
+    sub->indexData->indexCount = quads.size()*3*2;
+    sub->indexData->indexStart = 0;
+
+    /// Set bounding information (for culling)
+    msh->_setBounds(AxisAlignedBox(bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]));
+    msh->_setBoundingSphereRadius(0.5f*std::max(std::max(bb[3]-bb[0], bb[4]-bb[1]), bb[5]-bb[2]));
+
+    /// Notify Mesh object that it has been loaded
+    msh->load();
+
+    LogManager::getSingleton().logMessage(boost::str(boost::format("Done creating lane mesh %s") % name));
+}
+
+// void hwm_viewer::setup_CEGUI()
+// {}
+
+void hwm_viewer::create_frame_listener()
+{
+    move_listener_ = new hwm_frame_listener(root_->getAutoCreatedWindow(), camera_);
+    root_->addFrameListener(move_listener_);
+}
+
+void hwm_viewer::start_render_loop()
+{
+    root_->startRendering();
+}
+
 
 int main(int argc, char **argv)
 {
