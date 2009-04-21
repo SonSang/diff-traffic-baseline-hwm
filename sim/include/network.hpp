@@ -23,6 +23,8 @@
 typedef enum {DATA, CELLS, MERGES} draw_type;
 #define H (2.1f*CAR_LENGTH)
 
+const char* hwm_version_string();
+
 struct carticle
 {
     carticle() {}

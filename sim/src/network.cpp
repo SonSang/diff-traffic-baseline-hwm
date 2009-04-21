@@ -1,6 +1,15 @@
 #include "network.hpp"
 #include "arz.hpp"
 
+#include "config.h"
+
+static const char hwm_version[] = PACKAGE_VERSION "-" GIT_VERSION;
+
+const char* hwm_version_string()
+{
+    return hwm_version;
+}
+
 bool network::load_from_xml(const char *filename)
 {
     timer tim;

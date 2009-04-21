@@ -810,6 +810,7 @@ public:
 
 int main(int argc, char * argv[])
 {
+    printf("%s version: %s\n", argv[0], hwm_version_string());
     out_file = fopen("output.txt", "w");
 
     net = new network;
