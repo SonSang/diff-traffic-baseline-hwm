@@ -1,5 +1,6 @@
 #include "hwm-viewer.hpp"
 
+#include <cmath>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
@@ -52,12 +53,12 @@ protected:
 
 public:
 	// Constructor takes a RenderWindow because it uses that to determine input context
-	hwm_frame_listener(RenderWindow *win, Camera *cam, bool buffered_keys = false, bool buffered_mouse = false,
+	hwm_frame_listener(hwm_viewer *hwm_v, RenderWindow *win, Camera *cam, bool buffered_keys = false, bool buffered_mouse = false,
                        bool buffered_joy = false) :
 		camera_(cam), translate_vector_(Vector3::ZERO), current_speed_(0), window_(win), stats_on_(true), num_screen_shots_(0),
 		move_scale_(0.0f), rot_scale_(0.0f), time_until_next_toggle_(0), filtering_(TFO_BILINEAR),
 		aniso_(1), scene_detail_index_(0), move_speed_(500), rotate_speed_(30), debug_overlay_(0),
-		input_manager_(0), mouse_(0), keyboard_(0), joy_(0), t_(0)
+		input_manager_(0), mouse_(0), keyboard_(0), joy_(0), t_(0), hwm_v_(hwm_v)
 	{
 
 		debug_overlay_ = OverlayManager::getSingleton().getByName("Core/DebugOverlay");
@@ -186,7 +187,9 @@ public:
                 point pt,n;
                 float x = t_;
                 la_it->get_point_and_normal(x, pt, n);
-                ac_it->root_->setPosition(pt.x, pt.y, pt.z);
+                Vector3 scale(ac_it->root_->getScale());
+                ac_it->root_->yaw(Radian(std::atan2(pt.y, pt.x)), Node::TS_PARENT);
+                ac_it->root_->setPosition(pt.x/scale[0], -pt.z/scale[1], pt.y/scale[2]);
             }
         }
 
@@ -382,8 +385,6 @@ public:
 	}
 
 protected:
-    hwm_viewer *hwm_v_;
-
 	Camera  *camera_;
 
 	Vector3 translate_vector_;
@@ -414,6 +415,7 @@ protected:
 	OIS::JoyStick *joy_;
 
     float t_;
+    hwm_viewer *hwm_v_;
 };
 
 hwm_viewer::hwm_viewer(network *net) : net_(net), caelum_system_(0)
@@ -488,7 +490,7 @@ void hwm_viewer::start_caelum()
     root_->addFrameListener(caelum_system_);
     root_->getAutoCreatedWindow()->getViewport(0)->getTarget()->addListener(caelum_system_);
     // Set time acceleration.
-    caelum_system_->getUniversalClock ()->setTimeScale (512);
+    //    caelum_system_->getUniversalClock ()->setTimeScale (512);
     caelum_system_->setManageSceneFog(false);
 }
 
@@ -626,24 +628,25 @@ void hwm_viewer::setup_scene()
     tbird.wheelmesh_->createManualLodLevel(2500, "tbird-wheel-mesh-lod2.mesh");
     tbird.wheelmesh_->createManualLodLevel(5000, "tbird-wheel-mesh-lod3.mesh");
 
+    SceneNode *vehicle_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+
     count = 0;
     foreach(const lane &la, net_->lanes)
     {
         lane_cars_.push_back(anim_car());
-        create_car(tbird, boost::str(boost::format("Car-%1%") % count), lane_cars_.back());
+        create_car(vehicle_node, tbird, boost::str(boost::format("Car-%1%") % count), lane_cars_.back());
         ++count;
     }
 }
 
-void hwm_viewer::create_car(const car_model &cm, const std::string &name, anim_car &ac)
+void hwm_viewer::create_car(SceneNode *base, const car_model &cm, const std::string &name, anim_car &ac)
 {
-
     std::string body_name(boost::str(boost::format("%1%-body") % name));
 
     Entity* ent2 = scene_manager_->createEntity(body_name, cm.bodymesh_->getName() );
     ent2->setCastShadows(true);
 
-    ac.root_ = scene_manager_->getRootSceneNode()->createChildSceneNode(body_name, Vector3(0,  8+0.507+0.751*0.5, 0));
+    ac.root_ = base->createChildSceneNode(body_name, Vector3(0,  8+0.507+0.751*0.5, 0));
     ac.root_->scale(8, 8, 8);
     ac.root_->attachObject(ent2);
 
@@ -807,7 +810,7 @@ void hwm_viewer::create_lane_mesh(const lane &la, const std::string &name, float
 
 void hwm_viewer::create_frame_listener()
 {
-    move_listener_ = new hwm_frame_listener(root_->getAutoCreatedWindow(), camera_);
+    move_listener_ = new hwm_frame_listener(this, root_->getAutoCreatedWindow(), camera_);
     root_->addFrameListener(move_listener_);
 }
 

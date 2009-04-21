@@ -45,7 +45,7 @@ struct hwm_viewer
 
     void setup_scene();
 
-    void create_car(const car_model &carmodel, const std::string &name, anim_car &ac);
+    void create_car(Ogre::SceneNode *base, const car_model &carmodel, const std::string &name, anim_car &ac);
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6]);
 
