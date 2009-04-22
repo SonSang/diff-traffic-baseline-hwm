@@ -167,30 +167,45 @@ public:
 		if(keyboard_->isKeyDown(OIS::KC_Y))
         {
             update_cars = true;
-            t_ += 0.1;
+            t_ += 0.1f*evt.timeSinceLastFrame;
+            if(t_ > 1.0f)
+                t_ = 1.0f;
         }
 
 		if(keyboard_->isKeyDown(OIS::KC_H))
         {
             update_cars = true;
-            t_ -= 0.1;
+            t_ -= 0.1*evt.timeSinceLastFrame;
+            if(t_ < 0.0f)
+                t_ = 0.0f;
         }
 
         if(update_cars)
         {
-            std::vector<anim_car>::iterator ac_it = hwm_v_->lane_cars_.begin();
-            std::vector<lane>::iterator     la_it = hwm_v_->net_->lanes.begin();
-            for(;   ac_it != hwm_v_->lane_cars_.end() &&
-                    la_it != hwm_v_->net_->lanes.end();
-                ++ac_it, ++la_it)
-            {
-                point pt,n;
-                float x = t_;
-                la_it->get_point_and_normal(x, pt, n);
-                Vector3 scale(ac_it->root_->getScale());
-                ac_it->root_->yaw(Radian(std::atan2(pt.y, pt.x)), Node::TS_PARENT);
-                ac_it->root_->setPosition(pt.x/scale[0], -pt.z/scale[1], pt.y/scale[2]);
-            }
+            // std::vector<anim_car>::iterator ac_it = hwm_v_->lane_cars_.begin();
+            // std::vector<lane>::iterator     la_it = hwm_v_->net_->lanes.begin();
+            // for(;   ac_it != hwm_v_->lane_cars_.end() &&
+            //         la_it != hwm_v_->net_->lanes.end();
+            //     ++ac_it, ++la_it)
+            // {
+            //     point pt,n;
+            //     float x = t_;
+            //     la_it->get_point_and_normal(x, pt, n);
+            //     Vector3 scale(ac_it->root_->getScale());
+            //     ac_it->root_->yaw(Radian(std::atan2(-n.y, n.x)), Node::TS_PARENT);
+            //     printf("t: %f p: %f %f n: %f %f %f a: %f\n", t_, pt.x, pt.y, n.x, n.y, n.z, std::atan2(-n.y, n.x));
+
+            //     ac_it->root_->setPosition(10.0*pt.x, 0.0f, -10.0*pt.y);
+            // }
+
+            int count = 1;
+            point pt,n;
+            float x = t_;
+            hwm_v_->net_->lanes[count].get_point_and_normal(x, pt, n);
+            hwm_v_->lane_cars_[count].root_->yaw(Radian(std::atan2(-n.y, n.x)), Node::TS_PARENT);
+            printf("t: %f p: %f %f n: %f %f %f a: %f\n", t_, pt.x, pt.y, n.x, n.y, n.z, std::atan2(-n.y, n.x));
+
+            hwm_v_->lane_cars_[count].root_->setPosition(10.0*pt.x, 0.0f, -10.0*pt.y);
         }
 
 		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
