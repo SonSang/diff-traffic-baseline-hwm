@@ -1,0 +1,35 @@
+<car-model id="chevyvan">
+  <info>
+    <make="Chevrolet"/>
+    <model="Van"/>
+    <year="Unknown"/>
+  </info>
+  <parts>
+    <body>
+    </body>
+    <wheel>
+    </wheel>
+  </parts>
+  <metrics>
+    <wheel-diameter>
+      0.709
+    </wheel-diameter>
+    <wheel-points>
+      0.0    0.922 -0.619
+      3.611  0.922 -0.619
+      3.611 -0.922 -0.619
+      0.0   -0.922 -0.619
+    </wheel-points>
+    <z-offset><!--plus wheel-diameter * 1/2 -->
+      0.619
+    </z-offset>
+  </metrics>
+  <body-colors>
+    <color>0.929411764706 0.929411764706 0.929411764706</color>
+    <color>0.827450980392 0.737254901961 0.658823529412</color>
+    <color>0.0745098039216 0.247058823529 0.866666666667</color>
+    <color>0.0 0.396078431373 0.145098039216</color>
+    <color>0.486274509804 0.21568627451 0.725490196078</color>
+    <color>0.364705882353 0.639215686275 1.0</color>
+  </body-colors>
+</car-model>

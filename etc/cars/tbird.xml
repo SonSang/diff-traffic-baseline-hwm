@@ -1,0 +1,37 @@
+<car-model id="tbird">
+  <info>
+    <make="Ford"/>
+    <model="Thunderbird"/>
+    <year="Unknown"/>
+  </info>
+  <parts>
+    <body>
+    </body>
+    <wheel>
+    </wheel>
+  </parts>
+  <metrics>
+    <wheel-diameter>
+      0.751
+    </wheel-diameter>
+    <wheel-points>
+      0.0    0.808 -0.507
+      2.916  0.808 -0.507
+      2.916 -0.808 -0.507
+      0.0   -0.808 -0.507
+    </wheel-points>
+    <z-offset><!--plus wheel-diameter * 1/2 -->
+      0.507
+    </z-offset>
+  </metrics>
+  <body-colors>
+    <color>0.843137254902 0.0745098039216 0.0745098039216</color>
+    <color>0.450980392157 0.788235294118 1.0</color>
+    <color>0.0 0.447058823529 0.0941176470588</color>
+    <color>1.0 0.945098039216 0.0941176470588</color>
+    <color>0.98431372549 0.901960784314 0.450980392157</color>
+    <color>0.0 0.239215686275 0.533333333333</color>
+    <color>0.811764705882 0.811764705882 0.811764705882</color>
+    <color>0.18431372549 0.18431372549 0.18431372549</color>
+  </body-colors>
+</car-model>
