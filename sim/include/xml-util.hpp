@@ -208,6 +208,16 @@ struct converter<char*>
     }
 };
 
+template <>
+struct converter<std::string>
+{
+    static inline bool from_string(std::string *f, const char *vstr)
+    {
+        *f = std::string(vstr);
+        return true;
+    }
+};
+
 template <typename T>
 struct list_matcher
 {
@@ -299,5 +309,26 @@ inline bool read_attributes(T & v, xmlTextReaderPtr reader)
     xmlTextReaderMoveToElement(reader);
 
     return true;
+}
+
+inline bool read_leaf_text(std::string &res, xmlTextReaderPtr reader, const char *endtag)
+{
+    bool read_text = false;
+
+    do
+    {
+        int ret = xmlTextReaderRead(reader);
+        if(ret != 1)
+            return false;
+
+        if(xmlTextReaderNodeType(reader) == XML_READER_TYPE_TEXT)
+        {
+            res.append((const char *) xmlTextReaderConstValue(reader));
+            read_text = true;
+        }
+    }
+    while(!is_closing_element(reader, endtag));
+
+    return read_text;
 }
 #endif

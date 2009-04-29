@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <car-model id="tbird">
   <info>
-    <make="Ford"/>
-    <model="Thunderbird"/>
-    <year="Unknown"/>
+    <make>Ford</make>
+    <model>Thunderbird</model>
+    <year>Unknown</year>
   </info>
   <parts>
     <body>
+      tbird-body
     </body>
     <wheel>
+      tbird-wheel
     </wheel>
+    <wheel-flip>
+      tbird-wheel-flip
+    </wheel-flip>
   </parts>
   <metrics>
     <wheel-diameter>
