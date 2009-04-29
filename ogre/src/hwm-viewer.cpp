@@ -6,12 +6,6 @@
 
 using namespace Ogre;
 
-struct anim_car
-{
-    SceneNode *root_;
-    SceneNode *wheels_[4];
-};
-
 class hwm_frame_listener: public FrameListener, public WindowEventListener
 {
 protected:

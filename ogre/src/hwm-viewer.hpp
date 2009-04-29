@@ -11,7 +11,11 @@
 #include "Caelum.h"
 #include "network.hpp"
 
-struct anim_car;
+struct anim_car
+{
+    Ogre::SceneNode *root_;
+    Ogre::SceneNode *wheels_[4];
+};
 
 struct car_model
 {
