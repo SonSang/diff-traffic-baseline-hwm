@@ -17,17 +17,28 @@ struct anim_car
     Ogre::SceneNode *wheels_[4];
 };
 
-struct car_model
+struct ogre_car_model
 {
-    Ogre::MeshPtr bodymesh_;
-    Ogre::MeshPtr wheelmesh_;
+    anim_car create_car(Ogre::SceneManager *sm, Ogre::SceneNode *base, const std::string &name) const;
+
+    Ogre::MeshPtr bodymesh;
+    Ogre::MeshPtr wheelmesh;
+
+    car_model *cm;
+};
+
+struct ogre_car_db : public car_db
+{
+    void load_meshes();
+
+    std::map<std::string, ogre_car_model> odb;
 };
 
 class hwm_frame_listener;
 
 struct hwm_viewer
 {
-    hwm_viewer(network *net);
+    hwm_viewer(network *net, const char *carpath);
 
     void go();
 
@@ -48,8 +59,6 @@ struct hwm_viewer
     void initialize_network();
 
     void setup_scene();
-
-    void create_car(Ogre::SceneNode *base, const car_model &carmodel, const std::string &name, anim_car &ac);
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6]);
 
@@ -74,6 +83,8 @@ struct hwm_viewer
     std::vector<anim_car> lane_cars_;
 
     Caelum::CaelumSystem *caelum_system_;
+
+    ogre_car_db o_cars_;
 };
 
 #endif

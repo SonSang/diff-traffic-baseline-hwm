@@ -7,13 +7,13 @@
   </info>
   <parts>
     <body>
-      tbird-body
+      tbird-body-mesh
     </body>
     <wheel>
-      tbird-wheel
+      tbird-wheel-mesh
     </wheel>
     <wheel-flip>
-      tbird-wheel-flip
+      tbird-wheel-flip-mesh
     </wheel-flip>
   </parts>
   <metrics>

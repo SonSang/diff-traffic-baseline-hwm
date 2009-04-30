@@ -417,8 +417,10 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(network *net) : net_(net), caelum_system_(0)
-{}
+hwm_viewer::hwm_viewer(network *net, const char *carpath) : net_(net), caelum_system_(0)
+{
+    o_cars_.add_dir(carpath);
+}
 
 void hwm_viewer::go()
 {
@@ -594,8 +596,6 @@ void hwm_viewer::setup_scene()
     net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
     net_sg->build();
 
-    //        StaticGeometry *ground_sg = scene_manager_->createStaticGeometry("Ground");
-
     Plane plane;
     plane.normal = Vector3::UNIT_Y;
     plane.d = 1;
@@ -609,79 +609,15 @@ void hwm_viewer::setup_scene()
     SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
     ground_node->attachObject(ground);
 
-    // ground_sg->addEntity(ground, Vector3(0,-1, 0));
-
-    // ground_sg->setRegionDimensions(Vector3(200000, 2, 200000));
-    // ground_sg->setOrigin(Vector3(-100000, -1, -100000));
-    // ground_sg->build();
-
-    car_model tbird;
-
-    tbird.bodymesh_ = MeshManager::getSingleton().load("tbird-body-mesh.mesh",
-                                                        ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    tbird.bodymesh_->createManualLodLevel(2500, "tbird-body-mesh-lod2.mesh");
-    tbird.bodymesh_->createManualLodLevel(5000, "tbird-body-mesh-lod3.mesh");
-
-    tbird.wheelmesh_ = MeshManager::getSingleton().load("tbird-wheel-mesh.mesh",
-                                                         ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-    tbird.wheelmesh_->createManualLodLevel(2500, "tbird-wheel-mesh-lod2.mesh");
-    tbird.wheelmesh_->createManualLodLevel(5000, "tbird-wheel-mesh-lod3.mesh");
-
     SceneNode *vehicle_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+
+    o_cars_.load_meshes();
 
     count = 0;
     foreach(const lane &la, net_->lanes)
     {
-        lane_cars_.push_back(anim_car());
-        create_car(vehicle_node, tbird, boost::str(boost::format("Car-%1%") % count), lane_cars_.back());
+        lane_cars_.push_back(o_cars_.odb.begin()->second.create_car(scene_manager_, vehicle_node, boost::str(boost::format("Car-%1%") % count)));
         ++count;
-    }
-}
-
-void hwm_viewer::create_car(SceneNode *base, const car_model &cm, const std::string &name, anim_car &ac)
-{
-    std::string body_name(boost::str(boost::format("%1%-body") % name));
-
-    Entity* ent2 = scene_manager_->createEntity(body_name, cm.bodymesh_->getName() );
-    ent2->setCastShadows(true);
-
-    ac.root_ = base->createChildSceneNode(body_name, Vector3(0,  8+0.507+0.751*0.5, 0));
-    ac.root_->scale(8, 8, 8);
-    ac.root_->attachObject(ent2);
-
-    {
-        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 0));
-        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
-        wheel->setCastShadows(true);
-
-        ac.wheels_[0] = ac.root_->createChildSceneNode(wheel_name, Vector3(0,  -.507, 0.808));
-        ac.wheels_[0]->yaw(Degree(180));
-        ac.wheels_[0]->attachObject(wheel);
-    }
-    {
-        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 1));
-        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
-        wheel->setCastShadows(true);
-
-        ac.wheels_[1] = ac.root_->createChildSceneNode(wheel_name, Vector3(0,  -.507, -0.808));
-        ac.wheels_[1]->attachObject(wheel);
-    }
-    {
-        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 2));
-        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
-        wheel->setCastShadows(true);
-
-        ac.wheels_[2] = ac.root_->createChildSceneNode(wheel_name, Vector3(2.916,  -.507, 0.808));
-        ac.wheels_[2]->yaw(Degree(180));
-        ac.wheels_[2]->attachObject(wheel);
-    }
-    {
-        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % 3));
-        Entity *wheel = scene_manager_->createEntity(wheel_name, cm.wheelmesh_->getName());
-        wheel->setCastShadows(true);
-
-        ac.wheels_[3] = ac.root_->createChildSceneNode(wheel_name, Vector3(2.916,  -.507, -0.808));
-        ac.wheels_[3]->attachObject(wheel);
     }
 }
 
@@ -823,16 +759,129 @@ int main(int argc, char **argv)
 {
     network *net = new network;
 
-    if(!net->load_from_xml(argv[1]))
+    if(argc < 3)
     {
-        fprintf(stderr, "Couldn't load %s\n", argv[1]);
+        fprintf(stderr, "Usage: %s <network file> <car-db dir>\n", argv[0]);
         exit(1);
     }
 
-    hwm_viewer hv(net);
+    if(!net->load_from_xml(argv[1]))
+    {
+        fprintf(stderr, "Couldn't load network %s\n", argv[1]);
+        exit(1);
+    }
+
+    hwm_viewer hv(net, argv[2]);
     hv.go();
 
     delete net;
 
     return 0;
 }
+
+anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std::string &name) const
+{
+    const float scale = 8.0f;
+
+    anim_car ac;
+
+    std::string body_name(boost::str(boost::format("%1%-body") % name));
+
+    Entity* ent2 = sm->createEntity(body_name, bodymesh->getName() );
+    ent2->setCastShadows(true);
+
+    ac.root_ = base->createChildSceneNode(body_name, Vector3(0, scale + cm->z_offset + cm->wheel_diameter*0.5, 0));
+    ac.root_->scale(scale, scale, scale);
+    ac.root_->attachObject(ent2);
+
+    for(int w = 0; w < 4; ++w)
+    {
+        std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % w));
+        Entity *wheel = sm->createEntity(wheel_name, wheelmesh->getName());
+        wheel->setCastShadows(true);
+
+        ac.wheels_[w] = ac.root_->createChildSceneNode(wheel_name, Vector3(cm->wheel_points[w][0], cm->wheel_points[w][2], cm->wheel_points[w][1]));
+
+        if(w < 2)
+            ac.wheels_[w]->yaw(Degree(180));
+
+        ac.wheels_[w]->attachObject(wheel);
+    }
+
+    return ac;
+}
+
+
+static void look_for_lod(MeshPtr mesh, std::string &mesh_root, std::vector<float> &lodlevels)
+{
+    int count = 2;
+    foreach(float lod, lodlevels)
+    {
+        std::string lod_name = boost::str(boost::format("%1%-lod%2%.mesh") %  mesh_root % count);
+
+        LogManager::getSingleton().logMessage(boost::str(boost::format("Looking for lod %1% (filename %2%)") % count % lod_name));
+
+        MeshPtr lodm;
+        try
+        {
+            mesh->createManualLodLevel(lod, lod_name);
+        }
+        catch(FileNotFoundException &fnfe)
+        {
+            LogManager::getSingleton().logMessage(boost::str(boost::format("Couldn't find %1%; stopping lod search") % lod_name));
+            return;
+        }
+
+        LogManager::getSingleton().logMessage(boost::str(boost::format("Successfully found %1%") % lod_name));
+        ++count;
+    }
+}
+
+void ogre_car_db::load_meshes()
+{
+    for(std::map<std::string, car_model>::iterator current = db.begin();
+        current != db.end();
+        ++current)
+    {
+        std::string body_mesh_name = boost::str(boost::format("%1%.mesh") %  current->second.body_mesh);
+
+        std::string wheel_mesh_name = boost::str(boost::format("%1%.mesh") %  current->second.wheel_mesh);
+
+        ogre_car_model ocm;
+        try
+        {
+            LogManager::getSingleton().logMessage(boost::str(boost::format("Looking for bodymesh (%1%) for car %2%") % body_mesh_name % current->first));
+            ocm.bodymesh = MeshManager::getSingleton().load(body_mesh_name,
+                                                            ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        }
+        catch(FileNotFoundException &fnfe)
+        {
+            LogManager::getSingleton().logMessage(boost::str(boost::format("Couldn't find bodymesh (%1%) for car %2%; skipping this model") % body_mesh_name % current->first));
+            return;
+        }
+        LogManager::getSingleton().logMessage(boost::str(boost::format("Found bodymesh (%1%) for car %2%") % body_mesh_name % current->first));
+        std::vector<float> lodlevels;
+        lodlevels.push_back(250);
+        lodlevels.push_back(500);
+
+        look_for_lod(ocm.bodymesh, current->second.body_mesh, lodlevels);
+
+        try
+        {
+            LogManager::getSingleton().logMessage(boost::str(boost::format("Looking for wheelmesh (%1%) for car %2%") % wheel_mesh_name % current->first));
+            ocm.wheelmesh = MeshManager::getSingleton().load(wheel_mesh_name,
+                                                             ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+        }
+        catch(FileNotFoundException &fnfe)
+        {
+            LogManager::getSingleton().logMessage(boost::str(boost::format("Couldn't find wheelmesh (%1%) for car %2%; skipping this model") % wheel_mesh_name % current->first));
+            return;
+        }
+        LogManager::getSingleton().logMessage(boost::str(boost::format("Found wheelmesh (%1%) for car %2%") % wheel_mesh_name % current->first));
+        look_for_lod(ocm.wheelmesh, current->second.wheel_mesh, lodlevels);
+
+        ocm.cm = &(current->second);
+        odb[current->first] = ocm;
+    }
+};
+

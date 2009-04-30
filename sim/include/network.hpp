@@ -75,6 +75,7 @@ typedef id<lane> lane_id;
 typedef id<intersection> intersection_id;
 
 #include "xml-util.hpp"
+#include "car-models.hpp"
 #include "timer.hpp"
 #include "intervals.hpp"
 #include "arz.hpp"
