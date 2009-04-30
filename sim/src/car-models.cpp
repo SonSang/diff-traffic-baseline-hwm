@@ -97,14 +97,6 @@ bool car_model::xml_read(xmlTextReaderPtr reader)
     boost::trim(wheel_mesh);
     boost::trim(wheel_flip_mesh);
 
-    printf("id: %s\nmake: %s\nmodel: %s\nyear: %s\n", id.c_str(), make.c_str(), model.c_str(), year.c_str());
-    printf("body_mesh: %s\nwheel_mesh: %s\nwheel_flip_mesh: %s\n", body_mesh.c_str(), wheel_mesh.c_str(), wheel_flip_mesh.c_str());
-    printf("wheel_diameter: %f\nz_offset: %f\n", wheel_diameter, z_offset);
-    printf("wheel points:\n");
-    for(int i = 0; i < 4; ++i)
-        printf("%f %f %f\n", wheel_points[i][0], wheel_points[i][1], wheel_points[i][2]);
-    printf("ncolors: %zu\n", body_colors.size());
-
     return true;
 }
 
