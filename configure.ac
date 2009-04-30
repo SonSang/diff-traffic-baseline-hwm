@@ -100,6 +100,8 @@ AM_CONDITIONAL(DO_OGRE, test x"$ogre_ok" = xyes)
 
 # Checks for libraries.
 AX_BOOST_BASE([1.35])
+AX_BOOST_FILESYSTEM
+AX_BOOST_REGEX
 
 # Checks for header files.
 
@@ -131,10 +133,12 @@ AC_OUTPUT
 
 echo "
   $PACKAGE_NAME version $PACKAGE_VERSION-$GIT_VERSION
-  Prefix.........: $prefix
-  Debug Build....: $debug
-  Boost CPPFLAGS.: $BOOST_CPPFLAGS
-  Boost LDFLAGS..: $BOOST_LDFLAGS
+  Prefix..............: $prefix
+  Debug Build.........: $debug
+  Boost CPPFLAGS......: $BOOST_CPPFLAGS
+  Boost LDFLAGS.......: $BOOST_LDFLAGS
+  Boost FILESYSTEM LIB: $BOOST_FILESYSTEM_LIB
+  Boost REGEX LIB.....: $BOOST_REGEX_LIB
   libxml2 CFLAGS.: $LIBXML2_CFLAGS
   libxml2 LIBS...: $LIBXML2_LIBS"
 if test -z $DO_VISUAL; then

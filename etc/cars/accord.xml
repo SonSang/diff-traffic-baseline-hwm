@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <car-model id="accord">
   <info>
-    <make="Honda"/>
-    <model="Accord"/>
-    <year="Unknown"/>
+    <make>Honda</make>
+    <model>Accord</model>
+    <year>Unknown</year>
   </info>
   <parts>
-    <body>
+    <body>honda-body
     </body>
-    <wheel>
+    <wheel>honda-wheel
     </wheel>
+    <wheel-flip>honda-wheel-flip
+    </wheel-flip>
   </parts>
   <metrics>
     <wheel-diameter>

@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <car-model id="chevyvan">
   <info>
-    <make="Chevrolet"/>
-    <model="Van"/>
-    <year="Unknown"/>
+    <make>Chevrolet</make>
+    <model>Van</model>
+    <year>Unknown</year>
   </info>
   <parts>
-    <body>
+    <body>chevyvan-body
     </body>
-    <wheel>
+    <wheel>chevyvan-wheel
     </wheel>
+    <wheel-flip>chevyvan-wheel-flip
+    </wheel-flip>
   </parts>
   <metrics>
     <wheel-diameter>

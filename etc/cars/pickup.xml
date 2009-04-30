@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <car-model id="pickup">
   <info>
-    <make="Ford"/>
-    <model="F150"/>
-    <year="Unknown"/>
+    <make>Ford"</make>
+    <model>F150</model>
+    <year>Unknown</year>
   </info>
   <parts>
-    <body>
+    <body>pickup-body
     </body>
-    <wheel>
+    <wheel>pickup-wheel
     </wheel>
+    <wheel-flip>pickup-wheel-flip
+    </wheel-flip>
   </parts>
   <metrics>
     <wheel-diameter>

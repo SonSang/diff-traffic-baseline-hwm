@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <car-model id="golf">
   <info>
-    <make="Volkswagen"/>
-    <model="Golf"/>
-    <year="Unknown"/>
+    <make>Volkswagen</make>
+    <model>Golf</model>
+    <year>Unknown</year>
   </info>
   <parts>
-    <body>
+    <body>golf-body
     </body>
-    <wheel>
+    <wheel>golf-wheel
     </wheel>
+    <wheel-flip>golf-wheel-flip
+    </wheel-flip>
   </parts>
   <metrics>
     <wheel-diameter>
