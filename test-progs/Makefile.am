@@ -1,5 +1,5 @@
 AM_CXXFLAGS = -I$(top_srcdir)/sim/include $(BOOST_CPPFLAGS) $(LIBXML2_CFLAGS)
-ADD_LIBS = $(top_builddir)/sim/src/libhwm_net.la $(BOOST_LDFLAGS) $(LIBXML2_LIBS) $(BOOST_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_REGEX_LIB)
+ADD_LIBS = $(top_builddir)/sim/src/libhwm_net.la
 
 EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp
 

@@ -1,5 +1,9 @@
 #include "car-models.hpp"
+
 #include "boost/algorithm/string.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+#include <iostream>
 #include <sstream>
 
 bool car_model::load_from_xml(const char *filename)
@@ -285,4 +289,66 @@ static bool read_color(void *item, xmlTextReaderPtr reader)
     std::vector<bodycolor> &bc = reinterpret_cast<car_model*>(item)->body_colors;
     bc.push_back(bodycolor());
     return (sscanf(res.c_str(), "%f %f %f", bc.back().rgb, bc.back().rgb+1, bc.back().rgb+2) == 3);
+}
+
+void car_model::swap(car_model &o)
+{
+    id   .swap(o.id);
+    make .swap(o.make);
+    model.swap(o.model);
+    year .swap(o.year);
+
+    body_mesh      .swap(o.body_mesh);
+    wheel_mesh     .swap(o.wheel_mesh);
+    wheel_flip_mesh.swap(o.wheel_flip_mesh);
+
+    std::swap(wheel_diameter, o.wheel_diameter);
+
+    for(int i = 0; i < 4; ++i)
+        for(int j = 0; j < 3; ++j)
+            std::swap(wheel_points[i][j], o.wheel_points[i][j]);
+
+    std::swap(z_offset, o.z_offset);
+
+    body_colors.swap(o.body_colors);
+}
+
+bool car_db::add_file(const char *file)
+{
+    car_model cm;
+    if(cm.load_from_xml(file))
+    {
+        db[cm.id] = cm;
+        return true;
+    }
+    return false;
+}
+
+namespace bf = boost::filesystem;
+
+int car_db::add_dir(const char *dir)
+{
+    int count = 0;
+    bf::path srcdir(dir);
+    if(bf::is_directory(srcdir))
+    {
+        boost::regex re(".*\\.xml");
+        bf::directory_iterator end_itr;
+        for( bf::directory_iterator itr(srcdir);
+             itr != end_itr;
+             ++itr)
+        {
+            if(itr->path().has_filename() && boost::regex_match(itr->path().filename(), re))
+            {
+                std::cout << "Loading " << itr->path().file_string() << "...";
+
+                if(add_file(itr->path().file_string().c_str()))
+                {
+                    std::cout << "Done." << std::endl;
+                    ++count;
+                }
+            }
+        }
+    }
+    return count;
 }

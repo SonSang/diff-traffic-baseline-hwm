@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include "network.hpp"
 
 struct bodycolor
@@ -14,6 +15,8 @@ struct car_model
 {
     bool load_from_xml(const char *filename);
     bool xml_read(xmlTextReaderPtr reader);
+
+    void swap(car_model &o);
 
     std::string id;
     std::string make;
@@ -30,6 +33,14 @@ struct car_model
     float z_offset;
 
     std::vector<bodycolor> body_colors;
+};
+
+struct car_db
+{
+    bool add_file(const char *file);
+    int  add_dir(const char *dir);
+
+    std::map<const std::string, car_model> db;
 };
 
 #endif
