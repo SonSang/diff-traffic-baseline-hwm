@@ -246,6 +246,8 @@ void network::prepare(float h)
                 total += la.ncells = std::ceil(len/h);
                 assert(la.ncells > 0);
                 la.h = len/la.ncells;
+                if(la.h < h*0.5)
+                    la.h = h*0.5;
                 min_h = std::min(min_h, la.h);
                 ++nlanes;
             }
