@@ -83,7 +83,11 @@
 	<right>
 	  <interval>
 	    <base>
-	      <lane_adjacency/>
+	      <lane_adjacency>
+		0.1
+		0.2
+		0.24
+	      </lane_adjacency>
 	    </base>
 	    <divider value="0.3704">
 	      <lane_adjacency lane_ref="lane0c" interval_start="0.7478" interval_end="1.0"/>

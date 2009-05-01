@@ -1,4 +1,5 @@
 #include "network.hpp"
+#include <sstream>
 
 static inline float rk4(float x, float dtinvlen, const lane *la, float gamma_c)
 {
@@ -199,7 +200,24 @@ bool adjacency::xml_read(xmlTextReaderPtr reader)
                                  lm("interval_end", neighbor_interval+1));
 
     if(!read_attributes(vl, reader))
+    {
         neighbor.sp = 0;
+
+        if(!xmlTextReaderIsEmptyElement(reader))
+        {
+            std::string pts;
+            read_leaf_text(pts, reader, "lane_adjacency");
+
+            std::stringstream ss(pts);
+            float temp;
+            ss >> temp;
+            while(ss.good())
+            {
+                source_sinks.push_back(temp);
+                ss >> temp;
+            }
+        }
+    }
 
     return true;
 };

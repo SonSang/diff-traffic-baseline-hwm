@@ -44,6 +44,8 @@ struct adjacency
     float neighbor_interval[2]; //< The parametric interval
                                //< in the neighbor corresponding
                                //< to this adjacency
+
+    std::vector<float> source_sinks;
 };
 
 //! A single continuous road lane
