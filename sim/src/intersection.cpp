@@ -426,6 +426,8 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
     return maxspeed;
 }
 
+char fict_name[] = "Fictitious intersection road";
+
 void intersection::initialize_state_lanes()
 {
     foreach(state &st, states)
@@ -473,7 +475,7 @@ void intersection::initialize_state_lanes()
 
             st.fict_roads.push_back(road());
             road &r = st.fict_roads.back();
-            r.name = strdup("Fictitious intersection road");
+            r.name = fict_name;
             r.rep.points.push_back(in_pt);
             r.rep.points.push_back(middle);
             r.rep.points.push_back(out_pt);
