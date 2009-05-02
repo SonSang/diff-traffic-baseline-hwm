@@ -74,6 +74,7 @@ struct lane
 
     void draw_data(draw_type dtype, float gamma_c) const;
     void draw_carticles() const;
+    void draw_source_sinks(float scale) const;
 
     void fill_from_carticles();
     void reset_data();

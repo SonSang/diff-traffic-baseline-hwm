@@ -311,6 +311,57 @@ void lane::draw_carticles() const
     }
 }
 
+void lane::draw_source_sinks(float scale) const
+{
+    float offs = CAR_REAR_AXLE/(ncells*h);
+
+    const adjacency *ladj = &(left.base_data);
+    int p = -1;
+    while(1)
+    {
+        foreach(const float &ss, ladj->source_sinks)
+        {
+            float x = ss;
+            point pt;
+            point no;
+            get_point_and_normal(x, pt, no);
+
+            glBegin(GL_LINES);
+            glVertex3f(pt.x - no.y*(LANE_WIDTH*0.5),       pt.y + no.x*(LANE_WIDTH*0.5), pt.z);
+            glVertex3f(pt.x - no.y*(scale+LANE_WIDTH*0.5), pt.y + no.x*(scale+LANE_WIDTH*0.5), pt.z);
+            glEnd();
+        }
+
+        ++p;
+        if(p >= static_cast<int>(left.entries.size()))
+            break;
+        ladj = &(left.entries[p].data);
+    }
+
+    const adjacency *radj = &(right.base_data);
+    p = -1;
+    while(1)
+    {
+        foreach(const float &ss, radj->source_sinks)
+        {
+            float x = ss;
+            point pt;
+            point no;
+            get_point_and_normal(x, pt, no);
+
+            glBegin(GL_LINES);
+            glVertex3f(pt.x + no.y*(LANE_WIDTH*0.5),       pt.y - no.x*(LANE_WIDTH*0.5), pt.z);
+            glVertex3f(pt.x + no.y*(scale+LANE_WIDTH*0.5), pt.y - no.x*(scale+LANE_WIDTH*0.5), pt.z);
+            glEnd();
+        }
+
+        ++p;
+        if(p >= static_cast<int>(right.entries.size()))
+            break;
+        radj = &(right.entries[p].data);
+    }
+}
+
 void intersection::draw() const
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -530,6 +581,9 @@ public:
                 i.draw();
             foreach(const intersection &is, net->intersections)
                 is.draw_lanes();
+
+            foreach(lane &la, net->lanes)
+                la.draw_source_sinks(2*CAR_LENGTH);
         }
 
         if(draw_param_obj)
