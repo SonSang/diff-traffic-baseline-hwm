@@ -95,15 +95,32 @@ struct y_integrator
 
 int main(int argc, char **argv)
 {
-    kinematics ke(M_PI/4.0, 4.5, 16.666667, 0.0);
+    if(argc < 5)
+    {
+        fprintf(stderr, "Usage: %s <speed (m/s)> <lane width (m)> <car length (m)> <max wheel deflection (rad)> [nsamp]\n", argv[0]);
+        exit(1);
+    }
+
+    double velocity;
+    sscanf(argv[1], "%lf", &velocity);
+
+    double lane_width;
+    sscanf(argv[2], "%lf", &lane_width);
+
+    double car_length;
+    sscanf(argv[3], "%lf", &car_length);
+
+    double phi_max;
+    sscanf(argv[4], "%lf", &phi_max);
+
+    kinematics ke(phi_max, car_length, velocity, 0.0);
 
     gsl_function f_x = {ke_x, &ke};
     gsl_function f_y = {ke_y, &ke};
 
-    y_integrator yi(ke, f_y, 4.0);
+    y_integrator yi(ke, f_y, lane_width);
 
     double res = secant<y_integrator>(yi, 0.5, 1.0, 0.0, 20.0, 1e-4, 100);
-    fprintf(stderr, "t: %lf s\n", res);
 
     ke.m = res;
     ke.inv_m = 1.0/res;
@@ -115,29 +132,36 @@ int main(int argc, char **argv)
         gsl_integration_qng(&f_x, 0, ke.m, 1e-4, 1e-3, &final_x, &abserr, &neval);
     }
 
-    fprintf(stderr, "x end: %lf m\n", final_x);
-
-    printf("t x y theta\n");
-
-    double interval[2] = {0.0, res};
-
-    size_t n = 80;
-    for(size_t i = 0; i < n; ++i)
+    if(argc == 5)
     {
-        double t = (interval[1]-interval[0])*i/(n-1);
-
-        double x, y, theta;
-        double abserr;
-        size_t neval;
-        gsl_integration_qng(&f_x, 0, t, 1e-4, 1e-3, &x, &abserr, &neval);
-        gsl_integration_qng(&f_y, 0, t, 1e-4, 1e-3, &y, &abserr, &neval);
-
-        theta = ke_theta(t, &ke);
-
-        printf("%lf %lf %lf %lf\n", t, x, y, theta);
+        fprintf(stderr, "t_end x_end\n");
+        fprintf(stderr, "%lf %lf\n", res, final_x);
     }
+    else if(argc == 6)
+    {
+        size_t n;
+        sscanf(argv[5], "%zu", &n);
 
+        printf("t x y theta\n");
 
+        double interval[2] = {0.0, res};
+
+        for(size_t i = 0; i < n; ++i)
+        {
+            double t = (interval[1]-interval[0])*i/(n-1);
+
+            double x, y, theta;
+            double abserr;
+            size_t neval;
+            gsl_integration_qng(&f_x, 0, t, 1e-4, 1e-3, &x, &abserr, &neval);
+            gsl_integration_qng(&f_y, 0, t, 1e-4, 1e-3, &y, &abserr, &neval);
+
+            theta = ke_theta(t, &ke);
+
+            printf("%lf %lf %lf %lf\n", t, x, y, theta);
+        }
+
+    }
     return 0;
 }
 
