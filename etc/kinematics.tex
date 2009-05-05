@@ -79,36 +79,42 @@
   x\left(t\right) &= \int_{0}^{t} \dot{x}\left(u\right)\,du\\
   &= \int_{0}^{t} v\left(u\right)\cos\left(\theta\left(u\right)\right)\,du\\
   &= v \int_{0}^{t} \cos\left(\theta\left(u\right)\right)\,du\\
-  &= v \left(\int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du\right.\\
+  x\left(m\right) &= v \left(\int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du\right.\\
   &+ \int_{m/4}^{3m/4} \cos\left(-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}\right)\,du\\
-  &+ \left.\int_{3m/4}^{m} \cos\left(2\phi_{\max}m + \phi_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)\\
+  &+ \left.\int_{3m/4}^{m} \cos\left(2\phi_{\max}m + \phi_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)
 \end{align}
-\begin{equation}
-% w = \sqrt{2\frac{\phi_{\max}}{m}}u
-  \int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du = \sqrt{\frac{m}{2\phi_{\max}}}\int_{0}^{\sqrt{\phi_{\max}m/8}} \cos\left(w^2\right)\,dw
-\end{equation}
-\begin{align}
-  \int_{m/4}^{3m/4} \cos\left(\ldots
-    %-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}
-  \right)\,du &= \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) +  \phi_{\max}\frac{m}{4}\right)\,du\\
-  &= \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\cos\left(\phi_{\max}\frac{m}{4}\right)\,du - \int_{m/4}^{3m/4} \sin\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\sin\left(\phi_{\max}\frac{m}{4}\right)\,du\\
-  &= \cos\left(\phi_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du - \sin\left(\phi_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \sin\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du
-\end{align}
+%\begin{equation}
+%% w = \sqrt{2\frac{\phi_{\max}}{m}}u
+%  \int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du = \sqrt{\frac{m}{2\phi_{\max}}}\int_{0}^{\sqrt{\phi_{\max}m/8}} \cos\left(w^2\right)\,dw
+%\end{equation}
+%\begin{align}
+%  \int_{m/4}^{3m/4} \cos\left(\ldots
+%    %-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}
+%  \right)\,du &= \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) +  \phi_{\max}\frac{m}{4}\right)\,du\\
+%  &= \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\cos\left(\phi_{\max}\frac{m}{4}\right)\,du - \int_{m/4}^{3m/4} \sin\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\sin\left(\phi_{\max}\frac{m}{4}\right)\,du\\
+%  &= \cos\left(\phi_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du - \sin\left(\phi_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \sin\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du
+%\end{align}
+%\begin{align}
+%  \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right) &= \cos\left(2\phi_{\max}\frac{u^{2}}{m}-2\phi_{\max}u\right)\\
+%  &= \cos\left(2\phi_{\max}\frac{u^{2}}{m}\right)\cos\left(2\phi_{\max}u\right) + \sin\left(2\phi_{\max}\frac{u^{2}}{m}\right)\sin\left(2\phi_{\max}u\right)
+%\end{align}
 
 \begin{align}
-  \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right) &= \cos\left(2\phi_{\max}\frac{u^{2}}{m}-2\phi_{\max}u\right)\\
-  &= \cos\left(2\phi_{\max}\frac{u^{2}}{m}\right)\cos\left(2\phi_{\max}u\right) + \sin\left(2\phi_{\max}\frac{u^{2}}{m}\right)\sin\left(2\phi_{\max}u\right)
-\end{align}
-
-
-\begin{align}
-  x\left(t\right) &= v \left(\int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du\right.\\
-  &+ \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) + \phi_{\max}\frac{m}{4}\right)\,du\\
-  &+ \left.\int_{3m/4}^{m} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-4u\right) + 2\phi_{\max}m\right)\,du\right)\\
   y\left(t\right) &= \int_{0}^{t} \dot{y}\left(u\right)\,du\\
-  &= \int_{0}^{t} v\left(u\right)\sin\left(\theta\left(u\right)\right)\,du
+  &= \int_{0}^{t} v\left(u\right)\sin\left(\theta\left(u\right)\right)\,du\\
+  &= v \int_{0}^{t} \sin\left(\theta\left(u\right)\right)\,du\\
+  y\left(m\right) &= v \left(\int_{0}^{m/4} \sin\left(2\frac{\phi_{\max}}{m} u^2\right)\,du\right.\\
+  &+ \int_{m/4}^{3m/4} \sin\left(-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}\right)\,du\\
+  &+ \left.\int_{3m/4}^{m} \sin\left(2\phi_{\max}m + \phi_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)
 \end{align}
 
+\begin{align}
+  y\left(m\right) &= w_{\mathrm{lane}}\\
+  y\left(m\right) &- w_{\mathrm{lane}} = 0\\
+  y\left(m\right) &- w_{\mathrm{lane}} = 0\\
+  v \int_{0}^{m} \sin\left(\theta\left(u\right)\right)\,du &- w_{\mathrm{lane}} = 0\\
+  \int_{0}^{m} \sin\left(\theta\left(u\right)\right)\,du &- \frac{w_{\mathrm{lane}}}{v} = 0
+\end{align}
 
 \end{document}
 
