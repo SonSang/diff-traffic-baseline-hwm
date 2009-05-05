@@ -95,9 +95,7 @@ struct y_integrator
 
 int main(int argc, char **argv)
 {
-    double interval[2] = {0.0, M_PI};
-
-    kinematics ke(M_PI/4.0, 1.0, 16.666667, M_PI);
+    kinematics ke(M_PI/4.0, 4.5, 16.666667, 0.0);
 
     gsl_function f_x = {ke_x, &ke};
     gsl_function f_y = {ke_y, &ke};
@@ -119,7 +117,9 @@ int main(int argc, char **argv)
 
     fprintf(stderr, "x end: %lf m\n", final_x);
 
-    interval[1] = res;
+    printf("t x y theta\n");
+
+    double interval[2] = {0.0, res};
 
     size_t n = 80;
     for(size_t i = 0; i < n; ++i)
@@ -134,9 +134,7 @@ int main(int argc, char **argv)
 
         theta = ke_theta(t, &ke);
 
-        //        printf("%lf %lf %lf %lf\n", t, x, y, theta);
-        printf("%lf %lf\n", x, y);
-        //printf("%lf %lf\n", t, theta);
+        printf("%lf %lf %lf %lf\n", t, x, y, theta);
     }
 
 
