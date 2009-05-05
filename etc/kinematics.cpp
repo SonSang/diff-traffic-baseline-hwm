@@ -27,6 +27,8 @@ double ke_theta(double t, void *n)
         return -ke->phi_max*(2*t*t*ke->inv_m - 2*t + ke->m/4);
     else if(t <= ke->m)
         return ke->phi_max*(2*t*t*ke->inv_m - 4*t + 2*ke->m);
+    else
+        return 0.0;
 };
 
 double ke_x(double t, void *n)
@@ -75,11 +77,14 @@ struct y_integrator
 
     inline double operator()(float m)
     {
-        double x, y;
+        double y;
         double abserr;
         size_t neval;
 
-        gsl_integration_qng(&f_y, 0, m, 1e-4, 1e-3, &y, &abserr, &neval);
+        ke.m = m;
+        ke.inv_m = 1.0/m;
+
+        gsl_integration_qng(&f_y, 0, m, 1e-4, 1e-4, &y, &abserr, &neval);
         return y - width;
     }
 
@@ -87,7 +92,6 @@ struct y_integrator
     gsl_function &f_y;
     double width;
 };
-
 
 int main(int argc, char **argv)
 {
@@ -98,24 +102,39 @@ int main(int argc, char **argv)
     gsl_function f_x = {ke_x, &ke};
     gsl_function f_y = {ke_y, &ke};
 
-    // size_t n = 200;
-
-    // for(size_t i = 0; i < n; ++i)
-    // {
-    //     double t = (interval[1]-interval[0])*i/(n-1);
-
-    //     double x, y;
-    //     double abserr;
-    //     size_t neval;
-    //     gsl_integration_qng(&f_x, 0, t, 1e-4, 1e-3, &x, &abserr, &neval);
-    //     gsl_integration_qng(&f_y, 0, t, 1e-4, 1e-3, &y, &abserr, &neval);
-
-    //     printf("%lf %lf\n", x, y);
-    // }
     y_integrator yi(ke, f_y, 4.0);
 
     double res = secant<y_integrator>(yi, 0.5, 1.0, 0.0, 20.0, 1e-4, 100);
-    printf("res: %lf\n", res);
+    fprintf(stderr, "t: %lf s\n", res);
+
+    ke.m = res;
+    ke.inv_m = 1.0/res;
+
+    double final_x;
+    {
+        double abserr;
+        size_t neval;
+        gsl_integration_qng(&f_x, 0, ke.m, 1e-4, 1e-3, &final_x, &abserr, &neval);
+    }
+
+    fprintf(stderr, "x end: %lf m\n", final_x);
+
+    interval[1] = res;
+
+    size_t n = 80;
+    for(size_t i = 0; i < n; ++i)
+    {
+        double t = (interval[1]-interval[0])*i/(n-1);
+
+        double x, y;
+        double abserr;
+        size_t neval;
+        gsl_integration_qng(&f_x, 0, t, 1e-4, 1e-3, &x, &abserr, &neval);
+        gsl_integration_qng(&f_y, 0, t, 1e-4, 1e-3, &y, &abserr, &neval);
+
+        printf("%lf %lf\n", x, y);
+    }
+
 
     return 0;
 }
