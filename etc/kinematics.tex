@@ -10,6 +10,11 @@
 \end{align}
 
 \begin{align}
+  \frac{\tan \phi\left(t\right)}{L} &= \kappa\left(t\right)\\
+  \kappa_{\max} &= \frac{\tan \phi_{\max}}{L}
+\end{align}
+
+\begin{align}
   \kappa\left(t\right) = \left\{
     \begin{array}{cc}
       \kappa_{0}\left(t\right),   & t \le m/4\\
@@ -21,10 +26,10 @@
 \end{align}
 
 \begin{align}
-  \kappa_{0}\left(t\right) &= \phi_{\max}\frac{t}{\frac{m}{4}} &= &=\phi_{\max}\frac{4t}{m}\\
-  \kappa_{1}\left(t\right) &= \phi_{\max}\left(1-\frac{t-\frac{m}{4}}{\frac{m}{4}}\right) &= \phi_{\max}\left(1-\frac{4t-m}{m}\right) &= -\phi_{\max}\left(\frac{4t}{m}-2\right)\\
-  \kappa_{2}\left(t\right) &= -\phi_{\max}\frac{t-\frac{m}{2}}{\frac{m}{4}} &= -\phi_{\max}\frac{4t-2m}{m} &= -\phi_{\max}\left(\frac{4t}{m}-2\right)\\
-  \kappa_{3}\left(t\right) &= \phi_{\max}\left(\frac{t-\frac{3m}{4}}{\frac{m}{4}}-1\right) &=  \phi_{\max}\left(\frac{4t-3m}{m}-1\right) &= \phi_{\max}\left(\frac{4t}{m}-4\right)
+  \kappa_{0}\left(t\right) &= \kappa_{\max}\frac{t}{\frac{m}{4}} &= &=\kappa_{\max}\frac{4t}{m}\\
+  \kappa_{1}\left(t\right) &= \kappa_{\max}\left(1-\frac{t-\frac{m}{4}}{\frac{m}{4}}\right) &= \kappa_{\max}\left(1-\frac{4t-m}{m}\right) &= -\kappa_{\max}\left(\frac{4t}{m}-2\right)\\
+  \kappa_{2}\left(t\right) &= -\kappa_{\max}\frac{t-\frac{m}{2}}{\frac{m}{4}} &= -\kappa_{\max}\frac{4t-2m}{m} &= -\kappa_{\max}\left(\frac{4t}{m}-2\right)\\
+  \kappa_{3}\left(t\right) &= \kappa_{\max}\left(\frac{t-\frac{3m}{4}}{\frac{m}{4}}-1\right) &=  \kappa_{\max}\left(\frac{4t-3m}{m}-1\right) &= \kappa_{\max}\left(\frac{4t}{m}-4\right)
 \end{align}
 
 \begin{align}
@@ -48,29 +53,29 @@
   \right.
 \end{align}
 \begin{align}
-  \int \kappa_{0}\left(x\right)\,dx &= \int \phi_{\max}\frac{4x}{m}\,dx &= \phi_{\max}\frac{2x^{2}}{m} + C_{0}\\
-  \int \kappa_{1}\left(x\right)\,dx &= \int -\phi_{\max}\left(\frac{4x}{m}-2\right)\,dx &= -\phi_{\max}\left(\frac{2x^{2}}{m}-2x\right) + C_{1}\\
-  \int \kappa_{3}\left(x\right)\,dx &= \int \phi_{\max}\left(\frac{4x}{m}-4\right)\,dx &= \phi_{\max}\left(\frac{2x^{2}}{m}-4x\right) + C_{3}
+  \int \kappa_{0}\left(x\right)\,dx &= \int \kappa_{\max}\frac{4x}{m}\,dx &= \kappa_{\max}\frac{2x^{2}}{m} + C_{0}\\
+  \int \kappa_{1}\left(x\right)\,dx &= \int -\kappa_{\max}\left(\frac{4x}{m}-2\right)\,dx &= -\kappa_{\max}\left(\frac{2x^{2}}{m}-2x\right) + C_{1}\\
+  \int \kappa_{3}\left(x\right)\,dx &= \int \kappa_{\max}\left(\frac{4x}{m}-4\right)\,dx &= \kappa_{\max}\left(\frac{2x^{2}}{m}-4x\right) + C_{3}
 \end{align}
 \begin{align}
-  \int_{0}^{t} \kappa_{0}\left(x\right)\,dx &= \phi_{\max}\frac{2t^{2}}{m}\\
-  \int_{0}^{m/4} \kappa_{0}\left(x\right)\,dx &= \phi_{\max}\frac{m}{8}
+  \int_{0}^{t} \kappa_{0}\left(x\right)\,dx &= \kappa_{\max}\frac{2t^{2}}{m}\\
+  \int_{0}^{m/4} \kappa_{0}\left(x\right)\,dx &= \kappa_{\max}\frac{m}{8}
 \end{align}
 \begin{align}
-  \int_{m/4}^{t} \kappa_{1}\left(x\right)\,dx &= -\phi_{\max}\left(\frac{2t^{2}}{m}-2t\right) + \phi_{\max}\left(\frac{m}{8}-\frac{m}{2}\right) &= -\phi_{\max}\left(\frac{2t^{2}}{m}-2t\right) - \phi_{\max}\frac{3m}{8}\\
-  \int_{m/4}^{3m/4} \kappa_{1}\left(x\right)\,dx &= -\phi_{\max}\left(\frac{9m}{8}-\frac{3m}{2}\right) + \phi_{\max}\left(\frac{m}{8}-\frac{m}{2}\right) &= 0
+  \int_{m/4}^{t} \kappa_{1}\left(x\right)\,dx &= -\kappa_{\max}\left(\frac{2t^{2}}{m}-2t\right) + \kappa_{\max}\left(\frac{m}{8}-\frac{m}{2}\right) &= -\kappa_{\max}\left(\frac{2t^{2}}{m}-2t\right) - \kappa_{\max}\frac{3m}{8}\\
+  \int_{m/4}^{3m/4} \kappa_{1}\left(x\right)\,dx &= -\kappa_{\max}\left(\frac{9m}{8}-\frac{3m}{2}\right) + \kappa_{\max}\left(\frac{m}{8}-\frac{m}{2}\right) &= 0
 \end{align}
 \begin{align}
-  \int_{3m/4}^{t} \kappa_{3}\left(x\right)\,dx &= \phi_{\max}\left(\frac{2t^{2}}{m}-4t\right) - \phi_{\max}\left(\frac{9m}{8}-3m\right) &= \phi_{\max}\left(\frac{2t^{2}}{m}-4t\right) + \phi_{\max}\frac{15m}{8}\\
-  \int_{3m/4}^{m} \kappa_{3}\left(x\right)\,dx &= \phi_{\max}\left(2m-4m\right) - \phi_{\max}\left(\frac{9m}{8}-3m\right) &= -\phi_{\max}\frac{m}{8}
+  \int_{3m/4}^{t} \kappa_{3}\left(x\right)\,dx &= \kappa_{\max}\left(\frac{2t^{2}}{m}-4t\right) - \kappa_{\max}\left(\frac{9m}{8}-3m\right) &= \kappa_{\max}\left(\frac{2t^{2}}{m}-4t\right) + \kappa_{\max}\frac{15m}{8}\\
+  \int_{3m/4}^{m} \kappa_{3}\left(x\right)\,dx &= \kappa_{\max}\left(2m-4m\right) - \kappa_{\max}\left(\frac{9m}{8}-3m\right) &= -\kappa_{\max}\frac{m}{8}
 \end{align}
 
 \begin{align}
   \theta\left(t\right) &= \left\{
     \begin{array}{cc}
-      2\phi_{\max} t^2 / m,   & t \le m/4\\
-      -\phi_{\max}\left(\frac{2t^{2}}{m}-2t\right) - \phi_{\max}\frac{m}{4},& m/4 < t \le 3m/4\\
-      2\phi_{\max}m + \phi_{\max}\left(\frac{2t^{2}}{m}-4t\right), & 3m/4 < t
+      2\kappa_{\max} t^2 / m,   & t \le m/4\\
+      -\kappa_{\max}\left(\frac{2t^{2}}{m}-2t\right) - \kappa_{\max}\frac{m}{4},& m/4 < t \le 3m/4\\
+      2\kappa_{\max}m + \kappa_{\max}\left(\frac{2t^{2}}{m}-4t\right), & 3m/4 < t
     \end{array}
   \right.
 \end{align}
@@ -79,33 +84,33 @@
   x\left(t\right) &= \int_{0}^{t} \dot{x}\left(u\right)\,du\\
   &= \int_{0}^{t} v\left(u\right)\cos\left(\theta\left(u\right)\right)\,du\\
   &= v \int_{0}^{t} \cos\left(\theta\left(u\right)\right)\,du\\
-  x\left(m\right) &= v \left(\int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du\right.\\
-  &+ \int_{m/4}^{3m/4} \cos\left(-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}\right)\,du\\
-  &+ \left.\int_{3m/4}^{m} \cos\left(2\phi_{\max}m + \phi_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)
+  x\left(m\right) &= v \left(\int_{0}^{m/4} \cos\left(2\frac{\kappa_{\max}}{m} u^2\right)\,du\right.\\
+  &+ \int_{m/4}^{3m/4} \cos\left(-\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \kappa_{\max}\frac{m}{4}\right)\,du\\
+  &+ \left.\int_{3m/4}^{m} \cos\left(2\kappa_{\max}m + \kappa_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)
 \end{align}
 %\begin{equation}
-%% w = \sqrt{2\frac{\phi_{\max}}{m}}u
-%  \int_{0}^{m/4} \cos\left(2\frac{\phi_{\max}}{m} u^2\right)\,du = \sqrt{\frac{m}{2\phi_{\max}}}\int_{0}^{\sqrt{\phi_{\max}m/8}} \cos\left(w^2\right)\,dw
+%% w = \sqrt{2\frac{\kappa_{\max}}{m}}u
+%  \int_{0}^{m/4} \cos\left(2\frac{\kappa_{\max}}{m} u^2\right)\,du = \sqrt{\frac{m}{2\kappa_{\max}}}\int_{0}^{\sqrt{\kappa_{\max}m/8}} \cos\left(w^2\right)\,dw
 %\end{equation}
 %\begin{align}
 %  \int_{m/4}^{3m/4} \cos\left(\ldots
-%    %-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}
-%  \right)\,du &= \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) +  \phi_{\max}\frac{m}{4}\right)\,du\\
-%  &= \int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\cos\left(\phi_{\max}\frac{m}{4}\right)\,du - \int_{m/4}^{3m/4} \sin\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\sin\left(\phi_{\max}\frac{m}{4}\right)\,du\\
-%  &= \cos\left(\phi_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du - \sin\left(\phi_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \sin\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du
+%    %-\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \kappa_{\max}\frac{m}{4}
+%  \right)\,du &= \int_{m/4}^{3m/4} \cos\left(\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right) +  \kappa_{\max}\frac{m}{4}\right)\,du\\
+%  &= \int_{m/4}^{3m/4} \cos\left(\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\cos\left(\kappa_{\max}\frac{m}{4}\right)\,du - \int_{m/4}^{3m/4} \sin\left(\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\sin\left(\kappa_{\max}\frac{m}{4}\right)\,du\\
+%  &= \cos\left(\kappa_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \cos\left(\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du - \sin\left(\kappa_{\max}\frac{m}{4}\right)\int_{m/4}^{3m/4} \sin\left(\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right)\,du
 %\end{align}
 %\begin{align}
-%  \cos\left(\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right) &= \cos\left(2\phi_{\max}\frac{u^{2}}{m}-2\phi_{\max}u\right)\\
-%  &= \cos\left(2\phi_{\max}\frac{u^{2}}{m}\right)\cos\left(2\phi_{\max}u\right) + \sin\left(2\phi_{\max}\frac{u^{2}}{m}\right)\sin\left(2\phi_{\max}u\right)
+%  \cos\left(\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right)\right) &= \cos\left(2\kappa_{\max}\frac{u^{2}}{m}-2\kappa_{\max}u\right)\\
+%  &= \cos\left(2\kappa_{\max}\frac{u^{2}}{m}\right)\cos\left(2\kappa_{\max}u\right) + \sin\left(2\kappa_{\max}\frac{u^{2}}{m}\right)\sin\left(2\kappa_{\max}u\right)
 %\end{align}
 
 \begin{align}
   y\left(t\right) &= \int_{0}^{t} \dot{y}\left(u\right)\,du\\
   &= \int_{0}^{t} v\left(u\right)\sin\left(\theta\left(u\right)\right)\,du\\
   &= v \int_{0}^{t} \sin\left(\theta\left(u\right)\right)\,du\\
-  y\left(m\right) &= v \left(\int_{0}^{m/4} \sin\left(2\frac{\phi_{\max}}{m} u^2\right)\,du\right.\\
-  &+ \int_{m/4}^{3m/4} \sin\left(-\phi_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \phi_{\max}\frac{m}{4}\right)\,du\\
-  &+ \left.\int_{3m/4}^{m} \sin\left(2\phi_{\max}m + \phi_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)
+  y\left(m\right) &= v \left(\int_{0}^{m/4} \sin\left(2\frac{\kappa_{\max}}{m} u^2\right)\,du\right.\\
+  &+ \int_{m/4}^{3m/4} \sin\left(-\kappa_{\max}\left(\frac{2u^{2}}{m}-2u\right) - \kappa_{\max}\frac{m}{4}\right)\,du\\
+  &+ \left.\int_{3m/4}^{m} \sin\left(2\kappa_{\max}m + \kappa_{\max}\left(\frac{2u^{2}}{m}-4u\right)\right)\,du\right)
 \end{align}
 
 \begin{align}

@@ -6,10 +6,10 @@
 struct kinematics
 {
     kinematics(double in_phi_max, double in_l, double in_v, double in_m) :
-        phi_max(in_phi_max), L(in_l), v(in_v), m(in_m), inv_m(1.0/in_m)
+        kappa_max(std::tan(in_phi_max)/in_l), L(in_l), v(in_v), m(in_m), inv_m(1.0/in_m)
     {}
 
-    double phi_max;
+    double kappa_max;
     double L;
     double v;
 
@@ -22,11 +22,11 @@ double ke_theta(double t, void *n)
     const kinematics *ke = reinterpret_cast<const kinematics*>(n);
 
     if(t <= ke->m/4)
-        return 2*ke->phi_max*t*t*ke->inv_m;
+        return 2*ke->kappa_max*t*t*ke->inv_m;
     else if(t <= 3*ke->m/4)
-        return -ke->phi_max*(2*t*t*ke->inv_m - 2*t + ke->m/4);
+        return -ke->kappa_max*(2*t*t*ke->inv_m - 2*t + ke->m/4);
     else if(t <= ke->m)
-        return ke->phi_max*(2*t*t*ke->inv_m - 4*t + 2*ke->m);
+        return ke->kappa_max*(2*t*t*ke->inv_m - 4*t + 2*ke->m);
     else
         return 0.0;
 };
@@ -126,13 +126,17 @@ int main(int argc, char **argv)
     {
         double t = (interval[1]-interval[0])*i/(n-1);
 
-        double x, y;
+        double x, y, theta;
         double abserr;
         size_t neval;
         gsl_integration_qng(&f_x, 0, t, 1e-4, 1e-3, &x, &abserr, &neval);
         gsl_integration_qng(&f_y, 0, t, 1e-4, 1e-3, &y, &abserr, &neval);
 
+        theta = ke_theta(t, &ke);
+
+        //        printf("%lf %lf %lf %lf\n", t, x, y, theta);
         printf("%lf %lf\n", x, y);
+        //printf("%lf %lf\n", t, theta);
     }
 
 
