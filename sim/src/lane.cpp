@@ -499,6 +499,15 @@ void lane::fill_y(float gamma)
 
 float lane::merge_factor(float local_t, float gamma_c) const
 {
+    float left_t = local_t;
+    const lane *left_la = left_adjacency(left_t);
+
+    float right_t = local_t;
+    const lane *right_la = right_adjacency(right_t);
+
+    if(!(left_la || right_la))
+        return 0.0f;
+
     int mycell = std::floor(local_t*ncells);
     if(data[mycell].rho <= 1e-4)
         return 0.0f;
@@ -519,21 +528,17 @@ float lane::merge_factor(float local_t, float gamma_c) const
     float left_factor = 0.0f;
     float right_factor = 0.0f;
 
-    float other_t = local_t;
-    const lane *la = left_adjacency(other_t);
-    if(la)
+    if(left_la)
     {
-        int othercell = std::floor(other_t*la->ncells);
-        float other_u = to_u(la->data[othercell].rho, la->data[othercell].y, la->speedlimit, gamma_c);
+        int othercell = std::floor(left_t*left_la->ncells);
+        float other_u = to_u(left_la->data[othercell].rho, left_la->data[othercell].y, left_la->speedlimit, gamma_c);
         left_factor   = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
-    other_t = local_t;
-    la = right_adjacency(other_t);
-    if(la)
+    if(right_la)
     {
-        int othercell = std::floor(other_t*la->ncells);
-        float other_u = to_u(la->data[othercell].rho, la->data[othercell].y, la->speedlimit, gamma_c);
+        int othercell = std::floor(right_t*right_la->ncells);
+        float other_u = to_u(right_la->data[othercell].rho, right_la->data[othercell].y, right_la->speedlimit, gamma_c);
         right_factor  = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
