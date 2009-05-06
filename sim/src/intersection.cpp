@@ -143,7 +143,7 @@ static bool read_incident(void *item, xmlTextReaderPtr reader)
     if(!status)
         return false;
 
-    return read[0].count == 1 && read[1].count == 1 && (is->incoming.size() + is->outgoing.size()) > 0 ;
+    return read[0].count == 1 && read[1].count == 1 && (is->incoming.size() + is->outgoing.size()) > 0;
 }
 
 static bool read_state(void *item, xmlTextReaderPtr reader)
