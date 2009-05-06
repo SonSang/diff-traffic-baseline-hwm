@@ -504,8 +504,11 @@ float lane::merge_factor(float local_t, float gamma_c) const
         return 0.0f;
 
     float u = to_u(data[mycell].rho, data[mycell].y, speedlimit, gamma_c);
+    // seemingly random linear function a 0.5-assed estimation of distance needed for lane changes
+    float space = 2.2363f*u + 9.063f;
+
     float ahead_u;
-    if(mycell + 1 < static_cast<int>(ncells))
+    if(mycell + std::ceil(space/H) < static_cast<int>(ncells))
         ahead_u = to_u(data[mycell+1].rho, data[mycell+1].y, speedlimit, gamma_c);
     else
         return 0.0f;
