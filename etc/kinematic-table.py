@@ -33,8 +33,7 @@ def ke_lengths():
 
     return (speeds, times, distances)
 
-def ke_path():
-    speed = 16.667
+def ke_path(speed):
     exec_seq = [exe, str(speed), str(lane_width), str(car_length), str(max_steering_angle), str(resolution)]
 
     p = subprocess.Popen(exec_seq, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -49,40 +48,60 @@ def ke_path():
     return (di, data)
 
 if __name__ == '__main__':
-#    (idx, data) = ke_path()
+#    speeds = []
+#    res = []
+#    ends = []
+#    for speed in numpy.linspace(5, 100, 20):
+#        speed /= 3.6
+#        (idx, data) = ke_path(speed)
+#        coeffs = numpy.polyfit(data[:, idx['t']], data[:, idx['y']], 5)
+#        speeds.append(speed)
+#        res.append(coeffs.tolist())
+#        ends.append(data[-1,idx['t']])
 #
-#    pylab.clf()
-#
-#    pylab.subplot(411)
-#    pylab.ylabel('theta')
-#    pylab.plot( data[:, idx['t']], data[:, idx['theta']])
-#
-#    pylab.subplot(412)
-#    pylab.ylabel('x')
-#    pylab.plot( data[:, idx['t']], data[:, idx['x']])
-#
-#    pylab.subplot(413)
-#    pylab.ylabel('y')
-#    pylab.xlabel('t')
-#    pylab.plot( data[:, idx['t']], data[:, idx['y']])
-#
-#    pylab.subplot(414)
-#    pylab.ylabel('y')
-#    pylab.xlabel('x')
-#    pylab.plot( data[:, idx['x']], data[:, idx['y']])
-#
-#    pylab.show()
+#    print 'data[][] = {' + ',\n'.join(['{' + ', '.join([str(x) for x in m]) + '}' for m in res]) + '}'
+#    print 'idx[] = {' + ', '.join([str(x) for x in speeds]) + '}'
+#    print 'limits[] = {' + ', '.join([str(x) for x in ends]) + '}'
+    speed = 1
+    (idx, data) = ke_path(speed)
 
-    (speeds, times, distances) = ke_lengths()
+    coeffs = numpy.polyfit(data[:, idx['t']], data[:, idx['x']], 1)
 
-    coeffs = numpy.polyfit(speeds, distances, 4)
     print coeffs
-    p     = numpy.poly1d(coeffs)
 
     pylab.clf()
-    pylab.plot(speeds, distances, speeds, p(speeds))
-    pylab.plot(speeds, distances)
+
+    pylab.subplot(411)
+    pylab.ylabel('theta')
+    pylab.plot( data[:, idx['t']], data[:, idx['theta']])
+
+    pylab.subplot(412)
+    pylab.ylabel('x')
+    pylab.plot( data[:, idx['t']], data[:, idx['x']])
+
+    pylab.subplot(413)
+
+    pylab.ylabel('y')
+    pylab.xlabel('t')
+    pylab.plot( data[:, idx['t']], data[:, idx['y']])
+
+    pylab.subplot(414)
+    pylab.ylabel('y')
+    pylab.xlabel('x')
+    pylab.plot( data[:, idx['x']], data[:, idx['y']])
+
     pylab.show()
+
+#    (speeds, times, distances) = ke_lengths()
+#
+#    coeffs = numpy.polyfit(speeds, distances, 4)
+#    print coeffs
+#    p     = numpy.poly1d(coeffs)
+#
+#    pylab.clf()
+#    pylab.plot(speeds, distances, speeds, p(speeds))
+#    pylab.plot(speeds, distances)
+#    pylab.show()
 
 
 
