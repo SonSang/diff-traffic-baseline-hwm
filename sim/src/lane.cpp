@@ -497,7 +497,7 @@ void lane::fill_y(float gamma)
     }
 }
 
-float lane::merge_factor(float local_t, float gamma_c) const
+int lane::merge_intent(float local_t, float gamma_c) const
 {
     float left_t = local_t;
     const lane *left_la = left_adjacency(left_t);
@@ -506,11 +506,11 @@ float lane::merge_factor(float local_t, float gamma_c) const
     const lane *right_la = right_adjacency(right_t);
 
     if(!(left_la || right_la))
-        return 0.0f;
+        return 0;
 
     int mycell = std::floor(local_t*ncells);
     if(data[mycell].rho <= 1e-4)
-        return 0.0f;
+        return 0;
 
     float u = to_u(data[mycell].rho, data[mycell].y, speedlimit, gamma_c);
     // quartic-regression-based estimation of distance needed for lane changes
@@ -520,10 +520,10 @@ float lane::merge_factor(float local_t, float gamma_c) const
     if(mycell + std::ceil(space/H) < static_cast<int>(ncells))
         ahead_u = to_u(data[mycell+1].rho, data[mycell+1].y, speedlimit, gamma_c);
     else
-        return 0.0f;
+        return 0;
 
     if(ahead_u >= 0.8*u)
-        return 0.0f;
+        return 0;
 
     float left_factor = 0.0f;
     float right_factor = 0.0f;
@@ -543,9 +543,14 @@ float lane::merge_factor(float local_t, float gamma_c) const
     }
 
     if(right_factor > left_factor)
-        return -right_factor;
+        return -1;
     else
-        return left_factor;
+        return 1;
+}
+
+bool lane::merge_possible(float t, int dir, float gamma_c) const
+{
+    return true;
 }
 
 float lane::collect_riemann(float gamma_c, float inv_gamma)
@@ -661,65 +666,31 @@ void lane::update(float dt)
 
 struct lc_curve
 {
-    static inline int bisect(float speed)
+    lc_curve(float target_y, float t_scale) : y_(target_y), t_scale_(t_scale) {}
+
+    inline float operator()(float t) const
     {
-        int lo = 0;
-        int hi = n;
-
-        while(hi - lo > 1)
-        {
-            int mid = (lo + hi)/2;
-            if(idx[mid] <= speed)
-                lo = mid;
-            else
-                hi = mid;
-        }
-
-        return lo;
+        return y(t*t_scale_) - y_;
     }
 
-    static inline float poly_eval(float t, int poly_no)
+    static inline float y(float t)
     {
-        float res = 0.0f;
-        for(int i = 0; i < DEGREE; ++i)
-            res = res*t + data[poly_no][i];
-        return res;
+        return ((((8.82028322e+00   * t +
+                   -2.20507827e+01) * t +
+                  1.57957371e+01)   * t +
+                 -1.64277512e+00)   * t +
+                7.83366742e-02)     * t +
+            -4.01831320e-04;
     }
 
-    enum {DEGREE=6};
+    static inline float end(float speed)
+    {
+        return 9.539*std::pow(speed, -0.5f);
+    }
 
-    static const float  data[][DEGREE];
-    static const float  limits[];
-    static const float  idx[];
-    static const size_t n;
+    float y_;
+    float t_scale_;
 };
-
-const float lc_curve::data[][lc_curve::DEGREE] = {{0.000598537088594, -0.012179872643,  0.0706116257244, -0.0551565434034, 0.0189587585375, -0.00033536865626},
-                                                  {0.00359047612705,  -0.0513745016136, 0.210628729499,  -0.125374705494,  0.0342177176819, -0.00100457830112},
-                                                  {0.0100839659926,   -0.11759360712,   0.393632841115,  -0.19556477964,   0.0449053111767, -0.00122514637866},
-                                                  {0.0208960245451,   -0.210837040217,  0.611174962026,  -0.265728530641,  0.0535657247985, -0.00133331372858},
-                                                  {0.0367089467237,   -0.331102264881,  0.858445658875,  -0.335885025772,  0.0610346035657, -0.00139826844895},
-                                                  {0.0581224047402,   -0.478392863835,  1.1322320774,    -0.406044762554,  0.0676972866373, -0.00144135523535},
-                                                  {0.0856807919914,   -0.652726392869,  1.43019179738,   -0.47619827983,   0.0737645362599, -0.00147228670201},
-                                                  {0.119870799401,    -0.854052457204,  1.75045172642,   -0.546350994567,  0.0793742445081, -0.00149519171939},
-                                                  {0.161160450587,    -1.08240398211,   2.09158665334,   -0.616499374783,  0.084613286939,  -0.00151297948111},
-                                                  {0.209983579548,    -1.33778268712,   2.45239376904,   -0.686648030403,  0.0895467201272, -0.00152691514064},
-                                                  {0.266749569799,    -1.62018699672,   2.83185574176,   -0.756806047752,  0.0942289506796, -0.00153911195134},
-                                                  {0.331848543157,    -1.92961864072,   3.22909697369,   -0.826965767073,  0.0986891050501, -0.00154907524229},
-                                                  {0.405652492166,    -2.26607544527,   3.64334966217,   -0.897122938284,  0.102954934612,  -0.00155722013455},
-                                                  {0.488515841549,    -2.62954549337,   4.07392350714,   -0.967268257397,  0.10704929695,   -0.00156415859008},
-                                                  {0.580785304582,    -3.02004667181,   4.52025353558,   -1.03742592534,   0.110996820132,  -0.00157058839539},
-                                                  {0.682788799874,    -3.43756094274,   4.98176884069,   -1.10756933176,   0.114805323232,  -0.00157589271124},
-                                                  {0.794847155686,    -3.88204502975,   5.45781402233,   -1.17753718585,   0.118449217217,  -0.00157862318424},
-                                                  {0.917257284531,    -4.35354762785,   5.94827121731,   -1.24766909295,   0.122024339768,  -0.00158281795468},
-                                                  {1.05033926546,     -4.85209099357,   6.45262373729,   -1.31780863218,   0.125497651957,  -0.00158665606016},
-                                                  {1.19438762798,     -5.37768116633,   6.97051190082,   -1.38796777999,   0.12888192663,   -0.00159006071502}};
-
-const float lc_curve::limits[] = {8.139761, 5.7234, 4.664555, 4.035908, 3.607847, 3.292298, 3.047233, 2.849897, 2.686513, 2.548346, 2.429514, 2.325892, 2.234489, 2.153079, 2.079964, 2.013826, 1.953588, 1.898489, 1.847802, 1.800967};
-
-const float lc_curve::idx[] = {1.38888888889, 2.77777777778, 4.16666666667, 5.55555555556, 6.94444444444, 8.33333333333, 9.72222222222, 11.1111111111, 12.5, 13.8888888889, 15.2777777778, 16.6666666667, 18.0555555556, 19.4444444444, 20.8333333333, 22.2222222222, 23.6111111111, 25.0, 26.3888888889, 27.7777777778};
-
-const size_t lc_curve::n = sizeof(lc_curve::idx)/sizeof(lc_curve::idx[0]);
 
 void lane::advance_carticles(float dt, float gamma_c)
 {
@@ -727,84 +698,80 @@ void lane::advance_carticles(float dt, float gamma_c)
 
     foreach(carticle &cart, carticles[0])
     {
-        if(cart.yv == 0.0f)
+        if(cart.lc_state == 0)
         {
+            // check for intent to merge
+            int intent = merge_intent(cart.x, gamma_c);
 
-            float dir = merge_factor(cart.x, gamma_c);
-            if(std::abs(dir) > 0.5)
-                cart.yv = copysign(1.0f, dir);
+            // check for possibility of merge
+            if(intent && merge_possible(cart.x, intent, gamma_c))
+                cart.lc_state = intent;
         }
 
-        float rk4_res = rk4(cart.x, dt*inv_len, this, gamma_c);
-        cart.x += rk4_res;
-        cart.u = rk4_res*(ncells*h)/dt;
+        // advance vehicle
+        float param_u = rk4(cart.x, dt*inv_len, this, gamma_c);
+        cart.x += param_u;
+        float prev_u = cart.u;
+        cart.u = param_u*(ncells*h)/dt;
 
-        cart.theta = 0.0f;
-
-        printf("cart:\nid:%d\nx:%f\ntheta:%f\nu:%f\ny:%f\nyv:%f\n",
-               cart.id,
-               cart.x,
-               cart.theta,
-               cart.u,
-               cart.y,
-               cart.yv);
-
-        float oldy = cart.y;
-        if(cart.yv != 0.0f)
+        if(cart.lc_state)
         {
-            printf("Lane change!!!!\n");
-            int   curve     = lc_curve::bisect(cart.u);
-            float scaled_yv = cart.yv*lc_curve::limits[curve] + copysign(dt, cart.yv);
+            assert(cart.x < 1.0);
+            float prev_end = lc_curve::end(prev_u);
+            float end = lc_curve::end(cart.u);
 
-            cart.y          = copysign(lc_curve::poly_eval(std::abs(scaled_yv), curve)/LANE_WIDTH, cart.yv);
+            lc_curve t_solve(std::abs(cart.y), 1.0f/lc_curve::end(prev_u));
+            float t = secant<lc_curve>(0.1f, 0.5f, 0.0f, prev_end, 1e-4f, 100, t_solve);
 
-            cart.yv += copysign(dt/lc_curve::limits[curve], cart.yv);
+            float prev_y = cart.y;
 
-            merge_states[static_cast<int>(std::floor(cart.x*ncells))].transition = 0.1*cart.yv;
-        }
+            cart.y = copysign(lc_curve::y((t + dt)/end), cart.lc_state);
 
-        if(cart.y >= 0.5f)
-        {
-            cart.y -= 1.0f;
-            lane *llane = lane::left_adjacency(cart.x);
-            assert(llane);
-            llane->carticles[1].push_back(cart);
-        }
-        else if(cart.y <= -0.5f)
-        {
-            cart.y += 1.0f;
-            lane *rlane = lane::right_adjacency(cart.x);
-            assert(rlane);
-            rlane->carticles[1].push_back(cart);
-        }
-        else
-        {
-            if(std::abs(cart.y) < FLT_EPSILON || cart.y*oldy < 0.0f)
+            if(std::abs(cart.y) > 0.98)
             {
                 cart.y = 0.0f;
-                cart.yv = 0.0f;
-            }
-
-            if(cart.x > 1.0)
-            {
-                lane *next;
-                if(end.end_type == lane_end::INTERSECTION)
+                cart.theta = 0.0f;
+                if(cart.lc_state == 1)
                 {
-                    if((next = downstream_lane()))
-                    {
-                        cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
-                        next->carticles[1].push_back(cart);
-                    }
-                    else
-                    {
-                        cart.x = 1.0f;
-                        carticles[1].push_back(cart);
-                    }
+                    cart.lc_state = 0;
+                    lane *llane = lane::left_adjacency(cart.x);
+                    assert(llane);
+                    llane->carticles[1].push_back(cart);
                 }
+                else if(cart.lc_state == -1)
+                {
+                    cart.lc_state = 0;
+                    lane *rlane = lane::right_adjacency(cart.x);
+                    assert(rlane);
+                    rlane->carticles[1].push_back(cart);
+                }
+
+                continue;
             }
             else
-                carticles[1].push_back(cart);
+                cart.theta = -std::atan2(cart.y-prev_y, cart.u*dt);
         }
+
+        if(cart.x > 1.0)
+        {
+            lane *next;
+            if(end.end_type == lane_end::INTERSECTION)
+            {
+                if((next = downstream_lane()))
+                {
+                    cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
+                    next->carticles[1].push_back(cart);
+                    }
+                else
+                {
+                    cart.x = 1.0f;
+                    carticles[1].push_back(cart);
+                }
+            }
+            continue;
+        }
+
+        carticles[1].push_back(cart);
     }
 }
 
@@ -912,6 +879,6 @@ void lane::dump_carticles(FILE *fp) const
         float param = ca.x - offs;
         get_point_and_normal(param, pt, n);
 
-        fprintf(fp, "%d %f %f %f %f %f %f %f\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, n.x, n.y, ca.u, ca.yv);
+        fprintf(fp, "%d %f %f %f %f %f %f\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, n.x, n.y, ca.u);
     }
 }

@@ -28,14 +28,16 @@ const char* hwm_version_string();
 struct carticle
 {
     carticle() {}
-    carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), yv(0.0f) {}
+    carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), lc_state(0.0) {}
 
     int id;
     float x; //< Parametric position of carticle's front bumper axle along current lane.
     float theta; //< Orientation of carticle w.r.t. lane
+
     float u; //< Velocity of carticle.
     float y; //< Lane change position.
-    float yv; //< Lane change direction.
+
+    int lc_state;
 };
 
 struct ltstr
