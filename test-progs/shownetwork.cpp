@@ -884,9 +884,11 @@ int main(int argc, char * argv[])
     {
         if(la.h > 0.8*H)
         {
-            net->add_carticle(lno, 0.1, 4.5);
-            net->add_carticle(lno, 0.5, 4.5);
-            net->add_carticle(lno, 0.8, 4.5);
+            if(lno == 0)
+            {
+                net->add_carticle(lno, 0.2, 10.0);
+                net->add_carticle(lno, 0.4, 4.5);
+            }
         }
         ++lno;
     }
