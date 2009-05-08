@@ -302,11 +302,21 @@ void lane::draw_carticles() const
         float mat[16];
         get_matrix(car.x-offs, mat);
 
-        glColor3f(0.0f, 1.0f, 1.0f);
         glPushMatrix();
         glTranslatef(0.0f, car.y*LANE_WIDTH, 0.0f);
         glMultMatrixf(mat);
+
+        if(car.lc_state)
+        {
+            glColor3f(1.0f, 0.0f, 0.0f);
+            glBegin(GL_LINES);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+            glVertex3f(0.0f, -car.lc_state*LANE_WIDTH*0.5f, 0.0f);
+            glEnd();
+        }
+
         glRotatef(car.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
+        glColor3f(0.0f, 1.0f, 1.0f);
         draw_car();
         glPopMatrix();
     }
