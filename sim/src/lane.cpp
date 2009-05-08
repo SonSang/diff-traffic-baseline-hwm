@@ -513,11 +513,9 @@ int lane::merge_intent(float local_t, float gamma_c) const
         return 0;
 
     float u = to_u(data[mycell].rho, data[mycell].y, speedlimit, gamma_c);
-    // quartic-regression-based estimation of distance needed for lane changes
-    float space = (((-8.12440869e-05*u + 6.11983752e-03)*u + -1.81695338e-01)*u + 3.61744544e+00)*u + 6.67727470e+00;
 
     float ahead_u;
-    if(mycell + std::ceil(space/H) < static_cast<int>(ncells))
+    if(mycell + 1 < static_cast<int>(ncells))
         ahead_u = to_u(data[mycell+1].rho, data[mycell+1].y, speedlimit, gamma_c);
     else
         return 0;
