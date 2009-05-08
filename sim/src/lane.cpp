@@ -718,36 +718,58 @@ void lane::advance_carticles(float dt, float gamma_c)
             float prev_end = lc_curve::end(prev_u);
             float end = lc_curve::end(cart.u);
 
-            lc_curve t_solve(std::abs(cart.y), 1.0f/lc_curve::end(prev_u));
+            float y_lookup = std::abs(cart.y);
+            if(cart.y*cart.lc_state < 0.0f)
+                y_lookup = 1.0 - y_lookup;
+
+            lc_curve t_solve(y_lookup, 1.0f/lc_curve::end(prev_u));
             float t = secant<lc_curve>(0.1f, 0.5f, 0.0f, prev_end, 1e-4f, 100, t_solve);
 
             float prev_y = cart.y;
+            float new_t = (t + dt)/end;
+            float new_y;
+            if(new_t < 1.0f)
+                new_y = lc_curve::y((t + dt)/end);
+            else
+                new_y = 1.0f;
 
-            cart.y = copysign(lc_curve::y((t + dt)/end), cart.lc_state);
+            if(cart.y*cart.lc_state < 0.0f)
+                cart.y = new_y - 1.0f;
+            else
+                cart.y = new_y;
 
-            if(std::abs(cart.y) > 0.98)
+            cart.y *= cart.lc_state;
+
+            cart.theta = -std::atan2(cart.y-prev_y, cart.u*dt);
+
+            if(cart.y < -0.5f)
             {
-                cart.y = 0.0f;
-                cart.theta = 0.0f;
-                if(cart.lc_state == 1)
-                {
-                    cart.lc_state = 0;
-                    lane *llane = lane::left_adjacency(cart.x);
-                    assert(llane);
-                    llane->carticles[1].push_back(cart);
-                }
-                else if(cart.lc_state == -1)
-                {
-                    cart.lc_state = 0;
-                    lane *rlane = lane::right_adjacency(cart.x);
-                    assert(rlane);
-                    rlane->carticles[1].push_back(cart);
-                }
+                assert(cart.lc_state == -1);
+                cart.y += 1.0f;
+
+                lane *rlane = lane::right_adjacency(cart.x);
+                assert(rlane);
+                rlane->carticles[1].push_back(cart);
 
                 continue;
             }
-            else
-                cart.theta = -std::atan2(cart.y-prev_y, cart.u*dt);
+            else if(cart.y > 0.5f)
+            {
+                assert(cart.lc_state == 1);
+                cart.y -= 1.0f;
+
+                lane *llane = lane::left_adjacency(cart.x);
+                assert(llane);
+                llane->carticles[1].push_back(cart);
+
+                continue;
+            }
+            else if(cart.y*cart.lc_state <= 0.0f && std::abs(cart.y) < 1e-2f)
+            {
+                cart.y = 0.0f;
+                cart.theta = 0.0f;
+                cart.lc_state = 0;
+            }
         }
 
         if(cart.x > 1.0)
