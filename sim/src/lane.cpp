@@ -541,9 +541,9 @@ int lane::merge_intent(float local_t, float gamma_c) const
     }
 
     if(right_factor > left_factor)
-        return -1;
+        return right_factor > 0.5f ? -1 : 0;
     else
-        return 1;
+        return left_factor  > 0.5f ?  1 : 0;
 }
 
 bool lane::merge_possible(float t, int dir, float gamma_c) const
