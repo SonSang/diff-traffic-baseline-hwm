@@ -610,11 +610,11 @@ void lane::update(float dt)
 
 struct lc_curve
 {
-    lc_curve(float target_y, float t_scale) : y_(target_y), t_scale_(t_scale) {}
+    lc_curve(float target_y) : y_(target_y) {}
 
     inline float operator()(float t) const
     {
-        return y(t*t_scale_) - y_;
+        return y(t) - y_;
     }
 
     static inline float y(float t)
@@ -633,7 +633,6 @@ struct lc_curve
     }
 
     float y_;
-    float t_scale_;
 };
 
 int lane::merge_intent(float local_t, float gamma_c) const
@@ -727,11 +726,11 @@ void lane::advance_carticles(float dt, float gamma_c)
             if(cart.y*cart.lc_state < 0.0f)
                 y_lookup = 1.0 - y_lookup;
 
-            lc_curve t_solve(y_lookup, 1.0f/prev_end);
-            float t = secant<lc_curve>(0.1f, 0.5f, 0.0f, prev_end, 1e-4f, 100, t_solve);
+            lc_curve t_solve(y_lookup);
+            float t = secant<lc_curve>(0.1f, 0.5f, 0.0f, 1.0f, 1e-4f, 100, t_solve);
 
             float prev_y = cart.y;
-            float new_t = t/prev_end + dt/end;
+            float new_t = t + dt/end;
             float new_y;
             if(new_t < 1.0f)
                 new_y = lc_curve::y(new_t);
