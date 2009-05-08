@@ -731,7 +731,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             float t = secant<lc_curve>(0.1f, 0.5f, 0.0f, prev_end, 1e-4f, 100, t_solve);
 
             float prev_y = cart.y;
-            float new_t = (t + dt)/end;
+            float new_t = t/prev_end + dt/end;
             float new_y;
             if(new_t < 1.0f)
                 new_y = lc_curve::y(new_t);
