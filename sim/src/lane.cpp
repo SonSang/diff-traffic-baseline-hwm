@@ -497,60 +497,6 @@ void lane::fill_y(float gamma)
     }
 }
 
-int lane::merge_intent(float local_t, float gamma_c) const
-{
-    float left_t = local_t;
-    const lane *left_la = left_adjacency(left_t);
-
-    float right_t = local_t;
-    const lane *right_la = right_adjacency(right_t);
-
-    if(!(left_la || right_la))
-        return 0;
-
-    int mycell = std::floor(local_t*ncells);
-    if(data[mycell].rho <= 1e-4)
-        return 0;
-
-    float u = to_u(data[mycell].rho, data[mycell].y, speedlimit, gamma_c);
-
-    float ahead_u;
-    if(mycell + 1 < static_cast<int>(ncells))
-        ahead_u = to_u(data[mycell+1].rho, data[mycell+1].y, speedlimit, gamma_c);
-    else
-        return 0;
-
-    if(ahead_u >= 0.8*u)
-        return 0;
-
-    float left_factor = 0.0f;
-    float right_factor = 0.0f;
-
-    if(left_la)
-    {
-        int othercell = std::floor(left_t*left_la->ncells);
-        float other_u = to_u(left_la->data[othercell].rho, left_la->data[othercell].y, left_la->speedlimit, gamma_c);
-        left_factor   = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
-    }
-
-    if(right_la)
-    {
-        int othercell = std::floor(right_t*right_la->ncells);
-        float other_u = to_u(right_la->data[othercell].rho, right_la->data[othercell].y, right_la->speedlimit, gamma_c);
-        right_factor  = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
-    }
-
-    if(right_factor > left_factor)
-        return right_factor > 0.5f ? -1 : 0;
-    else
-        return left_factor  > 0.5f ?  1 : 0;
-}
-
-bool lane::merge_possible(float t, int dir, float gamma_c) const
-{
-    return true;
-}
-
 float lane::collect_riemann(float gamma_c, float inv_gamma)
 {
     full_q fq_buff[2];
@@ -690,6 +636,65 @@ struct lc_curve
     float t_scale_;
 };
 
+int lane::merge_intent(float local_t, float gamma_c) const
+{
+    float left_t = local_t;
+    const lane *left_la = left_adjacency(left_t);
+
+    float right_t = local_t;
+    const lane *right_la = right_adjacency(right_t);
+
+    if(!(left_la || right_la))
+        return 0;
+
+    int mycell = std::floor(local_t*ncells);
+    if(data[mycell].rho <= 1e-4)
+        return 0;
+
+    float u = to_u(data[mycell].rho, data[mycell].y, speedlimit, gamma_c);
+
+    float ahead_u;
+    if(mycell + 1 < static_cast<int>(ncells))
+        ahead_u = to_u(data[mycell+1].rho, data[mycell+1].y, speedlimit, gamma_c);
+    else
+        return 0;
+
+    if(ahead_u >= 0.8*u)
+        return 0;
+
+    float left_factor = 0.0f;
+    float right_factor = 0.0f;
+
+    if(left_la)
+    {
+        int othercell = std::floor(left_t*left_la->ncells);
+        float other_u = to_u(left_la->data[othercell].rho, left_la->data[othercell].y, left_la->speedlimit, gamma_c);
+        left_factor   = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
+    }
+
+    if(right_la)
+    {
+        int othercell = std::floor(right_t*right_la->ncells);
+        float other_u = to_u(right_la->data[othercell].rho, right_la->data[othercell].y, right_la->speedlimit, gamma_c);
+        right_factor  = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
+    }
+
+    if(right_factor > left_factor)
+        return right_factor > 0.5f ? -1 : 0;
+    else
+        return left_factor  > 0.5f ?  1 : 0;
+}
+
+bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
+{
+    float end = lc_curve::end(c.u);
+    printf("distance to end: %f, dist for lc: %f\n", ncells*h*(1.0-c.x), end*c.u);
+    if(c.x*ncells*h + end*c.u >= ncells*h)
+        return false;
+
+    return true;
+}
+
 void lane::advance_carticles(float dt, float gamma_c)
 {
     float inv_len = 1.0f/(ncells*h);
@@ -708,7 +713,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             int intent = merge_intent(cart.x, gamma_c);
 
             // check for possibility of merge
-            if(intent && merge_possible(cart.x, intent, gamma_c))
+            if(intent && merge_possible(cart, intent, gamma_c))
                 cart.lc_state = intent;
         }
 

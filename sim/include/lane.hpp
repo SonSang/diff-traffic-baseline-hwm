@@ -80,12 +80,12 @@ struct lane
     void reset_data();
     void fill_y(float gamma_c);
 
-    int merge_intent(float t, float gamma_c) const;
-    bool merge_possible(float t, int intent, float gamma_c) const;
-
     float collect_riemann(float gamma_c, float inv_gamma);
 
     void update(float maxspeed);
+
+    int merge_intent(float t, float gamma_c) const;
+    bool merge_possible(carticle &c, int intent, float gamma_c) const;
 
     void advance_carticles(float dt, float gamma_c);
 
