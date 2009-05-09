@@ -686,12 +686,28 @@ int lane::merge_intent(float local_t, float gamma_c) const
 
 bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
 {
+    assert(dir);
+
+    if(c.u < 1.0f)
+        return false;
+
     float end = lc_curve::end(c.u);
     printf("distance to end: %f, dist for lc: %f\n", ncells*h*(1.0-c.x), end*c.u);
     if(c.x*ncells*h + end*c.u >= ncells*h)
         return false;
 
-    return true;
+    float other_t = c.x;
+    const lane *other_la;
+    if(dir == 1)
+        other_la = left_adjacency(other_t);
+    else
+        other_la = right_adjacency(other_t);
+
+    assert(other_la);
+
+    int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
+
+    return other_la->data[loc].rho < 0.1f;
 }
 
 void lane::advance_carticles(float dt, float gamma_c)
