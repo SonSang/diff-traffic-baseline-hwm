@@ -719,7 +719,6 @@ void lane::advance_carticles(float dt, float gamma_c)
         // advance vehicle
         float param_u = rk4(cart.x, dt*inv_len, this, gamma_c);
         cart.x += param_u;
-        float prev_u = cart.u;
         cart.u = param_u*(ncells*h)/dt;
 
         if(cart.lc_state == 0)
@@ -735,7 +734,6 @@ void lane::advance_carticles(float dt, float gamma_c)
         if(cart.lc_state)
         {
             assert(cart.x < 1.0);
-            float prev_end = lc_curve::end(prev_u);
             float end = lc_curve::end(cart.u);
 
             float y_lookup = std::abs(cart.y);
