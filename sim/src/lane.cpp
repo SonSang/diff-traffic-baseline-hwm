@@ -668,20 +668,20 @@ int lane::merge_intent(float local_t, float gamma_c) const
     {
         int othercell = std::floor(left_t*left_la->ncells);
         float other_u = to_u(left_la->data[othercell].rho, left_la->data[othercell].y, left_la->speedlimit, gamma_c);
-        left_factor   = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
+        left_factor   = (other_u > ahead_u) ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
     if(right_la)
     {
         int othercell = std::floor(right_t*right_la->ncells);
         float other_u = to_u(right_la->data[othercell].rho, right_la->data[othercell].y, right_la->speedlimit, gamma_c);
-        right_factor  = other_u > ahead_u ? (other_u - ahead_u)/speedlimit : 0.0f;
+        right_factor  = (other_u > ahead_u) ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
     if(right_factor > left_factor)
-        return right_factor > 0.5f ? -1 : 0;
+        return (right_factor > 0.5f) ? -1 : 0;
     else
-        return left_factor  > 0.5f ?  1 : 0;
+        return (left_factor  > 0.5f) ?  1 : 0;
 }
 
 bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
@@ -697,12 +697,7 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
         return false;
 
     float other_t = c.x;
-    const lane *other_la;
-    if(dir == 1)
-        other_la = left_adjacency(other_t);
-    else
-        other_la = right_adjacency(other_t);
-
+    const lane *other_la = (dir == 1) ? left_adjacency(other_t) : right_adjacency(other_t);
     assert(other_la);
 
     int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
@@ -745,16 +740,11 @@ void lane::advance_carticles(float dt, float gamma_c)
 
             float prev_y = cart.y;
             float new_t = t + dt/end;
-            float new_y;
-            if(new_t < 1.0f)
-                new_y = lc_curve::y(new_t);
-            else
-                new_y = 1.0f;
+            float new_y = (new_t < 1.0f) ? lc_curve::y(new_t) : 1.0f;
 
-            if(cart.y*cart.lc_state < 0.0f)
-                cart.y = new_y - 1.0f;
-            else
-                cart.y = new_y;
+            cart.y = new_y;
+            if(prev_y*cart.lane_change_dir() < 0.0f)
+                cart.y -= 1.0f;
 
             cart.y *= cart.lc_state;
 
@@ -802,7 +792,7 @@ void lane::advance_carticles(float dt, float gamma_c)
                 {
                     cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
                     next->carticles[1].push_back(cart);
-                    }
+                }
                 else
                 {
                     cart.x = 1.0f;
