@@ -7,6 +7,21 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([sim/src/network.cpp])
 AC_CONFIG_HEADERS([config.h])
 
+AC_ARG_ENABLE([kinematic],
+  [AS_HELP_STRING([--enable-kinematic],
+    [build kinematic components (depending on gsl) @<:@default=check@:>@])],
+  [enable_kinematic=$enableval],
+  [enable_kinematic=check])
+
+AS_IF([test x"$enable_kinematic" != xno],
+      [AX_PATH_GSL(1.1,
+      	           [have_gsl=yes],
+		   [have_gsl=no])
+       AS_IF([test \( x"$have_gsl" = xno  \) -a x"$enable_kinematic" != xcheck],
+       	     AC_MSG_FAILURE([--enable-kinematic given, but test for gsl failed!]))])
+
+AM_CONDITIONAL(DO_KINEMATIC, test \( x"$have_gsl" = xyes  \) -a x"$enable_kinematic" != xno)
+
 AC_LANG([C++])
 
 AC_ARG_ENABLE([visual],
@@ -127,7 +142,8 @@ AC_CONFIG_FILES([m4/shave/shave
                  sim/Makefile
                  sim/src/Makefile
                  sim/include/Makefile
-		 test-progs/Makefile])
+		 test-progs/Makefile
+		 etc/Makefile])
 
 AC_OUTPUT
 
@@ -166,6 +182,15 @@ echo "
 else
 echo "
   Building ogre components: no"
+fi
+if test -z $DO_KINEMATIC; then
+echo "
+  Building kinematic components: yes
+    GSL_CFLAGS...: $GSL_CFLAGS
+    GSL_LIBS.....: $GSL_LIBS"
+else
+echo "
+  Building kinematic components: no"
 fi
 if test x"$try_doxygen" != xno -a -n "$DOXYGEN"; then
 echo "
