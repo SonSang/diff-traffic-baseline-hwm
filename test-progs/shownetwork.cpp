@@ -306,12 +306,12 @@ void lane::draw_carticles() const
         glTranslatef(0.0f, car.y*LANE_WIDTH, 0.0f);
         glMultMatrixf(mat);
 
-        if(car.lc_state)
+        if(car.in_lane_change())
         {
             glColor3f(1.0f, 0.0f, 0.0f);
             glBegin(GL_LINES);
             glVertex3f(0.0f, 0.0f, 0.0f);
-            glVertex3f(0.0f, -car.lc_state*LANE_WIDTH*0.5f, 0.0f);
+            glVertex3f(0.0f, -car.lane_change_dir()*LANE_WIDTH*0.5f, 0.0f);
             glEnd();
         }
 

@@ -716,23 +716,23 @@ void lane::advance_carticles(float dt, float gamma_c)
         cart.x += param_u;
         cart.u = param_u*(ncells*h)/dt;
 
-        if(cart.lc_state == 0)
+        if(cart.free_motion())
         {
             // check for intent to merge
             int intent = merge_intent(cart.x, gamma_c);
 
             // check for possibility of merge
             if(intent && merge_possible(cart, intent, gamma_c))
-                cart.lc_state = intent;
+                cart.start_lane_change(intent);
         }
 
-        if(cart.lc_state)
+        if(cart.in_lane_change())
         {
             assert(cart.x < 1.0);
             float end = lc_curve::end(cart.u);
 
             float y_lookup = std::abs(cart.y);
-            if(cart.y*cart.lc_state < 0.0f)
+            if(cart.y*cart.lane_change_dir() < 0.0f)
                 y_lookup = 1.0 - y_lookup;
 
             lc_curve t_solve(y_lookup);
@@ -746,7 +746,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             if(prev_y*cart.lane_change_dir() < 0.0f)
                 cart.y -= 1.0f;
 
-            cart.y *= cart.lc_state;
+            cart.y *= cart.lane_change_dir();
 
             float del_y = cart.y - prev_y;
             cart.theta = -std::atan2(del_y, cart.u*dt);
@@ -755,7 +755,7 @@ void lane::advance_carticles(float dt, float gamma_c)
 
             if(cart.y < -0.5f)
             {
-                assert(cart.lc_state == -1);
+                assert(cart.lane_change_dir() == -1);
                 cart.y += 1.0f;
 
                 lane *rlane = lane::right_adjacency(cart.x);
@@ -766,7 +766,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             }
             else if(cart.y > 0.5f)
             {
-                assert(cart.lc_state == 1);
+                assert(cart.lane_change_dir() == 1);
                 cart.y -= 1.0f;
 
                 lane *llane = lane::left_adjacency(cart.x);
@@ -775,11 +775,11 @@ void lane::advance_carticles(float dt, float gamma_c)
 
                 continue;
             }
-            else if(cart.y*cart.lc_state <= 0.0f && std::abs(cart.y) < 1e-2f)
+            else if(cart.y*cart.lane_change_dir() <= 0.0f && std::abs(cart.y) < 1e-2f)
             {
                 cart.y = 0.0f;
                 cart.theta = 0.0f;
-                cart.lc_state = 0;
+                cart.end_lane_change();
             }
         }
 

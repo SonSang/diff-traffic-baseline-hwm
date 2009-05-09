@@ -28,7 +28,7 @@ const char* hwm_version_string();
 struct carticle
 {
     carticle() {}
-    carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), lc_state(0.0) {}
+    carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), motion_state(0) {}
 
     int id;
     float x; //< Parametric position of carticle's front bumper axle along current lane.
@@ -37,7 +37,29 @@ struct carticle
     float u; //< Velocity of carticle.
     float y; //< Lane change position.
 
-    int lc_state;
+    inline bool free_motion() const { return motion_state == 0; }
+
+    inline bool in_lane_change() const { return std::abs(motion_state) == 1; }
+    inline int lane_change_dir() const
+    {
+        assert(in_lane_change());
+        return motion_state;
+    }
+
+    inline void start_lane_change(int dir)
+    {
+        assert(free_motion());
+        assert(std::abs(dir) == 1);
+        motion_state = dir;
+    }
+
+    inline void end_lane_change()
+    {
+        assert(in_lane_change());
+        motion_state = 0;
+    }
+
+    int motion_state; //< Lane-change - -1 is left change, 1 right, 0 none
 };
 
 struct ltstr
