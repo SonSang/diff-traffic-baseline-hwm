@@ -33,6 +33,16 @@ struct adjacency;
 
 typedef intervals<adjacency> adjacency_intervals;
 
+struct source_sink
+{
+    source_sink() {}
+    source_sink(float p, int c) : pos(p), capacity(c) {}
+
+    float pos;
+    int capacity;
+    std::vector<carticle> carticles;
+};
+
 //! Structure lane adjacency
 struct adjacency
 {
@@ -45,7 +55,7 @@ struct adjacency
                                //< in the neighbor corresponding
                                //< to this adjacency
 
-    std::vector<float> source_sinks;
+    std::vector<source_sink> source_sinks;
 };
 
 //! A single continuous road lane

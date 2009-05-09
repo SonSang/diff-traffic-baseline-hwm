@@ -213,7 +213,7 @@ bool adjacency::xml_read(xmlTextReaderPtr reader)
             ss >> temp;
             while(ss.good())
             {
-                source_sinks.push_back(temp);
+                source_sinks.push_back(source_sink(temp, 2));
                 ss >> temp;
             }
         }

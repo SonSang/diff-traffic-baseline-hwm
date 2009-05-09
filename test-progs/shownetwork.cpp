@@ -330,9 +330,9 @@ void lane::draw_source_sinks(float scale) const
     int p = -1;
     while(1)
     {
-        foreach(const float &ss, ladj->source_sinks)
+        foreach(const source_sink &ss, ladj->source_sinks)
         {
-            float x = ss;
+            float x = ss.pos;
             point pt;
             point no;
             get_point_and_normal(x, pt, no);
@@ -353,9 +353,9 @@ void lane::draw_source_sinks(float scale) const
     p = -1;
     while(1)
     {
-        foreach(const float &ss, radj->source_sinks)
+        foreach(const source_sink &ss, radj->source_sinks)
         {
-            float x = ss;
+            float x = ss.pos;
             point pt;
             point no;
             get_point_and_normal(x, pt, no);
