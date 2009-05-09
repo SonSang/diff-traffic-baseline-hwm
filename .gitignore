@@ -18,6 +18,8 @@ configure
 depcomp
 install-sh
 stamp-h1
+stamp-h
 missing
 libhwm_net.la
 .libs/
+GIT-VERSION-FILE
