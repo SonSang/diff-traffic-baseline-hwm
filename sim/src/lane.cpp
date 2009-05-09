@@ -744,7 +744,10 @@ void lane::advance_carticles(float dt, float gamma_c)
 
             cart.y *= cart.lc_state;
 
-            cart.theta = -std::atan2(cart.y-prev_y, cart.u*dt);
+            float del_y = cart.y - prev_y;
+            cart.theta = -std::atan2(del_y, cart.u*dt);
+
+            merge_states[static_cast<int>(std::floor(cart.x*ncells))].transition = del_y;
 
             if(cart.y < -0.5f)
             {
