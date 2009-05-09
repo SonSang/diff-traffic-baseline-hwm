@@ -8,12 +8,36 @@ exe = './ss_kinematic'
 car_length = 4.5
 lane_width = 2.5
 max_steering_angle = math.pi/4.0
+final_orient = math.pi/2.0
 resolution = 50
 
-def ke_lengths():
+def ke_lc_lengths():
     exec_seq = [exe, 0, str(lane_width), str(car_length), str(max_steering_angle)]
 
     speed_int = [5, 100]
+    nspeeds = 100
+
+    speeds    = numpy.zeros(nspeeds)
+    times     = numpy.zeros(nspeeds)
+    distances = numpy.zeros(nspeeds)
+
+    for speed_count in xrange(0, nspeeds):
+        speed = ((speed_int[1]-speed_int[0])*speed_count/(nspeeds-1.0) + speed_int[0])/3.6
+        exec_seq[1] = str(speed)
+        p = subprocess.Popen(exec_seq, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        p.wait()
+        p.stderr.readline()
+        [time, distance] = [float(x) for x in p.stderr.readline().strip().split()]
+        speeds   [speed_count] = speed
+        times    [speed_count] = time
+        distances[speed_count] = distance
+
+    return (speeds, times, distances)
+
+def ke_ss_lengths():
+    exec_seq = [exe, 0, str(10/3.6), str(final_orient), str(lane_width), str(car_length), str(max_steering_angle)]
+
+    speed_int = [15, 100]
     nspeeds = 100
 
     speeds    = numpy.zeros(nspeeds)
@@ -47,8 +71,8 @@ def ke_lc_path(speed):
 
     return (di, data)
 
-def ke_ss_path(speed):
-    exec_seq = [exe, str(speed), str(car_length), str(max_steering_angle), str(resolution)]
+def ke_ss_path(v0, v1):
+    exec_seq = [exe, str(v0), str(v1), str(final_orient), str(car_length), str(max_steering_angle), str(resolution)]
 
     p = subprocess.Popen(exec_seq, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
@@ -68,30 +92,9 @@ def cubic_bezier(t, pts):
         numpy.multiply.outer(numpy.power(t,3),                        pts[3,:])
 
 if __name__ == '__main__':
-    speed = 10
-    speed /= 3.6
-    (idx, data) = ke_ss_path(speed)
+    (speeds, times, distances) = ke_ss_lengths()
 
     pylab.clf()
-
-#    pylab.subplot(411)
-#    pylab.ylabel('theta')
-#    pylab.plot( data[:, idx['t']], data[:, idx['theta']])
-#
-#    pylab.subplot(412)
-#    pylab.ylabel('x')
-#    pylab.plot( data[:, idx['t']], data[:, idx['x']])
-#
-#    pylab.subplot(413)
-#
-#    pylab.ylabel('y')
-#    pylab.xlabel('t')
-#    pylab.plot( data[:, idx['t']], data[:, idx['y']])
-#
-#    pylab.subplot(414)
-#    pylab.ylabel('y')
-#    pylab.xlabel('x')
-    pylab.plot( data[:, idx['x']], data[:, idx['y']])
 
     pylab.show()
 
