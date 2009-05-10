@@ -70,7 +70,7 @@ struct carticle
     {
         assert(free_motion());
         assert(std::abs(dir) == 1);
-        motion_state = copysign(1.0, dir);
+        motion_state = copysign(2.0, dir);
     }
 
     inline void end_turn()
