@@ -314,11 +314,34 @@ void lane::draw_carticles() const
             glVertex3f(0.0f, -car.lane_change_dir()*LANE_WIDTH*0.5f, 0.0f);
             glEnd();
         }
+        else if(car.in_turn())
+        {
+            glColor3f(0.0f, 0.0f, 1.0f);
+            glBegin(GL_LINES);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+            glVertex3f(0.0f, -car.turn_dir()*LANE_WIDTH*0.5f, 0.0f);
+            glEnd();
+        }
+
 
         glRotatef(car.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
         glColor3f(0.0f, 1.0f, 1.0f);
         draw_car();
         glPopMatrix();
+
+        if(car.in_turn())
+        {
+            float x = car.turn_target->pos;
+            point pt;
+            point no;
+            get_point_and_normal(x, pt, no);
+
+            glColor3f(0.0f, 0.0f, 1.0f);
+            glBegin(GL_LINES);
+            glVertex3f(pt.x - no.y*(LANE_WIDTH*0.5),       pt.y + no.x*(LANE_WIDTH*0.5), pt.z);
+            glVertex3f(pt.x - no.y*(4*CAR_LENGTH+LANE_WIDTH*0.5), pt.y + no.x*(4*CAR_LENGTH+LANE_WIDTH*0.5), pt.z);
+            glEnd();
+        }
     }
 }
 

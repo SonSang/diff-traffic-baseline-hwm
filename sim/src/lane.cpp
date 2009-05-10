@@ -854,6 +854,40 @@ struct ss_walker
     int side;
 };
 
+struct turn_curve
+{
+    static float x(float t)
+    {
+        return (((0.952735372896*t+
+                  -0.999804060107*t) +
+                 -1.72981115096*t) +
+                2.77923310042*t) +
+            2.77923310042;
+    }
+
+    static float y(float t)
+    {
+        return ((((4.95688785514*t+
+                   -12.4993312165*t) +
+                  9.28482561644*t) +
+                 -0.8082796784*t) +
+                0.0691053639752*t) +
+            0.0691053639752;
+    }
+
+    static float x_end(float speed)
+    {
+        return  0.843112757647*speed+
+            2.45445917647;
+    }
+
+    static float y_end(float speed)
+    {
+        return 0.244331745882*speed+
+            4.11774005882;
+    }
+};
+
 void lane::find_ss(float x)
 {
     ss_walker ssw(*this);
@@ -868,6 +902,7 @@ void lane::find_ss(float x)
 void lane::advance_carticles(float dt, float gamma_c)
 {
     float inv_len = 1.0f/(ncells*h);
+    ss_walker ssw(*this);
 
     foreach(carticle &cart, carticles[0])
     {
@@ -877,13 +912,29 @@ void lane::advance_carticles(float dt, float gamma_c)
         cart.u = param_u*(ncells*h)/dt;
 
         if(cart.free_motion())
-        {
+       {
             // check for intent to merge
             int intent = merge_intent(cart.x, gamma_c);
 
             // check for possibility of merge
             if(intent && merge_possible(cart, intent, gamma_c))
                 cart.start_lane_change(intent);
+            else
+            {
+                // check for available source/sink
+                ssw.advance(cart.x);
+                source_sink *ss = ssw.front();
+                if(ss && !ss->full())
+                {
+                    float min_x = turn_curve::x_end(cart.u);
+                    float to_ss = (ss->pos - cart.x)*ncells*h;
+                    if(min_x < to_ss && to_ss < 20.0f)
+                    {
+                        cart.start_turn(ssw.side, ss);
+                        ss->add_carticle(cart);
+                    }
+                }
+            }
         }
 
         if(cart.in_lane_change())

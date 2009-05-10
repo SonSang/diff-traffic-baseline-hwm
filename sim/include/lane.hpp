@@ -38,6 +38,16 @@ struct source_sink
     source_sink() {}
     source_sink(float p, int c) : pos(p), capacity(c) {}
 
+    bool full() const
+    {
+        return capacity == static_cast<int>(carticles.size());
+    }
+
+    void add_carticle(carticle &c)
+    {
+        carticles.push_back(c);
+    }
+
     float pos;
     int capacity;
     std::vector<carticle> carticles;

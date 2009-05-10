@@ -25,6 +25,8 @@ typedef enum {DATA, CELLS, MERGES} draw_type;
 
 const char* hwm_version_string();
 
+struct source_sink;
+
 struct carticle
 {
     carticle() {}
@@ -66,20 +68,23 @@ struct carticle
         return copysign(1.0, motion_state);
     }
 
-    inline void start_turn(int dir)
+    inline void start_turn(int dir, source_sink *target)
     {
         assert(free_motion());
         assert(std::abs(dir) == 1);
         motion_state = copysign(2.0, dir);
+        turn_target = target;
     }
 
     inline void end_turn()
     {
         assert(in_turn());
         motion_state = 0;
+        turn_target = 0;
     }
 
     int motion_state; //< Lane-change/source-sink state - -1 is left change, 1 right, 0 none, -2 is left turn,  2 right turn
+    source_sink *turn_target;
 };
 
 struct ltstr
