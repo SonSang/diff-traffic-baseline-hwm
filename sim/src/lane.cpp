@@ -226,8 +226,10 @@ int adjacency::find_source(float x) const
 {
     int start = 0;
     int end = source_sinks.size();
-    if(!end)
+    if(!end || x > source_sinks[end-1].pos)
         return -1;
+    if(x < source_sinks[start].pos)
+        return 0;
 
     while(start + 1 < end)
     {
