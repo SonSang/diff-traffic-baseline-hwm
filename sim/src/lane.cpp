@@ -222,6 +222,24 @@ bool adjacency::xml_read(xmlTextReaderPtr reader)
     return true;
 };
 
+int adjacency::find_source(float x) const
+{
+    int start = 0;
+    int end = source_sinks.size();
+    if(!end)
+        return -1;
+
+    while(start + 1 < end)
+    {
+        int mid = (start+end)/2;
+        if(x < source_sinks[mid].pos)
+            end = mid;
+        else
+            start = mid;
+    }
+    return start+1;
+}
+
 bool lane::xml_read(xmlTextReaderPtr reader)
 {
     boost::fusion::vector<list_matcher<float> > vl(lm("speedlimit", &speedlimit));
@@ -703,6 +721,95 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
     int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
 
     return other_la->data[loc].rho < 0.1f;
+}
+
+struct ss_stack
+{
+    ss_stack(float x, const intervals<adjacency> *ia) : int_adj(ia)
+    {
+        const float t = x;
+        adjacency_no = int_adj->find(t);
+
+        if(adjacency_no == -1)
+            ss_idx = (*int_adj).base_data.find_source(t);
+        else
+            ss_idx = (*int_adj).entries[adjacency_no].data.find_source(t);
+    }
+
+    const source_sink* front() const
+    {
+        if(ss_idx == -1)
+            return 0;
+
+        if(adjacency_no == -1)
+            return (&(*int_adj).base_data.source_sinks[ss_idx]);
+        else
+            return (&(*int_adj).entries[adjacency_no].data.source_sinks[ss_idx]);
+    }
+
+    float front_value() const
+    {
+        const source_sink *s = front();
+
+        return s ? s->pos : FLT_MAX;
+    }
+
+    void advance()
+    {
+        ++ss_idx;
+
+        int sslen;
+        if(adjacency_no == -1)
+            sslen = static_cast<int>((*int_adj).base_data.source_sinks.size());
+        else
+            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
+
+        while(ss_idx >= sslen)
+        {
+            ++adjacency_no;
+            if(adjacency_no >= static_cast<int>(int_adj->entries.size()))
+            {
+                ss_idx = -1;
+                break;
+            }
+
+            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
+        }
+    }
+
+    bool end() const
+    {
+        return ss_idx == -1;
+    }
+
+    const intervals<adjacency> *int_adj;
+    int adjacency_no;
+    int ss_idx;
+};
+
+void lane::find_ss(float x) const
+{
+    ss_stack left_s(x, &left);
+    ss_stack right_s(x, &right);
+
+    while(!left_s.end() || !right_s.end())
+    {
+        int side;
+        ss_stack *pick;
+        if(left_s.front_value() < right_s.front_value())
+        {
+            pick = &left_s;
+            side = -1;
+        }
+        else
+        {
+            pick = &right_s;
+            side = 1;
+        }
+
+        printf("res %f, side: %d\n", pick->front()->pos, side);
+        pick->advance();
+    }
 }
 
 void lane::advance_carticles(float dt, float gamma_c)

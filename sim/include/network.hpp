@@ -35,7 +35,7 @@ struct carticle
     float theta; //< Orientation of carticle w.r.t. lane
 
     float u; //< Velocity of carticle.
-    float y; //< Lane change position.
+    float y; //< Lane change/source-sink position.
 
     inline bool free_motion() const { return motion_state == 0; }
 
@@ -59,7 +59,27 @@ struct carticle
         motion_state = 0;
     }
 
-    int motion_state; //< Lane-change - -1 is left change, 1 right, 0 none
+    inline bool in_turn() const { return std::abs(motion_state) == 2; }
+    inline int turn_dir() const
+    {
+        assert(in_turn());
+        return copysign(1.0, motion_state);
+    }
+
+    inline void start_turn(int dir)
+    {
+        assert(free_motion());
+        assert(std::abs(dir) == 1);
+        motion_state = copysign(1.0, dir);
+    }
+
+    inline void end_turn()
+    {
+        assert(in_turn());
+        motion_state = 0;
+    }
+
+    int motion_state; //< Lane-change/source-sink state - -1 is left change, 1 right, 0 none, -2 is left turn,  2 right turn
 };
 
 struct ltstr

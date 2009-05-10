@@ -55,6 +55,8 @@ struct adjacency
                                //< in the neighbor corresponding
                                //< to this adjacency
 
+    int find_source(float x) const;
+
     std::vector<source_sink> source_sinks;
 };
 
@@ -96,6 +98,8 @@ struct lane
 
     int merge_intent(float t, float gamma_c) const;
     bool merge_possible(carticle &c, int intent, float gamma_c) const;
+
+    void find_ss(float x) const;
 
     void advance_carticles(float dt, float gamma_c);
 
