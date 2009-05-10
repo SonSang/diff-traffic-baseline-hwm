@@ -727,7 +727,7 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
 
 struct ss_stack
 {
-    ss_stack(float x, const intervals<adjacency> *ia) : int_adj(ia)
+    ss_stack(float x, intervals<adjacency> *ia) : int_adj(ia)
     {
         const float t = x;
         adjacency_no = int_adj->find(t);
@@ -738,7 +738,7 @@ struct ss_stack
             ss_idx = (*int_adj).entries[adjacency_no].data.find_source(t);
     }
 
-    const source_sink* front() const
+    source_sink* front()
     {
         if(ss_idx == -1)
             return 0;
@@ -749,7 +749,7 @@ struct ss_stack
             return (&(*int_adj).entries[adjacency_no].data.source_sinks[ss_idx]);
     }
 
-    float front_value() const
+    float front_value()
     {
         const source_sink *s = front();
 
@@ -784,33 +784,84 @@ struct ss_stack
         return ss_idx == -1;
     }
 
-    const intervals<adjacency> *int_adj;
+    intervals<adjacency> *int_adj;
     int adjacency_no;
     int ss_idx;
 };
 
-void lane::find_ss(float x) const
+struct ss_walker
 {
-    ss_stack left_s(x, &left);
-    ss_stack right_s(x, &right);
-
-    while(!left_s.end() || !right_s.end())
+    ss_walker(lane &in_la) : la(in_la),
+        left_s(0.0f, &(la.left)),
+        right_s(0.0f, &(la.right))
     {
-        int side;
-        ss_stack *pick;
-        if(left_s.front_value() < right_s.front_value())
+        new_pick();
+    }
+
+    source_sink* front()
+    {
+        if(end())
+            return 0;
+        else
+            return pick->front();
+    }
+
+    void advance()
+    {
+        if(!end())
+        {
+            pick->advance();
+            new_pick();
+        }
+    }
+
+    void advance(float x)
+    {
+        while(!end() && pick->front()->pos < x)
+        {
+            pick->advance();
+            new_pick();
+        }
+    }
+
+    void new_pick()
+    {
+        if(left_s.end() && right_s.end())
+            pick = 0;
+        else if(left_s.front_value() < right_s.front_value())
         {
             pick = &left_s;
-            side = -1;
+            side = 1;
         }
         else
         {
             pick = &right_s;
-            side = 1;
+            side = -1;
         }
+    }
 
-        printf("res %f, side: %d\n", pick->front()->pos, side);
-        pick->advance();
+    bool end() const
+    {
+        return !pick;
+    }
+
+    lane &la;
+
+    ss_stack left_s;
+    ss_stack right_s;
+
+    ss_stack *pick;
+    int side;
+};
+
+void lane::find_ss(float x)
+{
+    ss_walker ssw(*this);
+
+    while(!ssw.end())
+    {
+        printf("res %f, side: %d\n", ssw.front()->pos, ssw.side);
+        ssw.advance();
     }
 }
 

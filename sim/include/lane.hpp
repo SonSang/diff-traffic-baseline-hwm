@@ -99,7 +99,7 @@ struct lane
     int merge_intent(float t, float gamma_c) const;
     bool merge_possible(carticle &c, int intent, float gamma_c) const;
 
-    void find_ss(float x) const;
+    void find_ss(float x);
 
     void advance_carticles(float dt, float gamma_c);
 
