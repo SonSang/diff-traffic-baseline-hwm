@@ -295,12 +295,10 @@ void lane::draw_data(draw_type dtype, float gamma_c) const
 
 void lane::draw_carticles() const
 {
-    float offs = CAR_REAR_AXLE/(ncells*h);
-
     foreach(const carticle &car, carticles[0])
     {
         float mat[16];
-        get_matrix(car.x-offs, mat);
+        get_matrix(car.x, mat);
 
         glPushMatrix();
         glTranslatef(0.0f, car.y*LANE_WIDTH, 0.0f);
@@ -347,8 +345,6 @@ void lane::draw_carticles() const
 
 void lane::draw_source_sinks(float scale) const
 {
-    float offs = CAR_REAR_AXLE/(ncells*h);
-
     const adjacency *ladj = &(left.base_data);
     int p = -1;
     while(1)

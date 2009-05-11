@@ -33,7 +33,7 @@ struct carticle
     carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), motion_state(0) {}
 
     int id;
-    float x; //< Parametric position of carticle's front bumper axle along current lane.
+    float x; //< Parametric position of carticle's rear axle along current lane.
     float theta; //< Orientation of carticle w.r.t. lane
 
     float u; //< Velocity of carticle.

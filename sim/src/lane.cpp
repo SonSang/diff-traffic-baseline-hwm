@@ -466,7 +466,7 @@ void lane::fill_from_carticles()
 
     foreach(carticle &cart, carticles[0])
     {
-        float front_pos = cart.x*ncells;
+        float front_pos = cart.x*ncells + CAR_REAR_AXLE*inv_h;
         float back_pos  = front_pos - CAR_LENGTH*inv_h;
 
         int front_cell = std::floor(front_pos);
@@ -994,19 +994,19 @@ void lane::advance_carticles(float dt, float gamma_c)
             }
         }
 
-        if(cart.x > 1.0)
+        if(cart.x > 1.0 - CAR_REAR_AXLE * inv_len)
         {
             lane *next;
             if(end.end_type == lane_end::INTERSECTION)
             {
                 if((next = downstream_lane()))
                 {
-                    cart.x = (cart.x - 1.0) * ncells*h/(next->ncells*next->h);
+                    cart.x = (cart.x - (1.0 - CAR_REAR_AXLE * inv_len)) * ncells*h/(next->ncells*next->h);
                     next->carticles[1].push_back(cart);
                 }
                 else
                 {
-                    cart.x = 1.0f;
+                    cart.x = 1.0f - CAR_REAR_AXLE * inv_len;
                     carticles[1].push_back(cart);
                 }
             }
@@ -1113,12 +1113,10 @@ void lane::apply_merges(float dt, float gamma_c)
 
 void lane::dump_carticles(FILE *fp) const
 {
-    float offs = CAR_REAR_AXLE/(ncells*h);
-
     foreach(const carticle &ca, carticles[0])
     {
         point pt, n;
-        float param = ca.x - offs;
+        float param = ca.x;
         get_point_and_normal(param, pt, n);
 
         fprintf(fp, "%d %f %f %f %f %f %f\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, n.x, n.y, ca.u);
