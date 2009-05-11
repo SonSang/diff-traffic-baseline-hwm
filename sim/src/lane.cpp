@@ -895,7 +895,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             cart.y *= cart.lane_change_dir();
 
             float del_y = cart.y - prev_y;
-            cart.theta = std::atan2(del_y, cart.u*dt);
+            cart.theta = std::atan2(del_y*LANE_WIDTH, cart.u*dt);
 
             float back_of_carticle  = cart.x - (CAR_LENGTH-CAR_REAR_AXLE)*inv_len;
             float front_of_carticle = cart.x +  CAR_REAR_AXLE*inv_len;
