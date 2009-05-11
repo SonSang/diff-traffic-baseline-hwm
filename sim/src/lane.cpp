@@ -1074,10 +1074,15 @@ void lane::dump_carticles(FILE *fp) const
 {
     foreach(const carticle &ca, carticles[0])
     {
-        point pt, n;
+        point pt, n, nf;
         float param = ca.x;
         get_point_and_normal(param, pt, n);
 
-        fprintf(fp, "%d %f %f %f %f %f %f\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, n.x, n.y, ca.u);
+        float s = -std::sin(ca.theta);
+        float c =  std::cos(ca.theta);
+        nf.x = c*n.x + -s*n.y;
+        nf.y = s*n.x +  c*n.y;
+
+        fprintf(fp, "%d %f %f %f %f %f %f %d\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, nf.x, nf.y, ca.u, ca.motion_state);
     }
 }
