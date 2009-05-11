@@ -306,8 +306,8 @@ void lane::draw_carticles() const
             get_matrix(cart.x, mat);
 
             glPushMatrix();
-            glTranslatef(0.0f, -cart.y*LANE_WIDTH, 0.0f);
             glMultMatrixf(mat);
+            glTranslatef(0.0f, -cart.y*LANE_WIDTH, 0.0f);
 
             glRotatef(-cart.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
             glColor3f(0.0f, 1.0f, 1.0f);
@@ -323,8 +323,8 @@ void lane::draw_carticles() const
         get_matrix(car.x, mat);
 
         glPushMatrix();
-        glTranslatef(0.0f, -car.y*LANE_WIDTH, 0.0f);
         glMultMatrixf(mat);
+        glTranslatef(0.0f, -car.y*LANE_WIDTH, 0.0f);
 
         if(car.in_lane_change())
         {
