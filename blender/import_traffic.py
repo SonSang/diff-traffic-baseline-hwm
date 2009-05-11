@@ -181,7 +181,7 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
         ipo_curves[0][fr] = carseries.x[i]
         ipo_curves[1][fr] = carseries.y[i]
         ipo_curves[2][fr] = carseries.z[i] + zoffs
-        
+
     zrot_curve = ipo_r.addCurve("RotZ")
     lastangle = math.atan2(carseries.ny[0],carseries.nx[0]) * 18.0/math.pi
     for i in xrange(0, carseries.nrecs()):
@@ -391,7 +391,7 @@ def build_car(scn, id, color, car, scale):
     wheel_obj = Blender.Object.Get(car['wheel'])
     wheel_obj_flip = Blender.Object.Get(car['wheel-flip'])
     wheel_points = car['wheel_points']
-    print "Got all neede objects"
+    print "Got all needed objects"
 
     print "Making empties"
     root = scn.objects.new("Empty")
@@ -406,12 +406,9 @@ def build_car(scn, id, color, car, scale):
     print "Got empties"
 
     print "Copying body"
-    scn.objects.selected = [body_obj]
-    Blender.Object.Duplicate()
-    new_body = scn.objects.selected[0]
-    new_body.setName("%s_%d" % (body_obj.getName(), id))
+    new_body = scn.objects.new(body_obj.getData(False, True), "%s_%d" % (body_obj.getName(), id))
 
-    mats = new_body.getMaterials()
+    mats = body_obj.getMaterials()
 
     body = find_mat(mats, "Bodycolor")
     assert body != None
@@ -447,18 +444,13 @@ def build_car(scn, id, color, car, scale):
 ######################
 
     print "Copying wheels"
-    scn.objects.selected = [wheel_obj]
+
     wheels = [None] * 4
     for i in [0, 1]:
-        Blender.Object.Duplicate()
-        wheels[i] = scn.objects.selected[0]
-        wheels[i].setName("%s_n%d_%d" % (wheel_obj.getName(), i, id))
+        wheels[i] = scn.objects.new(wheel_obj.getData(False, True), "%s_n%d_%d" % (wheel_obj.getName(), i, id))
 
-    scn.objects.selected = [wheel_obj_flip]
     for i in [2, 3]:
-        Blender.Object.Duplicate()
-        wheels[i] = scn.objects.selected[0]
-        wheels[i].setName("%s_n%d_%d" % (wheel_obj_flip.getName(), i, id))
+        wheels[i] = scn.objects.new(wheel_obj_flip.getData(False, True), "%s_n%d_%d" % (wheel_obj_flip.getName(), i, id))
 
     print "Copied wheels"
 
