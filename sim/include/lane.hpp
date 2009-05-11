@@ -40,7 +40,12 @@ struct source_sink
 
     bool full() const
     {
-        return capacity == static_cast<int>(carticles.size());
+        return capacity == 0;
+    }
+
+    void reserve_space()
+    {
+        --capacity;
     }
 
     void add_carticle(carticle &c)
@@ -140,5 +145,263 @@ struct lane
     merge_state *merge_states;
 
     std::vector<carticle> carticles[2];
+};
+
+struct ss_stack
+{
+    ss_stack(float x, intervals<adjacency> *ia) : int_adj(ia)
+    {
+        const float t = x;
+        adjacency_no = int_adj->find(t);
+
+        if(adjacency_no == -1)
+            ss_idx = (*int_adj).base_data.find_source(t);
+        else
+            ss_idx = (*int_adj).entries[adjacency_no].data.find_source(t);
+    }
+
+    source_sink* front()
+    {
+        if(ss_idx == -1)
+            return 0;
+
+        if(adjacency_no == -1)
+            return (&(*int_adj).base_data.source_sinks[ss_idx]);
+        else
+            return (&(*int_adj).entries[adjacency_no].data.source_sinks[ss_idx]);
+    }
+
+    float front_value()
+    {
+        const source_sink *s = front();
+
+        return s ? s->pos : FLT_MAX;
+    }
+
+    void advance()
+    {
+        ++ss_idx;
+
+        int sslen;
+        if(adjacency_no == -1)
+            sslen = static_cast<int>((*int_adj).base_data.source_sinks.size());
+        else
+            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
+
+        while(ss_idx >= sslen)
+        {
+            ++adjacency_no;
+            if(adjacency_no >= static_cast<int>(int_adj->entries.size()))
+            {
+                ss_idx = -1;
+                break;
+            }
+
+            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
+        }
+    }
+
+    bool end() const
+    {
+        return ss_idx == -1;
+    }
+
+    intervals<adjacency> *int_adj;
+    int adjacency_no;
+    int ss_idx;
+};
+
+struct ss_walker
+{
+    ss_walker(lane &in_la) : la(in_la),
+        left_s(0.0f, &(la.left)),
+        right_s(0.0f, &(la.right))
+    {
+        new_pick();
+    }
+
+    source_sink* front()
+    {
+        if(end())
+            return 0;
+        else
+            return pick->front();
+    }
+
+    void advance()
+    {
+        if(!end())
+        {
+            pick->advance();
+            new_pick();
+        }
+    }
+
+    void advance(float x)
+    {
+        while(!end() && pick->front()->pos < x)
+        {
+            pick->advance();
+            new_pick();
+        }
+    }
+
+    void new_pick()
+    {
+        if(left_s.end() && right_s.end())
+            pick = 0;
+        else if(left_s.front_value() < right_s.front_value())
+        {
+            pick = &left_s;
+            side = 1;
+        }
+        else
+        {
+            pick = &right_s;
+            side = -1;
+        }
+    }
+
+    bool end() const
+    {
+        return !pick;
+    }
+
+    lane &la;
+
+    ss_stack left_s;
+    ss_stack right_s;
+
+    ss_stack *pick;
+    int side;
+};
+
+struct const_ss_stack
+{
+    const_ss_stack(float x, const intervals<adjacency> *ia) : int_adj(ia)
+    {
+        const float t = x;
+        adjacency_no = int_adj->find(t);
+
+        if(adjacency_no == -1)
+            ss_idx = (*int_adj).base_data.find_source(t);
+        else
+            ss_idx = (*int_adj).entries[adjacency_no].data.find_source(t);
+    }
+
+    const source_sink* front() const
+    {
+        if(ss_idx == -1)
+            return 0;
+
+        if(adjacency_no == -1)
+            return (&(*int_adj).base_data.source_sinks[ss_idx]);
+        else
+            return (&(*int_adj).entries[adjacency_no].data.source_sinks[ss_idx]);
+    }
+
+    float front_value() const
+    {
+        const source_sink *s = front();
+
+        return s ? s->pos : FLT_MAX;
+    }
+
+    void advance()
+    {
+        ++ss_idx;
+
+        int sslen;
+        if(adjacency_no == -1)
+            sslen = static_cast<int>((*int_adj).base_data.source_sinks.size());
+        else
+            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
+
+        while(ss_idx >= sslen)
+        {
+            ++adjacency_no;
+            if(adjacency_no >= static_cast<int>(int_adj->entries.size()))
+            {
+                ss_idx = -1;
+                break;
+            }
+
+            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
+        }
+    }
+
+    bool end() const
+    {
+        return ss_idx == -1;
+    }
+
+    const intervals<adjacency> *int_adj;
+    int adjacency_no;
+    int ss_idx;
+};
+
+struct const_ss_walker
+{
+    const_ss_walker(const lane &in_la) : la(in_la),
+                                         left_s(0.0f, &(la.left)),
+                                         right_s(0.0f, &(la.right))
+    {
+        new_pick();
+    }
+
+    const source_sink* front() const
+    {
+        if(end())
+            return 0;
+        else
+            return pick->front();
+    }
+
+    void advance()
+    {
+        if(!end())
+        {
+            pick->advance();
+            new_pick();
+        }
+    }
+
+    void advance(float x)
+    {
+        while(!end() && pick->front()->pos < x)
+        {
+            pick->advance();
+            new_pick();
+        }
+    }
+
+    void new_pick()
+    {
+        if(left_s.end() && right_s.end())
+            pick = 0;
+        else if(left_s.front_value() < right_s.front_value())
+        {
+            pick = &left_s;
+            side = 1;
+        }
+        else
+        {
+            pick = &right_s;
+            side = -1;
+        }
+    }
+
+    bool end() const
+    {
+        return !pick;
+    }
+
+    const lane &la;
+
+    const_ss_stack left_s;
+    const_ss_stack right_s;
+
+    const_ss_stack *pick;
+    int side;
 };
 #endif

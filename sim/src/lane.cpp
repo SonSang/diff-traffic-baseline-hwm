@@ -725,137 +725,17 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
     return other_la->data[loc].rho < 0.1f;
 }
 
-struct ss_stack
-{
-    ss_stack(float x, intervals<adjacency> *ia) : int_adj(ia)
-    {
-        const float t = x;
-        adjacency_no = int_adj->find(t);
-
-        if(adjacency_no == -1)
-            ss_idx = (*int_adj).base_data.find_source(t);
-        else
-            ss_idx = (*int_adj).entries[adjacency_no].data.find_source(t);
-    }
-
-    source_sink* front()
-    {
-        if(ss_idx == -1)
-            return 0;
-
-        if(adjacency_no == -1)
-            return (&(*int_adj).base_data.source_sinks[ss_idx]);
-        else
-            return (&(*int_adj).entries[adjacency_no].data.source_sinks[ss_idx]);
-    }
-
-    float front_value()
-    {
-        const source_sink *s = front();
-
-        return s ? s->pos : FLT_MAX;
-    }
-
-    void advance()
-    {
-        ++ss_idx;
-
-        int sslen;
-        if(adjacency_no == -1)
-            sslen = static_cast<int>((*int_adj).base_data.source_sinks.size());
-        else
-            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
-
-        while(ss_idx >= sslen)
-        {
-            ++adjacency_no;
-            if(adjacency_no >= static_cast<int>(int_adj->entries.size()))
-            {
-                ss_idx = -1;
-                break;
-            }
-
-            sslen = static_cast<int>((*int_adj).entries[adjacency_no].data.source_sinks.size());
-        }
-    }
-
-    bool end() const
-    {
-        return ss_idx == -1;
-    }
-
-    intervals<adjacency> *int_adj;
-    int adjacency_no;
-    int ss_idx;
-};
-
-struct ss_walker
-{
-    ss_walker(lane &in_la) : la(in_la),
-        left_s(0.0f, &(la.left)),
-        right_s(0.0f, &(la.right))
-    {
-        new_pick();
-    }
-
-    source_sink* front()
-    {
-        if(end())
-            return 0;
-        else
-            return pick->front();
-    }
-
-    void advance()
-    {
-        if(!end())
-        {
-            pick->advance();
-            new_pick();
-        }
-    }
-
-    void advance(float x)
-    {
-        while(!end() && pick->front()->pos < x)
-        {
-            pick->advance();
-            new_pick();
-        }
-    }
-
-    void new_pick()
-    {
-        if(left_s.end() && right_s.end())
-            pick = 0;
-        else if(left_s.front_value() < right_s.front_value())
-        {
-            pick = &left_s;
-            side = 1;
-        }
-        else
-        {
-            pick = &right_s;
-            side = -1;
-        }
-    }
-
-    bool end() const
-    {
-        return !pick;
-    }
-
-    lane &la;
-
-    ss_stack left_s;
-    ss_stack right_s;
-
-    ss_stack *pick;
-    int side;
-};
-
 struct turn_curve
 {
+    turn_curve(float in_x) : x_(in_x) {}
+
+    float operator()(float t)
+    {
+        return x(t) - x_;
+    }
+
+    float x_;
+
     static float x(float t)
     {
         return (((0.952735372896*t+
@@ -873,6 +753,23 @@ struct turn_curve
                  -0.8082796784*t) +
                 0.0691053639752*t) +
             -0.00106975213459;
+    }
+
+    static float theta(float t)
+    {
+        const float orientation = M_PI/2.0f;
+        const float kmax = 1.1172f;
+        const float m = 2.0f*orientation/kmax;
+        const float inv_m = 1.0f/m;
+
+        t *= m;
+
+        if(t <= m/2)
+            return kmax*t*t*inv_m;
+        else if(t <= m)
+            return -kmax*(t*t*inv_m - 2*t + m/2);
+        else
+            return kmax*m/2;
     }
 
     static float x_end(float speed)
@@ -902,17 +799,46 @@ void lane::find_ss(float x)
 void lane::advance_carticles(float dt, float gamma_c)
 {
     float inv_len = 1.0f/(ncells*h);
+
+    {
+        ss_walker ssw(*this);
+        while(!ssw.end())
+        {
+            source_sink *ss = ssw.front();
+            for(int i = 0; i < static_cast<int>(ss->carticles.size()); ++i)
+            {
+                carticle &cart = ss->carticles[i];
+                if(cart.in_turn())
+                {
+                    if(cart.y*LANE_WIDTH > 2*CAR_LENGTH)
+                    {
+                        cart.end_turn();
+                        continue;
+                    }
+
+                    cart.u *= 0.8;
+                    cart.x += cart.u*inv_len*std::cos(cart.theta)*dt;
+                    cart.y -= 1.0/LANE_WIDTH*dt*cart.u*std::sin(cart.theta);
+                    printf("theta0: %f\n", cart.theta);
+                    cart.theta = -0.3*cart.turn_dir()*M_PI_2 + 0.7*cart.theta;
+                    printf("theta1: %f\n", cart.theta);
+                }
+            }
+            ssw.advance();
+        }
+    }
+
     ss_walker ssw(*this);
 
     foreach(carticle &cart, carticles[0])
     {
         // advance vehicle
         float param_u = rk4(cart.x, dt*inv_len, this, gamma_c);
-        cart.x += param_u;
+        cart.x += param_u*std::cos(cart.theta);
         cart.u = param_u*(ncells*h)/dt;
 
         if(cart.free_motion())
-       {
+        {
             // check for intent to merge
             int intent = merge_intent(cart.x, gamma_c);
 
@@ -931,7 +857,7 @@ void lane::advance_carticles(float dt, float gamma_c)
                     if(min_x < to_ss && to_ss < 20.0f)
                     {
                         cart.start_turn(ssw.side, ss);
-                        ss->add_carticle(cart);
+                        ss->reserve_space();
                     }
                 }
             }
@@ -992,6 +918,31 @@ void lane::advance_carticles(float dt, float gamma_c)
                 cart.theta = 0.0f;
                 cart.end_lane_change();
             }
+        }
+        else if(cart.in_turn())
+        {
+            float x_end = turn_curve::x_end(cart.u);
+            float to_ss = (cart.turn_target->pos - cart.x)*ncells*h;
+            if(to_ss > 0 && x_end > to_ss)
+            {
+                turn_curve t_solve((x_end-to_ss)/x_end);
+                float t = secant<turn_curve>(0.1f, 0.5f, 0.0f, 1.0f, 1e-4f, 100, t_solve);
+                printf("t: %f\n", t);
+                cart.y = 1.0/LANE_WIDTH*turn_curve::y_end(cart.u)*turn_curve::y(t)*cart.turn_dir();
+                cart.theta = -turn_curve::theta(t)*cart.turn_dir();
+            }
+
+            if(std::abs(cart.y*LANE_WIDTH) > 0.5*LANE_WIDTH + 2.0*(CAR_LENGTH-CAR_REAR_AXLE))
+                cart.turn_target->add_carticle(cart);
+            else
+            {
+                int cell = static_cast<int>(std::floor(cart.x*ncells));
+                data[cell].y = to_y(data[cell].rho, 0.7f*cart.u, speedlimit, gamma_c);
+
+                carticles[1].push_back(cart);
+            }
+
+            continue;
         }
 
         if(cart.x > 1.0 - CAR_REAR_AXLE * inv_len)

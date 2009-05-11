@@ -295,6 +295,29 @@ void lane::draw_data(draw_type dtype, float gamma_c) const
 
 void lane::draw_carticles() const
 {
+    const_ss_walker ssw(*this);
+    while(!ssw.end())
+    {
+        const source_sink *ss = ssw.front();
+        for(int i = 0; i < static_cast<int>(ss->carticles.size()); ++i)
+        {
+            const carticle &cart = ss->carticles[i];
+            float mat[16];
+            get_matrix(cart.x, mat);
+
+            printf("cart.x: %f\n", cart.x);
+            glPushMatrix();
+            glTranslatef(0.0f, cart.y*LANE_WIDTH, 0.0f);
+            glMultMatrixf(mat);
+
+            glRotatef(cart.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
+            glColor3f(0.0f, 1.0f, 1.0f);
+            draw_car();
+            glPopMatrix();
+        }
+        ssw.advance();
+    };
+
     foreach(const carticle &car, carticles[0])
     {
         float mat[16];

@@ -106,7 +106,7 @@ if __name__ == '__main__':
     (speeds, times, distances) = ke_ss_lengths()
     m = (distances[-1]-distances[0])/(speeds[-1]-speeds[0])
     b =  distances[0]-m*speeds[0]
-    print 'xend', cpoly([m, b],'speed')
+#    print 'xend', cpoly([m, b],'speed')
     #speed vs x: [0.843112757647 2.45445917647]
 #    p = numpy.poly1d([m, b])
 #    pylab.clf()
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     (speeds, times, distances) = ke_ss_lengths()
     m = (distances[-1]-distances[0])/(speeds[-1]-speeds[0])
     b =  distances[0]-m*speeds[0]
-    print 'yend', cpoly([m, b],'speed')
+#    print 'yend', cpoly([m, b],'speed')
     #speed vs y: [0.244331745882 4.11774005882]
 #    p = numpy.poly1d([m, b])
 #    pylab.clf()
@@ -141,14 +141,14 @@ if __name__ == '__main__':
 #    pylab.plot(data[:, idx['t']], data[:, idx['x']], data[:, idx['t']], px(numpy.divide(data[:, idx['t']], end)))
 
     newt = numpy.linspace(0, 1, 100)
-
+    pylab.plot(newt, px(newt))
     speed = 16.6667
 
     (idx, data) = ke_ss_path(speed, 10/3.6)
 
 
-    endx = 0.843112757647*speed + 2.45445917647
-    endy = 0.244331745882*speed + 4.11774005882
+#    endx = 0.843112757647*speed + 2.45445917647
+#    endy = 0.244331745882*speed + 4.11774005882
 
 #    pylab.plot(data[:, idx['x']], data[:, idx['y']], endx*px(newt),
 #               endy*py(newt))
