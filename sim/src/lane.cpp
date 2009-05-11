@@ -851,7 +851,8 @@ void lane::advance_carticles(float dt, float gamma_c)
                 {
                     float min_x = turn_curve::x_end(cart.u);
                     float to_ss = (ss->pos - cart.x)*ncells*h;
-                    if(min_x < to_ss && to_ss < 20.0f)
+                    float prob_turn = drand48();
+                    if(min_x < to_ss && to_ss < 20.0f && prob_turn < 0.05f);
                     {
                         cart.start_turn(ssw.side, ss);
                         ss->reserve_space();
