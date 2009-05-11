@@ -9,6 +9,9 @@
 #include "network.hpp"
 
 FILE *out_file;
+#define OUTPUT_RATE 0.3
+size_t frameno = 0;
+float last_dump;
 
 static float zooms[10] = { 13.0f,
                            2.0f,
@@ -843,8 +846,13 @@ public:
                 case ' ':
                     {
                         float dt =  net->sim_step();
-                        printf("dt = %f\n", dt);
-                        net->dump_carticles(out_file);
+                        printf("dt = %f, frameno = %zu\n", dt, frameno);
+                        if(net->global_time - last_dump > OUTPUT_RATE)
+                        {
+                            net->dump_carticles(out_file);
+                            frameno++;
+                            last_dump = net->global_time;
+                        }
                     }
                     break;
                 case 's':
@@ -946,6 +954,8 @@ int main(int argc, char * argv[])
     net->fill_from_carticles();
 
     net->dump_carticles(out_file);
+    last_dump = net->global_time;
+    frameno++;
 
     float rng[2] = {0.0f, 1.0f};
     float offsets[2];
