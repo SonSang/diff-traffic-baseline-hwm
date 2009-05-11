@@ -493,6 +493,10 @@ int network::add_carticle(int lane, float pos, float u)
 
 void network::dump_carticles(FILE *fp) const
 {
+    float origin[2];
+    origin[0] = (bb[0]+bb[1])*0.5;
+    origin[1] = (bb[2]+bb[3])*0.5;
+
     int count = 0;
     foreach(const lane &la, lanes)
         count += la.carticles[0].size();
@@ -508,13 +512,13 @@ void network::dump_carticles(FILE *fp) const
     fprintf(fp, "%f %d\n", global_time, count);
 
     foreach(const lane &la, lanes)
-        la.dump_carticles(fp);
+        la.dump_carticles(fp, origin);
     foreach(const intersection &is, intersections)
     {
         foreach(const intersection::state &st, is.states)
         {
             foreach(const lane &la, st.fict_lanes)
-                la.dump_carticles(fp);
+                la.dump_carticles(fp, origin);
         }
     }
 }

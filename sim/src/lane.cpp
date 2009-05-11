@@ -1090,7 +1090,7 @@ void lane::apply_merges(float dt, float gamma_c)
     }
 }
 
-void lane::dump_carticles(FILE *fp) const
+void lane::dump_carticles(FILE *fp, const float origin[2]) const
 {
     foreach(const carticle &ca, carticles[0])
     {
@@ -1098,11 +1098,14 @@ void lane::dump_carticles(FILE *fp) const
         float param = ca.x;
         get_point_and_normal(param, pt, n);
 
+        pt.x -= origin[0];
+        pt.y -= origin[1];
+
         float s = -std::sin(ca.theta);
         float c =  std::cos(ca.theta);
         nf.x = c*n.x + -s*n.y;
         nf.y = s*n.x +  c*n.y;
 
-        fprintf(fp, "%d %f %f %f %f %f %f %d\n", ca.id, pt.x-LANE_WIDTH*ca.y*n.y, pt.y+LANE_WIDTH*ca.y*n.x, pt.z, nf.x, nf.y, ca.u, ca.motion_state);
+        fprintf(fp, "%d %f %f %f %f %f %f %d\n", ca.id, pt.x+LANE_WIDTH*ca.y*n.y, pt.y-LANE_WIDTH*ca.y*n.x, pt.z, nf.x, nf.y, ca.u, ca.motion_state);
     }
 }
