@@ -589,6 +589,8 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
 
 void lane::update(float dt)
 {
+    const float relaxation_fac = 0.1;
+
     float coeff = dt/h;
 
     if(ncells == 1)
@@ -597,6 +599,7 @@ void lane::update(float dt)
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
+        data[i].y   -= data[i].y*coeff*relaxation_fac;
         assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
         data[i].fix();
@@ -607,6 +610,7 @@ void lane::update(float dt)
     data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
     data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
+    data[i].y   -= data[i].y*coeff*relaxation_fac;
     assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
     data[i].fix();
@@ -615,6 +619,8 @@ void lane::update(float dt)
     {
         data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
+
+        data[i].y   -= data[i].y*coeff*relaxation_fac;
         assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
         data[i].fix();
@@ -623,6 +629,7 @@ void lane::update(float dt)
     data[i].rho -= coeff*(rs[i].fluct_r.rho + rs[i+1].fluct_l.rho);
     data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
+    data[i].y   -= data[i].y*coeff*relaxation_fac;
     assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
     data[i].fix();
