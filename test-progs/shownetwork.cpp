@@ -305,12 +305,11 @@ void lane::draw_carticles() const
             float mat[16];
             get_matrix(cart.x, mat);
 
-            printf("cart.x: %f\n", cart.x);
             glPushMatrix();
-            glTranslatef(0.0f, cart.y*LANE_WIDTH, 0.0f);
+            glTranslatef(0.0f, -cart.y*LANE_WIDTH, 0.0f);
             glMultMatrixf(mat);
 
-            glRotatef(cart.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
+            glRotatef(-cart.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
             glColor3f(0.0f, 1.0f, 1.0f);
             draw_car();
             glPopMatrix();
@@ -324,7 +323,7 @@ void lane::draw_carticles() const
         get_matrix(car.x, mat);
 
         glPushMatrix();
-        glTranslatef(0.0f, car.y*LANE_WIDTH, 0.0f);
+        glTranslatef(0.0f, -car.y*LANE_WIDTH, 0.0f);
         glMultMatrixf(mat);
 
         if(car.in_lane_change())
@@ -332,7 +331,7 @@ void lane::draw_carticles() const
             glColor3f(1.0f, 0.0f, 0.0f);
             glBegin(GL_LINES);
             glVertex3f(0.0f, 0.0f, 0.0f);
-            glVertex3f(0.0f, -car.lane_change_dir()*LANE_WIDTH*0.5f, 0.0f);
+            glVertex3f(0.0f, -car.lane_change_dir()*LANE_WIDTH*1.5f, 0.0f);
             glEnd();
         }
         else if(car.in_turn())
@@ -344,8 +343,7 @@ void lane::draw_carticles() const
             glEnd();
         }
 
-
-        glRotatef(car.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
+        glRotatef(-car.theta*M_1_PI*180.0f, 0.0f, 0.0f, 1.0f);
         glColor3f(0.0f, 1.0f, 1.0f);
         draw_car();
         glPopMatrix();
@@ -359,8 +357,8 @@ void lane::draw_carticles() const
 
             glColor3f(0.0f, 0.0f, 1.0f);
             glBegin(GL_LINES);
-            glVertex3f(pt.x - no.y*(LANE_WIDTH*0.5),       pt.y + no.x*(LANE_WIDTH*0.5), pt.z);
-            glVertex3f(pt.x - no.y*(4*CAR_LENGTH+LANE_WIDTH*0.5), pt.y + no.x*(4*CAR_LENGTH+LANE_WIDTH*0.5), pt.z);
+            glVertex3f(pt.x + car.turn_dir()*no.y*(LANE_WIDTH*0.5),              pt.y - car.turn_dir()*no.x*(LANE_WIDTH*0.5), pt.z);
+            glVertex3f(pt.x + car.turn_dir()*no.y*(4*CAR_LENGTH+LANE_WIDTH*0.5), pt.y - car.turn_dir()*no.x*(4*CAR_LENGTH+LANE_WIDTH*0.5), pt.z);
             glEnd();
         }
     }

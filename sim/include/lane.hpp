@@ -253,12 +253,12 @@ struct ss_walker
         else if(left_s.front_value() < right_s.front_value())
         {
             pick = &left_s;
-            side = 1;
+            side = -1;
         }
         else
         {
             pick = &right_s;
-            side = -1;
+            side = 1;
         }
     }
 
@@ -382,12 +382,12 @@ struct const_ss_walker
         else if(left_s.front_value() < right_s.front_value())
         {
             pick = &left_s;
-            side = 1;
+            side = -1;
         }
         else
         {
             pick = &right_s;
-            side = -1;
+            side = 1;
         }
     }
 

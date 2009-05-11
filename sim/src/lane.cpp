@@ -366,7 +366,7 @@ void lane::get_matrix(const float &t, float mat[16]) const
     get_point_and_normal(t, p, n);
 
     mat[ 0]=n.x;  mat[ 1]= n.y; mat[ 2]=0.0f;mat[ 3]=0.0f;
-    mat[ 4]=n.y;  mat[ 5]=-n.x; mat[ 6]=0.0f;mat[ 7]=0.0f;
+    mat[ 4]=-n.y; mat[ 5]= n.x; mat[ 6]=0.0f;mat[ 7]=0.0f;
     mat[ 8]=0.0f; mat[ 9]= 0.0f;mat[10]=1.0f;mat[11]=0.0f;
     mat[12]=p.x;  mat[13]= p.y; mat[14]=p.z ;mat[15]=1.0f;
 }
@@ -699,9 +699,9 @@ int lane::merge_intent(float local_t, float gamma_c) const
     }
 
     if(right_factor > left_factor)
-        return (right_factor > 0.5f) ? -1 : 0;
+        return (right_factor > 0.5f) ? 1 : 0;
     else
-        return (left_factor  > 0.5f) ?  1 : 0;
+        return (left_factor  > 0.5f) ? -1 : 0;
 }
 
 bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
@@ -717,7 +717,7 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
         return false;
 
     float other_t = c.x;
-    const lane *other_la = (dir == 1) ? left_adjacency(other_t) : right_adjacency(other_t);
+    const lane *other_la = (dir == -1) ? left_adjacency(other_t) : right_adjacency(other_t);
     assert(other_la);
 
     int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
@@ -810,18 +810,15 @@ void lane::advance_carticles(float dt, float gamma_c)
                 carticle &cart = ss->carticles[i];
                 if(cart.in_turn())
                 {
-                    if(cart.y*LANE_WIDTH > 2*CAR_LENGTH)
+                    if(std::abs(cart.y)*LANE_WIDTH > 2*CAR_LENGTH)
                     {
                         cart.end_turn();
                         continue;
                     }
-
-                    cart.u *= 0.8;
+                    cart.u *= 0.6;
                     cart.x += cart.u*inv_len*std::cos(cart.theta)*dt;
-                    cart.y -= 1.0/LANE_WIDTH*dt*cart.u*std::sin(cart.theta);
-                    printf("theta0: %f\n", cart.theta);
-                    cart.theta = -0.3*cart.turn_dir()*M_PI_2 + 0.7*cart.theta;
-                    printf("theta1: %f\n", cart.theta);
+                    cart.y += 1.0/LANE_WIDTH*dt*cart.u*std::sin(cart.theta);
+                    cart.theta = 0.3*cart.turn_dir()*M_PI_2 + 0.7*cart.theta;
                 }
             }
             ssw.advance();
@@ -886,7 +883,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             cart.y *= cart.lane_change_dir();
 
             float del_y = cart.y - prev_y;
-            cart.theta = -std::atan2(del_y, cart.u*dt);
+            cart.theta = std::atan2(del_y, cart.u*dt);
 
             merge_states[static_cast<int>(std::floor(cart.x*ncells))].transition = del_y;
 
@@ -895,9 +892,9 @@ void lane::advance_carticles(float dt, float gamma_c)
                 assert(cart.lane_change_dir() == -1);
                 cart.y += 1.0f;
 
-                lane *rlane = lane::right_adjacency(cart.x);
-                assert(rlane);
-                rlane->carticles[1].push_back(cart);
+                lane *llane = lane::left_adjacency(cart.x);
+                assert(llane);
+                llane->carticles[1].push_back(cart);
 
                 continue;
             }
@@ -906,9 +903,9 @@ void lane::advance_carticles(float dt, float gamma_c)
                 assert(cart.lane_change_dir() == 1);
                 cart.y -= 1.0f;
 
-                lane *llane = lane::left_adjacency(cart.x);
-                assert(llane);
-                llane->carticles[1].push_back(cart);
+                lane *rlane = lane::right_adjacency(cart.x);
+                assert(rlane);
+                rlane->carticles[1].push_back(cart);
 
                 continue;
             }
@@ -929,7 +926,7 @@ void lane::advance_carticles(float dt, float gamma_c)
                 float t = secant<turn_curve>(0.1f, 0.5f, 0.0f, 1.0f, 1e-4f, 100, t_solve);
                 printf("t: %f\n", t);
                 cart.y = 1.0/LANE_WIDTH*turn_curve::y_end(cart.u)*turn_curve::y(t)*cart.turn_dir();
-                cart.theta = -turn_curve::theta(t)*cart.turn_dir();
+                cart.theta = turn_curve::theta(t)*cart.turn_dir();
             }
 
             if(std::abs(cart.y*LANE_WIDTH) > 0.5*LANE_WIDTH + 2.0*(CAR_LENGTH-CAR_REAR_AXLE))
@@ -1003,8 +1000,10 @@ void lane::apply_merges(float dt, float gamma_c)
     float inv_ncells = 1.0f/ncells;
     for(size_t i = 0; i < ncells; ++i)
     {
-        if(merge_states[i].transition > 0.0f)
+        if(merge_states[i].transition < 0.0f)
         {
+            merge_states[i].transition *= -1;
+
             float param = i*inv_ncells;
             lane *la = left_adjacency(param);
             if(la)
@@ -1030,10 +1029,8 @@ void lane::apply_merges(float dt, float gamma_c)
                 la->data[neighbor_cell].fix();
             }
         }
-        else if(merge_states[i].transition < 0.0f)
+        else if(merge_states[i].transition > 0.0f)
         {
-            merge_states[i].transition *= -1;
-
             float param = i*inv_ncells;
             lane *la = right_adjacency(param);
             if(la)
