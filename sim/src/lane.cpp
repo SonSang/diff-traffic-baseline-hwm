@@ -718,18 +718,22 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
     if(c.u < 1.0f)
         return false;
 
-    float end = lc_curve::end(c.u);
-    printf("distance to end: %f, dist for lc: %f\n", ncells*h*(1.0-c.x), end*c.u);
-    if(c.x*ncells*h + end*c.u >= ncells*h)
-        return false;
-
     float other_t = c.x;
     const lane *other_la = (dir == -1) ? left_adjacency(other_t) : right_adjacency(other_t);
     assert(other_la);
 
-    int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
+    float end = lc_curve::end(c.u);
+    int lastcell = static_cast<int>(std::ceil(other_t*other_la->ncells + end*c.u/other_la->h));
 
-    return other_la->data[loc].rho < 0.1f;
+    if(lastcell >= other_la->ncells)
+        return false;
+
+    int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
+    for(; loc < lastcell; ++loc)
+        if(other_la->data[loc].rho > 0.1f)
+            return false;
+
+    return true;
 }
 
 struct turn_curve
@@ -893,7 +897,16 @@ void lane::advance_carticles(float dt, float gamma_c)
             float del_y = cart.y - prev_y;
             cart.theta = std::atan2(del_y, cart.u*dt);
 
-            merge_states[static_cast<int>(std::floor(cart.x*ncells))].transition = del_y;
+            float back_of_carticle  = cart.x - (CAR_LENGTH-CAR_REAR_AXLE)*inv_len;
+            float front_of_carticle = cart.x +  CAR_REAR_AXLE*inv_len;
+
+            int first_cell = static_cast<int>(std::floor(back_of_carticle*ncells));
+            int last_cell  = static_cast<int>(std::floor(front_of_carticle*ncells));
+            assert(first_cell >= 0);
+            assert(last_cell < ncells);
+
+            for(int i = first_cell; i < last_cell; ++i)
+                merge_states[i].transition = del_y;
 
             if(cart.y < -0.5f)
             {
