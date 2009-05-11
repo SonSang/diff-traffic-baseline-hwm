@@ -471,11 +471,11 @@ void network::calc_bounding_box()
         {
             if(pt.x < bb[0])
                 bb[0] = pt.x;
-            else if(pt.x > bb[1])
+            if(pt.x > bb[1])
                 bb[1] = pt.x;
             if(pt.y < bb[2])
                 bb[2] = pt.y;
-            else if(pt.y > bb[3])
+            if(pt.y > bb[3])
                 bb[3] = pt.y;
         }
     }
