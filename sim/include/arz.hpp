@@ -411,7 +411,7 @@ inline void stop_riemann(riemann_solution *rs,
                    u_max, gamma);
 
     rs->speeds[0]    = 0.0f;
-    if(std::abs(q_m.rho - q_l->rho) > FLT_EPSILON)
+    if(std::abs(q_m.rho - q_l->rho) > 1e-4)
         rs->speeds[0] = -q_l->rho * q_l->u/(q_m.rho - q_l->rho);
 
     rs->waves[0].rho = -q_l->rho;
