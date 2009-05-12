@@ -128,12 +128,6 @@ public:
 	virtual bool processUnbufferedKeyInput(const FrameEvent &evt)
 	{
 
-        if(keyboard_->isKeyDown(OIS::KC_C))
-        {
-            MaterialPtr material = MaterialManager::getSingleton().getByName("Test/ColourTest");
-            material->getTechnique(0)->getPass(0)->setAmbient(drand48(), drand48(), drand48());
-        }
-
 		if(keyboard_->isKeyDown(OIS::KC_A))
 			translate_vector_.x = -move_scale_;	// Move camera left
 
