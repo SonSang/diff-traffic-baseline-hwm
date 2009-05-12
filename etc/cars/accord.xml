@@ -6,11 +6,11 @@
     <year>Unknown</year>
   </info>
   <parts>
-    <body>honda-body
+    <body>accord-body-mesh
     </body>
-    <wheel>honda-wheel
+    <wheel>accord-wheel
     </wheel>
-    <wheel-flip>honda-wheel-flip
+    <wheel-flip>accord-wheel-flip
     </wheel-flip>
   </parts>
   <metrics>

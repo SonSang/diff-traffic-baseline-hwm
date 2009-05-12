@@ -6,11 +6,11 @@
     <year>Unknown</year>
   </info>
   <parts>
-    <body>golf-body
+    <body>golf-body-mesh
     </body>
-    <wheel>golf-wheel
+    <wheel>golf-wheel-mesh
     </wheel>
-    <wheel-flip>golf-wheel-flip
+    <wheel-flip>golf-wheel-mesh-flip
     </wheel-flip>
   </parts>
   <metrics>
