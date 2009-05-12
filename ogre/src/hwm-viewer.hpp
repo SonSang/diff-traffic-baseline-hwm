@@ -60,6 +60,8 @@ struct ogre_car_model
     Ogre::MeshPtr bodymesh;
     Ogre::MeshPtr wheelmesh;
 
+    std::vector<Ogre::MaterialPtr> materials;
+
     car_model *cm;
 };
 
