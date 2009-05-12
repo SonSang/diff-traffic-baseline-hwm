@@ -94,6 +94,8 @@ struct hwm_viewer
 
     void initialize_network();
 
+    void load_terrain(Ogre::SceneNode *sn);
+
     void setup_scene();
 
     anim_car& access_sim_car(int id);

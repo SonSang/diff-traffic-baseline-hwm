@@ -500,7 +500,43 @@ void hwm_viewer::initialize_resource_groups()
 
 void hwm_viewer::initialize_network()
 {
-    net_->prepare(H);
+}
+
+static const char *statesville_mesh[] = {
+    "01_-_Default",
+    "02_-_Default",
+    "03_-_Defauldfgt",
+    "03_-_Default",
+    "04_-_Defaultdf",
+    "04_-_Default",
+    "05_-_Defaultghkj",
+    "05_-_Defaultghkjs",
+    "05_-_Default",
+    "07_-_Default",
+    "08_-_Defadfultghj",
+    "08_-_Defaultghdfj",
+    "08_-_Defaultghj",
+    "08_-_Default",
+    "09_-_Default",
+    "13_-_Default",
+    "19_-_Defaultcv",
+    "19_-_Default",
+    "xcdfhdd",
+    "xcdfhd",
+    "xcdfh",
+    "xc"
+};
+
+void hwm_viewer::load_terrain(SceneNode *sn)
+{
+    for(size_t i = 0; i < sizeof(statesville_mesh)/sizeof(statesville_mesh[0]); ++i)
+    {
+        const char *str = statesville_mesh[i];
+        Entity *ent = scene_manager_->createEntity(boost::str(boost::format("%1%-entity") % str), boost::str(boost::format("%1%.mesh") % str));
+        ent->setMaterialName(str);
+        SceneNode *node = sn->createChildSceneNode();
+        node->attachObject(ent);
+    }
 }
 
 void hwm_viewer::setup_scene()
@@ -511,99 +547,107 @@ void hwm_viewer::setup_scene()
     camera_->setPosition(-20, 100, 0);
     camera_->lookAt(0,0,0);
     camera_->setNearClipDistance(10);
-    camera_->setFarClipDistance(0);
+    camera_->setFarClipDistance(10000);
 
-    Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
+    root_->getAutoCreatedWindow()->addViewport(camera_);
 
     //    scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
     //        scene_manager_->setShadowTextureSize(1 << 11);
     //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
 
-    // Light *l = scene_manager_->createLight("MainLight");
-    // l->setType(Light::LT_POINT);
-    // l->setPosition(0, 800, 0);
-    // l->setAttenuation(2000, 1.0, 0.0, 0.0);
-    // l->setDiffuseColour(1.0, 1.0, 1.0);
-    //l->setSpecularColour(1.0, 1.0, 1.0);
+    Light *l = scene_manager_->createLight("MainLight");
+    l->setType(Light::LT_POINT);
+    l->setPosition(0, 800, 0);
+    l->setAttenuation(2000, 1.0, 0.0, 0.0);
+    l->setDiffuseColour(1.0, 1.0, 1.0);
+    l->setSpecularColour(1.0, 1.0, 1.0);
 
     // ColourValue bgcolor(0.93, 0.86, 0.76);
     // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
     // vp->setBackgroundColour(bgcolor);
 
-    SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-    StaticGeometry *net_sg = scene_manager_->createStaticGeometry("RoadNetwork");
+    // SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+    // //    StaticGeometry *net_sg = scene_manager_->createStaticGeometry("RoadNetwork");
 
     float network_node_scale = 10.0f;
 
-    network_node->translate(0,0,0);
-    network_node->scale(network_node_scale, network_node_scale, network_node_scale);
-    network_node->pitch(Degree(-90));
+    // network_node->translate(0,0,0);
+    // network_node->scale(network_node_scale, network_node_scale, network_node_scale);
+    // network_node->pitch(Degree(-90));
 
-    float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-                          -FLT_MAX, -FLT_MAX, -FLT_MAX};
+    // float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
+    //                       -FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-    int count = 0;
-    foreach(const lane &la, net_->lanes)
-    {
-        float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-                       -FLT_MAX, -FLT_MAX, -FLT_MAX};
+    // int count = 0;
+    // foreach(const lane &la, net_->lanes)
+    // {
+    //     float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
+    //                    -FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-        std::string meshname = boost::str(boost::format("lane-%1%") %  count);
-        create_lane_mesh(la,  meshname, bb);
+    //     std::string meshname = boost::str(boost::format("lane-%1%") %  count);
+    //     create_lane_mesh(la,  meshname, bb);
 
-        for(int i = 0; i < 3; ++i)
-        {
-            if(bb[i] < static_bb[i])
-                static_bb[i] = bb[i];
+    //     for(int i = 0; i < 3; ++i)
+    //     {
+    //         if(bb[i] < static_bb[i])
+    //             static_bb[i] = bb[i];
 
-            if(bb[i+3] > static_bb[i+3])
-                static_bb[i+3] = bb[i+3];
-        }
+    //         if(bb[i+3] > static_bb[i+3])
+    //             static_bb[i+3] = bb[i+3];
+    //     }
 
-        Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
-        lane->setMaterialName("Test/RoadSurface");
-        SceneNode *lane_node = network_node->createChildSceneNode();
-        lane_node->attachObject(lane);
-        ++count;
-    }
+    //     Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
+    //     lane->setMaterialName("Test/RoadSurface");
+    //     SceneNode *lane_node = network_node->createChildSceneNode();
+    //     lane_node->attachObject(lane);
+    //     ++count;
+    // }
 
-    for(int i = 0; i < 6; ++i)
-        static_bb[i] *= network_node_scale;
+    // for(int i = 0; i < 6; ++i)
+    //     static_bb[i] *= network_node_scale;
 
-    float y_low  = static_bb[1];
-    float y_high = static_bb[4];
-    static_bb[1] = -static_bb[5];
-    static_bb[4] = -static_bb[2];
-    static_bb[5] = y_high;
-    static_bb[2] = y_low;
+    // float y_low  = static_bb[1];
+    // float y_high = static_bb[4];
+    // static_bb[1] = -static_bb[5];
+    // static_bb[4] = -static_bb[2];
+    // static_bb[5] = y_high;
+    // static_bb[2] = y_low;
 
-    Vector3 dims(std::max(static_bb[3]-static_bb[0], 1.0f),
-                 std::max(static_bb[4]-static_bb[1], 1.0f),
-                 std::max(static_bb[5]-static_bb[2], 1.0f));
+    // network_node->translate(-(static_bb[0]+static_bb[3])*0.5,
+    //                         -(static_bb[1]+static_bb[4])*0.5,
+    //                         -(static_bb[2]+static_bb[5])*0.5);
 
-    net_sg->addSceneNode(network_node);
-    scene_manager_->destroySceneNode(network_node);
+    // Vector3 dims(std::max(static_bb[3]-static_bb[0], 1.0f),
+    //              std::max(static_bb[4]-static_bb[1], 1.0f),
+    //              std::max(static_bb[5]-static_bb[2], 1.0f));
 
-    net_sg->setRegionDimensions(dims);
-    net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
-    net_sg->build();
+    // net_sg->addSceneNode(network_node);
+    // scene_manager_->destroySceneNode(network_node);
 
-    Plane plane;
-    plane.normal = Vector3::UNIT_Y;
-    plane.d = 1;
-    MeshManager::getSingleton().createPlane("Myplane",
-                                            ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-                                            15000,15000,20,20,true,1,10,10,Vector3::UNIT_Z);
-    Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
+    // net_sg->setRegionDimensions(dims);
+    // net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
+    // net_sg->build();
 
-    ground->setMaterialName("Examples/GrassFloor");
+    // Plane plane;
+    // plane.normal = Vector3::UNIT_Y;
+    // plane.d = 1;
+    // MeshManager::getSingleton().createPlane("Myplane",
+    //                                         ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
+    //                                         150000,150000,20,20,true,1,10,10,Vector3::UNIT_Z);
+    // Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
+
+    // ground->setMaterialName("Examples/GrassFloor");
 
     SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-    ground_node->attachObject(ground);
+    ground_node->translate(1852.340698, 0.000000, -257.709320);
+    ground_node->scale(network_node_scale, network_node_scale, network_node_scale);
+    //    ground_node->attachObject(ground);
 
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     o_cars_->load_meshes();
+
+    load_terrain(ground_node);
 
     // count = 0;
     // foreach(const lane &la, net_->lanes)
