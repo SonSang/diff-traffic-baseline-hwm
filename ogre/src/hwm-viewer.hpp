@@ -11,10 +11,46 @@
 #include "Caelum.h"
 #include "network.hpp"
 
+struct hwm_viewer;
+
 struct anim_car
 {
+    anim_car () : root_(0), cm_(0)
+    {
+        memset(wheels_, 0, sizeof(Ogre::SceneNode*)*4);
+    }
+
     Ogre::SceneNode *root_;
     Ogre::SceneNode *wheels_[4];
+    car_model       *cm_;
+};
+
+struct car_time_sample
+{
+    void from_pair(const car_time_sample &cts0,
+                   const car_time_sample &cts1,
+                   float                  f0,
+                   float                  f1);
+
+    void apply_to_car(anim_car &ac) const;
+
+    int   id;
+    float pos[3];
+    float theta;
+    float velocity;
+    int   motion_state;
+};
+
+struct car_time_series
+{
+    typedef std::vector<car_time_sample> sample_vector;
+    typedef std::pair<float,sample_vector > entry;
+
+    int read(FILE *fp);
+
+    void update_cars(float t, hwm_viewer *hv) const;
+
+    std::vector<entry> samples;
 };
 
 struct ogre_car_model
@@ -38,7 +74,7 @@ class hwm_frame_listener;
 
 struct hwm_viewer
 {
-    hwm_viewer(network *net, const char *carpath);
+    hwm_viewer(network *net, const char *anim_file, const char *carpath);
 
     void go();
 
@@ -59,6 +95,8 @@ struct hwm_viewer
     void initialize_network();
 
     void setup_scene();
+
+    anim_car& access_sim_car(int id);
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6]);
 
@@ -81,6 +119,9 @@ struct hwm_viewer
     network *net_;
 
     std::vector<anim_car> lane_cars_;
+    std::vector<anim_car> sim_cars_;
+    Ogre::SceneNode *vehicle_node_;
+    car_time_series cts_;
 
     Caelum::CaelumSystem *caelum_system_;
 

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <OgreProgressiveMesh.h>
 
 using namespace Ogre;
 
@@ -161,35 +162,20 @@ public:
 		if(keyboard_->isKeyDown(OIS::KC_Y))
         {
             update_cars = true;
-            t_ += 0.1f*evt.timeSinceLastFrame;
-            if(t_ > 1.0f)
-                t_ = 1.0f;
+            t_ += evt.timeSinceLastFrame;
         }
 
 		if(keyboard_->isKeyDown(OIS::KC_H))
         {
             update_cars = true;
-            t_ -= 0.1*evt.timeSinceLastFrame;
+            t_ -= evt.timeSinceLastFrame;
             if(t_ < 0.0f)
                 t_ = 0.0f;
         }
 
         if(update_cars)
         {
-            std::vector<anim_car>::iterator ac_it = hwm_v_->lane_cars_.begin();
-            std::vector<lane>::iterator     la_it = hwm_v_->net_->lanes.begin();
-            for(;   ac_it != hwm_v_->lane_cars_.end() &&
-                    la_it != hwm_v_->net_->lanes.end();
-                ++ac_it, ++la_it)
-            {
-                point pt,n;
-                float x = t_;
-                la_it->get_point_and_normal(x, pt, n);
-                float half_angle = 0.5*std::atan2(-n.y, n.x);
-                ac_it->root_->setOrientation(std::cos(half_angle), 0.0, -std::sin(half_angle), 0.0);
-
-                ac_it->root_->setPosition(10.0*pt.x, 0.0f, -10.0*pt.y);
-            }
+            hwm_v_->cts_.update_cars(t_, hwm_v_);
         }
 
 		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
@@ -417,10 +403,14 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(network *net, const char *carpath) : net_(net), caelum_system_(0)
+hwm_viewer::hwm_viewer(network *net, const char *anim_file, const char *carpath) : net_(net), caelum_system_(0)
 {
     o_cars_ = new ogre_car_db();
     o_cars_->add_dir(carpath);
+    FILE *fp = fopen(anim_file, "r");
+    assert(fp);
+    cts_.read(fp);
+    fclose(fp);
 }
 
 void hwm_viewer::go()
@@ -525,7 +515,7 @@ void hwm_viewer::setup_scene()
 
     Viewport *vp  = root_->getAutoCreatedWindow()->addViewport(camera_);
 
-    scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+    //    scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
     //        scene_manager_->setShadowTextureSize(1 << 11);
     //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
 
@@ -611,16 +601,27 @@ void hwm_viewer::setup_scene()
     SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
     ground_node->attachObject(ground);
 
-    SceneNode *vehicle_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+    vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     o_cars_->load_meshes();
 
-    count = 0;
-    foreach(const lane &la, net_->lanes)
-    {
-        lane_cars_.push_back(o_cars_->odb.begin()->second.create_car(scene_manager_, vehicle_node, boost::str(boost::format("Car-%1%") % count)));
-        ++count;
-    }
+    // count = 0;
+    // foreach(const lane &la, net_->lanes)
+    // {
+    //     lane_cars_.push_back(o_cars_->odb.begin()->second.create_car(scene_manager_, vehicle_node_, boost::str(boost::format("Car-%1%") % count)));
+    //     ++count;
+    // }
+}
+
+anim_car& hwm_viewer::access_sim_car(int id)
+{
+    if(id >= static_cast<int>(sim_cars_.size()))
+        sim_cars_.resize(id+1);
+    assert(id >= 0 && id <= static_cast<int>(sim_cars_.size()));
+    if(sim_cars_[id].root_ == 0)
+        sim_cars_[id] = o_cars_->odb.begin()->second.create_car(scene_manager_, vehicle_node_, boost::str(boost::format("Car-%1%") % id));
+
+    return sim_cars_[id];
 }
 
 void hwm_viewer::create_lane_mesh(const lane &la, const std::string &name, float bb[6])
@@ -761,9 +762,9 @@ int main(int argc, char **argv)
 {
     network *net = new network;
 
-    if(argc < 3)
+    if(argc < 4)
     {
-        fprintf(stderr, "Usage: %s <network file> <car-db dir>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <network-file> <car-anim-file> <car-db dir>\n", argv[0]);
         exit(1);
     }
 
@@ -773,7 +774,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    hwm_viewer hv(net, argv[2]);
+    hwm_viewer hv(net, argv[2], argv[3]);
     hv.go();
 
     delete net;
@@ -783,14 +784,16 @@ int main(int argc, char **argv)
 
 anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std::string &name) const
 {
-    const float scale = 8.0f;
+    const float scale = 10.0f;
 
     anim_car ac;
+
+    ac.cm_ = cm;
 
     std::string body_name(boost::str(boost::format("%1%-body") % name));
 
     Entity* ent2 = sm->createEntity(body_name, bodymesh->getName() );
-    ent2->setCastShadows(true);
+    //    ent2->setCastShadows(true);
 
     ac.root_ = base->createChildSceneNode(body_name, Vector3(0, scale + cm->z_offset + cm->wheel_diameter*0.5, 0));
     ac.root_->scale(scale, scale, scale);
@@ -800,7 +803,7 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
     {
         std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % w));
         Entity *wheel = sm->createEntity(wheel_name, wheelmesh->getName());
-        wheel->setCastShadows(true);
+        //        wheel->setCastShadows(true);
 
         ac.wheels_[w] = ac.root_->createChildSceneNode(wheel_name, Vector3(cm->wheel_points[w][0], cm->wheel_points[w][2], cm->wheel_points[w][1]));
 
@@ -863,9 +866,11 @@ void ogre_car_db::load_meshes()
         }
         LogManager::getSingleton().logMessage(boost::str(boost::format("Found bodymesh (%1%) for car %2%") % body_mesh_name % current->first));
         std::vector<float> lodlevels;
-        lodlevels.push_back(250);
-        lodlevels.push_back(500);
-
+        for(int i = 0; i < 4; ++i)
+        {
+            lodlevels.push_back(200*(i+1));
+        }
+        //ocm.bodymesh->generateLodLevels(lodlevels, ProgressiveMesh::VRQ_PROPORTIONAL, 0.75);
         look_for_lod(ocm.bodymesh, current->second.body_mesh, lodlevels);
 
         try
@@ -881,9 +886,172 @@ void ogre_car_db::load_meshes()
         }
         LogManager::getSingleton().logMessage(boost::str(boost::format("Found wheelmesh (%1%) for car %2%") % wheel_mesh_name % current->first));
         look_for_lod(ocm.wheelmesh, current->second.wheel_mesh, lodlevels);
-
+        //ocm.wheelmesh->generateLodLevels(lodlevels, ProgressiveMesh::VRQ_PROPORTIONAL, 0.75);
         ocm.cm = &(current->second);
         odb[current->first] = ocm;
     }
 };
+
+#define GETS_BUFFER_SIZE 1024
+
+void car_time_sample::from_pair(const car_time_sample &cts0,
+                                const car_time_sample &cts1,
+                                float                  f0,
+                                float                  f1)
+{
+    assert(cts0.id == cts1.id);
+    id           = cts0.id;
+    for(int i = 0; i < 3; ++i)
+        pos[i]   = cts0.pos[i]*f0 + cts1.pos[i]*f1;
+    theta        = cts0.theta*f0 + cts1.theta*f1;
+    velocity     = cts0.velocity*f0 + cts1.velocity*f1;
+    motion_state = cts0.motion_state; //< Perhaps this could be something else
+}
+
+void car_time_sample::apply_to_car(anim_car &ac) const
+{
+    ac.root_->setVisible(true, true);
+
+    ac.root_->setOrientation(std::cos(theta*0.5f), 0.0, -std::sin(theta*0.5f), 0.0);
+    ac.root_->setPosition(10.0*pos[0], 10.0*(pos[2]+ac.cm_->z_offset + ac.cm_->wheel_diameter*0.5), -10.0*pos[1]);
+    // should update wheels...
+}
+
+struct car_time_sample_cmp
+{
+    bool operator()(const car_time_sample &l, const car_time_sample &r) const
+    {
+        return l.id < r.id;
+    }
+};
+
+int car_time_series::read(FILE *fp)
+{
+    int count = 0;
+    char gets_buff[GETS_BUFFER_SIZE];
+    while(!feof(fp))
+    {
+        char *res = fgets(gets_buff, GETS_BUFFER_SIZE-1, fp);
+        if(res != gets_buff)
+            continue;
+
+        int ncars;
+        float new_time;
+
+        int nitems = sscanf(res, "%f %d", &new_time, &ncars);
+        assert(nitems == 2);
+
+        assert(ncars > 0);
+        float last_time = samples.empty() ? -FLT_MAX : samples.back().first;
+        assert(last_time < new_time);
+
+        samples.push_back(entry(new_time, sample_vector(ncars)));
+
+        sample_vector &current = samples.back().second;
+
+        for(int i = 0; i < ncars; ++i)
+        {
+            car_time_sample &cts = current[i];
+
+            char *res = fgets(gets_buff, GETS_BUFFER_SIZE-1, fp);
+            if(res != gets_buff)
+            {
+                samples.pop_back();
+                return count;
+            }
+
+            float n[2];
+
+            int nitems = sscanf(res, "%d %f %f %f %f %f %f %d",
+                                &(cts.id),
+                                cts.pos,
+                                cts.pos+1,
+                                cts.pos+2,
+                                n,
+                                n+1,
+                                &(cts.velocity),
+                                &(cts.motion_state));
+            assert(nitems == 8);
+            assert(cts.id >=0);
+
+            cts.theta = std::atan2(-n[1], n[0]);
+
+            if(feof(fp))
+            {
+                samples.pop_back();
+                return count;
+            }
+        }
+
+        std::sort(current.begin(), current.end(), car_time_sample_cmp());
+        ++count;
+    }
+
+    return count;
+}
+
+struct entry_cmp
+{
+    bool operator()(const car_time_series::entry &l, const car_time_series::entry &r) const
+    {
+        return l.first < r.first;
+    }
+};
+
+void car_time_series::update_cars(float t, hwm_viewer *hv) const
+{
+    foreach(anim_car &ac, hv->sim_cars_)
+    {
+        if(ac.root_)
+            ac.root_->setVisible(false, true);
+    }
+
+    const entry ent(t, sample_vector());
+    std::vector<entry>::const_iterator res(std::lower_bound(samples.begin(), samples.end(), ent, entry_cmp()));
+
+    if(res == samples.begin())
+    {
+        foreach(const car_time_sample &cts, res->second)
+            cts.apply_to_car(hv->access_sim_car(cts.id));
+    }
+    else if(res == samples.end())
+    {
+        --res;
+        foreach(const car_time_sample &cts, res->second)
+            cts.apply_to_car(hv->access_sim_car(cts.id));
+    }
+    else
+    {
+        float t1 = res->first;
+        const sample_vector &sv1(res->second);
+        --res;
+        float t0 = res->first;
+        const sample_vector &sv0(res->second);
+
+        float fac1 = (t - t0)/(t1-t0);
+        float fac0 = 1.0f - fac1;
+
+        foreach(const car_time_sample &cts, sv0)
+        {
+
+            std::vector<car_time_sample>::const_iterator res(std::lower_bound(sv1.begin(), sv1.end(), cts, car_time_sample_cmp()));
+            if(res == sv1.end() || res->id != cts.id)
+            {
+                // possibly fade 'em out?
+                cts.apply_to_car(hv->access_sim_car(cts.id));
+                // apply to car
+            }
+            else
+            {
+                // construct avg
+                car_time_sample avg;
+                avg.from_pair(cts, *res, fac0, fac1);
+
+                // apply to car
+                avg.apply_to_car(hv->access_sim_car(avg.id));
+            }
+        }
+    }
+
+}
 
