@@ -482,6 +482,22 @@ void network::calc_bounding_box()
     printf("bb[0] = %f bb[1] = %f\nbb[2] = %f bb[3] = %f\n", bb[0], bb[1], bb[2], bb[3]);
 }
 
+void network::translate(const point &tr)
+{
+    foreach(road &rd, roads)
+    {
+        foreach(point &pt, rd.rep.points)
+        {
+            pt.x += tr.x;
+            pt.y += tr.y;
+            pt.z += tr.z;
+        }
+    }
+
+    foreach(intersection &in, intersections)
+        in.translate(tr);
+}
+
 int network::add_carticle(int lane, float pos, float u)
 {
     carticle cart(pos, u);
@@ -493,9 +509,7 @@ int network::add_carticle(int lane, float pos, float u)
 
 void network::dump_carticles(FILE *fp) const
 {
-    float origin[2];
-    origin[0] = (bb[0]+bb[1])*0.5;
-    origin[1] = (bb[2]+bb[3])*0.5;
+    float origin[2] = {0.0f, 0.0f};
 
     int count = 0;
     foreach(const lane &la, lanes)

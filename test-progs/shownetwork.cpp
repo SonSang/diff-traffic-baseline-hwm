@@ -624,10 +624,6 @@ public:
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        glTranslatef(-(net->bb[0] + net->bb[1])*0.5f,
-                     -(net->bb[2] + net->bb[3])*0.5f,
-                     0.0f);
-
         if(draw_lanes)
         {
             glColor3f(1.0f, 1.0f, 1.0f);
@@ -935,6 +931,11 @@ int main(int argc, char * argv[])
     }
 
     net->calc_bounding_box();
+    point pt;
+    pt.x = -(net->bb[0]+net->bb[1])*0.5f;
+    pt.y = -(net->bb[2]+net->bb[3])*0.5f;
+    pt.z = 0.0f;
+    net->translate(pt);
     net->prepare(H);
 
     int lno = 0;

@@ -55,6 +55,8 @@ struct intersection
 
     void initialize_state_lanes();
 
+    void translate(const point &tr);
+
     std::vector<lane_id> incoming; //< Lanes that flow
                                    //< _IN_ to intersection
     std::vector<lane_id> outgoing; //< Lanes that flow

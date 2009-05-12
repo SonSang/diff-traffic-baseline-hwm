@@ -504,3 +504,27 @@ void intersection::initialize_state_lanes()
         }
     }
 }
+
+void intersection::translate(const point &tr)
+{
+    foreach(point &pt, shape)
+    {
+        pt.x += tr.x;
+        pt.y += tr.y;
+        pt.z += tr.z;
+    }
+
+    foreach(state &s, states)
+    {
+        foreach(road &rd, s.fict_roads)
+        {
+            foreach(point &pt, rd.rep.points)
+            {
+                pt.x += tr.x;
+                pt.y += tr.y;
+                pt.z += tr.z;
+            }
+        }
+    }
+
+}

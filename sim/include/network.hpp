@@ -146,6 +146,8 @@ struct network
 
     void calc_bounding_box();
 
+    void translate(const point &tr);
+
     int add_carticle(int lane, float pos, float u);
 
     void dump_carticles(FILE *fp) const;
