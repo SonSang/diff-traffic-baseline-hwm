@@ -812,6 +812,13 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    net->calc_bounding_box();
+    point pt;
+    pt.x = -(net->bb[0]+net->bb[1])*0.5f;
+    pt.y = -(net->bb[2]+net->bb[3])*0.5f;
+    pt.z = 0.0f;
+    net->translate(pt);
+
     hwm_viewer hv(net, argv[2], argv[3]);
     hv.go();
 
