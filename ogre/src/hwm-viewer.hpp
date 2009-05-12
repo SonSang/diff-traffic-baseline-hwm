@@ -84,7 +84,7 @@ struct hwm_viewer
 
     Caelum::CaelumSystem *caelum_system_;
 
-    ogre_car_db o_cars_;
+    ogre_car_db *o_cars_;
 };
 
 #endif

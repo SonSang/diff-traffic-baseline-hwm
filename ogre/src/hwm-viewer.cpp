@@ -419,7 +419,8 @@ protected:
 
 hwm_viewer::hwm_viewer(network *net, const char *carpath) : net_(net), caelum_system_(0)
 {
-    o_cars_.add_dir(carpath);
+    o_cars_ = new ogre_car_db();
+    o_cars_->add_dir(carpath);
 }
 
 void hwm_viewer::go()
@@ -441,6 +442,7 @@ hwm_viewer::~hwm_viewer()
 {
     // delete renderer_;
     // delete system_;
+    delete o_cars_;
 
     delete move_listener_;
     if(caelum_system_)
@@ -611,12 +613,12 @@ void hwm_viewer::setup_scene()
 
     SceneNode *vehicle_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
-    o_cars_.load_meshes();
+    o_cars_->load_meshes();
 
     count = 0;
     foreach(const lane &la, net_->lanes)
     {
-        lane_cars_.push_back(o_cars_.odb.begin()->second.create_car(scene_manager_, vehicle_node, boost::str(boost::format("Car-%1%") % count)));
+        lane_cars_.push_back(o_cars_->odb.begin()->second.create_car(scene_manager_, vehicle_node, boost::str(boost::format("Car-%1%") % count)));
         ++count;
     }
 }
