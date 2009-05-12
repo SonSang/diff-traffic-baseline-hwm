@@ -697,17 +697,17 @@ void hwm_viewer::create_lane_mesh(const lane &la, const std::string &name, float
         vert_data[3*(2*i + 0) + 0] = verts[i].x;
         if(verts[i].x < bb[0])
             bb[0] = verts[i].x;
-        else if(verts[i].x > bb[3])
+        if(verts[i].x > bb[3])
             bb[3] = verts[i].x;
         vert_data[3*(2*i + 0) + 1] = verts[i].y;
         if(verts[i].y < bb[1])
             bb[1] = verts[i].y;
-        else if(verts[i].y > bb[4])
+        if(verts[i].y > bb[4])
             bb[4] = verts[i].y;
         vert_data[3*(2*i + 0) + 2] = verts[i].z;
         if(verts[i].z < bb[2])
             bb[2] = verts[i].z;
-        else if(verts[i].z > bb[5])
+        if(verts[i].z > bb[5])
             bb[5] = verts[i].z;
         vert_data[3*(2*i + 1) + 0] = 0.0f;
         vert_data[3*(2*i + 1) + 1] = 1.0f;
