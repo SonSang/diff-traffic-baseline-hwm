@@ -4,6 +4,7 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <OgreProgressiveMesh.h>
+#include <OgreShadowCameraSetupLiSPSM.h>
 
 using namespace Ogre;
 
@@ -474,8 +475,10 @@ void hwm_viewer::setup_render_system()
 void hwm_viewer::start_caelum()
 {
     caelum_system_ = new Caelum::CaelumSystem(root_, scene_manager_, Caelum::CaelumSystem::CAELUM_COMPONENTS_DEFAULT);
+
     root_->addFrameListener(caelum_system_);
     root_->getAutoCreatedWindow()->getViewport(0)->getTarget()->addListener(caelum_system_);
+    caelum_system_->setEnsureSingleShadowSource(true);
     // Set time acceleration.
     //    caelum_system_->getUniversalClock ()->setTimeScale (512);
     caelum_system_->setManageSceneFog(false);
@@ -527,6 +530,7 @@ void hwm_viewer::load_terrain(SceneNode *sn)
     {
         const char *str = statesville_mesh[i];
         Entity *ent = scene_manager_->createEntity(boost::str(boost::format("%1%-entity") % str), boost::str(boost::format("%1%.mesh") % str));
+        ent->setCastShadows(false);
         ent->setMaterialName(str);
         SceneNode *node = sn->createChildSceneNode();
         node->attachObject(ent);
@@ -536,25 +540,55 @@ void hwm_viewer::load_terrain(SceneNode *sn)
 void hwm_viewer::setup_scene()
 {
     scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
+
+    // MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
+    // scene_manager_->setShadowTechnique(SHADOWTYPE_TEXTURE_ADDITIVE);
+    // scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+    // scene_manager_->setShadowFarDistance(1000.0f);
+
+    // scene_manager_->setShadowTextureSize(2*4096);
+    // scene_manager_->setAmbientLight(ColourValue(0.0, 0.0, 0.0));
+
     camera_ = scene_manager_->createCamera("Camera");
 
     camera_->setPosition(-20, 100, 0);
     camera_->lookAt(0,0,0);
-    camera_->setNearClipDistance(10);
-    camera_->setFarClipDistance(10000);
+    camera_->setNearClipDistance(20);
+    camera_->setFarClipDistance(20000);
 
     root_->getAutoCreatedWindow()->addViewport(camera_);
+    //{
+    // Light *l = scene_manager_->createLight("Light");
 
-    //    scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
-    //        scene_manager_->setShadowTextureSize(1 << 11);
-    //        scene_manager_->setAmbientLight(ColourValue(0.5, 0.5, 0.5));
+    // l->setType(Light::LT_SPOTLIGHT);
+    // l->setCastShadows(true);
+    // l->setPosition(-100,1000, 0);
+    // l->setDiffuseColour(1.0, 1.0, 1.0);
+    // l->setDirection(0.0, -1.0, 0.0);
+    // l->setSpotlightRange(Degree(45), Degree(45));
 
-    Light *l = scene_manager_->createLight("MainLight");
-    l->setType(Light::LT_POINT);
-    l->setPosition(0, 800, 0);
-    l->setAttenuation(2000, 1.0, 0.0, 0.0);
-    l->setDiffuseColour(1.0, 1.0, 1.0);
-    l->setSpecularColour(1.0, 1.0, 1.0);
+    // LiSPSMShadowCameraSetup *lscs = new LiSPSMShadowCameraSetup();
+    // Ogre::ShadowCameraSetupPtr lscs_sp = Ogre::ShadowCameraSetupPtr(lscs);
+    // scene_manager_->setShadowCameraSetup(lscs_sp);
+
+        //}
+    // {
+    //     Light *l = scene_manager_->createLight("Light2");
+
+    //     l->setType(Light::LT_POINT);
+    //     l->setCastShadows(true);
+    //     l->setPosition(3000,10050,-4500);
+    //     l->setAttenuation(5000, 1.0, 0.0, 0.0);
+    //     l->setDiffuseColour(0.7, 0.7, 0.7);
+    // }
+
+
+    // Light *l = scene_manager_->createLight("MainLight");
+    // l->setType(Light::LT_POINT);
+    // l->setPosition(0, 800, 0);
+    // l->setAttenuation(2000, 1.0, 0.0, 0.0);
+    // l->setDiffuseColour(1.0, 1.0, 1.0);
+    // l->setSpecularColour(1.0, 1.0, 1.0);
 
     // ColourValue bgcolor(0.93, 0.86, 0.76);
     // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
@@ -882,7 +916,7 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
     {
         std::string wheel_name(boost::str(boost::format("%1%-wheel-%2%") % name % w));
         Entity *wheel = sm->createEntity(wheel_name, wheelmesh->getName());
-        //        wheel->setCastShadows(true);
+        wheel->setCastShadows(true);
 
         ac.wheels_[w] = ac.root_->createChildSceneNode(wheel_name, Vector3(cm->wheel_points[w][0], cm->wheel_points[w][2], cm->wheel_points[w][1]));
 
