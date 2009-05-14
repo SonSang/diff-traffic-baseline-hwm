@@ -402,7 +402,7 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
             q_r.from_q(end->data,
                        end->speedlimit,
                        gamma_c);
-            printf("start: %p, %d\n", start->rs, start->ncells);
+
             lebacque_inhomogeneous_riemann(start->rs + start->ncells,
                                            &q_l,
                                            &q_r,
