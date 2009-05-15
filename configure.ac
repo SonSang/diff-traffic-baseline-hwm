@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_PREREQ([2.63])
+AC_PREREQ([2.59])
 AC_INIT([hwm], [0.1], [jasonsewall@gmail.com])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
@@ -18,7 +18,7 @@ AS_IF([test x"$enable_kinematic" != xno],
       	           [have_gsl=yes],
 		   [have_gsl=no])
        AS_IF([test \( x"$have_gsl" = xno  \) -a x"$enable_kinematic" != xcheck],
-       	     AC_MSG_FAILURE([--enable-kinematic given, but test for gsl failed!]))])
+             AC_MSG_FAILURE([--enable-kinematic given but test for gsl failed!]))])
 
 AM_CONDITIONAL(DO_KINEMATIC, test \( x"$have_gsl" = xyes  \) -a x"$enable_kinematic" != xno)
 
@@ -80,11 +80,11 @@ AS_IF([test x"$have_libxml2" != xno],
 
 AS_IF([test x"$enable_visual" != xno],
             [AC_CHECK_PROG(have_fltk, fltk-config, [yes], [no])
-             PKG_CHECK_MODULES([CAIRO], [cairo > 1.6],
+             PKG_CHECK_MODULES([CAIRO], [cairo > 1.2	  ],
                                [have_cairo=yes],
                                [have_cairo=no])
              AS_IF([test \( x"$have_fltk" = xno -o x"$have_cairo" = xno \) -a x"$enable_visual" != xcheck],
-             AC_MSG_FAILURE([--enable-visual given, but test for fltk-config and cairo failed!]))])
+             AC_MSG_FAILURE([--enable-visual given but test for fltk-config and cairo failed!]))])
 
 AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_cairo" = xyes],
             [visual_ok=yes
@@ -109,12 +109,12 @@ AS_IF([test x"$enable_ogre" != xno],
 	     PKG_CHECK_MODULES(CAELUM,  [Caelum >= 0.4.0], [have_caelum=yes], [have_caelum=no])
 	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno -a x"have_caelum" != xno],
 	           [ogre_ok=yes])],
-	    [AC_MSG_FAILURE([--enable-ogre given, but test for ogre, ois, or caelum failed!])])
+	    [AC_MSG_FAILURE([--enable-ogre given but test for ogre, ois, or caelum failed!])])
 
 AM_CONDITIONAL(DO_OGRE, test x"$ogre_ok" = xyes)
 
 # Checks for libraries.
-AX_BOOST_BASE([1.35])
+AX_BOOST_BASE([1.37])
 AX_BOOST_FILESYSTEM
 AX_BOOST_REGEX
 
