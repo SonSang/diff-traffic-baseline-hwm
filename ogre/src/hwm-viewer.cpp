@@ -1123,6 +1123,9 @@ struct entry_cmp
 
 void car_time_series::update_cars(float t, hwm_viewer *hv) const
 {
+    if(samples.empty())
+        return;
+
     foreach(anim_car &ac, hv->sim_cars_)
     {
         if(ac.root_)
