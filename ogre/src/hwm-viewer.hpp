@@ -8,6 +8,9 @@
 #define OIS_DYNAMIC_LIB
 #include <OIS/OIS.h>
 
+#include "CEGUI/CEGUI.h"
+#include "OgreCEGUIRenderer.h"
+
 #include "Caelum.h"
 #include "network.hpp"
 
@@ -104,18 +107,18 @@ struct hwm_viewer
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6]);
 
-    // void setup_CEGUI();
+    void setup_CEGUI();
 
     void create_frame_listener();
 
     void start_render_loop();
 
-    Ogre::Root *root_;
-    OIS::Keyboard *keyboard_;
-    OIS::InputManager *input_manager_;
-    // CEGUI::OgreCEGUIRenderer *renderer_;
-    // CEGUI::System *system_;
-    hwm_frame_listener *move_listener_;
+    Ogre::Root               *root_;
+    OIS::Keyboard            *keyboard_;
+    OIS::InputManager        *input_manager_;
+    CEGUI::OgreCEGUIRenderer *CEGUI_renderer_;
+    CEGUI::System            *CEGUI_system_;
+    hwm_frame_listener       *move_listener_;
 
     Ogre::Camera *camera_;
     Ogre::SceneManager *scene_manager_;

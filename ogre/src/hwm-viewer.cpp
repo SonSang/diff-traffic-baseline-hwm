@@ -418,15 +418,15 @@ void hwm_viewer::go()
     initialize_network();
     setup_scene();
     start_caelum();
-    //setup_CEGUI();
+    setup_CEGUI();
     create_frame_listener();
     start_render_loop();
 }
 
 hwm_viewer::~hwm_viewer()
 {
-    // delete renderer_;
-    // delete system_;
+    delete CEGUI_renderer_;
+    delete CEGUI_system_;
     delete o_cars_;
 
     delete move_listener_;
@@ -815,8 +815,16 @@ void hwm_viewer::create_lane_mesh(const lane &la, const std::string &name, float
     LogManager::getSingleton().logMessage(boost::str(boost::format("Done creating lane mesh %s") % name));
 }
 
-// void hwm_viewer::setup_CEGUI()
-// {}
+void hwm_viewer::setup_CEGUI()
+{
+    CEGUI_renderer_ = new CEGUI::OgreCEGUIRenderer (root_->getAutoCreatedWindow(), Ogre::RENDER_QUEUE_OVERLAY, false, 3000, scene_manager_);
+    CEGUI_system_    = new CEGUI::System (CEGUI_renderer_);
+
+
+    CEGUI::SchemeManager::getSingleton().loadScheme((CEGUI::utf8*)"TaharezLookSkin.scheme");
+    CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
+
+}
 
 void hwm_viewer::create_frame_listener()
 {
