@@ -127,6 +127,7 @@ struct hwm_viewer
 
     std::vector<anim_car> lane_cars_;
     std::vector<anim_car> sim_cars_;
+    size_t nactive_cars_;
     Ogre::SceneNode *vehicle_node_;
     car_time_series cts_;
 

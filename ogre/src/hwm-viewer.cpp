@@ -22,10 +22,10 @@ protected:
 
 		// update stats when necessary
 		try {
-			OverlayElement *gui_avg   = OverlayManager::getSingleton().getOverlayElement("Core/AverageFps");
-			OverlayElement *gui_curr  = OverlayManager::getSingleton().getOverlayElement("Core/CurrFps");
-			OverlayElement *gui_best  = OverlayManager::getSingleton().getOverlayElement("Core/BestFps");
-			OverlayElement *gui_worst = OverlayManager::getSingleton().getOverlayElement("Core/WorstFps");
+			OverlayElement *gui_avg   = OverlayManager::getSingleton().getOverlayElement("myAverageFps");
+			OverlayElement *gui_curr  = OverlayManager::getSingleton().getOverlayElement("myCurrFps");
+			OverlayElement *gui_best  = OverlayManager::getSingleton().getOverlayElement("myBestFps");
+			OverlayElement *gui_worst = OverlayManager::getSingleton().getOverlayElement("myWorstFps");
 
 			const RenderTarget::FrameStats &stats = window_->getStatistics();
 			gui_avg ->setCaption(   avg_fps + StringConverter::toString(stats.avgFPS));
@@ -35,29 +35,43 @@ protected:
 			gui_worst->setCaption(worst_fps + StringConverter::toString(stats.worstFPS)
 				+" "+StringConverter::toString(stats.worstFrameTime)+" ms");
 
-			OverlayElement *gui_tris = OverlayManager::getSingleton().getOverlayElement("Core/NumTris");
+			OverlayElement *gui_tris = OverlayManager::getSingleton().getOverlayElement("myNumTris");
 			gui_tris->setCaption(tris + StringConverter::toString(stats.triangleCount));
 
-			OverlayElement *gui_batches = OverlayManager::getSingleton().getOverlayElement("Core/NumBatches");
+			OverlayElement *gui_batches = OverlayManager::getSingleton().getOverlayElement("myNumBatches");
 			gui_batches->setCaption(batches + StringConverter::toString(stats.batchCount));
 
-			OverlayElement *gui_dbg = OverlayManager::getSingleton().getOverlayElement("Core/DebugText");
+			OverlayElement *gui_dbg = OverlayManager::getSingleton().getOverlayElement("myDebugText");
 			gui_dbg->setCaption(debug_text_);
 		}
 		catch(...) { /* ignore */ }
+	}
+
+	virtual void UpdateInfo(void)
+	{
+		// update info when necessary
+        try {
+			OverlayElement *gui_ncars = OverlayManager::getSingleton().getOverlayElement("myNCars");
+			gui_ncars->setCaption(boost::str(boost::format("# of cars: %1%") % hwm_v_->nactive_cars_));
+			OverlayElement *gui_time = OverlayManager::getSingleton().getOverlayElement("myTime");
+            float endtime = hwm_v_->cts_.samples.empty() ? 0.0f : hwm_v_->cts_.samples.back().first;
+			gui_time->setCaption(boost::str(boost::format("time: %1%/%2% s") % t_ % endtime));
+        }
+        catch(...) { /* ignore */ }
 	}
 
 public:
 	// Constructor takes a RenderWindow because it uses that to determine input context
 	hwm_frame_listener(hwm_viewer *hwm_v, RenderWindow *win, Camera *cam, bool buffered_keys = false, bool buffered_mouse = false,
                        bool buffered_joy = false) :
-		camera_(cam), translate_vector_(Vector3::ZERO), current_speed_(0), window_(win), stats_on_(true), num_screen_shots_(0),
+		camera_(cam), translate_vector_(Vector3::ZERO), current_speed_(0), window_(win), stats_on_(true), info_on_(true), num_screen_shots_(0),
 		move_scale_(0.0f), rot_scale_(0.0f), time_until_next_toggle_(0), filtering_(TFO_BILINEAR),
 		aniso_(1), scene_detail_index_(0), move_speed_(500), rotate_speed_(30), debug_overlay_(0),
-		input_manager_(0), mouse_(0), keyboard_(0), joy_(0), t_(0), hwm_v_(hwm_v)
+        info_overlay_(0), input_manager_(0), mouse_(0), keyboard_(0), joy_(0), t_(0), hwm_v_(hwm_v)
 	{
 
-		debug_overlay_ = OverlayManager::getSingleton().getByName("Core/DebugOverlay");
+		debug_overlay_ = OverlayManager::getSingleton().getByName("myDebugOverlay");
+		info_overlay_  = OverlayManager::getSingleton().getByName("myInfoOverlay");
 
 		LogManager::getSingletonPtr()->logMessage("*** Initializing OIS ***");
 		OIS::ParamList pl;
@@ -84,6 +98,7 @@ public:
 		windowResized(window_);
 
 		showDebugOverlay(true);
+		showInfoOverlay(true);
 
 		//Register as a Window listener
 		WindowEventUtilities::addWindowEventListener(window_, this);
@@ -180,6 +195,13 @@ public:
 		{
 			stats_on_ = !stats_on_;
 			showDebugOverlay(stats_on_);
+			time_until_next_toggle_ = 1;
+		}
+
+       	if( keyboard_->isKeyDown(OIS::KC_I) && time_until_next_toggle_ <= 0 )
+		{
+			info_on_ = !info_on_;
+			showInfoOverlay(info_on_);
 			time_until_next_toggle_ = 1;
 		}
 
@@ -287,6 +309,18 @@ public:
 		}
 	}
 
+	virtual void showInfoOverlay(bool show)
+	{
+		if (info_overlay_)
+		{
+			if (show)
+				info_overlay_->show();
+			else
+				info_overlay_->hide();
+		}
+	}
+
+
 	// Override frameRenderingQueued event to process that (don't care about frameEnded)
 	bool frameRenderingQueued(const FrameEvent &evt)
 	{
@@ -361,6 +395,7 @@ public:
 	bool frameEnded(const FrameEvent &evt)
 	{
 		UpdateStats();
+        UpdateInfo();
 		return true;
 	}
 
@@ -371,6 +406,7 @@ protected:
 	Real current_speed_;
 	RenderWindow *window_;
 	bool stats_on_;
+	bool info_on_;
 
 	String debug_text_;
 
@@ -388,6 +424,7 @@ protected:
 	Real move_speed_;
 	Degree rotate_speed_;
 	Overlay *debug_overlay_;
+	Overlay *info_overlay_;
 	//OIS Input devices
 	OIS::InputManager *input_manager_;
 	OIS::Mouse    *mouse_;
@@ -398,7 +435,7 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(network *net, const char *anim_file, const char *carpath) : net_(net), caelum_system_(0)
+hwm_viewer::hwm_viewer(network *net, const char *anim_file, const char *carpath) : net_(net), nactive_cars_(0), caelum_system_(0)
 {
     o_cars_ = new ogre_car_db();
     o_cars_->add_dir(carpath);
@@ -1140,19 +1177,28 @@ void car_time_series::update_cars(float t, hwm_viewer *hv) const
             ac.root_->setVisible(false, true);
     }
 
+    hv->nactive_cars_ = 0;
+
     const entry ent(t, sample_vector());
     std::vector<entry>::const_iterator res(std::lower_bound(samples.begin(), samples.end(), ent, entry_cmp()));
 
     if(res == samples.begin())
     {
         foreach(const car_time_sample &cts, res->second)
+        {
             cts.apply_to_car(hv->access_sim_car(cts.id));
+            ++hv->nactive_cars_;
+        }
     }
     else if(res == samples.end())
     {
         --res;
         foreach(const car_time_sample &cts, res->second)
+        {
             cts.apply_to_car(hv->access_sim_car(cts.id));
+            ++hv->nactive_cars_;
+        }
+
     }
     else
     {
@@ -1173,6 +1219,7 @@ void car_time_series::update_cars(float t, hwm_viewer *hv) const
             {
                 // possibly fade 'em out?
                 cts.apply_to_car(hv->access_sim_car(cts.id));
+                ++hv->nactive_cars_;
                 // apply to car
             }
             else
@@ -1183,6 +1230,7 @@ void car_time_series::update_cars(float t, hwm_viewer *hv) const
 
                 // apply to car
                 avg.apply_to_car(hv->access_sim_car(avg.id));
+                ++hv->nactive_cars_;
             }
         }
     }
