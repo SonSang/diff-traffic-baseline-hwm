@@ -425,8 +425,8 @@ void hwm_viewer::go()
 
 hwm_viewer::~hwm_viewer()
 {
-    delete CEGUI_renderer_;
     delete CEGUI_system_;
+    delete CEGUI_renderer_;
     delete o_cars_;
 
     delete move_listener_;
