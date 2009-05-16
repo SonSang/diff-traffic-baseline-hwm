@@ -107,8 +107,9 @@ AS_IF([test x"$enable_ogre" != xno],
 	    [PKG_CHECK_MODULES(OGRE,    [OGRE >= 1.2],   [have_ogre=yes],   [have_ogre=no])
              PKG_CHECK_MODULES(OIS,     [OIS >= 1.0],    [have_ois=yes],    [have_ois=no])
              PKG_CHECK_MODULES(CEGUI,     [CEGUI >= 0.6.2],    [have_cegui=yes],    [have_cegui=no])
+             PKG_CHECK_MODULES(CEGUI_OGRE,     [CEGUI-OGRE >= 1.6.2],    [have_cegui_ogre=yes],    [have_cegui_ogre=no])
 	     PKG_CHECK_MODULES(CAELUM,  [Caelum >= 0.4.0], [have_caelum=yes], [have_caelum=no])
-	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno -a x"have_cegui" != xno -a x"have_caelum" != xno],
+	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno -a x"have_cegui" != xno -a x"have_cegui_ogre" != xno -a x"have_caelum" != xno],
 	           [ogre_ok=yes])],
 	    [AC_MSG_FAILURE([--enable-ogre given but test for ogre, ois, cegui, or caelum failed!])])
 
@@ -174,14 +175,16 @@ fi
 if test -z $DO_OGRE; then
 echo "
   Building ogre components: yes
-    OGRE_CFLAGS...: $OGRE_CFLAGS
-    OGRE_LIBS.....: $OGRE_LIBS
-    OIS_CFLAGS....: $OIS_CFLAGS
-    OIS_LIBS......: $OIS_LIBS
-    CEGUI_CFLAGS..: $CEGUI_CFLAGS
-    CEGUI_LIBS....: $CEGUI_LIBS
-    CAELUM_CFLAGS.: $CAELUM_CFLAGS
-    CAELUM_LIBS...: $CAELUM_LIBS"
+    OGRE_CFLAGS......: $OGRE_CFLAGS
+    OGRE_LIBS........: $OGRE_LIBS
+    OIS_CFLAGS.......: $OIS_CFLAGS
+    OIS_LIBS.........: $OIS_LIBS
+    CEGUI_CFLAGS.....: $CEGUI_CFLAGS
+    CEGUI_LIBS.......: $CEGUI_LIBS
+    CEGUI_OGRE_CFLAGS: $CEGUI_OGRE_CFLAGS
+    CEGUI_OGRE_LIBS..: $CEGUI_OGRE_LIBS
+    CAELUM_CFLAGS....: $CAELUM_CFLAGS
+    CAELUM_LIBS......: $CAELUM_LIBS"
 else
 echo "
   Building ogre components: no"
