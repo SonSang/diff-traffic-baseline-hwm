@@ -977,7 +977,7 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
 
 static void look_for_lod(MeshPtr mesh, std::string &mesh_root, std::vector<float> &lodlevels)
 {
-    int count = 2;
+    int count = 1;
     foreach(float lod, lodlevels)
     {
         std::string lod_name = boost::str(boost::format("%1%-lod%2%.mesh") %  mesh_root % count);
@@ -1023,13 +1023,12 @@ void ogre_car_db::load_meshes()
             return;
         }
         LogManager::getSingleton().logMessage(boost::str(boost::format("Found bodymesh (%1%) for car %2%") % body_mesh_name % current->first));
-        std::vector<float> lodlevels;
-        for(int i = 0; i < 4; ++i)
-        {
-            lodlevels.push_back(200*(i+1));
-        }
-        //ocm.bodymesh->generateLodLevels(lodlevels, ProgressiveMesh::VRQ_PROPORTIONAL, 0.75);
-        look_for_lod(ocm.bodymesh, current->second.body_mesh, lodlevels);
+        std::vector<float> body_lodlevels;
+        body_lodlevels.push_back(200);
+        body_lodlevels.push_back(600);
+        body_lodlevels.push_back(1200);
+
+        look_for_lod(ocm.bodymesh, current->second.body_mesh, body_lodlevels);
 
         try
         {
@@ -1043,8 +1042,12 @@ void ogre_car_db::load_meshes()
             return;
         }
         LogManager::getSingleton().logMessage(boost::str(boost::format("Found wheelmesh (%1%) for car %2%") % wheel_mesh_name % current->first));
-        look_for_lod(ocm.wheelmesh, current->second.wheel_mesh, lodlevels);
-        //ocm.wheelmesh->generateLodLevels(lodlevels, ProgressiveMesh::VRQ_PROPORTIONAL, 0.75);
+        std::vector<float> wheel_lodlevels;
+        wheel_lodlevels.push_back(200);
+        wheel_lodlevels.push_back(600);
+
+        look_for_lod(ocm.wheelmesh, current->second.wheel_mesh, wheel_lodlevels);
+
         ocm.cm = &(current->second);
 
         MaterialPtr bodycolor = MaterialManager::getSingleton().getByName("Bodycolor");
