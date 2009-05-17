@@ -262,6 +262,8 @@ bool intersection::xml_read(xmlTextReaderPtr reader)
     if(!status)
         return false;
 
+    current_state = 0;
+
     return read[0].count == 1 && read[1].count == 1;
 }
 
