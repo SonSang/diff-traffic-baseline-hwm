@@ -486,6 +486,7 @@ void intersection::initialize_state_lanes()
             la.road_memberships.base_data.parent_road.dp = &r;
             la.road_memberships.base_data.interval[0] = 0.0f;
             la.road_memberships.base_data.interval[1] = 1.0f;
+            la.road_memberships.base_data.lane_position = 0.0f;
             la.left.base_data.neighbor.dp  = 0;
             la.right.base_data.neighbor.dp = 0;
 
