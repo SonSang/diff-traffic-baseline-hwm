@@ -336,6 +336,14 @@ void network::prepare(float h)
             }
         }
     }
+
+    // Set each intersection to a random state
+    // and with some random elapsed duration
+    foreach(intersection &is, intersections)
+    {
+        is.current_state = (rand() % is.states.size());
+        is.update_time(drand48() * is.states[is.current_state].duration);
+    }
 }
 
 void network::fill_from_carticles()
@@ -453,6 +461,11 @@ float network::sim_step()
            foreach(lane &la, st.fict_lanes)
                la.apply_merges(dt, gamma_c);
        }
+   }
+
+   foreach(intersection &is, intersections)
+   {
+       is.update_time(dt);
    }
 
    global_time += dt;

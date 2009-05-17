@@ -263,8 +263,30 @@ bool intersection::xml_read(xmlTextReaderPtr reader)
         return false;
 
     current_state = 0;
+    current_time  = 0.0f;
 
     return read[0].count == 1 && read[1].count == 1;
+}
+
+bool intersection::gridlocked() const
+{
+    foreach(const lane &la, states[current_state].fict_lanes)
+    {
+        if(!la.carticles[0].empty())
+            return true;
+    }
+
+    return false;
+}
+
+void intersection::update_time(float dt)
+{
+    current_time += dt;
+    while(!gridlocked() && current_time >= states[current_state].duration)
+    {
+        current_time -= states[current_state].duration;
+        next_state();
+    }
 }
 
 int intersection::next_state()

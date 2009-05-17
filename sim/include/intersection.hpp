@@ -36,6 +36,9 @@ struct intersection
 
     bool xml_read(xmlTextReaderPtr reader);
 
+    bool gridlocked() const;
+    void update_time(float dt);
+
     int next_state();
 
     lane* incoming_state(int intern_ref) const; //< Returns the OUTGOING lane corresponing to
@@ -61,8 +64,9 @@ struct intersection
                                    //< _IN_ to intersection
     std::vector<lane_id> outgoing; //< Lanes that flow
                                    //< _OUT_ of intersection
-    int current_state;
-    std::vector<state> states;
+    int current_state;             //< Records the state of the intersection
+    float current_time;            //  Currently not totally satisfactory, because intersection
+    std::vector<state> states;     //  can be gridlocked but will generally advance states anyway
 
     std::vector<point> shape;
     point center;
