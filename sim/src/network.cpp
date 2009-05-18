@@ -205,6 +205,10 @@ bool network::xml_read(xmlTextReaderPtr reader)
         inter.initialize_state_lanes();
     }
 
+    lanes[0].data         = 0;
+    lanes[0].rs           = 0;
+    lanes[0].merge_states = 0;
+
     return ret == 1 && have_roads && have_lanes && have_intersections;
 }
 
