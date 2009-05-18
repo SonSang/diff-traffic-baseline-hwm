@@ -185,7 +185,9 @@ public:
 
         if(update_cars)
         {
-            hwm_v_->cts_.update_cars(t_, hwm_v_);
+            if(!hwm_v_->car_animation_state_)
+                hwm_v_->car_animation_state_ = hwm_v_->cts_.animate("CarAnimation", hwm_v_);
+            hwm_v_->car_animation_state_->setTimePosition(t_);
         }
 
 		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
@@ -435,7 +437,7 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(network *net, const char *anim_file, const char *carpath) : net_(net), nactive_cars_(0), caelum_system_(0)
+hwm_viewer::hwm_viewer(network *net, const char *anim_file, const char *carpath) : net_(net), nactive_cars_(0), car_animation_state_(0), caelum_system_(0)
 {
     o_cars_ = new ogre_car_db();
     o_cars_->add_dir(carpath);
@@ -764,7 +766,6 @@ void hwm_viewer::start_render_loop()
     root_->startRendering();
 }
 
-
 int main(int argc, char **argv)
 {
     network *net = new network;
@@ -843,9 +844,11 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
 
     ent2->setCastShadows(true);
 
-    ac.root_ = base->createChildSceneNode(body_name, Vector3(0, scale + cm->z_offset + cm->wheel_diameter*0.5, 0));
+    ac.root_ = base->createChildSceneNode(body_name, Vector3(0, 0, 0));
     ac.root_->scale(scale, scale, scale);
     ac.root_->attachObject(ent2);
+
+    ac.root_->setInitialState();
 
     for(int w = 0; w < 4; ++w)
     {
@@ -1049,6 +1052,32 @@ int car_time_series::read(FILE *fp)
     }
 
     return count;
+}
+
+AnimationState* car_time_series::animate(const std::string &name, hwm_viewer *hv)
+{
+    assert(!samples.empty());
+
+    Animation *ani = hv->scene_manager_->createAnimation(name, samples.back().first);
+
+    foreach(const entry &ent, samples)
+    {
+        foreach(const car_time_sample &cts, ent.second)
+        {
+            anim_car &car = hv->access_sim_car(cts.id);
+            NodeAnimationTrack *nat = ani->hasNodeTrack(cts.id) ? ani->getNodeTrack(cts.id) : ani->createNodeTrack(cts.id, car.root_);
+
+            TransformKeyFrame *tkf = nat->createNodeKeyFrame(ent.first);
+            tkf->setTranslate(Vector3(10.0*cts.pos[0], 10.0*(cts.pos[2]+car.cm_->z_offset + car.cm_->wheel_diameter*0.5), -10.0*cts.pos[1]));
+            tkf->setRotation(Quaternion(std::cos(cts.theta*0.5f), 0.0, -std::sin(cts.theta*0.5f), 0.0));
+        }
+    }
+
+    ani->optimise();
+
+    AnimationState *ani_s = hv->scene_manager_->createAnimationState(name);
+    ani_s->setEnabled(true);
+    return ani_s;
 }
 
 struct entry_cmp

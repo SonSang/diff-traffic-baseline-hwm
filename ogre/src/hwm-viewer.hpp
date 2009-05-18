@@ -51,6 +51,8 @@ struct car_time_series
 
     int read(FILE *fp);
 
+    Ogre::AnimationState* animate(const std::string &name, hwm_viewer *hv);
+
     void update_cars(float t, hwm_viewer *hv) const;
 
     std::vector<entry> samples;
@@ -130,6 +132,8 @@ struct hwm_viewer
     size_t nactive_cars_;
     Ogre::SceneNode *vehicle_node_;
     car_time_series cts_;
+
+    Ogre::AnimationState *car_animation_state_;
 
     Caelum::CaelumSystem *caelum_system_;
 
