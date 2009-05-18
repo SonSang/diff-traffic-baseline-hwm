@@ -308,7 +308,7 @@ inline bool read_attributes(T & v, xmlTextReaderPtr reader)
 
     xmlTextReaderMoveToElement(reader);
 
-    return true;
+    return is_full(v);
 }
 
 inline bool read_leaf_text(std::string &res, xmlTextReaderPtr reader, const char *endtag)
