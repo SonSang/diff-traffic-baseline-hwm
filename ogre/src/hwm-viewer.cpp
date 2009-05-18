@@ -1024,9 +1024,9 @@ void ogre_car_db::load_meshes()
         }
         LogManager::getSingleton().logMessage(boost::str(boost::format("Found bodymesh (%1%) for car %2%") % body_mesh_name % current->first));
         std::vector<float> body_lodlevels;
-        body_lodlevels.push_back(200);
         body_lodlevels.push_back(600);
-        body_lodlevels.push_back(1200);
+        body_lodlevels.push_back(1500);
+        body_lodlevels.push_back(3000);
 
         look_for_lod(ocm.bodymesh, current->second.body_mesh, body_lodlevels);
 
@@ -1043,8 +1043,8 @@ void ogre_car_db::load_meshes()
         }
         LogManager::getSingleton().logMessage(boost::str(boost::format("Found wheelmesh (%1%) for car %2%") % wheel_mesh_name % current->first));
         std::vector<float> wheel_lodlevels;
-        wheel_lodlevels.push_back(200);
         wheel_lodlevels.push_back(600);
+        wheel_lodlevels.push_back(1500);
 
         look_for_lod(ocm.wheelmesh, current->second.wheel_mesh, wheel_lodlevels);
 
