@@ -21,7 +21,7 @@ protected:
 		static String batches = "Batch Count: ";
 
 		// update stats when necessary
-		try {
+        try {
 			OverlayElement *gui_avg   = OverlayManager::getSingleton().getOverlayElement("myAverageFps");
 			OverlayElement *gui_curr  = OverlayManager::getSingleton().getOverlayElement("myCurrFps");
 			OverlayElement *gui_best  = OverlayManager::getSingleton().getOverlayElement("myBestFps");
@@ -43,8 +43,8 @@ protected:
 
 			OverlayElement *gui_dbg = OverlayManager::getSingleton().getOverlayElement("myDebugText");
 			gui_dbg->setCaption(debug_text_);
-		}
-		catch(...) { /* ignore */ }
+        }
+        catch(...) { /* ignore */ }
 	}
 
 	virtual void UpdateInfo(void)
@@ -578,13 +578,13 @@ void hwm_viewer::setup_scene()
 {
     scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
 
-    // MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
-    // scene_manager_->setShadowTechnique(SHADOWTYPE_TEXTURE_ADDITIVE);
-    // scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
-    // scene_manager_->setShadowFarDistance(1000.0f);
+    MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
+    scene_manager_->setShadowTechnique(SHADOWTYPE_TEXTURE_ADDITIVE);
+    //scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
+    scene_manager_->setShadowFarDistance(4000.0f);
 
-    // scene_manager_->setShadowTextureSize(2*4096);
-    // scene_manager_->setAmbientLight(ColourValue(0.0, 0.0, 0.0));
+    scene_manager_->setShadowTextureSize(2*4096);
+    scene_manager_->setAmbientLight(ColourValue(0.0, 0.0, 0.0));
 
     camera_ = scene_manager_->createCamera("Camera");
 
@@ -594,132 +594,22 @@ void hwm_viewer::setup_scene()
     camera_->setFarClipDistance(20000);
 
     root_->getAutoCreatedWindow()->addViewport(camera_);
-    //{
-    // Light *l = scene_manager_->createLight("Light");
 
-    // l->setType(Light::LT_SPOTLIGHT);
-    // l->setCastShadows(true);
-    // l->setPosition(-100,1000, 0);
-    // l->setDiffuseColour(1.0, 1.0, 1.0);
-    // l->setDirection(0.0, -1.0, 0.0);
-    // l->setSpotlightRange(Degree(45), Degree(45));
-
-    // LiSPSMShadowCameraSetup *lscs = new LiSPSMShadowCameraSetup();
-    // Ogre::ShadowCameraSetupPtr lscs_sp = Ogre::ShadowCameraSetupPtr(lscs);
-    // scene_manager_->setShadowCameraSetup(lscs_sp);
-
-        //}
-    // {
-    //     Light *l = scene_manager_->createLight("Light2");
-
-    //     l->setType(Light::LT_POINT);
-    //     l->setCastShadows(true);
-    //     l->setPosition(3000,10050,-4500);
-    //     l->setAttenuation(5000, 1.0, 0.0, 0.0);
-    //     l->setDiffuseColour(0.7, 0.7, 0.7);
-    // }
-
-
-    // Light *l = scene_manager_->createLight("MainLight");
-    // l->setType(Light::LT_POINT);
-    // l->setPosition(0, 800, 0);
-    // l->setAttenuation(2000, 1.0, 0.0, 0.0);
-    // l->setDiffuseColour(1.0, 1.0, 1.0);
-    // l->setSpecularColour(1.0, 1.0, 1.0);
-
-    // ColourValue bgcolor(0.93, 0.86, 0.76);
-    // scene_manager_->setFog(FOG_LINEAR, bgcolor, 0.001, 500, 2500);
-    // vp->setBackgroundColour(bgcolor);
-
-    // SceneNode *network_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-    // //    StaticGeometry *net_sg = scene_manager_->createStaticGeometry("RoadNetwork");
+    LiSPSMShadowCameraSetup *lscs = new LiSPSMShadowCameraSetup();
+    Ogre::ShadowCameraSetupPtr lscs_sp = Ogre::ShadowCameraSetupPtr(lscs);
+    scene_manager_->setShadowCameraSetup(lscs_sp);
 
     float network_node_scale = 10.0f;
-
-    // network_node->translate(0,0,0);
-    // network_node->scale(network_node_scale, network_node_scale, network_node_scale);
-    // network_node->pitch(Degree(-90));
-
-    // float static_bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-    //                       -FLT_MAX, -FLT_MAX, -FLT_MAX};
-
-    // int count = 0;
-    // foreach(const lane &la, net_->lanes)
-    // {
-    //     float bb[6] = {FLT_MAX, FLT_MAX, FLT_MAX,
-    //                    -FLT_MAX, -FLT_MAX, -FLT_MAX};
-
-    //     std::string meshname = boost::str(boost::format("lane-%1%") %  count);
-    //     create_lane_mesh(la,  meshname, bb);
-
-    //     for(int i = 0; i < 3; ++i)
-    //     {
-    //         if(bb[i] < static_bb[i])
-    //             static_bb[i] = bb[i];
-
-    //         if(bb[i+3] > static_bb[i+3])
-    //             static_bb[i+3] = bb[i+3];
-    //     }
-
-    //     Entity *lane = scene_manager_->createEntity(boost::str(boost::format("lane-%1%-entity") % count), meshname);
-    //     lane->setMaterialName("Test/RoadSurface");
-    //     SceneNode *lane_node = network_node->createChildSceneNode();
-    //     lane_node->attachObject(lane);
-    //     ++count;
-    // }
-
-    // for(int i = 0; i < 6; ++i)
-    //     static_bb[i] *= network_node_scale;
-
-    // float y_low  = static_bb[1];
-    // float y_high = static_bb[4];
-    // static_bb[1] = -static_bb[5];
-    // static_bb[4] = -static_bb[2];
-    // static_bb[5] = y_high;
-    // static_bb[2] = y_low;
-
-    // network_node->translate(-(static_bb[0]+static_bb[3])*0.5,
-    //                         -(static_bb[1]+static_bb[4])*0.5,
-    //                         -(static_bb[2]+static_bb[5])*0.5);
-
-    // Vector3 dims(std::max(static_bb[3]-static_bb[0], 1.0f),
-    //              std::max(static_bb[4]-static_bb[1], 1.0f),
-    //              std::max(static_bb[5]-static_bb[2], 1.0f));
-
-    // net_sg->addSceneNode(network_node);
-    // scene_manager_->destroySceneNode(network_node);
-
-    // net_sg->setRegionDimensions(dims);
-    // net_sg->setOrigin(Vector3(static_bb[0], static_bb[1], static_bb[2]));
-    // net_sg->build();
-
-    // Plane plane;
-    // plane.normal = Vector3::UNIT_Y;
-    // plane.d = 1;
-    // MeshManager::getSingleton().createPlane("Myplane",
-    //                                         ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME, plane,
-    //                                         150000,150000,20,20,true,1,10,10,Vector3::UNIT_Z);
-    // Entity *ground = scene_manager_->createEntity( "plane", "Myplane" );
-
-    // ground->setMaterialName("Examples/GrassFloor");
 
     SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
     ground_node->translate(1852.340698, 0.000000, -257.709320);
     ground_node->scale(network_node_scale, network_node_scale, network_node_scale);
-    //    ground_node->attachObject(ground);
 
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     o_cars_->load_meshes();
 
     load_terrain(ground_node);
-
-    // count = 0;
-    // foreach(const lane &la, net_->lanes)
-    // {
-    //     lane_cars_.push_back(o_cars_->odb.begin()->second.create_car(scene_manager_, vehicle_node_, boost::str(boost::format("Car-%1%") % count)));
-    //     ++count;
-    // }
 }
 
 anim_car& hwm_viewer::access_sim_car(int id)
