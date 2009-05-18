@@ -40,7 +40,14 @@ struct car_db
     bool add_file(const char *file);
     int  add_dir(const char *dir);
 
-    std::map<const std::string, car_model> db;
+    std::string random_id() const
+    {
+        assert(!car_ids.empty());
+        return car_ids[rand() % car_ids.size()];
+    }
+
+    std::vector<std::string> car_ids;
+    std::map<std::string, car_model> db;
 };
 
 #endif

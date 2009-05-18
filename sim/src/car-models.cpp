@@ -318,6 +318,8 @@ bool car_db::add_file(const char *file)
     car_model cm;
     if(cm.load_from_xml(file))
     {
+        assert(db.find(cm.id) == db.end());
+        car_ids.push_back(cm.id);
         db[cm.id] = cm;
         return true;
     }

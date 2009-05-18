@@ -728,7 +728,7 @@ anim_car& hwm_viewer::access_sim_car(int id)
         sim_cars_.resize(id+1);
     assert(id >= 0 && id <= static_cast<int>(sim_cars_.size()));
     if(sim_cars_[id].root_ == 0)
-        sim_cars_[id] = o_cars_->odb.begin()->second.create_car(scene_manager_, vehicle_node_, boost::str(boost::format("Car-%1%") % id));
+        sim_cars_[id] = o_cars_->odb[o_cars_->random_id()].create_car(scene_manager_, vehicle_node_, boost::str(boost::format("Car-%1%") % id));
 
     return sim_cars_[id];
 }
