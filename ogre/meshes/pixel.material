@@ -1,0 +1,31 @@
+material pixel
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref   v_fragmentLighting
+			{
+			}
+			fragment_program_ref f_dir_fragmentLighting
+			{
+			}
+		}
+	}
+}
+
+material pixel_ref
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref   v_reflection
+			{
+			}
+			fragment_program_ref f_reflection
+			{
+			}
+		}
+	}
+}

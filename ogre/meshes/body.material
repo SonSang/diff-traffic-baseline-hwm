@@ -1,0 +1,128 @@
+import pixel from "pixel.material"
+import pixel_ref from "pixel.material"
+
+material Glass : pixel_ref
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.5 0.5 0.5
+			diffuse 0.5 0.5 0.5
+			specular 1.0 1.0 1.0 128.0
+			emissive 0.0 0.0 0.0 1.0
+
+			texture_unit
+			{
+				cubic_texture roadenv.jpg combinedUVW
+				colour_op_ex blend_manual src_texture src_current 0.5
+				colour_op_multipass_fallback one one
+				env_map cubic_reflection
+			}
+		}
+	}
+}
+
+material Bodycolor : pixel
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 1.000000 1.000000 1.000000 1.000000
+			diffuse 1.00000 0.000000 0.000000 1.000000
+			specular 1.000000 1.000000 1.000000 1.000000 128.0
+			emissive 0.000000 0.000000 0.000000 1.000000
+
+//			texture_unit
+//			{
+//				cubic_texture roadenv.jpg combinedUVW
+//				colour_op_ex blend_manual src_texture src_current 0.1
+//				colour_op_multipass_fallback one one
+//				env_map cubic_reflection
+//			}
+		}
+	}
+}
+material Undercarriage
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.500000 0.500000 0.500000 1.000000
+			diffuse 0.000000 0.000000 0.000000 1.000000
+			specular 0.000000 0.000000 0.000000 1.000000 0.250000
+			emissive 0.000000 0.000000 0.000000 1.000000
+		}
+	}
+}
+material leftturn
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.500000 0.500000 0.500000 1.000000
+			diffuse 0.720962 0.599281 0.000000 1.000000
+			specular 1.000000 1.000000 1.000000 1.000000 111.000000
+			emissive 0.000000 0.000000 0.000000 1.000000
+		}
+	}
+}
+material Chrome
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 1.0 1.0 1.0
+			diffuse 1.0 1.0 1.0
+			specular 1.0 1.0 1.0 128.0
+			emissive 0.0 0.0 0.0 1.0
+
+
+			texture_unit
+			{
+				cubic_texture roadenv.jpg combinedUVW
+				colour_op_ex blend_manual src_texture src_current 0.6
+				colour_op_multipass_fallback one one
+				env_map cubic_reflection
+			}
+		}
+	}
+}
+
+material rightturn
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.500000 0.500000 0.500000 1.000000
+			diffuse 0.720643 0.599631 0.000000 1.000000
+			specular 1.000000 1.000000 1.000000 1.000000 111.000000
+			emissive 0.000000 0.000000 0.000000 1.000000
+		}
+	}
+}
+material Taillight
+{
+	receive_shadows on
+	technique
+	{
+		pass
+		{
+			ambient 0.500000 0.500000 0.500000 1.000000
+			diffuse 0.775719 0.000000 0.000000 1.000000
+			specular 1.000000 1.000000 1.000000 1.000000 111.000000
+			emissive 0.000000 0.000000 0.000000 1.000000
+		}
+	}
+}
