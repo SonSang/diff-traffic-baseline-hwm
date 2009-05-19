@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cmath>
 #include <cfloat>
+#include "network.hpp"
 
 using namespace std;
 
@@ -61,7 +62,7 @@ void print(point3* a);
 
 point3* lose_dim(point3* loser,int coord);					// Remove one coordinate and return a 2D vector.
 
-class road;
+class paul_road;
 
 class laneSet{
 public:
@@ -71,23 +72,22 @@ public:
 
     laneSet(double newStart,double newEnd,double newOffset,int newRightSide);
     laneSet(double newStart,double newEnd,vector<double> newOffset,int newRightSide);
-    void draw(ofstream* outfile,road*);
+    void draw(ofstream* outfile,paul_road*);
 };
 
-class road{
+class paul_road{
 public:
-    char id[5000];
     vector<point3*> points;
     vector<laneSet*> left;
     vector<laneSet*> right;
     int sIntersect,eIntersect,over;
-    road* next;
+    paul_road* next;
 
-    road(const char* newId,vector<point3*> newPoints,int newOver,road* newNext);
-    void addLane(const char* newId,double start,double end,double offset);
+    paul_road(vector<point3*> newPoints, int newOver, paul_road* next);
+    void addLane(double start,double end,double offset);
     void draw(ofstream* outfile);
-    void intersection(const char* id,int sNotE);
-    void overpass(const char* newId,double x);
+    void intersection(int sNotE);
+    void overpass(double x);
     void addPoint(double x,double upOffset);
 };
 
@@ -101,113 +101,85 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Usage: %s <input network> <output file>\n", argv[0]);
         exit(1);
     }
+    printf("%s version: %s\n", argv[0], hwm_version_string());
 
-	ifstream infile(argv[1]);
+    network net;
 
-	char word[5000];
-	char   id[5000];
-	char  num[5000];
-	int comment = 0;
-	road* roads = 0;
-	int sIntersect = 0;
-	int eIntersect = 0;
-	int side = 0;
-	while(!infile.eof()){
-		infile>>word;
-		if(strcmp(word,"<!--") == 0)
-			comment = 1;
+    if(!net.load_from_xml(argv[1]))
+    {
+        fprintf(stderr, "Couldn't load %s\n", argv[1]);
+        exit(1);
+    }
 
-		if(!comment){
-			if(strcmp(word,"<road") == 0){
-				infile>>word;
-				if(strspn(word,"id=") >= 3){
-					strcpy_s(id,4997,&word[3]);
-					cout<<&word[3]<<endl;
-					while(strcmp(word,"<points>") != 0)
-						infile>>word;
-					infile>>word;
-					double x,y,z;
-					int over = 0;
-					z = 0;
+    net.calc_bounding_box();
+    point pt;
+    pt.x = -(net.bb[0]+net.bb[1])*0.5f;
+    pt.y = -(net.bb[2]+net.bb[3])*0.5f;
+    pt.z = 0.0f;
+    printf("Translating by %f %f %f\n", pt.x, pt.y, pt.z);
+    net.translate(pt);
 
-					vector<point3*> points;
-					while(strcmp(word,"</points>") != 0){
-						x = atof(word);
-						infile>>word;
-						y = atof(word);
-						infile>>word;
-						//x -= 955802;
-						//y -= 687107;
- 						//x -= 1432876;
-						//y -= 751504;
-                        //						x -= 875000;
-                        //						y -= 458000;
-						z = atof(word);
-						z = z * 5;
-						infile>>word;
-						int overpass;
-						overpass = atoi(word);
-						if(overpass)
-							over = 1;
-						infile>>word;
+    std::map<const road*, paul_road*> road_map;
 
-						point3* p = new point3(x,y,z);
-						cout<<x<<" "<<y<<" "<<z*10<<endl;
-						points.push_back(p);}
+	paul_road* paul_roads = 0;
 
-					roads = new road(id,points,over,roads);}}
+    foreach(const road &ro, net.roads)
+    {
+        vector<point3*> ppts;
+        foreach(const point &pt, ro.rep.points)
+        {
+            ppts.push_back(new point3(pt.x, pt.y, pt.z));
+        }
+        int over = 0;
+        paul_roads = new paul_road(ppts, over, paul_roads);
 
-			if(strcmp(word,"<start>") == 0){
-				if(((sIntersect) && (!side)) || ((eIntersect) && (side))){
-					//cout<<id<<" end"<<endl;
-					roads->intersection(id,0);
-					eIntersect = 0;}
-				infile>>word;
-				sIntersect = (strcmp(word,"<intersection_ref") == 0);}
+        assert(road_map.find(&ro) == road_map.end());
 
-			if(strcmp(word,"<end>") == 0){
-				infile>>word;
-				eIntersect = (strcmp(word,"<intersection_ref") == 0);}
+        road_map[&ro] = paul_roads;
+    }
 
-			if(strcmp(word,"<road_membership") == 0){
-				infile>>word;
-				if(strspn(word,"parent_road_ref=") >= 16){
-					strcpy_s(id,5000-16,&word[16]);
-					//cout<<&word[16]<<endl;
-					infile>>word;
-					strncpy_s(num,5000,&word[16],strlen(word)-17);
-					double start = atof(num);
-					//cout<<start<<endl;
-					infile>>word;
-					strncpy_s(num,5000,&word[14],strlen(word)-15);
-					double end = atof(num);
-					//cout<<end<<endl;
-					infile>>word;
-					strncpy_s(num,5000,&word[15],strlen(word)-16);
-					double offset = atof(num);
-					//cout<<offset<<endl;
-					side = (start < end);
-					if(((sIntersect) && (side)) || ((eIntersect) && (!side))){
-						roads->intersection(id,1);
-						if(side)
-							sIntersect = 0;
-						else
-							eIntersect = 0;}
-					offset *= -1;
-					if(offset < 0)
-						offset += 0.5;
-					else
-						offset -= 0.5;
-					roads->addLane(id,start,end,offset * 2.5);}}}
+    foreach(const lane &la, net.lanes)
+    {
+        int sintersect = (la.start.end_type == lane_end::INTERSECTION);
+        int eintersect = (la.end.end_type   == lane_end::INTERSECTION);
 
-		if(strcmp(word,"-->")==0)
-			comment = 0;}
+        const road_membership *rom = &(la.road_memberships.base_data);
+        int p = -1;
+        while(1)
+        {
+            std::map<const road*, paul_road*>::iterator parent_road = road_map.find(rom->parent_road.dp);
 
-	//roads->overpass("\"road5\"",0.5);
+            assert(parent_road != road_map.end());
 
-	ofstream outfile(argv[2]);
-	roads->draw(&outfile);
-	drawSigns(&outfile);
+            float offset = rom->lane_position;
+            int side = rom->interval[0] <  rom->interval[1];
+
+            if(((sintersect) && (side)) || ((eintersect) && (!side)))
+            {
+                parent_road->second->intersection(1);
+            }
+
+            offset *= -1;
+            if(offset < 0)
+                offset += 0.5;
+            else
+                offset -= 0.5;
+
+            parent_road->second->addLane(rom->interval[0],rom->interval[1],offset * 2.5);
+
+            ++p;
+            if(p >= static_cast<int>(la.road_memberships.entries.size()))
+                break;
+            rom = &(la.road_memberships.entries[p].data);
+        }
+
+    }
+
+	//paul_roads->overpass("\"paul_road5\"",0.5);
+
+    ofstream outfile(argv[2]);
+    paul_roads->draw(&outfile);
+    drawSigns(&outfile);
 
 	return 0;
 }
@@ -218,23 +190,18 @@ const int simplePart = 1;
 const double laneScale = 1.0;
 const double interOffset = 0; //2.5 * laneScale;
 
-road::road(const char* newId,vector<point3*> newPoints,int newOver,road* newNext){
-	strcpy_s(id,5000,newId);
-	points = newPoints;
+paul_road::paul_road(vector<point3*> newPoints,int newOver,paul_road* newNext){
+    points = newPoints;
 	over = newOver;
 	sIntersect = 0;
 	eIntersect = 0;
 	next = newNext;}
 
-void road::addLane(const char* newId,double start,double end,double offset){
-	if(strcmp(id,newId) == 0){
-		if(end > start)
-			addToSet(right,start,end,offset,1);
-		else
-			addToSet(left ,end,start,offset,0);}
-	else
-		if(next)
-			next->addLane(newId,start,end,offset);}
+void paul_road::addLane(double start,double end,double offset){
+    if(end > start)
+        addToSet(right,start,end,offset,1);
+    else
+        addToSet(left ,end,start,offset,0);}
 
 void insert(vector<laneSet*>& sets,int i,laneSet* insertion){
 	vector<laneSet*>::iterator it = sets.begin();
@@ -329,7 +296,7 @@ void clip(ofstream* outfile,double s1,double e1,double s2,double e2,double s3,do
 		result->printToFile(outfile);
 		delete result;}}
 
-void addRoadObject(ofstream* outfile,road* r,double offset,const char* object,double left,double right,double startLane,double endLane,int dashed,double dashIn,double period,double cut){
+void addPaul_RoadObject(ofstream* outfile,paul_road* r,double offset,const char* object,double left,double right,double startLane,double endLane,int dashed,double dashIn,double period,double cut){
 	left  *= laneScale;
 	right *= laneScale;
 	point3* up = new point3(0,0,1);
@@ -423,13 +390,13 @@ void addRoadObject(ofstream* outfile,road* r,double offset,const char* object,do
 	if(!sign)
 		*outfile<<"#"<<endl;}
 
-void addRoadObject(ofstream* outfile,road* r,double offset,const char* object,double left,double right,double startLane,double endLane,int dashed,double dashIn,double period){
-	addRoadObject(outfile,r,offset,object,left,right,startLane,endLane,dashed,dashIn,period,0);}
+void addPaul_RoadObject(ofstream* outfile,paul_road* r,double offset,const char* object,double left,double right,double startLane,double endLane,int dashed,double dashIn,double period){
+	addPaul_RoadObject(outfile,r,offset,object,left,right,startLane,endLane,dashed,dashIn,period,0);}
 
-void addRoadObject(ofstream* outfile,road* roads,double offset,const char* object,double left,double right,double startLane,double endLane){
-	addRoadObject(outfile,roads,offset,object,left,right,startLane,endLane,0,0,0,0);}
+void addPaul_RoadObject(ofstream* outfile,paul_road* paul_roads,double offset,const char* object,double left,double right,double startLane,double endLane){
+	addPaul_RoadObject(outfile,paul_roads,offset,object,left,right,startLane,endLane,0,0,0,0);}
 
-void road::draw(ofstream* outfile){
+void paul_road::draw(ofstream* outfile){
 	for(int i = 0; i < (int)left.size(); i++)
 		left [i]->draw(outfile,this);
 	for(int i = 0; i < (int)right.size(); i++)
@@ -441,9 +408,9 @@ void road::draw(ofstream* outfile){
 			if(left.size() > 0){
 				for(int i = 0; i < (int)left[0]->offsets.size(); i++){
 					if(complexPart)
-						addRoadObject(outfile,this,left[0]->offsets[i],"$intersection",0,0,0,0,1,0,5,1.4 * laneScale + interOffset);
+						addPaul_RoadObject(outfile,this,left[0]->offsets[i],"$intersection",0,0,0,0,1,0,5,1.4 * laneScale + interOffset);
 					if(simplePart)
-						addRoadObject(outfile,this,left[0]->offsets[i],"$2crosswalk",0,0,0,0,1,0,5,0.4 * laneScale + interOffset);}}
+						addPaul_RoadObject(outfile,this,left[0]->offsets[i],"$2crosswalk",0,0,0,0,1,0,5,0.4 * laneScale + interOffset);}}
 
 			if(right.size() > 0){
 				double max = right[0]->offsets[0];
@@ -451,19 +418,19 @@ void road::draw(ofstream* outfile){
 					if(right[0]->offsets[i] > max)
 						max = right[0]->offsets[i];
 					if(complexPart)
-						addRoadObject(outfile,this,right[0]->offsets[i],"$2light",0,0,0,0,1,0,5,1.4 * laneScale + interOffset);
+						addPaul_RoadObject(outfile,this,right[0]->offsets[i],"$2light",0,0,0,0,1,0,5,1.4 * laneScale + interOffset);
 					if(simplePart)
-						addRoadObject(outfile,this,right[0]->offsets[i],"$2crosswalk",0,0,0,0,1,0,5,0.4 * laneScale + interOffset);}
+						addPaul_RoadObject(outfile,this,right[0]->offsets[i],"$2crosswalk",0,0,0,0,1,0,5,0.4 * laneScale + interOffset);}
 				if(complexPart)
-					addRoadObject(outfile,this,max+1.857 * laneScale,"$2lightSupport",0,0,0,0,1,0,5,1.4 * laneScale + interOffset);}}
+					addPaul_RoadObject(outfile,this,max+1.857 * laneScale,"$2lightSupport",0,0,0,0,1,0,5,1.4 * laneScale + interOffset);}}
 
 		if(eIntersect){
 			if(right.size() > 0){
 				for(int i = 0; i < (int)right[right.size()-1]->offsets.size(); i++){
 					if(complexPart)
-						addRoadObject(outfile,this,right[right.size()-1]->offsets[i],"$intersection",0,0,1,1,1,0,5,-1.4 * laneScale  - interOffset);
+						addPaul_RoadObject(outfile,this,right[right.size()-1]->offsets[i],"$intersection",0,0,1,1,1,0,5,-1.4 * laneScale  - interOffset);
 					if(simplePart)
-						addRoadObject(outfile,this,right[right.size()-1]->offsets[i],"$crosswalk",0,0,1,1,1,0,5,-0.4 * laneScale - interOffset);}}
+						addPaul_RoadObject(outfile,this,right[right.size()-1]->offsets[i],"$crosswalk",0,0,1,1,1,0,5,-0.4 * laneScale - interOffset);}}
 
 			if(left.size() > 0){
 				double min = left[left.size()-1]->offsets[0];
@@ -471,16 +438,16 @@ void road::draw(ofstream* outfile){
 					if(left[left.size()-1]->offsets[i] < min)
 						min = left[left.size()-1]->offsets[i];
 					if(complexPart)
-						addRoadObject(outfile,this,left[left.size()-1]->offsets[i],"$light",0,0,1,1,1,0,5,-1.4  * laneScale - interOffset);
+						addPaul_RoadObject(outfile,this,left[left.size()-1]->offsets[i],"$light",0,0,1,1,1,0,5,-1.4  * laneScale - interOffset);
 					if(simplePart)
-						addRoadObject(outfile,this,left[left.size()-1]->offsets[i],"$crosswalk",0,0,1,1,1,0,5,-0.4  * laneScale - interOffset);}
+						addPaul_RoadObject(outfile,this,left[left.size()-1]->offsets[i],"$crosswalk",0,0,1,1,1,0,5,-0.4  * laneScale - interOffset);}
 				if(complexPart)
-					addRoadObject(outfile,this,min-1.857 * laneScale,"$lightSupport",0,0,1,1,1,0,5,-1.4 * laneScale - interOffset);}}}
+					addPaul_RoadObject(outfile,this,min-1.857 * laneScale,"$lightSupport",0,0,1,1,1,0,5,-1.4 * laneScale - interOffset);}}}
 
 	if(next)
 		next->draw(outfile);}
 
-void laneSet::draw(std::ofstream *outfile, road* r){
+void laneSet::draw(std::ofstream *outfile, paul_road* r){
 	int lowIndex  = 0;
 	int highIndex = 0;
 	double lowValue=FLT_MAX, highValue=-FLT_MAX;
@@ -503,67 +470,63 @@ void laneSet::draw(std::ofstream *outfile, road* r){
 	if(!r->over){
 		for(int i = 0; i < (int)offsets.size(); i++){
 			if(simplePart)
-				addRoadObject(outfile,r,offsets[i],"$road",-1.3,1.3,start,end);
+				addPaul_RoadObject(outfile,r,offsets[i],"$road",-1.3,1.3,start,end);
 			if(i == endIndex){
 				if(simplePart){
-					addRoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end);
-					addRoadObject(outfile,r,offsets[i] - 5.0/2 * laneScale + 5.0 * rightSide * laneScale,"$road",-1.3,1.3,start,end);}
+					addPaul_RoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end);
+					addPaul_RoadObject(outfile,r,offsets[i] - 5.0/2 * laneScale + 5.0 * rightSide * laneScale,"$road",-1.3,1.3,start,end);}
 				if(complexPart){
 					if(rightSide){
-						addRoadObject(outfile,r,offsets[i] + 7.0/2 * laneScale ,"$leftBarrier" ,-0.056,0.05,start,end,0,0,0,10 * laneScale);
-						//addRoadObject(outfile,r,offsets[i] + 7.4/2 * laneScale ,"$leftPost"    ,-0.04,0.056,start,end,1,0,5,3);
-						addRoadObject(outfile,r,offsets[i] + 2.7 * laneScale   ,"leftSign"    ,0,0,start,end,1,0,75,40 * laneScale);}
+						addPaul_RoadObject(outfile,r,offsets[i] + 7.0/2 * laneScale ,"$leftBarrier" ,-0.056,0.05,start,end,0,0,0,10 * laneScale);
+						//addPaul_RoadObject(outfile,r,offsets[i] + 7.4/2 * laneScale ,"$leftPost"    ,-0.04,0.056,start,end,1,0,5,3);
+						addPaul_RoadObject(outfile,r,offsets[i] + 2.7 * laneScale   ,"leftSign"    ,0,0,start,end,1,0,75,40 * laneScale);}
 					else{
-						addRoadObject(outfile,r,offsets[i] - 7.0/2 * laneScale ,"$rightBarrier",-0.04,0.056,start,end,0,0,0,10 * laneScale);
-						//addRoadObject(outfile,r,offsets[i] - 7.4/2 * laneScale ,"$rightPost"   ,-0.056,0.04,start,end,1,0,5,3);
-						addRoadObject(outfile,r,offsets[i] - 2.7 * laneScale   ,"rightSign"   ,0,0,start,end,1,0,75,40 * laneScale);}}}
+						addPaul_RoadObject(outfile,r,offsets[i] - 7.0/2 * laneScale ,"$rightBarrier",-0.04,0.056,start,end,0,0,0,10 * laneScale);
+						//addPaul_RoadObject(outfile,r,offsets[i] - 7.4/2 * laneScale ,"$rightPost"   ,-0.056,0.04,start,end,1,0,5,3);
+						addPaul_RoadObject(outfile,r,offsets[i] - 2.7 * laneScale   ,"rightSign"   ,0,0,start,end,1,0,75,40 * laneScale);}}}
 			else{
 				if(simplePart)
-					addRoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$dashed",-0.07,0.07,start,end);						// Using a texture
-				//addRoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end,1,3,9);		// Geometrically
+					addPaul_RoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$dashed",-0.07,0.07,start,end);						// Using a texture
+				//addPaul_RoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end,1,3,9);		// Geometrically
 			}
 			if(i == midIndex)
 				if(simplePart)
-					addRoadObject(outfile,r,offsets[i] + 2.25/2 * laneScale - 2.25 * rightSide * laneScale,"$orange",-0.07,0.07,start,end);}}
+					addPaul_RoadObject(outfile,r,offsets[i] + 2.25/2 * laneScale - 2.25 * rightSide * laneScale,"$orange",-0.07,0.07,start,end);}}
 
 	// For the overpass
 
 	else{
 		for(int i = 0; i < (int)offsets.size(); i++){
 			if(simplePart){
-				addRoadObject(outfile,r,offsets[i],"$road",-1.3,1.3,start,end);
-				addRoadObject(outfile,r,offsets[i],"$iBeams",-0.99,0.99,start,end);
-				addRoadObject(outfile,r,offsets[i],"$underRoad",-1.55,1.55,start,end);
-				addRoadObject(outfile,r,offsets[i],"$ramp",-1.5,1.5,start,end);}
+				addPaul_RoadObject(outfile,r,offsets[i],"$road",-1.3,1.3,start,end);
+				addPaul_RoadObject(outfile,r,offsets[i],"$iBeams",-0.99,0.99,start,end);
+				addPaul_RoadObject(outfile,r,offsets[i],"$underRoad",-1.55,1.55,start,end);
+				addPaul_RoadObject(outfile,r,offsets[i],"$ramp",-1.5,1.5,start,end);}
 			if(i == endIndex){
 				if(simplePart)
-					addRoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end);
+					addPaul_RoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end);
 				if(complexPart){
 					if(rightSide){
-						addRoadObject(outfile,r,offsets[i] + 1.25 * laneScale ,"$leftRailing"    ,-0.15,0.08,start,end,0,0,0,10 * laneScale);
-						addRoadObject(outfile,r,offsets[i] + 1.25 * laneScale ,"$leftRailingPost",-0.15,0.08,start,end,1,0,5,10 * laneScale);}
+						addPaul_RoadObject(outfile,r,offsets[i] + 1.25 * laneScale ,"$leftRailing"    ,-0.15,0.08,start,end,0,0,0,10 * laneScale);
+						addPaul_RoadObject(outfile,r,offsets[i] + 1.25 * laneScale ,"$leftRailingPost",-0.15,0.08,start,end,1,0,5,10 * laneScale);}
 					else{
-						addRoadObject(outfile,r,offsets[i] - 1.25 * laneScale,"$rightRailing"   ,-0.08,0.15,start,end,0,0,0,10 * laneScale);
-						addRoadObject(outfile,r,offsets[i] - 1.25 * laneScale,"$rightRailingPost",-0.08,0.15,start,end,1,0,5,10 * laneScale);}}}
+						addPaul_RoadObject(outfile,r,offsets[i] - 1.25 * laneScale,"$rightRailing"   ,-0.08,0.15,start,end,0,0,0,10 * laneScale);
+						addPaul_RoadObject(outfile,r,offsets[i] - 1.25 * laneScale,"$rightRailingPost",-0.08,0.15,start,end,1,0,5,10 * laneScale);}}}
 			else{
 				if(simplePart)
-					addRoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$dashed",-0.07,0.07,start,end);					// Using a texture
-				//addRoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end,1,3,9);				// Geometrically
+					addPaul_RoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$dashed",-0.07,0.07,start,end);					// Using a texture
+				//addPaul_RoadObject(outfile,r,offsets[i] - 2.5/2 * laneScale + 2.5 * rightSide * laneScale,"$white",-0.07,0.07,start,end,1,3,9);				// Geometrically
 			}
 			if(i == midIndex)
 				if(simplePart)
-					addRoadObject(outfile,r,offsets[i] + 2.25/2 * laneScale - 2.25 * rightSide * laneScale,"$orange",-0.07,0.07,start,end);}}
+					addPaul_RoadObject(outfile,r,offsets[i] + 2.25/2 * laneScale - 2.25 * rightSide * laneScale,"$orange",-0.07,0.07,start,end);}}
 }
 
-void road::intersection(const char* newId,int sNotE){
-	if(strcmp(id,newId) == 0){
-		if(sNotE)
-			sIntersect = 1;
-		else
-			eIntersect = 1;}
-	else
-		if(next)
-			next->intersection(newId,sNotE);}
+void paul_road::intersection(int sNotE){
+    if(sNotE)
+        sIntersect = 1;
+    else
+        eIntersect = 1;}
 
 void drawSigns(ofstream* outfile){
 	vector<int> signChoice;
@@ -598,7 +561,7 @@ void drawSigns(ofstream* outfile){
 	*outfile<<"$6sign01"<<endl<<"1"<<endl;	for(int i = 0; i < (int)rightSigns.size() / 2; i++)		if((signChoice[i] >= 9) && (signChoice[i] <= 11)){			rightSigns[2*i  ]->printToFile(outfile);			rightSigns[2*i+1]->printToFile(outfile);}	*outfile<<"#"<<endl;
 }
 
-void road::addPoint(double x,double upOffset){
+void paul_road::addPoint(double x,double upOffset){
 	double length = 0;
 	for(int i = 0; i < (int)points.size() - 1; i++){
 		point3* v = *points[i+1] - points[i];
@@ -611,26 +574,24 @@ void road::addPoint(double x,double upOffset){
 			return;}
 		length += vNorm;}}
 
-void road::overpass(const char *newId, double x){
-	if(strcmp(id,newId) == 0){
-		double length = 0;
-		for(int i = 0; i < (int)points.size() - 1; i++){
-			point3* v = *points[i+1] - points[i];
-			length += v->length();}
+void paul_road::overpass(double x)
+{
+    double length = 0;
+    for(int i = 0; i < (int)points.size() - 1; i++){
+        point3* v = *points[i+1] - points[i];
+        length += v->length();}
 
-		double addition[4];
-		addition[0] = x * length - 15.0;
-		addition[1] = x * length -  5.0;
-		addition[2] = x * length +  5.0;
-		addition[3] = x * length + 15.0;
+    double addition[4];
+    addition[0] = x * length - 15.0;
+    addition[1] = x * length -  5.0;
+    addition[2] = x * length +  5.0;
+    addition[3] = x * length + 15.0;
 
-		addPoint(addition[0],0);
-		addPoint(addition[1],5);
-		addPoint(addition[2],5);
-		addPoint(addition[3],0);}
-	else
-		if(next)
-			next->overpass(newId,x);}
+    addPoint(addition[0],0);
+    addPoint(addition[1],5);
+    addPoint(addition[2],5);
+    addPoint(addition[3],0);
+}
 
 point3::point3(double newx,double newy,double newz){
   x=newx;
