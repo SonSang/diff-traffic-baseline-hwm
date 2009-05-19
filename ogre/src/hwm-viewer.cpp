@@ -578,8 +578,7 @@ void hwm_viewer::setup_scene()
 
     MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
     scene_manager_->setShadowTechnique(SHADOWTYPE_TEXTURE_ADDITIVE);
-    //scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_ADDITIVE);
-    scene_manager_->setShadowFarDistance(4000.0f);
+    scene_manager_->setShadowFarDistance(8000.0f);
 
     scene_manager_->setShadowTextureSize(2*4096);
     scene_manager_->setAmbientLight(ColourValue(0.0, 0.0, 0.0));
@@ -593,7 +592,7 @@ void hwm_viewer::setup_scene()
 
     root_->getAutoCreatedWindow()->addViewport(camera_);
 
-    LiSPSMShadowCameraSetup *lscs = new LiSPSMShadowCameraSetup();
+    PSSMShadowCameraSetup *lscs = new PSSMShadowCameraSetup();
     Ogre::ShadowCameraSetupPtr lscs_sp = Ogre::ShadowCameraSetupPtr(lscs);
     scene_manager_->setShadowCameraSetup(lscs_sp);
 
