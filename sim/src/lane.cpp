@@ -938,8 +938,8 @@ void lane::swap_carticles()
         {
             assert(i >= 0);
             assert(i+1 < static_cast<int>(carticles[0].size()));
-            if(carticles[0][i].x > carticles[0][i+1].x - (CAR_LENGTH*1.2f)/(ncells*h))
-                carticles[0][i].x = carticles[0][i+1].x - (CAR_LENGTH*1.2f)/(ncells*h);
+            if(carticles[0][i].x > carticles[0][i+1].x - (CAR_LENGTH*1.5f)/(ncells*h))
+                carticles[0][i].x = carticles[0][i+1].x - (CAR_LENGTH*1.5f)/(ncells*h);
         }
     carticles[1].clear();
 }
