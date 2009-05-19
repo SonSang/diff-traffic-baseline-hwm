@@ -94,8 +94,8 @@ void spatial_view::query_point(const float screen[2], float val[2]) const
 
 void cairo_plotter1d::draw(cairo_t *cxt, float l, float r, float linewidth, drawtype dt)
 {
-    size_t lo = std::max(std::floor((l - origin)/h), 0.0f);
-    size_t hi = std::min(std::max(0.0f, std::ceil ((r - origin)/h)+1.0f), (float)ncells);
+    size_t lo = static_cast<size_t>(std::max(std::floor((l - origin)/h), 0.0f));
+    size_t hi = static_cast<size_t>(std::min(std::max(0.0f, std::ceil ((r - origin)/h)+1.0f), (float)ncells));
 
     float last;
     switch(dt)

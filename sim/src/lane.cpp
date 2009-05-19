@@ -395,7 +395,7 @@ void lane::get_point(const float &t, point &pt) const
 float lane::velocity(float t, float gamma_c) const
 {
     float pos = t*ncells - 0.5f;
-    int cell = std::floor(pos);
+    int cell = static_cast<int>(std::floor(pos));
     float u[2];
     float rho[2];
 
@@ -471,8 +471,8 @@ void lane::fill_from_carticles()
         float front_pos = cart.x*ncells + CAR_REAR_AXLE*inv_h;
         float back_pos  = front_pos - CAR_LENGTH*inv_h;
 
-        int front_cell = std::floor(front_pos);
-        int back_cell  = std::floor(back_pos);
+        int front_cell = static_cast<int>(std::floor(front_pos));
+        int back_cell  = static_cast<int>(std::floor(back_pos));
 
         assert(front_cell - back_cell <= 1);
         if(front_cell < static_cast<int>(ncells))
@@ -675,7 +675,7 @@ int lane::merge_intent(float local_t, float gamma_c) const
     if(!(left_la || right_la))
         return 0;
 
-    int mycell = std::floor(local_t*ncells);
+    int mycell = static_cast<int>(std::floor(local_t*ncells));
     if(data[mycell].rho <= 1e-4)
         return 0;
 
@@ -695,14 +695,14 @@ int lane::merge_intent(float local_t, float gamma_c) const
 
     if(left_la)
     {
-        int othercell = std::floor(left_t*left_la->ncells);
+        int othercell = static_cast<int>(std::floor(left_t*left_la->ncells));
         float other_u = to_u(left_la->data[othercell].rho, left_la->data[othercell].y, left_la->speedlimit, gamma_c);
         left_factor   = (other_u > ahead_u) ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
 
     if(right_la)
     {
-        int othercell = std::floor(right_t*right_la->ncells);
+        int othercell = static_cast<int>(std::floor(right_t*right_la->ncells));
         float other_u = to_u(right_la->data[othercell].rho, right_la->data[othercell].y, right_la->speedlimit, gamma_c);
         right_factor  = (other_u > ahead_u) ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
@@ -727,7 +727,7 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
     float end = lc_curve::end(c.u);
     int lastcell = static_cast<int>(std::ceil(other_t*other_la->ncells + end*c.u/other_la->h));
 
-    if(lastcell >= other_la->ncells)
+    if(lastcell >= static_cast<int>(other_la->ncells))
         return false;
 
     int loc = static_cast<int>(std::floor(other_t*other_la->ncells));
@@ -861,7 +861,7 @@ void lane::advance_carticles(float dt, float gamma_c)
             int first_cell = static_cast<int>(std::floor(back_of_carticle*ncells));
             int last_cell  = static_cast<int>(std::floor(front_of_carticle*ncells));
             assert(first_cell >= 0);
-            assert(last_cell < ncells);
+            assert(last_cell < static_cast<int>(ncells));
 
             for(int i = first_cell; i < last_cell; ++i)
                 merge_states[i].transition = del_y;
@@ -962,7 +962,7 @@ void lane::apply_merges(float dt, float gamma_c)
             lane *la = left_adjacency(param);
             if(la)
             {
-                int neighbor_cell = std::floor(param*la->ncells);
+                int neighbor_cell = static_cast<int>(std::floor(param*la->ncells));
                 if(merge_states[i].transition > data[i].rho)
                     merge_states[i].transition = data[i].rho;
                 if(merge_states[i].transition + la->data[neighbor_cell].rho > 1.0)
@@ -989,7 +989,7 @@ void lane::apply_merges(float dt, float gamma_c)
             lane *la = right_adjacency(param);
             if(la)
             {
-                int neighbor_cell = std::floor(param*la->ncells);
+                int neighbor_cell = static_cast<int>(std::floor(param*la->ncells));
                 if(merge_states[i].transition > data[i].rho)
                     merge_states[i].transition = data[i].rho;
                 if(merge_states[i].transition + la->data[neighbor_cell].rho > 1.0)

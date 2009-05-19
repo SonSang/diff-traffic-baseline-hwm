@@ -141,7 +141,7 @@ int line_rep::draw_data(draw_type dtype, const road_membership *rom, float &left
 
     float ncells = (t1-t0)/la->h;
 
-    int data_end = std::floor(ncells);
+    int data_end = static_cast<int>(std::floor(ncells));
     float next_leftover = 0.0f;
     if(backwards)
     {

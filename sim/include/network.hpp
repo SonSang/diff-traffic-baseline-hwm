@@ -65,14 +65,14 @@ struct carticle
     inline int turn_dir() const
     {
         assert(in_turn());
-        return copysign(1.0, motion_state);
+        return (motion_state < 0) ? -1 : 1;
     }
 
     inline void start_turn(int dir, source_sink *target)
     {
         assert(free_motion());
         assert(std::abs(dir) == 1);
-        motion_state = copysign(2.0, dir);
+        motion_state = (dir < 0) ? -2 : 2;
         turn_target = target;
     }
 

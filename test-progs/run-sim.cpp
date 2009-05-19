@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
     {
         if(la.h > 0.8*H)
         {
-            for(int i = 0; i < la.ncells/4; ++i)
+            for(int i = 0; i < static_cast<int>(la.ncells/4); ++i)
             {
                 if(drand48() > 0.5)
                     net.add_carticle(lno, drand48(), drand48()*la.speedlimit);

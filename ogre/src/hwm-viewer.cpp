@@ -814,7 +814,7 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
     bool found = false;
 
     Entity *lent = ent2;
-    for(int i = 0; i < lent->getNumSubEntities(); ++i)
+    for(int i = 0; i < static_cast<int>(lent->getNumSubEntities()); ++i)
     {
         if(lent->getSubEntity(i)->getMaterialName() == "Bodycolor")
         {
@@ -825,11 +825,11 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
             }
     }
 
-    for(int j = 0; j < ent2->getNumManualLodLevels(); ++j)
+    for(int j = 0; j < static_cast<int>(ent2->getNumManualLodLevels()); ++j)
     {
         lent = ent2->getManualLodLevel(j);
 
-        for(int i = 0; i < lent->getNumSubEntities(); ++i)
+        for(int i = 0; i < static_cast<int>(lent->getNumSubEntities()); ++i)
         {
             if(lent->getSubEntity(i)->getMaterialName() == "Bodycolor")
             {
@@ -946,7 +946,7 @@ void ogre_car_db::load_meshes()
 
         MaterialPtr bodycolor = MaterialManager::getSingleton().getByName("Bodycolor");
         ocm.materials.resize(ocm.cm->body_colors.size());
-        for(int i = 0; i < ocm.materials.size(); ++i)
+        for(int i = 0; i < static_cast<int>(ocm.materials.size()); ++i)
         {
             ocm.materials[i] = bodycolor->clone(boost::str(boost::format("Bodycolor-%1%-%2%") % current->first % i));
             ocm.materials[i]->getTechnique(0)->getPass(0)->setDiffuse(ocm.cm->body_colors[i].rgb[0], ocm.cm->body_colors[i].rgb[1], ocm.cm->body_colors[i].rgb[2], 1.0f);
