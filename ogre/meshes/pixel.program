@@ -51,6 +51,42 @@ fragment_program f_dir_fragmentLighting cg
 	}
 }
 
+vertex_program v_fragmentLighting_ref cg
+{
+	source pixel_test1.cg
+	entry_point v_fragmentLighting_ref
+	profiles vp40
+
+	default_params
+	{
+		param_named_auto modelViewProj worldviewproj_matrix
+		param_named_auto eyePositionW  camera_position
+		param_named_auto modelToWorld  world_matrix
+	}
+}
+
+fragment_program f_dir_fragmentLighting_ref cg
+{
+	source pixel_test1.cg
+	entry_point f_dir_basicLight_ref
+	profiles arbfp1
+
+	default_params
+	{
+	        param_named_auto globalAmbient  ambient_light_colour 0
+	        param_named_auto lightColor     light_diffuse_colour 0
+	        param_named_auto lightDirection light_direction_object_space 0
+		param_named_auto eyePosition    camera_position_object_space
+	        param_named_auto Ke             surface_emissive_colour
+	        param_named_auto Ka	        surface_ambient_colour
+	        param_named_auto Kd	        surface_diffuse_colour
+	        param_named_auto Ks             surface_specular_colour
+	        param_named_auto shininess      surface_shininess
+		param_named      reflectivity   float 0.5
+	}
+}
+
+
 vertex_program v_reflection cg
 {
 	source pixel_test1.cg
