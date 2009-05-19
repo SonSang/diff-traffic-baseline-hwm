@@ -124,6 +124,10 @@ struct q
             rho = 0.0f;
             y = 0.0f;
         }
+        else if(rho > 1.0f-1e-2f)
+        {
+            rho = 1.0f-1e-2f;
+        }
         else if(y > -FLT_EPSILON)
             y = 0.0f;
     }
