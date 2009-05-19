@@ -410,11 +410,8 @@ float network::sim_step()
 
     foreach(intersection &is, intersections)
     {
-        foreach(intersection::state &st, is.states)
-        {
-            foreach(lane &la, st.fict_lanes)
+        foreach(lane &la, is.states[is.current_state].fict_lanes)
                 la.update(dt);
-        }
     }
 
     foreach(lane &la, lanes)
