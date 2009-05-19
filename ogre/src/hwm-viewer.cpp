@@ -587,8 +587,8 @@ void hwm_viewer::setup_scene()
 
     camera_->setPosition(-20, 100, 0);
     camera_->lookAt(0,0,0);
-    camera_->setNearClipDistance(20);
-    camera_->setFarClipDistance(20000);
+    camera_->setNearClipDistance(100);
+    camera_->setFarClipDistance(30000);
 
     root_->getAutoCreatedWindow()->addViewport(camera_);
 
