@@ -647,30 +647,51 @@ public:
                 glPushMatrix();
                 glMultMatrixf(mat);
                 draw_car();
-                glPopMatrix();
 
-                glColor3f(0.0, 1.0, 0.0);
-                float x = t;
-                lane *left_lane = la.left_adjacency(x);
+                float left_x = t;
+                lane *left_lane = la.left_adjacency(left_x);
+
+                if(left_lane)
+                {
+                    glColor3f(0.0f, 0.0f, 1.0f);
+                    glBegin(GL_LINES);
+                    glVertex2f(0.0f, 0.0f);
+                    glVertex2f(0.0f, LANE_WIDTH);
+                    glEnd();
+                }
+
+                float right_x = t;
+                lane *right_lane = la.right_adjacency(right_x);
+
+                if(right_lane)
+                {
+                    glColor3f(0.0f, 0.0f, 1.0f);
+                    glBegin(GL_LINES);
+                    glVertex2f(0.0f, 0.0f);
+                    glVertex2f(0.0f, -LANE_WIDTH);
+                    glEnd();
+                }
+
+                glPopMatrix();
 
                 if(left_lane)
                 {
                     point lp;
-                    left_lane->get_point(x, lp);
+                    left_lane->get_point(left_x, lp);
 
+                    glColor3f(0.0, 1.0, 0.0);
                     glBegin(GL_LINES);
                     glVertex2fv(&(p.x));
                     glVertex2fv(&(lp.x));
                     glEnd();
                 }
-                x = t;
-                lane *right_lane = la.right_adjacency(x);
 
                 if(right_lane)
                 {
                     point rp;
-                    right_lane->get_point(x, rp);
+                    right_lane->get_point(right_x, rp);
 
+                    glColor3f(0.0, 1.0, 0.0);
                     glBegin(GL_LINES);
                     glVertex2fv(&(p.x));
                     glVertex2fv(&(rp.x));
