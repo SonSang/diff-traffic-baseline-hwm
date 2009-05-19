@@ -81,7 +81,7 @@ class hwm_frame_listener;
 
 struct hwm_viewer
 {
-    hwm_viewer(const char *anim_file, const char *carpath);
+    hwm_viewer(const char *anim_file, const char *carpath, const char *terrainpath);
 
     void go();
 
@@ -99,7 +99,7 @@ struct hwm_viewer
 
     void initialize_resource_groups();
 
-    void load_terrain(Ogre::SceneNode *sn);
+    void load_terrain(const std::string &dir, Ogre::SceneNode *sn);
 
     void setup_scene();
 
@@ -134,6 +134,7 @@ struct hwm_viewer
     Caelum::CaelumSystem *caelum_system_;
 
     ogre_car_db *o_cars_;
+    std::string terrain_dir_;
 };
 
 #endif

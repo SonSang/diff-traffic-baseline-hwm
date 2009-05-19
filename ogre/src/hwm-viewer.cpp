@@ -3,6 +3,9 @@
 #include <cmath>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include "boost/algorithm/string.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <OgreProgressiveMesh.h>
 #include <OgreShadowCameraSetupLiSPSM.h>
 
@@ -437,7 +440,7 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(const char *anim_file, const char *carpath) : nactive_cars_(0), car_animation_state_(0), caelum_system_(0)
+hwm_viewer::hwm_viewer(const char *anim_file, const char *carpath, const char *terrainpath) : nactive_cars_(0), car_animation_state_(0), caelum_system_(0), terrain_dir_(terrainpath)
 {
     o_cars_ = new ogre_car_db();
     o_cars_->add_dir(carpath);
@@ -534,41 +537,28 @@ void hwm_viewer::initialize_resource_groups()
     ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
-static const char *statesville_mesh[] = {
-    "01_-_Default",
-    "02_-_Default",
-    "03_-_Defauldfgt",
-    "03_-_Default",
-    "04_-_Defaultdf",
-    "04_-_Default",
-    "05_-_Defaultghkj",
-    "05_-_Defaultghkjs",
-    "05_-_Default",
-    "07_-_Default",
-    "08_-_Defadfultghj",
-    "08_-_Defaultghdfj",
-    "08_-_Defaultghj",
-    "08_-_Default",
-    "09_-_Default",
-    "13_-_Default",
-    "19_-_Defaultcv",
-    "19_-_Default",
-    "xcdfhdd",
-    "xcdfhd",
-    "xcdfh",
-    "xc"
-};
+namespace bf = boost::filesystem;
 
-void hwm_viewer::load_terrain(SceneNode *sn)
+void hwm_viewer::load_terrain(const std::string &dir, SceneNode *sn)
 {
-    for(size_t i = 0; i < sizeof(statesville_mesh)/sizeof(statesville_mesh[0]); ++i)
+    bf::path srcdir(dir);
+    if(bf::is_directory(srcdir))
     {
-        const char *str = statesville_mesh[i];
-        Entity *ent = scene_manager_->createEntity(boost::str(boost::format("%1%-entity") % str), boost::str(boost::format("%1%.mesh") % str));
-        ent->setCastShadows(false);
-        ent->setMaterialName(str);
-        SceneNode *node = sn->createChildSceneNode();
-        node->attachObject(ent);
+        boost::regex re(".*\\.mesh");
+        bf::directory_iterator end_itr;
+        for( bf::directory_iterator itr(srcdir);
+             itr != end_itr;
+             ++itr)
+        {
+            if(itr->path().has_filename() && boost::regex_match(itr->path().filename(), re))
+            {
+                const std::string &str = itr->path().stem();
+                Entity *ent = scene_manager_->createEntity(boost::str(boost::format("%1%-entity") % str), itr->path().filename());
+                ent->setCastShadows(false);
+                SceneNode *node = sn->createChildSceneNode();
+                node->attachObject(ent);
+            }
+        }
     }
 }
 
@@ -599,14 +589,24 @@ void hwm_viewer::setup_scene()
     float network_node_scale = 10.0f;
 
     SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
-    ground_node->translate(1852.340698, 0.000000, -257.709320);
+    ground_node->translate(5743.000000, 0.000000, 752.000000);
     ground_node->scale(network_node_scale, network_node_scale, network_node_scale);
+
+    load_terrain(terrain_dir_, ground_node);
+
+    StaticGeometry *static_geom = scene_manager_->createStaticGeometry("static-ground");
+
+    static_geom->addSceneNode(ground_node);
+
+    static_geom->setRegionDimensions(Vector3(20000, 20000, 20000));
+
+    static_geom->build();
+
+    scene_manager_->destroySceneNode(ground_node);
 
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     o_cars_->load_meshes();
-
-    load_terrain(ground_node);
 }
 
 anim_car& hwm_viewer::access_sim_car(int id)
@@ -763,13 +763,13 @@ void hwm_viewer::start_render_loop()
 
 int main(int argc, char **argv)
 {
-    if(argc < 3)
+    if(argc < 4)
     {
-        fprintf(stderr, "Usage: %s <car-anim-file> <car-db dir>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <car-anim-file> <car-db dir> <terrain-path>\n", argv[0]);
         exit(1);
     }
 
-    hwm_viewer hv(argv[1], argv[2]);
+    hwm_viewer hv(argv[1], argv[2], argv[3]);
     hv.go();
 
     return 0;
