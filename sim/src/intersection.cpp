@@ -268,7 +268,7 @@ bool intersection::xml_read(xmlTextReaderPtr reader)
     return read[0].count == 1 && read[1].count == 1;
 }
 
-bool intersection::gridlocked() const
+bool intersection::occupied() const
 {
     foreach(const lane &la, states[current_state].fict_lanes)
     {
@@ -279,10 +279,15 @@ bool intersection::gridlocked() const
     return false;
 }
 
+bool intersection::gridlocked() const
+{
+    return occupied() && current_time >= states[current_state].duration;
+}
+
 void intersection::update_time(float dt)
 {
     current_time += dt;
-    while(!gridlocked() && current_time >= states[current_state].duration)
+    while(!occupied() && current_time >= states[current_state].duration)
     {
         current_time -= states[current_state].duration;
         next_state();
@@ -300,10 +305,10 @@ int intersection::next_state()
 
 lane* intersection::incoming_state(int intern_ref) const
 {
-    const state &cstate = states[current_state];
-
-    if(intern_ref >= 0)
-        return cstate.in_states[intern_ref].fict_lane;
+    if(gridlocked())
+        return 0;
+    else if(intern_ref >= 0)
+        return states[current_state].in_states[intern_ref].fict_lane;
     else
     {
         assert(-intern_ref-1 < static_cast<int>(outgoing.size()));
@@ -313,10 +318,11 @@ lane* intersection::incoming_state(int intern_ref) const
 
 lane* intersection::outgoing_state(int intern_ref) const
 {
-    const state &cstate = states[current_state];
+    if(gridlocked())
+        return 0;
+    else if(intern_ref >= 0)
+        return states[current_state].out_states[intern_ref].fict_lane;
 
-    if(intern_ref >= 0)
-        return cstate.out_states[intern_ref].fict_lane;
     else
     {
         assert(-intern_ref-1 < static_cast<int>(incoming.size()));

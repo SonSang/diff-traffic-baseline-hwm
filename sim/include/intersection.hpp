@@ -36,6 +36,7 @@ struct intersection
 
     bool xml_read(xmlTextReaderPtr reader);
 
+    bool occupied() const;
     bool gridlocked() const;
     void update_time(float dt);
 

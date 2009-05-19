@@ -884,7 +884,8 @@ public:
                     break;
                 case 't':
                     foreach(intersection &is, net->intersections)
-                        is.next_state();
+                        if(!is.occupied())
+                            is.next_state();
                     break;
                 default:
                     return Fl_Gl_Window::handle(event);
