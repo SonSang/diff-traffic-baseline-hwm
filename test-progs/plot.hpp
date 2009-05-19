@@ -26,6 +26,8 @@ struct plotter1d
 
     virtual void draw(cairo_t * cxt, float l, float r, float linewidth, drawtype d=SMOOTH) = 0;
 
+    virtual ~plotter1d() {};
+
     int stride;
     float * data;
 
@@ -37,6 +39,7 @@ struct plotter1d
 struct cairo_plotter1d : public plotter1d
 {
     virtual void draw(cairo_t *cxt, float l, float r, float linewidth, drawtype d=SMOOTH);
+    virtual ~cairo_plotter1d() {};
 };
 
 struct plot_tex

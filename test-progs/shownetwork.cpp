@@ -284,9 +284,6 @@ void lane::draw_data(draw_type dtype, float gamma_c) const
     int p = -1;
     while(1)
     {
-        float offsets[2] = {rom->lane_position-LANE_WIDTH*0.5,
-                            rom->lane_position+LANE_WIDTH*0.5};
-
         count += rom->parent_road.dp->rep.draw_data(dtype, rom, lenused, count, this, gamma_c);
 
         ++p;
@@ -958,8 +955,6 @@ int main(int argc, char * argv[])
     last_dump = net->global_time;
     frameno++;
 
-    float rng[2] = {0.0f, 1.0f};
-    float offsets[2];
     t = 0.0f;
 
     foreach(const lane &la, net->lanes)

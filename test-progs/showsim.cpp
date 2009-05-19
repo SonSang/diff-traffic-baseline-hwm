@@ -31,8 +31,6 @@ struct lane
     q *data;
 };
 
-static const char * fieldnames[] = {"rho", "y"};
-
 static spatial_view *sv;
 static plot_tex pt;
 
@@ -239,8 +237,6 @@ int main(int argc, char * argv[])
             x += la.h;
         }
     }
-
-    float the_time = 0.0f;
 
     sv = new spatial_view();
     pt.reset(1000, 500);

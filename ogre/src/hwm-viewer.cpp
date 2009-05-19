@@ -819,7 +819,7 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
         if(lent->getSubEntity(i)->getMaterialName() == "Bodycolor")
         {
             lent->getSubEntity(i)->setMaterialName(materials[matpick]->getName());
-            const ColourValue &c = lent->getSubEntity(i)->getMaterial()->getTechnique(0)->getPass(0)->getDiffuse();
+            lent->getSubEntity(i)->getMaterial()->getTechnique(0)->getPass(0)->getDiffuse();
             found = true;
             break;
             }
@@ -834,7 +834,7 @@ anim_car ogre_car_model::create_car(SceneManager *sm, SceneNode *base, const std
             if(lent->getSubEntity(i)->getMaterialName() == "Bodycolor")
             {
                 lent->getSubEntity(i)->setMaterialName(materials[matpick]->getName());
-                const ColourValue &c = lent->getSubEntity(i)->getMaterial()->getTechnique(0)->getPass(0)->getDiffuse();
+                lent->getSubEntity(i)->getMaterial()->getTechnique(0)->getPass(0)->getDiffuse();
                 found = true;
                 break;
             }

@@ -40,10 +40,5 @@ int main(int argc, char * argv[])
     r.to_string(buff, 1024);
     printf("%s", buff);
 
-    float rng[2] = {0.5f, 0.75f};
-    float offsets[2] = {0.05f, 0.25f};
-
-    //    r.lane_mesh(rng, 0.15f, offsets);
-
     return 0;
 }
