@@ -399,8 +399,10 @@ float lane::velocity(float t, float gamma_c) const
     float u[2];
     float rho[2];
 
-    assert(cell > -2);
-    assert(cell < static_cast<int>(ncells+1));
+    if(cell < -1)
+        cell = -1;
+    else if(cell > static_cast<int>(ncells+1))
+        cell = static_cast<int>(ncells+1);
 
     if(cell < 0)
     {
