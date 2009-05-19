@@ -81,7 +81,7 @@ class hwm_frame_listener;
 
 struct hwm_viewer
 {
-    hwm_viewer(network *net, const char *anim_file, const char *carpath);
+    hwm_viewer(const char *anim_file, const char *carpath);
 
     void go();
 
@@ -98,8 +98,6 @@ struct hwm_viewer
     void create_render_window();
 
     void initialize_resource_groups();
-
-    void initialize_network();
 
     void load_terrain(Ogre::SceneNode *sn);
 
@@ -124,8 +122,6 @@ struct hwm_viewer
 
     Ogre::Camera *camera_;
     Ogre::SceneManager *scene_manager_;
-
-    network *net_;
 
     std::vector<anim_car> lane_cars_;
     std::vector<anim_car> sim_cars_;

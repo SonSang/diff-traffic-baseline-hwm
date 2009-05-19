@@ -437,7 +437,7 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(network *net, const char *anim_file, const char *carpath) : net_(net), nactive_cars_(0), car_animation_state_(0), caelum_system_(0)
+hwm_viewer::hwm_viewer(const char *anim_file, const char *carpath) : nactive_cars_(0), car_animation_state_(0), caelum_system_(0)
 {
     o_cars_ = new ogre_car_db();
     o_cars_->add_dir(carpath);
@@ -454,7 +454,6 @@ void hwm_viewer::go()
     setup_render_system();
     create_render_window();
     initialize_resource_groups();
-    initialize_network();
     setup_scene();
     start_caelum();
     setup_CEGUI();
@@ -533,10 +532,6 @@ void hwm_viewer::initialize_resource_groups()
 {
     TextureManager::getSingleton().setDefaultNumMipmaps(5);
     ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
-}
-
-void hwm_viewer::initialize_network()
-{
 }
 
 static const char *statesville_mesh[] = {
@@ -769,31 +764,14 @@ void hwm_viewer::start_render_loop()
 
 int main(int argc, char **argv)
 {
-    network *net = new network;
-
-    if(argc < 4)
+    if(argc < 3)
     {
-        fprintf(stderr, "Usage: %s <network-file> <car-anim-file> <car-db dir>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <car-anim-file> <car-db dir>\n", argv[0]);
         exit(1);
     }
 
-    if(!net->load_from_xml(argv[1]))
-    {
-        fprintf(stderr, "Couldn't load network %s\n", argv[1]);
-        exit(1);
-    }
-
-    net->calc_bounding_box();
-    point pt;
-    pt.x = -(net->bb[0]+net->bb[1])*0.5f;
-    pt.y = -(net->bb[2]+net->bb[3])*0.5f;
-    pt.z = 0.0f;
-    net->translate(pt);
-
-    hwm_viewer hv(net, argv[2], argv[3]);
+    hwm_viewer hv(argv[1], argv[2]);
     hv.go();
-
-    delete net;
 
     return 0;
 }
