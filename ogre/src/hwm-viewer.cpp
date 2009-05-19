@@ -526,6 +526,7 @@ void hwm_viewer::start_caelum()
 void hwm_viewer::create_render_window()
 {
     root_->initialise(true, "hwm viewer");
+    root_->getAutoCreatedWindow()->reposition(0,0);
 }
 
 void hwm_viewer::initialize_resource_groups()
