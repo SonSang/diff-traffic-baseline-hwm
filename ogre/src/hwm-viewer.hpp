@@ -12,6 +12,7 @@
 #include "OgreCEGUIRenderer.h"
 
 #include "Caelum.h"
+#include "camcorder.hpp"
 #include "network.hpp"
 
 struct hwm_viewer;
@@ -103,6 +104,8 @@ struct hwm_viewer
 
     void setup_scene();
 
+    void setup_camcorder();
+
     anim_car& access_sim_car(int id);
 
     void create_lane_mesh(const lane &la, const std::string &name, float bb[6]);
@@ -132,6 +135,8 @@ struct hwm_viewer
     Ogre::AnimationState *car_animation_state_;
 
     Caelum::CaelumSystem *caelum_system_;
+
+    CamcorderHelper *camcorder_;
 
     ogre_car_db *o_cars_;
     std::string terrain_dir_;

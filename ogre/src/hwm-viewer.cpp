@@ -146,6 +146,8 @@ public:
 
 	virtual bool processUnbufferedKeyInput(const FrameEvent &evt)
 	{
+        hwm_v_->camcorder_->processUnbufferedKeyboard(keyboard_, evt.timeSinceLastFrame);
+        hwm_v_->camcorder_->update(evt.timeSinceLastFrame);
 
 		if(keyboard_->isKeyDown(OIS::KC_A))
 			translate_vector_.x = -move_scale_;	// Move camera left
@@ -458,6 +460,7 @@ void hwm_viewer::go()
     create_render_window();
     initialize_resource_groups();
     setup_scene();
+    setup_camcorder();
     start_caelum();
     setup_CEGUI();
     create_frame_listener();
@@ -466,6 +469,7 @@ void hwm_viewer::go()
 
 hwm_viewer::~hwm_viewer()
 {
+    delete camcorder_;
     delete CEGUI_system_;
     delete CEGUI_renderer_;
     delete o_cars_;
@@ -607,6 +611,13 @@ void hwm_viewer::setup_scene()
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     o_cars_->load_meshes();
+}
+
+void hwm_viewer::setup_camcorder()
+{
+    camcorder_ = new CamcorderHelper();
+    camcorder_->init(root_->getAutoCreatedWindow()->getViewport(0), camera_);
+    camcorder_->setEnabled(true);
 }
 
 anim_car& hwm_viewer::access_sim_car(int id)
