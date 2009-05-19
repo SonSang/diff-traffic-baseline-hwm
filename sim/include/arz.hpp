@@ -436,7 +436,7 @@ inline void inhomogeneous_riemann(riemann_solution *rs,
 {
     full_q q_m_l, q_m_r;
 
-    printf("q_r->u - q_l->u + q_l->u_eq: %f\n", q_r->u - q_l->u + q_l->u_eq);
+    //    printf("q_r->u - q_l->u + q_l->u_eq: %f\n", q_r->u - q_l->u + q_l->u_eq);
 
     q_m_r.from_rho_u(inv_eq_u(q_r->u - q_l->u + q_l->u_eq, 1.0f/u_max_r, inv_gamma),
                      q_r->u,
@@ -449,27 +449,27 @@ inline void inhomogeneous_riemann(riemann_solution *rs,
                      u_max_l,
                      gamma);
 
-    printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
-    printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
-    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
-    printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
-    printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
-           lambda_0(q_l->rho, q_l->u, u_max_l, gamma),
-           lambda_0(q_m_l.rho, q_m_l.u, u_max_l, gamma),
-           lambda_0(q_m_r.rho, q_m_r.u, u_max_r, gamma),
-           lambda_0(q_r->rho, q_r->u, u_max_r, gamma));
+    // printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
+    // printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
+    // printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
+    // printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
+    // printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
+    //        lambda_0(q_l->rho, q_l->u, u_max_l, gamma),
+    //        lambda_0(q_m_l.rho, q_m_l.u, u_max_l, gamma),
+    //        lambda_0(q_m_r.rho, q_m_r.u, u_max_r, gamma),
+    //        lambda_0(q_r->rho, q_r->u, u_max_r, gamma));
 
     memset(rs, 0, sizeof(riemann_solution));
 
     if(std::abs(q_m_l.rho - q_l->rho) < FLT_EPSILON)
     {
-        printf("numer %f, denom %f\n", (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u),(q_m_l.rho - q_l->rho));
+        //        printf("numer %f, denom %f\n", (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u),(q_m_l.rho - q_l->rho));
         rs->speeds[0] = 0.0f;
     }
     else
         rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
 
-    printf("s = %f\n", rs->speeds[0]);
+    //    printf("s = %f\n", rs->speeds[0]);
 
     rs->speeds[1] = q_r->u;
 
@@ -584,27 +584,27 @@ inline void lebacque_inhomogeneous_riemann(riemann_solution *rs,
     q_m_l.y = to_y(q_m_l.rho, q_m_l.u, u_max_l, gamma);
     q_m_r.y = to_y(q_m_r.rho, q_m_r.u, u_max_r, gamma);
 
-    printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
-    printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
-    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
-    printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
-    printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
-           lambda_0(q_l->rho, q_l->u, u_max_l, gamma),
-           lambda_0(q_m_l.rho, q_m_l.u, u_max_l, gamma),
-           lambda_0(q_m_r.rho, q_m_r.u, u_max_r, gamma),
-           lambda_0(q_r->rho, q_r->u, u_max_r, gamma));
+    // printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
+    // printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->rho,q_m_l.rho, q_m_r.rho,q_r->rho);
+    // printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->y,  q_m_l.y, q_m_r.y,    q_r->y  );
+    // printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l->u,  q_m_l.u, q_m_r.u,    q_r->u  );
+    // printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
+    //        lambda_0(q_l->rho, q_l->u, u_max_l, gamma),
+    //        lambda_0(q_m_l.rho, q_m_l.u, u_max_l, gamma),
+    //        lambda_0(q_m_r.rho, q_m_r.u, u_max_r, gamma),
+    //        lambda_0(q_r->rho, q_r->u, u_max_r, gamma));
 
     memset(rs, 0, sizeof(riemann_solution));
 
     if(std::abs(q_m_l.rho - q_l->rho) < FLT_EPSILON)
     {
-        printf("numer %f, denom %f\n", (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u),(q_m_l.rho - q_l->rho));
+        //        printf("numer %f, denom %f\n", (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u),(q_m_l.rho - q_l->rho));
         rs->speeds[0] = 0.0f;
     }
     else
         rs->speeds[0] = (q_m_l.rho * q_m_l.u - q_l->rho * q_l->u)/(q_m_l.rho - q_l->rho);
 
-    printf("s = %f\n", rs->speeds[0]);
+    //    printf("s = %f\n", rs->speeds[0]);
 
     rs->speeds[1] = q_r->u;
 

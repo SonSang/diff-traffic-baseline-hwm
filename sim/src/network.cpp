@@ -403,8 +403,6 @@ float network::sim_step()
         maxspeed = std::max(maxspeed, speed);
     }
 
-    printf("maxspeed: %f\n", maxspeed);
-
     float dt = min_h/maxspeed;
 
     foreach(lane &la, lanes)

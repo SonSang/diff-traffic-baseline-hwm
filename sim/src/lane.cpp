@@ -947,7 +947,6 @@ void lane::advance_carticles(float dt, float gamma_c)
             {
                 turn_curve t_solve((x_end-to_ss)/x_end);
                 float t = secant<turn_curve>(0.1f, 0.5f, 0.0f, 1.0f, 1e-4f, 100, t_solve);
-                printf("t: %f\n", t);
                 float prev_y = cart.y;
                 cart.y = 1.0/LANE_WIDTH*turn_curve::y_end(cart.u)*turn_curve::y(t)*cart.turn_dir();
                 cart.theta = turn_curve::theta(t)*cart.turn_dir();
