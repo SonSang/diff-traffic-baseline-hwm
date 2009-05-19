@@ -529,7 +529,7 @@ inline float inv_demand(float flow, float relv, float u_max, float gamma)
     float crit = critical_density(relv, u_max, gamma);
     float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
 
-    if(flow >= max_flow)
+    if(flow + 1e-3f >= max_flow)
         return crit;
 
     inv_fd solver(flow, relv, u_max, gamma);
@@ -541,7 +541,7 @@ inline float inv_supply(float flow, float relv, float u_max, float gamma)
     float crit = critical_density(relv, u_max, gamma);
     float max_flow = fundamental_diagram(crit, relv, u_max, gamma);
 
-    if(flow >= max_flow)
+    if(flow + 1e-3f >= max_flow)
         return crit;
 
     inv_fd solver(flow, relv, u_max, gamma);
