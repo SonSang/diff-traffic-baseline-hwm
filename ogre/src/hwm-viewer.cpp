@@ -927,6 +927,7 @@ void ogre_car_db::load_meshes()
         {
             ocm.materials[i] = bodycolor->clone(boost::str(boost::format("Bodycolor-%1%-%2%") % current->first % i));
             ocm.materials[i]->getTechnique(0)->getPass(0)->setDiffuse(ocm.cm->body_colors[i].rgb[0], ocm.cm->body_colors[i].rgb[1], ocm.cm->body_colors[i].rgb[2], 1.0f);
+            ocm.materials[i]->getTechnique(0)->getPass(0)->setAmbient(ocm.cm->body_colors[i].rgb[0], ocm.cm->body_colors[i].rgb[1], ocm.cm->body_colors[i].rgb[2]);
             ocm.materials[i]->compile();
         }
 
