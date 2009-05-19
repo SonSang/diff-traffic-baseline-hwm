@@ -217,8 +217,8 @@ inline void riemann(riemann_solution *rs,
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = q_m.u; //lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
 
-        assert(0.0f < lambda0_m);
-        assert(lambda0_l < lambda0_m);
+        // assert(0.0f < lambda0_m);
+        // assert(lambda0_l < lambda0_m);
 
         rs->speeds[0] = 0.5f*(lambda0_l + lambda0_m);
         rs->waves[0].rho = q_m.rho - q_l->rho;
@@ -306,7 +306,7 @@ inline void riemann(riemann_solution *rs,
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
 
-        assert(lambda0_l < lambda0_m);
+        // assert(lambda0_l < lambda0_m);
 
         rs->speeds[0] = 0.5f*(lambda0_l + lambda0_m);
         rs->waves[0].rho = q_m.rho - q_l->rho;
@@ -337,8 +337,8 @@ inline void riemann(riemann_solution *rs,
         float lambda0_l = lambda_0(q_l->rho, q_l->u, u_max, gamma);
         float lambda0_m = q_m.u; //lambda_0(q_m.rho,  q_m.u,  u_max, gamma);
 
-        assert(0.0f < lambda0_m);
-        assert(lambda0_l < lambda0_m);
+        // assert(0.0f < lambda0_m);
+        // assert(lambda0_l < lambda0_m);
 
         rs->speeds[0] = 0.5f*(lambda0_l + lambda0_m);
 
@@ -358,7 +358,7 @@ inline void riemann(riemann_solution *rs,
             q_0 = &q_m;
         }
     }
-    assert(rs->speeds[0] <= rs->speeds[1]);
+    // assert(rs->speeds[0] <= rs->speeds[1]);
 
     rs->fluct_l.rho = q_0->rho*q_0->u - q_l->rho*q_l->u;
     rs->fluct_l.y   = q_0->y  *q_0->u - q_l->y  *q_l->u;
