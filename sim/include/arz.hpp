@@ -117,8 +117,14 @@ inline float centered_rarefaction_u(float rho_l, float u_l, float u_max, float g
 
 struct q
 {
+    bool check() const
+    {
+        return std::isfinite(rho) && std::isfinite(y);
+    }
+
     inline void fix()
     {
+        assert(check());
         if(rho < 1e-3)
         {
             rho = 0.0f;
@@ -181,6 +187,13 @@ inline void centered_rarefaction(full_q *q_e, const full_q *q_l,
 
 struct riemann_solution
 {
+    bool check() const
+    {
+        return waves[0].check() && waves[1].check() &&
+            std::isfinite(speeds[0]) && std::isfinite(speeds[1]) &&
+            fluct_l.check() && fluct_r.check();
+    }
+
     q waves[2];
     float speeds[2];
     q fluct_l;

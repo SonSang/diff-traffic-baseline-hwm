@@ -407,8 +407,7 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
                    start->rs + start->ncells,
                    sizeof(riemann_solution));
 
-            assert(std::isfinite(end->rs->speeds[0]));
-            assert(std::isfinite(end->rs->speeds[1]));
+            assert(end->rs[0].check());
 
             maxspeed = std::max(maxspeed, std::max(std::abs(end->rs->speeds[0]), std::abs(end->rs->speeds[1])));
         }
@@ -445,8 +444,7 @@ float intersection::collect_riemann(float gamma_c, float inv_gamma)
                    start->rs + start->ncells,
                    sizeof(riemann_solution));
 
-            assert(std::isfinite(end->rs->speeds[0]));
-            assert(std::isfinite(end->rs->speeds[1]));
+            assert(end->rs[0].check());
 
             maxspeed = std::max(maxspeed, std::max(std::abs(end->rs->speeds[0]), std::abs(end->rs->speeds[1])));
         }

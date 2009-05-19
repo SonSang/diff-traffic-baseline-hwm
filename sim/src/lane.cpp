@@ -540,11 +540,12 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
                            gamma_c,
                            inv_gamma);
 
+        assert(rs[0].check());
+
         // we know that maxspeed previously was 0, and
         // that starvation_riemann has a nonnegative speed in speeds[1]
         // and nothing in speeds[0]
         maxspeed = rs[0].speeds[1];
-        assert(std::isfinite(maxspeed));
     }
     else
         memset(rs, 0, sizeof(riemann_solution));
@@ -562,9 +563,8 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
                 gamma_c,
                 inv_gamma);
 
+        assert(rs[i].check());
         maxspeed = std::max(maxspeed, std::max(std::abs(rs[i].speeds[0]), std::abs(rs[i].speeds[1])));
-        assert(std::isfinite(rs[i].speeds[0]));
-        assert(std::isfinite(rs[i].speeds[1]));
 
         std::swap(fq[0], fq[1]);
     }
@@ -578,10 +578,12 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
                      gamma_c,
                      inv_gamma);
 
+        assert(rs[ncells].check());
+
         // we know that stop_riemann has a speed in speeds[0]
         // and nothing in speeds[1]
         maxspeed = std::max(maxspeed, std::abs(rs[ncells].speeds[0]));
-        assert(std::isfinite(rs[ncells].speeds[0]));
+
     }
     else
         memset(rs+ncells, 0, sizeof(riemann_solution));
@@ -602,7 +604,6 @@ void lane::update(float dt)
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
         data[i].y   -= data[i].y*coeff*relaxation_fac;
-        assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
         data[i].fix();
         return;
@@ -613,7 +614,6 @@ void lane::update(float dt)
     data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
     data[i].y   -= data[i].y*coeff*relaxation_fac;
-    assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
     data[i].fix();
 
@@ -623,7 +623,6 @@ void lane::update(float dt)
         data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
         data[i].y   -= data[i].y*coeff*relaxation_fac;
-        assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
         data[i].fix();
     }
@@ -632,7 +631,6 @@ void lane::update(float dt)
     data[i].y   -= coeff*(rs[i].fluct_r.y   + rs[i+1].fluct_l.y);
 
     data[i].y   -= data[i].y*coeff*relaxation_fac;
-    assert(std::isfinite(data[i].rho) && std::isfinite(data[i].y));
 
     data[i].fix();
 }
