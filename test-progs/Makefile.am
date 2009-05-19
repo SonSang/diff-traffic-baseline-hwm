@@ -1,9 +1,9 @@
 AM_CXXFLAGS = -I$(top_srcdir)/sim/include $(BOOST_CPPFLAGS) $(LIBXML2_CFLAGS)
 ADD_LIBS = $(top_builddir)/sim/src/libhwm_net.la
 
-EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp road-geom.cpp
+EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp road-geom.cpp run-sim.cpp
 
-noinst_PROGRAMS = interval-test inhomo-test lane-test xml-test car-data-test road-geom
+noinst_PROGRAMS = interval-test inhomo-test lane-test xml-test car-data-test road-geom run-sim
 
 interval_test_SOURCES = interval-test.cpp
 interval_test_LDADD   = $(ADD_LIBS)
@@ -22,6 +22,9 @@ car_data_test_LDADD   = $(ADD_LIBS)
 
 road_geom_SOURCES = road-geom.cpp
 road_geom_LDADD   = $(ADD_LIBS)
+
+run_sim_SOURCES = run-sim.cpp
+run_sim_LDADD   = $(ADD_LIBS)
 
 if DO_VISUAL
 noinst_PROGRAMS += showlane shownetwork showsim
