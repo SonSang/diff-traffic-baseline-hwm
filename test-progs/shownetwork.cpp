@@ -54,9 +54,8 @@ static void init_draw_car()
         for(int j = 0; j < 4; ++j)
             glVertex3fv(&(verts[faces[i][j]][0]));
     glEnd();
-
-    glPopMatrix();
     glEndList();
+    glPopMatrix();
 }
 
 static void draw_car()
