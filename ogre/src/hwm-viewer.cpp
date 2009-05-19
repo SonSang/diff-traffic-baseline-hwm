@@ -1077,6 +1077,7 @@ AnimationState* car_time_series::animate(const std::string &name, hwm_viewer *hv
 
     AnimationState *ani_s = hv->scene_manager_->createAnimationState(name);
     ani_s->setEnabled(true);
+    ani_s->setLoop(false);
     return ani_s;
 }
 
