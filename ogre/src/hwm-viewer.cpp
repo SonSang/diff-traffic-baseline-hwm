@@ -700,7 +700,7 @@ void hwm_viewer::setup_scene()
     static_geom->addSceneNode(shadow_node);
     static_geom->setRegionDimensions(Vector3(20000, 20000, 20000));
     static_geom->build();
-    static_geom->setCastShadows(true);
+    //static_geom->setCastShadows(true);
     scene_manager_->destroySceneNode(shadow_node);
 
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
