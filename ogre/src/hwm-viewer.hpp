@@ -82,7 +82,7 @@ class hwm_frame_listener;
 
 struct hwm_viewer
 {
-    hwm_viewer(const char *anim_file, const char *carpath, const char *terrainpath);
+    hwm_viewer(const char *anim_file, const char *carpath, const char *terrainpath, const char *component_file);
 
     void go();
 
@@ -101,6 +101,8 @@ struct hwm_viewer
     void initialize_resource_groups();
 
     void load_terrain(const std::string &dir, Ogre::SceneNode *reg, Ogre::SceneNode *shadow);
+
+    void load_components(const std::string &file, Ogre::SceneNode *reg, Ogre::SceneNode *shadow);
 
     void setup_scene();
 
@@ -140,6 +142,7 @@ struct hwm_viewer
 
     ogre_car_db *o_cars_;
     std::string terrain_dir_;
+    std::string component_file_;
 };
 
 #endif

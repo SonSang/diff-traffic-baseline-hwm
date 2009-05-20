@@ -442,7 +442,7 @@ protected:
     hwm_viewer *hwm_v_;
 };
 
-hwm_viewer::hwm_viewer(const char *anim_file, const char *carpath, const char *terrainpath) : nactive_cars_(0), car_animation_state_(0), caelum_system_(0), terrain_dir_(terrainpath)
+hwm_viewer::hwm_viewer(const char *anim_file, const char *carpath, const char *terrainpath, const char *component_file) : nactive_cars_(0), car_animation_state_(0), caelum_system_(0), terrain_dir_(terrainpath), component_file_(component_file)
 {
     o_cars_ = new ogre_car_db();
     o_cars_->add_dir(carpath);
@@ -583,6 +583,73 @@ void hwm_viewer::load_terrain(const std::string &dir, SceneNode *regular, SceneN
     }
 }
 
+static bool component_shadow_name(const std::string &name)
+{
+    static boost::regex re("(?:2?light(?:Support)?)|(?:[1-9]?sign(:?01)?)|(?:(?:(?:left)|(?:right))(?:Railing)?Post)");
+    return boost::regex_match(name, re);
+}
+
+#define GETS_BUFFER_SIZE 1024
+#define GETS_BUFFER_SIZE_STR "1024"
+
+void hwm_viewer::load_components(const std::string &file, SceneNode *regular, SceneNode *shadow)
+{
+    char gets_buff[GETS_BUFFER_SIZE];
+
+    FILE *fp = fopen(file.c_str(), "r");
+
+    assert(fp);
+
+    size_t count = 0;
+    while(!feof(fp))
+    {
+        char *res = fgets(gets_buff, GETS_BUFFER_SIZE, fp);
+        if(res != gets_buff)
+            break;
+
+        size_t offs = 0;
+        while(!isspace(res[offs]) && offs < GETS_BUFFER_SIZE)
+            ++offs;
+        assert(isspace(res[offs]));
+        res[offs] = 0;
+
+        char *next_res = res + offs + 1;
+
+        float pos[3];
+        Matrix3 rot;
+        sscanf(next_res, "%f %f %f %f %f %f %f %f %f %f %f %f\n",
+               pos, pos+1, pos+2,
+               &(rot[0][0]), &(rot[0][1]), &(rot[0][2]), &(rot[1][0]), &(rot[1][1]), &(rot[1][2]), &(rot[2][0]), &(rot[2][1]), &(rot[2][2]));
+               //               quat, quat+1, quat+2, quat+3);
+        Entity *ent = scene_manager_->createEntity(boost::str(boost::format("%1%-%2%") % res % count), boost::str(boost::format("%1%.mesh") % res));
+
+        //        LogManager::getSingleton().logMessage(boost::str(boost::format("Making %1%-%2% %3% %4% %5% %6% %7% %8% %9% %10% %11% %12% %13% %14%") % res % count % pos[0] % pos[1] % pos[2] % rot[0][0]% rot[0][1]% rot[0][2]% rot[1][0]% rot[1][1]% rot[1][2]% rot[2][0]% rot[2][1]% rot[2][2]));
+
+        SceneNode *node;
+        if(component_shadow_name(res))
+        {
+            ent->setCastShadows(true);
+            node = shadow->createChildSceneNode();
+        }
+        else
+        {
+            ent->setCastShadows(false);
+            node = regular->createChildSceneNode();
+        }
+
+        node->setPosition(pos[0], pos[2], -pos[1]);
+
+        Quaternion r(rot);
+
+        node->setOrientation(rot);
+        node->attachObject(ent);
+
+        ++count;
+    }
+
+    fclose(fp);
+}
+
 void hwm_viewer::setup_scene()
 {
     scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
@@ -621,6 +688,7 @@ void hwm_viewer::setup_scene()
 
     load_terrain(terrain_dir_, ground_node, shadow_node);
 
+    load_components(component_file_, ground_node, shadow_node);
 
     StaticGeometry *static_geom = scene_manager_->createStaticGeometry("static-ground");
     static_geom->addSceneNode(ground_node);
@@ -801,13 +869,13 @@ void hwm_viewer::start_render_loop()
 
 int main(int argc, char **argv)
 {
-    if(argc < 4)
+    if(argc < 5)
     {
-        fprintf(stderr, "Usage: %s <car-anim-file> <car-db dir> <terrain-path>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <car-anim-file> <car-db dir> <terrain-path> <components-file>\n", argv[0]);
         exit(1);
     }
 
-    hwm_viewer hv(argv[1], argv[2], argv[3]);
+    hwm_viewer hv(argv[1], argv[2], argv[3], argv[4]);
     hv.go();
 
     return 0;
@@ -974,8 +1042,6 @@ void ogre_car_db::load_meshes()
         odb[current->first] = ocm;
     }
 };
-
-#define GETS_BUFFER_SIZE 1024
 
 void car_time_sample::from_pair(const car_time_sample &cts0,
                                 const car_time_sample &cts1,
