@@ -100,7 +100,7 @@ struct hwm_viewer
 
     void initialize_resource_groups();
 
-    void load_terrain(const std::string &dir, Ogre::SceneNode *sn);
+    void load_terrain(const std::string &dir, Ogre::SceneNode *reg, Ogre::SceneNode *shadow);
 
     void setup_scene();
 

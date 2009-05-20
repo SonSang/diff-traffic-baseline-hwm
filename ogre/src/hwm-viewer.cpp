@@ -543,12 +543,19 @@ void hwm_viewer::initialize_resource_groups()
 
 namespace bf = boost::filesystem;
 
-void hwm_viewer::load_terrain(const std::string &dir, SceneNode *sn)
+static bool terrain_shadow_name(const std::string &name)
+{
+    static boost::regex re("(?:(?:ramp)|(?:Box)|(?:Cylinder))[0-9]+");
+    return boost::regex_match(name, re);
+}
+
+void hwm_viewer::load_terrain(const std::string &dir, SceneNode *regular, SceneNode *shadow)
 {
     bf::path srcdir(dir);
     if(bf::is_directory(srcdir))
     {
         boost::regex re(".*\\.mesh");
+
         bf::directory_iterator end_itr;
         for( bf::directory_iterator itr(srcdir);
              itr != end_itr;
@@ -558,8 +565,18 @@ void hwm_viewer::load_terrain(const std::string &dir, SceneNode *sn)
             {
                 const std::string &str = itr->path().stem();
                 Entity *ent = scene_manager_->createEntity(boost::str(boost::format("%1%-entity") % str), itr->path().filename());
-                ent->setCastShadows(false);
-                SceneNode *node = sn->createChildSceneNode();
+
+                SceneNode *node;
+                if(terrain_shadow_name(itr->path().stem()))
+                {
+                    ent->setCastShadows(true);
+                    node = shadow->createChildSceneNode();
+                }
+                else
+                {
+                    ent->setCastShadows(false);
+                    node = regular->createChildSceneNode();
+                }
                 node->attachObject(ent);
             }
         }
@@ -593,20 +610,30 @@ void hwm_viewer::setup_scene()
     float network_node_scale = 10.0f;
 
     SceneNode *ground_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+    SceneNode *shadow_node = scene_manager_->getRootSceneNode()->createChildSceneNode();
+    //ground_node->translate(1852.340698, 0.000000, -257.709320);
+
     ground_node->translate(5743.000000, 0.000000, 752.000000);
     ground_node->scale(network_node_scale, network_node_scale, network_node_scale);
 
-    load_terrain(terrain_dir_, ground_node);
+    shadow_node->translate(5743.000000, 0.000000, 752.000000);
+    shadow_node->scale(network_node_scale, network_node_scale, network_node_scale);
+
+    load_terrain(terrain_dir_, ground_node, shadow_node);
+
 
     StaticGeometry *static_geom = scene_manager_->createStaticGeometry("static-ground");
-
     static_geom->addSceneNode(ground_node);
-
     static_geom->setRegionDimensions(Vector3(20000, 20000, 20000));
-
     static_geom->build();
-
     scene_manager_->destroySceneNode(ground_node);
+
+    static_geom = scene_manager_->createStaticGeometry("static-ground-shadow");
+    static_geom->addSceneNode(shadow_node);
+    static_geom->setRegionDimensions(Vector3(20000, 20000, 20000));
+    static_geom->build();
+    static_geom->setCastShadows(true);
+    scene_manager_->destroySceneNode(shadow_node);
 
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
