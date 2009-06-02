@@ -56,6 +56,8 @@ struct car_time_series
 
     void update_cars(float t, hwm_viewer *hv) const;
 
+    void set_visible(float t, hwm_viewer *hv) const;
+
     std::vector<entry> samples;
 };
 

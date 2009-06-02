@@ -371,7 +371,7 @@ void lane::get_matrix(const float &t, float mat[16]) const
     mat[12]=p.x;  mat[13]= p.y; mat[14]=p.z ;mat[15]=1.0f;
 }
 
-void lane::get_point_and_normal(const float &t, point &p, point &n) const
+int lane::get_point_and_normal(const float &t, point &p, point &n) const
 {
     float x = t;
     const road_membership *rom = &(road_memberships.get_rescale(x));
@@ -381,7 +381,11 @@ void lane::get_point_and_normal(const float &t, point &p, point &n) const
     {
         n.x *= -1.0f;
         n.y *= -1.0f;
+
+        return -1;
     }
+
+    return 1;
 }
 
 void lane::get_point(const float &t, point &pt) const
@@ -569,23 +573,23 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
         std::swap(fq[0], fq[1]);
     }
 
-    if(downstream_lane() == 0)
-    {
-        stop_riemann(rs+ncells,
-                     fq[0],
-                     speedlimit,
-                     inv_speedlimit,
-                     gamma_c,
-                     inv_gamma);
+    // if(downstream_lane() == 0)
+    // {
+    //     stop_riemann(rs+ncells,
+    //                  fq[0],
+    //                  speedlimit,
+    //                  inv_speedlimit,
+    //                  gamma_c,
+    //                  inv_gamma);
 
-        assert(rs[ncells].check());
+    //     assert(rs[ncells].check());
 
-        // we know that stop_riemann has a speed in speeds[0]
-        // and nothing in speeds[1]
-        maxspeed = std::max(maxspeed, std::abs(rs[ncells].speeds[0]));
+    //     // we know that stop_riemann has a speed in speeds[0]
+    //     // and nothing in speeds[1]
+    //     maxspeed = std::max(maxspeed, std::abs(rs[ncells].speeds[0]));
 
-    }
-    else
+    // }
+    // else
         memset(rs+ncells, 0, sizeof(riemann_solution));
 
     return maxspeed;
@@ -593,7 +597,7 @@ float lane::collect_riemann(float gamma_c, float inv_gamma)
 
 void lane::update(float dt)
 {
-    const float relaxation_fac = 0.1;
+    const float relaxation_fac = 0.4;
 
     float coeff = dt/h;
 
@@ -811,6 +815,8 @@ void lane::advance_carticles(float dt, float gamma_c)
 {
     float inv_len = 1.0f/(ncells*h);
 
+
+    int count =0;
     foreach(carticle &cart, carticles[0])
     {
         // advance vehicle
@@ -824,9 +830,12 @@ void lane::advance_carticles(float dt, float gamma_c)
             int intent = merge_intent(cart.x, gamma_c);
 
             // check for possibility of merge
-            if(intent && merge_possible(cart, intent, gamma_c))
+            if(intent && merge_possible(cart, intent, gamma_c)
+               && count+1 < carticles[0].size() && carticles[0][count+1].free_motion())
                 cart.start_lane_change(intent);
         }
+
+        ++count;
 
         if(cart.in_lane_change())
         {

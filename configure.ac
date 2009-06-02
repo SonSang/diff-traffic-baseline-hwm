@@ -24,6 +24,9 @@ AM_CONDITIONAL(DO_KINEMATIC, test \( x"$have_gsl" = xyes  \) -a x"$enable_kinema
 
 AC_LANG([C++])
 
+AX_OPENMP([],
+	  [AC_MSG_FAILURE([cannot find flag for OpenMP])])
+
 AC_ARG_ENABLE([visual],
   [AS_HELP_STRING([--enable-visual],
     [build graphical viewer components @<:@default=check@:>@])],
@@ -157,8 +160,9 @@ echo "
   Boost LDFLAGS.......: $BOOST_LDFLAGS
   Boost FILESYSTEM LIB: $BOOST_FILESYSTEM_LIB
   Boost REGEX LIB.....: $BOOST_REGEX_LIB
-  libxml2 CFLAGS.: $LIBXML2_CFLAGS
-  libxml2 LIBS...: $LIBXML2_LIBS"
+  libxml2 CFLAGS......: $LIBXML2_CFLAGS
+  libxml2 LIBS........: $LIBXML2_LIBS
+  OpenMP CXXFLAGS.....: $OPENMP_CXXFLAGS"
 if test -z $DO_VISUAL; then
 echo "
   Building visual: yes

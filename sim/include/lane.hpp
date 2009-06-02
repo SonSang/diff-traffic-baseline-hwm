@@ -94,7 +94,7 @@ struct lane
     lane* downstream_lane() const;
 
     void get_matrix(const float &x, float mat[16]) const;
-    void get_point_and_normal(const float &x, point &pt, point &no) const;
+    int  get_point_and_normal(const float &x, point &pt, point &no) const;
     void get_point(const float &x, point &pt) const;
 
     float velocity(float x, float gamma_c) const;

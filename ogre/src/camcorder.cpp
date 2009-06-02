@@ -37,10 +37,10 @@ void CamcorderHelper::setEnabled(bool enabled)
 	if (!mOverlay)
 		createOverlay();
 
-	if (enabled)
-		mOverlay->show();
-	else
-		mOverlay->hide();
+	// if (enabled)
+	// 	mOverlay->show();
+	// else
+	// 	mOverlay->hide();
 }
 //---------------------------------------------------------------------
 void CamcorderHelper::setMode(Mode m)

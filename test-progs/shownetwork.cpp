@@ -953,6 +953,8 @@ int main(int argc, char * argv[])
     pt.x = -(net->bb[0]+net->bb[1])*0.5f;
     pt.y = -(net->bb[2]+net->bb[3])*0.5f;
     pt.z = 0.0f;
+
+    printf("origin: %f %f %f\n", pt.x, pt.y, pt.z);
     net->translate(pt);
     net->prepare(H);
 
@@ -961,11 +963,36 @@ int main(int argc, char * argv[])
     {
         if(la.h > 0.8*H)
         {
-            if(lno == 0)
+            float x = (CAR_LENGTH*20*drand48())/(la.ncells*la.h);
+
+            while(x < 0.5)
             {
-                net->add_carticle(lno, 0.2, 10.0);
-                net->add_carticle(lno, 0.4, 4.5);
+                x += (drand48()*15*CAR_LENGTH/(la.ncells*la.h));
+                net->add_carticle(lno, x, la.speedlimit*0.5);
+                x += 2.5*CAR_LENGTH/(la.ncells*la.h);
+                printf("x %f\n", x);
             }
+
+            while(x < 0.55)
+            {
+                x += (drand48()*1.5*CAR_LENGTH/(la.ncells*la.h));
+                net->add_carticle(lno, x, la.speedlimit*0.01);
+                x += 1.5*CAR_LENGTH/(la.ncells*la.h);
+                printf("x %f\n", x);
+            }
+
+            x = 0.8;
+
+            while(x < 0.85)
+            {
+                x += (drand48()*1.6*CAR_LENGTH/(la.ncells*la.h));
+                net->add_carticle(lno, x, la.speedlimit*0.01);
+                x += 1.5*CAR_LENGTH/(la.ncells*la.h);
+                printf("x %f\n", x);
+            }
+
+
+
         }
         ++lno;
     }

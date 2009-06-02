@@ -146,8 +146,20 @@ public:
 
 	virtual bool processUnbufferedKeyInput(const FrameEvent &evt)
 	{
-        hwm_v_->camcorder_->processUnbufferedKeyboard(keyboard_, evt.timeSinceLastFrame);
-        hwm_v_->camcorder_->update(evt.timeSinceLastFrame);
+        float frame_time = 1.0f/24.0f;
+
+        if(hwm_v_->camcorder_->isPlayingBack())
+        {
+            hwm_v_->camcorder_->processUnbufferedKeyboard(keyboard_, frame_time);
+            hwm_v_->camcorder_->update(frame_time);
+            hwm_v_->cts_.set_visible(frame_time, hwm_v_);
+            hwm_v_->scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_MODULATIVE);
+        }
+        else
+        {
+            hwm_v_->camcorder_->processUnbufferedKeyboard(keyboard_, evt.timeSinceLastFrame);
+            hwm_v_->camcorder_->update(evt.timeSinceLastFrame);
+        }
 
 		if(keyboard_->isKeyDown(OIS::KC_A))
 			translate_vector_.x = -move_scale_;	// Move camera left
@@ -188,12 +200,33 @@ public:
                 t_ = 0.0f;
         }
 
-        if(update_cars)
+        // if(update_cars)a { if(!hwm_v_->car_animation_state_)
+        // hwm_v_->car_animation_state_ =
+        // hwm_v_->cts_.animate("CarAnimation", hwm_v_);
+        // hwm_v_->car_animation_state_->setTimePosition(evt.timeSinceLastFrame);
+        // }
+
+        if(hwm_v_->camcorder_->isPlayingBack())
         {
+            t_+= frame_time;
             if(!hwm_v_->car_animation_state_)
                 hwm_v_->car_animation_state_ = hwm_v_->cts_.animate("CarAnimation", hwm_v_);
+
+            hwm_v_->cts_.set_visible(t_, hwm_v_);
+            hwm_v_->car_animation_state_->setTimePosition(t_);
+
+            window_->writeContentsToFile(boost::str(boost::format("frame%05d.png") % (num_screen_shots_)));
+            num_screen_shots_++;
+        }
+        else
+        {
+            t_ += evt.timeSinceLastFrame;
+            if(!hwm_v_->car_animation_state_)
+                hwm_v_->car_animation_state_ = hwm_v_->cts_.animate("CarAnimation", hwm_v_);
+            hwm_v_->cts_.set_visible(t_, hwm_v_);
             hwm_v_->car_animation_state_->setTimePosition(t_);
         }
+
 
 		if( keyboard_->isKeyDown(OIS::KC_ESCAPE) || keyboard_->isKeyDown(OIS::KC_Q) )
 			return false;
@@ -585,8 +618,9 @@ void hwm_viewer::load_terrain(const std::string &dir, SceneNode *regular, SceneN
 
 static bool component_shadow_name(const std::string &name)
 {
-    static boost::regex re("(?:2?light(?:Support)?)|(?:[1-9]?sign(:?01)?)|(?:(?:(?:left)|(?:right))(?:Railing)?Post)");
-    return boost::regex_match(name, re);
+    //    static boost::regex re("(?:2?light(?:Support)?)|(?:[1-9]?sign(:?01)?)|(?:(?:(?:left)|(?:right))(?:Railing)?Post)");
+    //    static boost::regex re("(?:2?light(?:Support)?)");
+    return false;// boost::regex_match(name, re);
 }
 
 #define GETS_BUFFER_SIZE 1024
@@ -650,29 +684,58 @@ void hwm_viewer::load_components(const std::string &file, SceneNode *regular, Sc
     fclose(fp);
 }
 
+String CUSTOM_CASTER_MATERIAL("PSSM/shadow_caster");
+
 void hwm_viewer::setup_scene()
 {
     scene_manager_ = root_->createSceneManager(ST_GENERIC, "SceneManager");
 
     MaterialManager::getSingleton().setDefaultTextureFiltering(Ogre::TFO_ANISOTROPIC);
+    //    scene_manager_->setShadowTechnique(SHADOWTYPE_TEXTURE_ADDITIVE_INTEGRATED);
     scene_manager_->setShadowTechnique(SHADOWTYPE_TEXTURE_ADDITIVE);
-    scene_manager_->setShadowFarDistance(8000.0f);
+    //    scene_manager_->setShadowTechnique(SHADOWTYPE_STENCIL_MODULATIVE);
 
+    scene_manager_->setShadowCasterRenderBackFaces(false);
+
+    // 3 textures per directional light
+    //    scene_manager_->setShadowTextureCountPerLightType(Ogre::Light::LT_DIRECTIONAL, 3);
+    //    scene_manager_->setShadowTextureSettings(4*512, 3, PF_FLOAT32_R);
     scene_manager_->setShadowTextureSize(2*4096);
+    //    scene_manager_->setShadowTextureSelfShadow(true);
+
+
+    scene_manager_->setShadowFarDistance(8000.0f);
+    //    scene_manager_->setShadowTexturePixelFormat(PF_FLOAT32_R);
     scene_manager_->setAmbientLight(ColourValue(0.0, 0.0, 0.0));
+
+    //    scene_manager_->setShadowTextureCasterMaterial(CUSTOM_CASTER_MATERIAL);
 
     camera_ = scene_manager_->createCamera("Camera");
 
-    camera_->setPosition(-20, 100, 0);
+    camera_->setPosition(-20, 1000, 0);
     camera_->lookAt(0,0,0);
     camera_->setNearClipDistance(100);
-    camera_->setFarClipDistance(30000);
+    camera_->setFarClipDistance(20000);
 
     root_->getAutoCreatedWindow()->addViewport(camera_);
 
     PSSMShadowCameraSetup *lscs = new PSSMShadowCameraSetup();
+    // lscs->calculateSplitPoints(3, camera_->getNearClipDistance(), camera_->getFarClipDistance());
+    // lscs->setSplitPadding(10);
+    // lscs->setOptimalAdjustFactor(0, 2);
+    // lscs->setOptimalAdjustFactor(1, 1);
+    // lscs->setOptimalAdjustFactor(2, 0.5);
     Ogre::ShadowCameraSetupPtr lscs_sp = Ogre::ShadowCameraSetupPtr(lscs);
     scene_manager_->setShadowCameraSetup(lscs_sp);
+
+    // Vector4 splitPoints;
+    // const PSSMShadowCameraSetup::SplitPointList& splitPointList = lscs->getSplitPoints();
+    // for (int i = 0; i < 3; ++i)
+    // {
+    //     splitPoints[i] = splitPointList[i];
+    // }
+    // MaterialPtr mat = MaterialManager::getSingleton().getByName("08_-_Default");
+    // mat->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("pssmSplitPoints", splitPoints);
 
     float network_node_scale = 10.0f;
 
@@ -699,13 +762,17 @@ void hwm_viewer::setup_scene()
     static_geom = scene_manager_->createStaticGeometry("static-ground-shadow");
     static_geom->addSceneNode(shadow_node);
     static_geom->setRegionDimensions(Vector3(20000, 20000, 20000));
+    //    static_geom->setCastShadows(true);
+
     static_geom->build();
-    //static_geom->setCastShadows(true);
+
     scene_manager_->destroySceneNode(shadow_node);
 
     vehicle_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
 
     o_cars_->load_meshes();
+
+    //scene_manager_->setShadowTechnique(SHADOWTYPE_NONE);
 }
 
 void hwm_viewer::setup_camcorder()
@@ -851,8 +918,8 @@ void hwm_viewer::setup_CEGUI()
     CEGUI_system_    = new CEGUI::System (CEGUI_renderer_);
 
 
-    CEGUI::SchemeManager::getSingleton().loadScheme((CEGUI::utf8*)"TaharezLookSkin.scheme");
-    CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
+    // CEGUI::SchemeManager::getSingleton().loadScheme((CEGUI::utf8*)"TaharezLookSkin.scheme");
+    // CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
 
 }
 
@@ -1090,7 +1157,8 @@ int car_time_series::read(FILE *fp)
         int nitems = sscanf(res, "%f %d", &new_time, &ncars);
         assert(nitems == 2);
 
-        assert(ncars > 0);
+        if(ncars == 0)
+            continue;
         float last_time = samples.empty() ? -FLT_MAX : samples.back().first;
         assert(last_time < new_time);
 
@@ -1173,6 +1241,36 @@ struct entry_cmp
         return l.first < r.first;
     }
 };
+
+void car_time_series::set_visible(float t, hwm_viewer *hv) const
+{
+    foreach(anim_car &ac, hv->sim_cars_)
+    {
+        if(ac.root_)
+            ac.root_->setVisible(false, true);
+    }
+
+   const entry ent(t, sample_vector());
+   std::vector<entry>::const_iterator res(std::lower_bound(samples.begin(), samples.end(), ent, entry_cmp()));
+
+    if(res == samples.begin())
+    {
+        foreach(const car_time_sample &cts, res->second)
+        {
+            hv->access_sim_car(cts.id).root_->setVisible(true);
+        }
+    }
+    else if(res == samples.end())
+    {
+    }
+    else
+    {
+        foreach(const car_time_sample &cts, res->second)
+        {
+            hv->access_sim_car(cts.id).root_->setVisible(true);
+        }
+    }
+}
 
 void car_time_series::update_cars(float t, hwm_viewer *hv) const
 {
