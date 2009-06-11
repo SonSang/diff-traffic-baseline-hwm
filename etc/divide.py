@@ -1,4 +1,5 @@
 import numpy
+from numpy.random import random_integers
 import itertools
 import time
 
@@ -41,9 +42,12 @@ def partitions(nums, slots):
 
 @print_timing
 def best_partition(pfunc, nums, slots):
+    low_bound = (sum(nums) % slots)
     best = (sum(nums), None)
     for part in pfunc(nums, slots):
         md = max_diff(part)
+        if md == low_bound:
+            return (md, part)
         if md < best[0]:
             best = (md, part)
     return best
@@ -70,12 +74,16 @@ def combinations(iterable, r):
 
 def powerset_comp(nums):
     card = len(nums)
-    if card == 0:
-        yield []
-        return
     allset = 2L**card-1
     for i in xrange(2L**(card)):
-        yield (numpy.take(nums, list(whatset(i))), numpy.take(nums, list(whatset(i ^ allset))))
+        inset  = []
+        outset = []
+        for c in xrange(card):
+            if (1 << c) & i:
+                inset.append(nums[c])
+            else:
+                outset.append(nums[c])
+        yield (inset, outset)
 
 def partitions2(nums, slots):
     if slots == 1:
@@ -90,6 +98,4 @@ def partitions2(nums, slots):
             yield first + subpart
 
 if __name__ == '__main__':
-    print best_partition(partitions2, range(1,5)*2, 5)
-    print best_partition(partitions, range(1,5)*2, 5)
-
+    print best_partition(partitions2, random_integers(100, 200, 20), 3)
