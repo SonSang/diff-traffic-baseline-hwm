@@ -13,7 +13,7 @@ int main(int argc, char * argv[])
 
     int nthreads;
     if(argc == 5)
-        sscanf("%d", &nthreads);
+        sscanf(argv[4], "%d", &nthreads);
 
     size_t frameno = 0;
     float last_dump;
@@ -97,10 +97,10 @@ int main(int argc, char * argv[])
 
     sscanf(argv[3], "%f", &end_time);
     printf("Running for %f seconds\n", end_time);
-    if(n_threads > 0)
+    if(nthreads > 0)
     {
-        omp_set_num_threads(n_threads);
-        printf("OpenMP using %d threads\n", n_threads);
+        omp_set_num_threads(nthreads);
+        printf("OpenMP using %d threads\n", nthreads);
 
 
 
