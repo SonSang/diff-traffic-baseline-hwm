@@ -24,7 +24,7 @@ AM_CONDITIONAL(DO_KINEMATIC, test \( x"$have_gsl" = xyes  \) -a x"$enable_kinema
 
 AC_LANG([C++])
 
-AX_OPENMP([],
+AX_OPENMP([AC_SUBST(OPENMP_CXXFLAGS)],
 	  [AC_MSG_FAILURE([cannot find flag for OpenMP])])
 
 AC_ARG_ENABLE([visual],

@@ -46,5 +46,5 @@ showsim_SOURCES = showsim.cpp \
 		  plotwin.hpp
 
 showsim_CXXFLAGS = $(AM_CXXFLAGS) $(CAIRO_CFLAGS) $(FLTK_CXXFLAGS)
-showsim_LDADD    = $(ADD_LIBS) $(CAIRO_LIBS) $(FLTK_LDFLAGS)
+showsim_LDADD    = $(ADD_LIBS) $(CAIRO_LIBS) $(FLTK_LDFLAGS) $(OPENMP_CXXFLAGS)
 endif

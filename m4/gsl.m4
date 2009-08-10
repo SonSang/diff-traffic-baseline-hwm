@@ -2,7 +2,7 @@
 # Christopher R. Gabriel <cgabriel@linux.it>, April 2000
 
 
-AC_DEFUN([AM_PATH_GSL],
+AC_DEFUN([AX_PATH_GSL],
 [
 AC_ARG_WITH(gsl-prefix,[  --with-gsl-prefix=PFX   Prefix where GSL is installed (optional)],
             gsl_prefix="$withval", gsl_prefix="")
@@ -99,19 +99,13 @@ int main (void)
    if (($gsl_major_version > major) ||
       (($gsl_major_version == major) && ($gsl_minor_version > minor)) ||
       (($gsl_major_version == major) && ($gsl_minor_version == minor) && ($gsl_micro_version >= micro)))
-    {
-      exit(0);
-    }
-  else
-    {
-      printf("\n*** 'gsl-config --version' returned %d.%d.%d, but the minimum version\n", $gsl_major_version, $gsl_minor_version, $gsl_micro_version);
-      printf("*** of GSL required is %d.%d.%d. If gsl-config is correct, then it is\n", major, minor, micro);
-      printf("*** best to upgrade to the required version.\n");
-      printf("*** If gsl-config was wrong, set the environment variable GSL_CONFIG\n");
-      printf("*** to point to the correct copy of gsl-config, and remove the file\n");
-      printf("*** config.cache before re-running configure\n");
-      exit(1);
-    }
+     { 
+       exit(0);
+     }   
+   else
+     {
+       exit(1);
+     }
 }
 
 ],, no_gsl=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
@@ -165,4 +159,4 @@ int main (void)
   rm -f conf.gsltest
 ])
 
-
+AU_ALIAS([AM_PATH_GSL], [AX_PATH_GSL])
