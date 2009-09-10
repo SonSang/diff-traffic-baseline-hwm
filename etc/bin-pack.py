@@ -6,7 +6,7 @@ import bisect
 import random
 import itertools as it
 
-testI = sorted([random.randint(100, 1000) for x in xrange(0, 2500)])
+testI = sorted([random.randint(100, 1000) for x in xrange(0, 1000)])
 
 def size(I, m):
     return max(sum(I)/m, max(I))
@@ -40,17 +40,33 @@ def eps_histogram(seq, eps):
     nbins = int(math.ceil(1.0/eps**2.0))
     h = (1.0 - eps)/nbins
     bins = []
+    seq_bins = []
     for i in xrange(0, nbins):
         bins.append(0)
+        seq_bins.append([])
     for i in seq:
-        bins[int(math.ceil((i - eps)/h)) - 1] += 1
-#    for ct in xrange(0, nbins):
-#        print "(",eps+ ct*h, ",", eps + (ct+1)*h, "], ",
-#    print " "
-    return bins
+        bin_no = int(math.ceil((i - eps)/h)) - 1
+        bins[bin_no] += 1
+        seq_bins[bin_no].append(i)
+    return (bins, h, seq_bins)
 
 def dual(I, eps):
-    return fifth_approx(I)
+##    small, large = partition(I, 0.2)
+##    bins = fifth_approx(large)
+
+    small, large = partition(I, eps)
+
+    actual_bins = []
+    if large:
+        (hist, h, seq_hist) = eps_histogram(large, eps)
+        hist_bins = minbins(hist, eps, h)
+        for hb in hist_bins:
+            actual_bins.append([])
+            for pos, ct in enumerate(hb):
+                for i in xrange(ct):
+                    actual_bins[-1].append(seq_hist[pos].pop())
+
+    return pack_small(actual_bins, small)
 
 def feasiblep(config, eps, h):
     s = 0
@@ -61,20 +77,25 @@ def feasiblep(config, eps, h):
     return true
 
 def minbins(items, eps, h):
-    bin_table = numpy.empty( [i + 1 for i in items], numpy.int32 )
-    bin_table.fill(-1)
-    bin_table[tuple(numpy.zeros(len(items), numpy.int32))] = 0
+    bin_table = dict()
     todo = set(feasible(list(numpy.zeros(len(items), numpy.int32)), items, eps, h))
     for t0 in todo:
-        bin_table[t0] = 1
-
+        bin_table[t0] = (1, None)
     while todo:
         t0 = todo.pop()
         for t1 in feasible(t0, items, eps, h):
-            if bin_table[t1] == -1 or 1 + bin_table[t0] < bin_table[t1]:
-                bin_table[t1] = 1 + bin_table[t0]
+            if not bin_table.has_key(t1) or 1 + bin_table[t0][0] < bin_table[t1][0]:
+                bin_table[t1] = (1 + bin_table[t0][0], t0)
                 todo.add(t1)
-    return bin_table[tuple(items)]
+    res = []
+    last = tuple(items)
+    current = bin_table[last][1]
+    while current != None:
+        res.append(tuple((i - j for i, j in it.izip(last, current))))
+        last = current
+        current = bin_table[last][1]
+    res.append(last)
+    return res
 
 def L(I, items):
     result = []
@@ -191,6 +212,9 @@ def fifth_approx(inI):
     # print "Bins: ", bins
     # print "I ", I
 
+    return bins
+
+def pack_small(bins, small):
     bins.sort(key=sum)
     bins.reverse()
     start = 0
@@ -239,7 +263,5 @@ def feasible_iterator2(left, maxconfig, base, h):
                     yield [i] + sub
 
 if __name__ == '__main__':
-    print minbins([5, 4, 1], 0.25, 0.25)
-
-
-#    print [(len(x), sum(x)) for x in eps_makespan(testI, 15, 0.0)]
+#    print dual([0.25, 0.33, 0.34, 0.41, 0.55, 0.56], 0.2)
+    print [(len(x), sum(x)) for x in eps_makespan(testI, 8, 0.2)]
