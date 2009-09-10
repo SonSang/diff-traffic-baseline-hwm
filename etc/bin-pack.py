@@ -4,6 +4,7 @@ import math
 import numpy
 import bisect
 import random
+import itertools as it
 
 testI = sorted([random.randint(100, 1000) for x in xrange(0, 2500)])
 
@@ -59,16 +60,21 @@ def feasiblep(config, eps, h):
             return false
     return true
 
-class minbins(object):
-    def __init__(self, items, eps, h):
-        self.items = items
-        self.eps = eps
-        self.h = h
-        self.bin_table = numpy.empty( self.items, numpy.int32 )
-        self.bin_table[:] = -1
-        self.bin_table[numpy.zeros(len(self.items), numpy.int32)] = 0
-    def all_feasible(config, bin_size = 1):
-        pass
+def minbins(items, eps, h):
+    bin_table = numpy.empty( [i + 1 for i in items], numpy.int32 )
+    bin_table.fill(-1)
+    bin_table[tuple(numpy.zeros(len(items), numpy.int32))] = 0
+    todo = set(feasible(list(numpy.zeros(len(items), numpy.int32)), items, eps, h))
+    for t0 in todo:
+        bin_table[t0] = 1
+
+    while todo:
+        t0 = todo.pop()
+        for t1 in feasible(t0, items, eps, h):
+            if bin_table[t1] == -1 or 1 + bin_table[t0] < bin_table[t1]:
+                bin_table[t1] = 1 + bin_table[t0]
+                todo.add(t1)
+    return bin_table[tuple(items)]
 
 def L(I, items):
     result = []
@@ -202,5 +208,38 @@ def fifth_approx(inI):
             start += 1
     return bins
 
+def feasible_iterator(maxconfig):
+    if len(maxconfig) == 0:
+        yield []
+    else:
+        for i in xrange(0, maxconfig[0]):
+            for sub in feasible_iterator(maxconfig[1:]):
+                yield [i] + sub
+
+def feasible(startconfig, maxconfig, base, h):
+    left = 1.0
+    possible_config = []
+    for (i, j) in it.izip(maxconfig, startconfig):
+        if i >= j:
+            possible_config.append(i - j)
+        else:
+            return []
+    fi = (tuple((i + j for i, j in it.izip(startconfig, x))) for x in feasible_iterator2(left,  possible_config, base, h))
+    fi.next()
+    return fi
+
+def feasible_iterator2(left, maxconfig, base, h):
+    if not maxconfig:
+        yield []
+    else:
+        for i in xrange(maxconfig[0]+1):
+            newleft = left - base*i
+            if newleft >= -1e-4:
+                for sub in feasible_iterator2(newleft, maxconfig[1:], base + h, h):
+                    yield [i] + sub
+
 if __name__ == '__main__':
-    print [(len(x), sum(x)) for x in eps_makespan(testI, 15, 0.0)]
+    print minbins([5, 4, 1], 0.25, 0.25)
+
+
+#    print [(len(x), sum(x)) for x in eps_makespan(testI, 15, 0.0)]
