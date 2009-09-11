@@ -109,6 +109,20 @@ typename C::value_type sum(const C &cont)
     return s;
 }
 
+template <class C>
+inline bool sum_over(const C &cont, typename C::value_type limit)
+{
+    typedef typename C::value_type value_type;
+    value_type s = 0;
+    BOOST_FOREACH(const value_type &i, cont)
+    {
+        s += i;
+        if(s > limit)
+            break;
+    }
+    return (s > limit);
+}
+
 void eps_histogram(config &histogram, binlist &job_hist, float &h, const_job_range &jobs, float eps)
 {
     int nbins = static_cast<int>(std::ceil(1.0f/(eps*eps)));
@@ -141,14 +155,7 @@ void pack_small(binlist &bins, const_job_range &small_range)
 
     while(examine_start != bins.end())
     {
-        float sum = 0.0f;
-        BOOST_FOREACH(const float &j, *examine_start)
-        {
-            sum += j;
-            if(sum > 1.0f)
-                break;
-        }
-        if(sum > 1.0f)
+        if(sum_over(*examine_start, 1.0f))
         {
             ++examine_start;
             ++unfull_bin_start;
@@ -159,14 +166,7 @@ void pack_small(binlist &bins, const_job_range &small_range)
 
     for(; examine_start != bins.end(); ++examine_start)
     {
-        float sum = 0.0f;
-        BOOST_FOREACH(const float &j, *examine_start)
-        {
-            sum += j;
-            if(sum > 1.0f)
-                break;
-        }
-        if(sum > 1.0f)
+        if(sum_over(*examine_start, 1.0f))
         {
             std::swap(*examine_start, *unfull_bin_start);
             ++unfull_bin_start;
@@ -184,14 +184,7 @@ void pack_small(binlist &bins, const_job_range &small_range)
         else
             unfull_bin_start->push_back(j);
 
-        float sum = 0.0f;
-        BOOST_FOREACH(const float &j, *unfull_bin_start)
-        {
-            sum += j;
-            if(sum > 1.0f)
-                break;
-        }
-        if(sum > 1.0f)
+        if(sum_over(*unfull_bin_start, 1.0f))
             ++unfull_bin_start;
     }
 }
@@ -204,11 +197,6 @@ struct feasible_iterator
         maxconf_(maxconf_),
         base_(base), h_(h), left_(1.0f)
     {
-    }
-
-    void reset()
-    {
-        left_ = 1.0f;
     }
 
     bool next(config &resconf)
