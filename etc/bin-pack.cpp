@@ -5,19 +5,25 @@
 #include <boost/foreach.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/assign/std/vector.hpp>
+#include <boost/assign/std/vector.hpp>
 #include <boost/utility.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/vector_proxy.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
-typedef std::vector<float>                      joblist;
-typedef std::vector<float>::iterator            job_iter;
-typedef std::vector<float>::const_iterator      const_job_iter;
-typedef boost::iterator_range<job_iter>         job_range;
-typedef boost::iterator_range<const_job_iter>   const_job_range;
+namespace ublas = boost::numeric::ublas;
 
-typedef std::vector<joblist>                    binlist;
+typedef std::vector<float>                    joblist;
+typedef joblist::iterator                     job_iter;
+typedef joblist::const_iterator               const_job_iter;
+typedef boost::iterator_range<job_iter>       job_range;
+typedef boost::iterator_range<const_job_iter> const_job_range;
 
-typedef std::vector<int>                   config;
-typedef config::iterator                   config_iter;
-typedef boost::iterator_range<config_iter> config_range;
+typedef std::vector<joblist>                  binlist;
+
+typedef ublas::vector<int>                    config;
+typedef config::iterator                      config_iter;
+typedef boost::iterator_range<config_iter>    config_range;
 
 using namespace boost::assign;
 
@@ -31,6 +37,17 @@ static float size(const joblist &jobs, int nprocs)
         maxjob = std::max(j, maxjob);
     }
     return std::max(sum/nprocs, maxjob);
+}
+
+template <class C>
+typename C::value_type sum(const C &cont)
+{
+    C::value_type s = 0;
+    BOOST_FOREACH(const C::value_type &i, cont)
+    {
+        s += i;
+    }
+    return s;
 }
 
 void eps_histogram(config &histogram, binlist &job_hist, float &h, const_job_range &jobs, float eps)
@@ -203,6 +220,8 @@ inline void unindex(config &res, size_t idx, const config &cum_dims)
 
 std::vector<config> minbins(const config &conf, float eps, float h)
 {
+    int s = conf.size();
+
     size_t prod = 1;
     BOOST_FOREACH(const int &i, conf)
     {
@@ -214,8 +233,7 @@ std::vector<config> minbins(const config &conf, float eps, float h)
     std::vector<config> todo;
     feasible_iterator fi(conf, eps, h);
     {
-        config res(conf.size());
-        std::fill(res.begin(), res.end(), 0);
+        config res((ublas::scalar_vector<int>(s, 0)));
         while(fi.next(res))
             todo.push_back(res);
     }
@@ -231,19 +249,14 @@ std::vector<config> minbins(const config &conf, float eps, float h)
         todo.pop_back();
         size_t t0_idx(index(t0, conf));
 
-        config tf(conf);
-        for(int i = 0; i < tf.size(); ++i)
-            tf[i] -= t0[i];
+        config tf = conf - t0;
 
         feasible_iterator fi(tf, eps, h);
         {
-            config res(conf.size());
-            std::fill(res.begin(), res.end(), 0);
+            config res((ublas::scalar_vector<int>(s, 0)));
             while(fi.next(res))
             {
-                config res_total(res);
-                for(int i = 0; i < conf.size(); ++i)
-                    res_total[i] += t0[i];
+                config res_total = res + t0;
 
                 size_t t1_idx = index(res_total, conf);
                 if( search[t1_idx].bins == -1 ||
@@ -256,9 +269,9 @@ std::vector<config> minbins(const config &conf, float eps, float h)
         }
     }
 
-    config cum_dim(conf.size()-1);
-    cum_dim.back() = conf[conf.size()-1]+1;
-    for(int i = cum_dim.size()-2; i >= 0; --i)
+    config cum_dim(s-1);
+    cum_dim[s-2] = conf[s-1]+1;
+    for(int i = s-3; i >= 0; --i)
         cum_dim[i] = cum_dim[i+1]*(conf[i+1]+1);
 
     std::vector<config> result;
@@ -266,15 +279,13 @@ std::vector<config> minbins(const config &conf, float eps, float h)
     config last_conf(conf);
 
     bin_search *current = last->parent;
-    config current_conf(conf.size());
+    config current_conf(s);
     if(current)
         unindex(current_conf, current - search, cum_dim);
 
     while(current)
     {
-        result.push_back(config(conf.size()));
-        for(int i = 0; i < conf.size(); ++i)
-            result.back()[i] = last_conf[i] - current_conf[i];
+        result.push_back(last_conf - current_conf);
         last = current;
         std::swap(last_conf, current_conf);
         current = last->parent;
@@ -291,7 +302,6 @@ std::vector<config> minbins(const config &conf, float eps, float h)
 binlist dual(const std::vector<float> &jobs, float eps)
 {
     const_job_iter part(partition(jobs, eps));
-
 
     const_job_range small = boost::make_iterator_range(static_cast<const_job_iter>(jobs.begin()), part);
     const_job_range large = boost::make_iterator_range(part, static_cast<const_job_iter>(jobs.end()));
@@ -365,7 +375,7 @@ binlist eps_makespan(const joblist &jobs, int nprocs, float eps)
 
 int main(int argc, char *argv[])
 {
-    float epsilon = 0.2f;
+    float epsilon = 0.05f;
     joblist values;
     values += 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10;
     std::sort(values.begin(), values.end());
@@ -376,7 +386,7 @@ int main(int argc, char *argv[])
     }
     std::cout << std::endl;
 
-    binlist bl(eps_makespan(values, 20, epsilon));
+    binlist bl(eps_makespan(values, 8, epsilon));
 
     BOOST_FOREACH(const joblist &jl, bl)
     {
