@@ -223,24 +223,22 @@ struct feasible_iterator
     float left_;
 };
 
-struct bin_search
-{
-    bin_search()
-        : bins(-1), parent(0)
-    {}
-    bin_search(int b)
-        : bins(b), parent(0)
-    {}
-    bin_search(int b, bin_search *p)
-        : bins(b), parent(p)
-    {}
-
-    int bins;
-    bin_search *parent;
-};
-
 std::vector<config> minbins(const config &conf, float eps, float h)
 {
+    struct bin_search
+    {
+        bin_search()
+            : bins(-1), parent(0) {}
+        bin_search(int b)
+            : bins(b), parent(0) {}
+
+        bin_search(int b, bin_search *p)
+            : bins(b), parent(p) {}
+
+        int bins;
+        bin_search *parent;
+    };
+
     int s = conf.size();
 
     size_t prod = 1;
