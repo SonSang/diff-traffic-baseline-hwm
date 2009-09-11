@@ -1,9 +1,11 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <ext/hash_map>
 #include <deque>
 #include <cmath>
 #include <cassert>
+#include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/assign/std/vector.hpp>
@@ -12,6 +14,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace ublas = boost::numeric::ublas;
 
@@ -454,20 +457,50 @@ binlist eps_makespan(const joblist &jobs, int nprocs, float eps)
     return part;
 }
 
+
+
 int main(int argc, char *argv[])
 {
-    float epsilon = 0.1f;
+    if(argc < 4)
+    {
+        std::cerr << "Usage: " << argv[0] << " <epilson> <nbins> <jobfile>|-" << std::endl;
+        exit(1);
+    }
+
+    float epsilon = boost::lexical_cast<float>(argv[1]);
+    if(epsilon <= 0.0f || epsilon > 1.0f)
+    {
+        std::cerr << "Epsilon must be in (0, 1]" << std::endl;
+        exit(1);
+    }
+
+    int   nbins   = boost::lexical_cast<int>(argv[2]);
+    if(nbins <= 0)
+    {
+        std::cerr << "nbins must be > 0" << std::endl;
+        exit(1);
+    }
+
+    std::istream *input_stream;
+    if(*argv[3] == '-')
+        input_stream = &(std::cin);
+    else
+        input_stream = new std::ifstream(argv[3]);
+
     joblist values;
-    values += 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10;
+
+    while(!input_stream->eof())
+    {
+        std::string str;
+        std::getline(*input_stream, str);
+        boost::algorithm::trim_left(str);
+        if(!str.empty())
+            values.push_back(boost::lexical_cast<float>(str));
+    }
+
     std::sort(values.begin(), values.end());
 
-    BOOST_FOREACH(const float &j, values)
-    {
-        std::cout << j << " ";
-    }
-    std::cout << std::endl;
-
-    binlist bl(eps_makespan(values, 8, epsilon));
+    binlist bl(eps_makespan(values, nbins, epsilon));
 
     BOOST_FOREACH(const joblist &jl, bl)
     {
