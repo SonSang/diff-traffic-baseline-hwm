@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <ext/hash_map>
+#include <deque>
 #include <cmath>
 #include <cassert>
 #include <boost/foreach.hpp>
@@ -25,6 +27,62 @@ typedef ublas::vector<int>                    config;
 typedef config::iterator                      config_iter;
 typedef boost::iterator_range<config_iter>    config_range;
 
+inline size_t index(const config &current, const config &dim)
+{
+    size_t sz = current.size();
+    size_t res = 0;
+    for(int i = 0; i < sz-1; ++i)
+    {
+        res = (res + current[i])*(dim[i+1]+1);
+    }
+    res += current[sz-1];
+
+    return res;
+}
+
+inline void unindex(config &res, size_t idx, const config &cum_dims)
+{
+    size_t sz = res.size();
+
+    for(int i = 0; i < sz-1; ++i)
+    {
+        res[i] = idx/cum_dims[i];
+        idx -= res[i]*cum_dims[i];
+    }
+
+    res[sz-1] = idx;
+}
+
+struct todo_queue : public std::deque<config>
+{
+    typedef std::deque<config> base;
+
+    todo_queue(const config &maxc) : maxconf(maxc)
+    {}
+
+    config pop_front()
+    {
+        config res(base::front());
+        base::pop_front();
+        membership.erase(index(res, maxconf));
+        return res;
+    }
+
+    void push_back(const config &res)
+    {
+        size_t idx(index(res, maxconf));
+        __gnu_cxx::hash_map<size_t,bool>::iterator loc(membership.find(idx));
+        if(loc == membership.end())
+        {
+            base::push_back(res);
+            membership.insert(std::make_pair(idx,true));
+        }
+    }
+
+    __gnu_cxx::hash_map<size_t,bool> membership;
+    const config &maxconf;
+};
+
 using namespace boost::assign;
 
 static float size(const joblist &jobs, int nprocs)
@@ -42,8 +100,9 @@ static float size(const joblist &jobs, int nprocs)
 template <class C>
 typename C::value_type sum(const C &cont)
 {
-    C::value_type s = 0;
-    BOOST_FOREACH(const C::value_type &i, cont)
+    typedef typename C::value_type value_type;
+    value_type s = 0;
+    BOOST_FOREACH(const value_type &i, cont)
     {
         s += i;
     }
@@ -192,32 +251,6 @@ struct bin_search
     bin_search *parent;
 };
 
-inline size_t index(const config &current, const config &dim)
-{
-    size_t sz = current.size();
-    size_t res = 0;
-    for(int i = 0; i < sz-1; ++i)
-    {
-        res = (res + current[i])*(dim[i+1]+1);
-    }
-    res += current[sz-1];
-
-    return res;
-}
-
-inline void unindex(config &res, size_t idx, const config &cum_dims)
-{
-    size_t sz = res.size();
-
-    for(int i = 0; i < sz-1; ++i)
-    {
-        res[i] = idx/cum_dims[i];
-        idx -= res[i]*cum_dims[i];
-    }
-
-    res[sz-1] = idx;
-}
-
 std::vector<config> minbins(const config &conf, float eps, float h)
 {
     int s = conf.size();
@@ -230,7 +263,7 @@ std::vector<config> minbins(const config &conf, float eps, float h)
 
     bin_search *search = new bin_search[prod];
 
-    std::vector<config> todo;
+    todo_queue todo(conf);
     feasible_iterator fi(conf, eps, h);
     {
         config res((ublas::scalar_vector<int>(s, 0)));
@@ -245,8 +278,7 @@ std::vector<config> minbins(const config &conf, float eps, float h)
 
     while(!todo.empty())
     {
-        config t0    (todo.back());
-        todo.pop_back();
+        config t0    (todo.pop_front());
         size_t t0_idx(index(t0, conf));
 
         config tf = conf - t0;
@@ -335,7 +367,6 @@ binlist dual(const std::vector<float> &jobs, float eps)
     return real_bins;
 }
 
-
 binlist eps_makespan(const joblist &jobs, int nprocs, float eps)
 {
     float lower = size(jobs, nprocs);
@@ -375,7 +406,7 @@ binlist eps_makespan(const joblist &jobs, int nprocs, float eps)
 
 int main(int argc, char *argv[])
 {
-    float epsilon = 0.05f;
+    float epsilon = 0.1f;
     joblist values;
     values += 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10;
     std::sort(values.begin(), values.end());
