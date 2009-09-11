@@ -77,8 +77,8 @@ const_job_iter partition(const joblist &jobs, float split)
 
 void pack_small(binlist &bins, const_job_range &small_range)
 {
-    std::vector<joblist>::iterator unfull_bin_start = bins.begin();
-    std::vector<joblist>::iterator examine_start    = bins.begin();
+    binlist::iterator unfull_bin_start = bins.begin();
+    binlist::iterator examine_start    = bins.begin();
 
     while(examine_start != bins.end())
     {
@@ -303,6 +303,43 @@ std::vector<config> minbins(const config &conf, float eps, float h)
     return result;
 }
 
+binlist dual(const std::vector<float> &jobs, float eps)
+{
+    const_job_iter part(partition(jobs, eps));
+
+
+    const_job_range small = boost::make_iterator_range(static_cast<const_job_iter>(jobs.begin()), part);
+    const_job_range large = boost::make_iterator_range(part, static_cast<const_job_iter>(jobs.end()));
+
+    binlist real_bins;
+    if(!large.empty())
+    {
+        config histogram;
+        binlist job_hist;
+        float h;
+        eps_histogram(histogram, job_hist, h,
+                      large, eps);
+
+        std::vector<config> hist_bins = minbins(histogram, eps, h);
+        BOOST_FOREACH(const config &hb, hist_bins)
+        {
+            real_bins.push_back(joblist());
+            for(int pos = 0; pos < hb.size(); ++pos)
+            {
+                for(int ct = 0; ct < hb[pos]; ++ct)
+                {
+                    real_bins.back().push_back(job_hist[pos].back());
+                    job_hist[pos].back();
+                }
+            }
+        }
+    }
+
+    pack_small(real_bins, small);
+
+    return real_bins;
+}
+
 int main(int argc, char *argv[])
 {
     float epsilon = 0.5f;
@@ -378,7 +415,6 @@ int main(int argc, char *argv[])
         std::cout << "]";
     }
     std::cout << std::endl;
-
 
     return 0;
 }
