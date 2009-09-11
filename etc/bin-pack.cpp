@@ -33,23 +33,6 @@ static float size(const joblist &jobs, int nprocs)
     return std::max(sum/nprocs, maxjob);
 }
 
-// binlist eps_makespan(const std::vector<float> &jobs, int nprocs, float eps)
-// {
-//     float lower = size(jobs, nprocs);
-//     float upper = 2.0f*lowers;
-//     while(std::abs(upper-lower) > 1e-1)
-//     {
-//         float d = (upper + lower)*0.5f;
-//         part = dual(jobs/d, eps);
-//         if(part > nprocs)
-//             lower = d;
-//         else
-//             upper = d;
-//     }
-//     part = dual(jobs/upper, eps);
-//     return part;
-// }
-
 void eps_histogram(config &histogram, binlist &job_hist, float &h, const_job_range &jobs, float eps)
 {
     int nbins = static_cast<int>(std::ceil(1.0f/(eps*eps)));
@@ -120,6 +103,7 @@ void pack_small(binlist &bins, const_job_range &small_range)
         {
             bins.push_back(joblist());
             bins.back().push_back(j);
+            unfull_bin_start = boost::prior(bins.end());
         }
         else
             unfull_bin_start->push_back(j);
@@ -283,7 +267,8 @@ std::vector<config> minbins(const config &conf, float eps, float h)
 
     bin_search *current = last->parent;
     config current_conf(conf.size());
-    unindex(current_conf, current - search, cum_dim);
+    if(current)
+        unindex(current_conf, current - search, cum_dim);
 
     while(current)
     {
@@ -298,7 +283,7 @@ std::vector<config> minbins(const config &conf, float eps, float h)
     }
     result.push_back(last_conf);
 
-    delete search;
+    delete[] search;
 
     return result;
 }
@@ -329,7 +314,7 @@ binlist dual(const std::vector<float> &jobs, float eps)
                 for(int ct = 0; ct < hb[pos]; ++ct)
                 {
                     real_bins.back().push_back(job_hist[pos].back());
-                    job_hist[pos].back();
+                    job_hist[pos].pop_back();
                 }
             }
         }
@@ -340,11 +325,49 @@ binlist dual(const std::vector<float> &jobs, float eps)
     return real_bins;
 }
 
+
+binlist eps_makespan(const joblist &jobs, int nprocs, float eps)
+{
+    float lower = size(jobs, nprocs);
+    float upper = 2.0f*lower;
+    while(std::abs(upper-lower) > 1e-1)
+    {
+        float d = (upper + lower)*0.5f;
+        float inv_d = 1.0f/d;
+        joblist scaled(jobs);
+        BOOST_FOREACH(float &j, scaled)
+        {
+            j *= inv_d;
+        }
+        binlist part(dual(scaled, eps));
+        if(part.size() > nprocs)
+            lower = d;
+        else
+            upper = d;
+    }
+    float inv_upper = 1.0f/upper;
+    joblist scaled(jobs);
+    BOOST_FOREACH(float &j, scaled)
+    {
+        j *= inv_upper;
+    }
+
+    binlist part(dual(scaled, eps));
+    BOOST_FOREACH(joblist &jl, part)
+    {
+        BOOST_FOREACH(float &j, jl)
+        {
+            j *= upper;
+        }
+    }
+    return part;
+}
+
 int main(int argc, char *argv[])
 {
-    float epsilon = 0.5f;
+    float epsilon = 0.2f;
     joblist values;
-    values += .14,.44,.93,.23,.56, 0.1, 0.1, 0.1, 0.1;
+    values += 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10, 14,44,93,23,56, 10, 10, 10, 10;
     std::sort(values.begin(), values.end());
 
     BOOST_FOREACH(const float &j, values)
@@ -353,66 +376,18 @@ int main(int argc, char *argv[])
     }
     std::cout << std::endl;
 
-    const_job_iter split = partition(values, epsilon);
-    const_job_range large = boost::make_iterator_range(split, static_cast<const_job_iter>(values.end()));
-    const_job_range small = boost::make_iterator_range(static_cast<const_job_iter>(values.begin()), split);
-    std::cout << "Large: ";
-    BOOST_FOREACH(const float &j, large)
-    {
-        std::cout << j << " ";
-    }
-    std::cout << std::endl;
+    binlist bl(eps_makespan(values, 20, epsilon));
 
-    config  hist;
-    binlist job_hist;
-    float   h;
-    eps_histogram(hist, job_hist, h, large, epsilon);
-
-    std::cout << "Histogram: ";
-    BOOST_FOREACH(const int &j, hist)
-    {
-        std::cout << j << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "job_hist: ";
-    BOOST_FOREACH(const joblist &jl, job_hist)
+    BOOST_FOREACH(const joblist &jl, bl)
     {
         std::cout << "[ ";
-        BOOST_FOREACH(const float &j, jl)
+        float sum = 0.0f;
+        BOOST_FOREACH(const float &f, jl)
         {
-            std::cout << j << " ";
+            std::cout << f << " ";
+            sum += f;
         }
-        std::cout << "]";
-    }
-    std::cout << std::endl;
-
-    pack_small(job_hist, small);
-
-    std::cout << "job_hist: ";
-    BOOST_FOREACH(const joblist &jl, job_hist)
-    {
-        std::cout << "[ ";
-        BOOST_FOREACH(const float &j, jl)
-        {
-            std::cout << j << " ";
-        }
-        std::cout << "]";
-    }
-    std::cout << std::endl;
-
-    config maxconf;
-    maxconf += 2, 3, 5;
-
-    std::vector<config> res = minbins(maxconf, 0.2, 0.2);
-    BOOST_FOREACH(const config &cf, res)
-    {
-        std::cout << "[ ";
-        BOOST_FOREACH(const float &c, cf)
-        {
-            std::cout << c << " ";
-        }
-        std::cout << "]";
+        std::cout << "]: " << sum << " ";
     }
     std::cout << std::endl;
 
