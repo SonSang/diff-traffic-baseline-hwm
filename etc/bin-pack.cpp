@@ -349,92 +349,25 @@ binlist dual(const std::vector<float> &jobs, float eps)
     return real_bins;
 }
 
-bool pack_small_in_nbins(binlist &bins, const_job_range &small_range)
-{
-    binlist::iterator unfull_bin_start = bins.begin();
-    binlist::iterator examine_start    = bins.begin();
-
-    while(examine_start != bins.end())
-    {
-        if(sum_over(*examine_start, 1.0f))
-        {
-            ++examine_start;
-            ++unfull_bin_start;
-        }
-        else
-            break;
-    }
-
-    for(; examine_start != bins.end(); ++examine_start)
-        if(sum_over(*examine_start, 1.0f))
-        {
-            std::swap(*examine_start, *unfull_bin_start);
-            ++unfull_bin_start;
-        }
-
-    BOOST_FOREACH(const float &j, small_range)
-    {
-        if(unfull_bin_start == bins.end())
-            return false;
-        else
-            unfull_bin_start->push_back(j);
-
-        if(sum_over(*unfull_bin_start, 1.0f))
-            ++unfull_bin_start;
-    }
-
-    return true;
-}
-
-bool dual_in_nbins(const std::vector<float> &jobs, float eps, int nbins)
-{
-    const_job_iter part(partition(jobs, eps));
-
-    const_job_range small = boost::make_iterator_range(static_cast<const_job_iter>(jobs.begin()), part);
-    const_job_range large = boost::make_iterator_range(part, static_cast<const_job_iter>(jobs.end()));
-
-    binlist real_bins;
-    if(!large.empty())
-    {
-        config histogram;
-        binlist job_hist;
-        float h;
-        eps_histogram(histogram, job_hist, h,
-                      large, eps);
-
-        std::vector<config> hist_bins = minbins(histogram, eps, h);
-        if(hist_bins.size() > nbins)
-            return false;
-        real_bins.reserve(hist_bins.size());
-        BOOST_FOREACH(const config &hb, hist_bins)
-        {
-            real_bins.push_back(joblist());
-            for(int pos = 0; pos < hb.size(); ++pos)
-                for(int ct = 0; ct < hb[pos]; ++ct)
-                {
-                    real_bins.back().push_back(job_hist[pos].back());
-                    job_hist[pos].pop_back();
-                }
-        }
-    }
-
-    return pack_small_in_nbins(real_bins, small);
-}
-
 binlist eps_makespan(const joblist &jobs, int nprocs, float eps)
 {
     float lower = size(jobs, nprocs);
     float upper = 2.0f*lower;
-    while(std::abs(upper-lower) > 1e-1)
+    std::cout << lower << std::endl;
+    std::cout << upper << std::endl;
+    while(std::abs(upper-lower) > 1)
     {
         float d = (upper + lower)*0.5f;
+        std::cout << d << " ";
         float inv_d = 1.0f/d;
         joblist scaled(jobs);
         BOOST_FOREACH(float &j, scaled)
         {
             j *= inv_d;
         }
-        if(dual_in_nbins(scaled, eps, nprocs))
+        binlist part(dual(scaled, eps));
+        std::cout << part.size() << std::endl;
+        if(part.size() > nprocs)
             lower = d;
         else
             upper = d;
@@ -501,6 +434,8 @@ int main(int argc, char *argv[])
     std::sort(values.begin(), values.end());
 
     binlist bl(eps_makespan(values, nbins, epsilon));
+
+    std::cout << "nbins: " << bl.size() << std::endl;
 
     BOOST_FOREACH(const joblist &jl, bl)
     {
