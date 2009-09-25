@@ -20,7 +20,7 @@ fps = 25.0
 
 #<t (s)> <n cars this step>
 #<Car id (integer)>  <X-position (meters)> <Y-position (meters)> <Z-position (meters)> <X-component of dir> <Y-component of dir> <X-velocity (m/s)> <Y-velocity (m/s)>
-
+# need to fix colors for last 3 added (cvic, bmw, impr)
 available_cars = { 'tbird' :
                        {'body': 'tbird-body',
                         'wheel': 'tbird-wheel',
@@ -157,6 +157,23 @@ available_cars = { 'tbird' :
                                      [ 2.980, -0.777, -0.567],
                                      [   0.0, -0.777, -0.567]],
                     'z-offs' : 0.567 + 0.701*0.5,
+                    'colors' : [[ 0.929411764706, 0.929411764706, 0.929411764706 ],
+                                [ 0.827450980392, 0.737254901961, 0.658823529412 ],
+                                [ 0.0745098039216, 0.247058823529, 0.866666666667 ],
+                                    [ 0.0, 0.396078431373, 0.145098039216 ],
+                                [ 0.486274509804, 0.21568627451, 0.725490196078 ],
+                                [ 0.364705882353, 0.639215686275, 1.0 ]]
+                        },
+                   'impr' :
+                   {'body': 'impr_body_obj',
+                    'wheel': 'impr_wheel_obj',
+                    'wheel-flip': 'impr_wheel_obj_flip',
+                    'wheel-radius' : 0.629*0.5,
+                    'wheel_points': [[   0.0,  0.664, -0.535],
+                                     [ 2.577,  0.664, -0.535],
+                                     [ 2.577, -0.664, -0.535],
+                                     [   0.0, -0.664, -0.535]],
+                    'z-offs' : 0.535 + 0.629*0.5,
                     'colors' : [[ 0.929411764706, 0.929411764706, 0.929411764706 ],
                                 [ 0.827450980392, 0.737254901961, 0.658823529412 ],
                                 [ 0.0745098039216, 0.247058823529, 0.866666666667 ],
