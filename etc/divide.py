@@ -93,6 +93,8 @@ def partitions2(nums, slots):
         yield [list(nums)] + [[]] * (slots-1)
         return
     for subset, comp in powerset_comp(nums[1:]):
+        if(len(comp) < slots):
+            continue
         first = [[nums[0]] + list(subset)]
         for subpart in partitions2(comp, slots-1):
             yield first + subpart
