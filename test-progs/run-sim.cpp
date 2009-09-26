@@ -42,11 +42,12 @@ int main(int argc, char * argv[])
     timer t;
 
     t.start();
+    size_t last_out = 0;
     size_t steps = 0;
-    float end_time = 8000.0f;
+    float end_time = 75000.0f;
     while(net.global_time < end_time)
     {
-        if(!icars.empty() && net.global_time > icars.front().time)
+        while(!icars.empty() && net.global_time > icars.front().time)
         {
             size_t lno = icars.front().lane;
             net.add_carticle(lno, CAR_LENGTH/(net.lanes[lno].h*net.lanes[lno].ncells), icars.front().speed);
@@ -60,6 +61,13 @@ int main(int argc, char * argv[])
 
         net.sim_step();
         ++steps;
+
+        if((steps - last_out) > 100)
+        {
+            printf("%f\r", net.global_time);
+            fflush(stdout);
+            last_out = steps;
+        }
     };
     t.stop();
 
