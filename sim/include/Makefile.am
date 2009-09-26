@@ -6,4 +6,5 @@ include_HEADERS = arz.hpp          \
                   road.hpp	   \
                   timer.hpp	   \
                   xml-util.hpp     \
-	          car-models.hpp
+	          car-models.hpp   \
+	          car-stream.hpp

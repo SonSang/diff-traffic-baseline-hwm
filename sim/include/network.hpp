@@ -2,6 +2,7 @@
 #define _NETWORK_HPP_
 
 #include <vector>
+#include <deque>
 #include <map>
 #include <cassert>
 #include <cmath>
@@ -124,6 +125,7 @@ typedef id<intersection> intersection_id;
 
 #include "xml-util.hpp"
 #include "car-models.hpp"
+#include "car-stream.hpp"
 #include "timer.hpp"
 #include "intervals.hpp"
 #include "arz.hpp"

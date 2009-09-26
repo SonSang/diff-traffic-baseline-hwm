@@ -12,6 +12,7 @@ FILE *out_file;
 #define OUTPUT_RATE 0.3
 size_t frameno = 0;
 float last_dump;
+std::deque<input_car> icars;
 
 static float zooms[10] = { 13.0f,
                            2.0f,
@@ -859,13 +860,17 @@ public:
                     break;
                 case ' ':
                     {
+                        if(!icars.empty() && net->global_time > icars.front().time)
                         {
-                            size_t lno = 0;
-                            net->add_carticle(lno, 0.0, 11.5);
+
+                            size_t lno = icars.front().lane;
+                            net->add_carticle(lno, 0.0, icars.front().speed);
                             net->lanes[lno].data[0].rho += CAR_LENGTH/net->lanes[lno].h;
                             if(net->lanes[lno].data[0].rho >= 0.95)
                                 net->lanes[lno].data[0].rho = 0.95;
-                            net->lanes[lno].data[0].y = (net->lanes[lno].data[0].y + to_y(CAR_LENGTH/net->lanes[lno].h, 11.5, net->lanes[lno].speedlimit, net->gamma_c))*0.5f;
+                            net->lanes[lno].data[0].y = to_y(CAR_LENGTH/net->lanes[lno].h, icars.front().speed, net->lanes[lno].speedlimit, net->gamma_c);
+
+                            icars.pop_front();
                         }
 
                         float dt =  net->sim_step();
@@ -957,6 +962,8 @@ int main(int argc, char * argv[])
         fprintf(stderr, "Couldn't load %s\n", argv[1]);
         exit(1);
     }
+
+    icars = read_sumo_routing(argv[2]);
 
     net->calc_bounding_box();
     point pt;
