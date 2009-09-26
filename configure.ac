@@ -135,10 +135,7 @@ AC_FUNC_MALLOC
 AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 
-SHAVE_INIT([m4/shave], [enable])
-AC_CONFIG_FILES([m4/shave/shave
-	         m4/shave/shave-libtool
-		 Makefile
+AC_CONFIG_FILES([Makefile
 		 doc/Doxyfile
 		 doc/Makefile
  		 ogre/Makefile
