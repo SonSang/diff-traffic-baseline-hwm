@@ -458,7 +458,7 @@ def build_car(scn, id, color, car, scale):
 
     print "Copying body"
     new_body = scn.objects.new(body_obj.getData(False, True), "%s_%d" % (body_obj.getName(), id))
-
+    new_body.colbits = 255
     mats = body_obj.getMaterials()
 
     body = find_mat(mats, "Bodycolor")
