@@ -24,9 +24,7 @@ static float zooms[10] = { 13.0f,
                            12.0f,
                            12.5f};
 
-static GLuint car_list;
-
-static void init_draw_car()
+static GLuint init_draw_car()
 {
     static const float verts[][3] = {{-(CAR_LENGTH-CAR_REAR_AXLE), -0.3f*LANE_WIDTH, 0.0f},  //0
                                      {              CAR_REAR_AXLE,-0.15f*LANE_WIDTH, 0.0f},  //1
@@ -46,7 +44,7 @@ static void init_draw_car()
                                     { 1, 2, 6, 5}};// front
 
 
-    car_list = glGenLists(1);
+    GLuint car_list = glGenLists(1);
     glPushMatrix();
     glNewList(car_list, GL_COMPILE);
     glBegin(GL_QUADS);
@@ -56,10 +54,16 @@ static void init_draw_car()
     glEnd();
     glEndList();
     glPopMatrix();
+
+    return car_list;
 }
 
 static void draw_car()
 {
+    static GLuint car_list = 0;
+
+    if(!car_list)
+        car_list = init_draw_car();
     glCallList(car_list);
 }
 
@@ -604,9 +608,6 @@ public:
             glClearColor(0.0, 0.0, 0.0, 0.0);
 
             glEnable(GL_DEPTH_TEST);
-
-            if(!glIsList(car_list))
-                init_draw_car();
         }
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
