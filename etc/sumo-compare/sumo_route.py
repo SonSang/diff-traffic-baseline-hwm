@@ -1,4 +1,4 @@
-from xml.dom.minidom import Document
+import sys
 import random
 
 def okaylanes(lanemap, time):
@@ -12,40 +12,33 @@ def okaylanes(lanemap, time):
         return ok
 
 if __name__ == '__main__':
-    doc = Document()
-    routes = doc.createElement('routes')
-    doc.appendChild(routes)
+    out = open("/home/sewall/unc/traffic/hwm/etc/sumo-compare/sumo-data/fout2.rou.xml", 'w')
+    out.write("<routes>\n")
 
     nlanes = 6
     lanelast = []
     for i in xrange(nlanes):
         lanelast.append(-1)
 
-    N = 10000
+    N = 1000000
     time = 0
     for i in xrange(0, N):
-        v = doc.createElement('vehicle')
-        routes.appendChild(v)
-        v.setAttribute("id", "0_%02d" % i)
-        v.setAttribute("depart", str(time))
-
         valid_lanes = okaylanes(lanelast, time)
         departlane = valid_lanes[random.randint(0, len(valid_lanes)-1)]
+        arrivallane = random.randint(0, nlanes-1)
+        departspeed = random.uniform(10, 14)
+
         lanelast[departlane] = time
 
-        v.setAttribute("departlane",  str(departlane))
-        v.setAttribute("arrivallane", str(random.randint(0, nlanes-1)))
-        v.setAttribute("departspeed", str(random.uniform(10, 14)))
+        out.write("<vehicle id=\"0_%02d\" depart=\"%d\" departlane=\"%d\" arrivallane=\"%d\" departspeed=\"%d\">\n" % (i, time,
+                                                                                                                       departlane,
+                                                                                                                       arrivallane,
+                                                                                                                       departspeed))
 
         time += random.randint(1, 2)
 
-        r = doc.createElement('route')
-        r.setAttribute("edges", "e0 e1 e2")
-        v.appendChild(r)
+        out.write("<route edges=\"e0 e1 e2\"/></vehicle>\n")
 
-    # print doc.toprettyxml(indent="   ")
-
-    fi = open("/home/sewall/unc/traffic/hwm/etc/sumo-compare/sumo-data/fout2.rou.xml", 'w')
-    fi.write(doc.toprettyxml(indent="   "))
-    fi.close()
+    out.write("</routes>")
+    out.close()
     print time
