@@ -864,7 +864,7 @@ public:
                         {
 
                             size_t lno = icars.front().lane;
-                            net->add_carticle(lno, 0.0, icars.front().speed);
+                            net->add_carticle(lno, CAR_LENGTH/(net->lanes[lno].h*net->lanes[lno].ncells), icars.front().speed);
                             net->lanes[lno].data[0].rho += CAR_LENGTH/net->lanes[lno].h;
                             if(net->lanes[lno].data[0].rho >= 0.95)
                                 net->lanes[lno].data[0].rho = 0.95;
