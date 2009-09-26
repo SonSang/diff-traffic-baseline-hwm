@@ -113,8 +113,9 @@ AS_IF([test x"$enable_ogre" != xno],
              PKG_CHECK_MODULES(CEGUI_OGRE,     [CEGUI-OGRE >= 1.6.2],    [have_cegui_ogre=yes],    [have_cegui_ogre=no])
 	     PKG_CHECK_MODULES(CAELUM,  [Caelum >= 0.4.0], [have_caelum=yes], [have_caelum=no])
 	     AS_IF([test x"have_ogre" != xno -a x"have_ois" != xno -a x"have_cegui" != xno -a x"have_cegui_ogre" != xno -a x"have_caelum" != xno],
-	           [ogre_ok=yes])],
-	    [AC_MSG_FAILURE([--enable-ogre given but test for ogre, ois, cegui, or caelum failed!])])
+	           [ogre_ok=yes],
+		   [AC_MSG_FAILURE([--enable-ogre given but test for ogre, ois, cegui, or caelum failed!])])],
+      [ogre_ok=no])
 
 AM_CONDITIONAL(DO_OGRE, test x"$ogre_ok" = xyes)
 
@@ -173,7 +174,7 @@ else
 echo "
   Building visual: no"
 fi
-if test -z $DO_OGRE; then
+if test x"$ogre_ok" = xyes; then
 echo "
   Building ogre components: yes
     OGRE_CFLAGS......: $OGRE_CFLAGS
