@@ -34,7 +34,7 @@
       <road_intervals>
         <interval>
           <base>
-            <road_membership parent_road_ref="e0" interval_start="0" interval_end="1" lane_position="0"/>
+            <road_membership parent_road_ref="e0" interval_start="0" interval_end="1" lane_position="-1"/>
           </base>
         </interval>
       </road_intervals>
