@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <ext/hash_map>
+#include <tr1/unordered_set>
 #include <deque>
 #include <cmath>
 #include <cassert>
@@ -15,10 +15,11 @@
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/pool/pool_alloc.hpp>
 
 namespace ublas = boost::numeric::ublas;
 
-typedef std::vector<float>                    joblist;
+typedef std::vector<float, boost::pool_allocator<float> >                    joblist;
 typedef joblist::iterator                     job_iter;
 typedef joblist::const_iterator               const_job_iter;
 typedef boost::iterator_range<job_iter>       job_range;
@@ -26,7 +27,7 @@ typedef boost::iterator_range<const_job_iter> const_job_range;
 
 typedef std::vector<joblist>                  binlist;
 
-typedef ublas::vector<int>                    config;
+typedef ublas::vector<int>                   config;
 typedef config::iterator                      config_iter;
 typedef boost::iterator_range<config_iter>    config_range;
 
@@ -72,15 +73,15 @@ struct todo_queue : public std::deque<config>
     void push_back(const config &res)
     {
         size_t idx(index(res, maxconf));
-        __gnu_cxx::hash_map<size_t,bool>::iterator loc(membership.find(idx));
+        std::tr1::unordered_set<size_t>::iterator loc(membership.find(idx));
         if(loc == membership.end())
         {
             base::push_back(res);
-            membership.insert(std::make_pair(idx,true));
+            membership.insert(idx);
         }
     }
 
-    __gnu_cxx::hash_map<size_t,bool> membership;
+    std::tr1::unordered_set<size_t> membership;
     const config &maxconf;
 };
 
@@ -314,7 +315,7 @@ void pack_small(binlist &bins, const_job_range &small_range)
     }
 }
 
-binlist dual(const std::vector<float> &jobs, float eps)
+binlist dual(const joblist &jobs, float eps)
 {
     const_job_iter part(partition(jobs, eps));
 
@@ -449,6 +450,9 @@ int main(int argc, char *argv[])
         std::cout << "]: " << sum << " ";
     }
     std::cout << std::endl;
+
+    if(*argv[3] != '-')
+        delete input_stream;
 
     return 0;
 }
