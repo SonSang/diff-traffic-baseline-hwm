@@ -859,6 +859,15 @@ public:
                     break;
                 case ' ':
                     {
+                        {
+                            size_t lno = 0;
+                            net->add_carticle(lno, 0.0, 11.5);
+                            net->lanes[lno].data[0].rho += CAR_LENGTH/net->lanes[lno].h;
+                            if(net->lanes[lno].data[0].rho >= 0.95)
+                                net->lanes[lno].data[0].rho = 0.95;
+                            net->lanes[lno].data[0].y = (net->lanes[lno].data[0].y + to_y(CAR_LENGTH/net->lanes[lno].h, 11.5, net->lanes[lno].speedlimit, net->gamma_c))*0.5f;
+                        }
+
                         float dt =  net->sim_step();
                         printf("dt = %f, frameno = %zu\n", dt, frameno);
                         if(net->global_time - last_dump > OUTPUT_RATE)
@@ -959,52 +968,11 @@ int main(int argc, char * argv[])
     net->translate(pt);
     net->prepare(H);
 
-    int lno = 0;
-    foreach(lane &la, net->lanes)
-    {
-        if(la.h > 0.8*H)
-        {
-            float x = (CAR_LENGTH*20*drand48())/(la.ncells*la.h);
-
-            while(x < 0.5)
-            {
-                x += (drand48()*15*CAR_LENGTH/(la.ncells*la.h));
-                net->add_carticle(lno, x, la.speedlimit*0.5);
-                x += 2.5*CAR_LENGTH/(la.ncells*la.h);
-                printf("x %f\n", x);
-            }
-
-            while(x < 0.55)
-            {
-                x += (drand48()*1.5*CAR_LENGTH/(la.ncells*la.h));
-                net->add_carticle(lno, x, la.speedlimit*0.01);
-                x += 1.5*CAR_LENGTH/(la.ncells*la.h);
-                printf("x %f\n", x);
-            }
-
-            x = 0.8;
-
-            while(x < 0.85)
-            {
-                x += (drand48()*1.6*CAR_LENGTH/(la.ncells*la.h));
-                net->add_carticle(lno, x, la.speedlimit*0.01);
-                x += 1.5*CAR_LENGTH/(la.ncells*la.h);
-                printf("x %f\n", x);
-            }
-
-
-
-        }
-        ++lno;
-    }
-
-    net->fill_from_carticles();
-
-    net->dump_carticles(out_file);
     last_dump = net->global_time;
-    frameno++;
 
     t = 0.0f;
+
+    net->fill_from_carticles();
 
     foreach(const lane &la, net->lanes)
     {
