@@ -1,14 +1,15 @@
 #include "network.hpp"
 #include <omp.h>
+#include <boost/lexical_cast.hpp>
 
 #include "xmmintrin.h"
 #include "pmmintrin.h"
 
 int main(int argc, char * argv[])
 {
-    if(argc < 3)
+    if(argc < 5)
     {
-        fprintf(stderr, "Usage: %s <input network> <input flow>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input network> <input flow> <start> <end>\n", argv[0]);
         exit(1);
     }
 
@@ -27,6 +28,9 @@ int main(int argc, char * argv[])
 
     std::deque<input_car> icars = read_sumo_routing(argv[2]);
 
+    float start    = boost::lexical_cast<float>(argv[3]);
+    float end_time = boost::lexical_cast<float>(argv[4]);
+
     net.calc_bounding_box();
 
     point pt;
@@ -38,13 +42,13 @@ int main(int argc, char * argv[])
     net.prepare(H);
 
     net.fill_from_carticles();
+    net.global_time = start;
 
     timer t;
 
     t.start();
     size_t last_out = 0;
     size_t steps = 0;
-    float end_time = 75000.0f;
     while(net.global_time < end_time)
     {
         while(!icars.empty() && net.global_time > icars.front().time)
@@ -62,16 +66,16 @@ int main(int argc, char * argv[])
         net.sim_step();
         ++steps;
 
-        if((steps - last_out) > 100)
-        {
-            printf("%f\r", net.global_time);
-            fflush(stdout);
-            last_out = steps;
-        }
+        // if((steps - last_out) > 100)
+        // {
+        //     printf("%f\r", net.global_time);
+        //     fflush(stdout);
+        //     last_out = steps;
+        // }
     };
     t.stop();
 
-    printf("%zu steps; end time = %f took %f seconds\n", steps, net.global_time, t.interval_S());
+    printf("steps: %zu\nend time: %f\nduration: %fs\n", steps, net.global_time, t.interval_S());
 
     return 0;
 }
