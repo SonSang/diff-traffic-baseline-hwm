@@ -11,22 +11,21 @@ def okaylanes(lanemap, time):
     else:
         return ok
 
-if __name__ == '__main__':
-    out = open("/home/sewall/unc/traffic/hwm/etc/sumo-compare/sumo-data/fout2.rou.xml", 'w')
+def generate_route(file, ncars, time_sep, vel_range=(10,14), nlanes=6):
+    out = open(file, 'w')
     out.write("<routes>\n")
 
-    nlanes = 6
     lanelast = []
     for i in xrange(nlanes):
         lanelast.append(-1)
 
-    N = 1000000
+    N = ncars
     time = 0
     for i in xrange(0, N):
         valid_lanes = okaylanes(lanelast, time)
         departlane = valid_lanes[random.randint(0, len(valid_lanes)-1)]
         arrivallane = random.randint(0, nlanes-1)
-        departspeed = random.uniform(10, 14)
+        departspeed = random.uniform(*vel_range)
 
         lanelast[departlane] = time
 
@@ -34,11 +33,26 @@ if __name__ == '__main__':
                                                                                                                        departlane,
                                                                                                                        arrivallane,
                                                                                                                        departspeed))
-
-        time += random.randint(1, 2)
+        time += random.randint(5, 10)
 
         out.write("<route edges=\"e0 e1 e2\"/></vehicle>\n")
 
     out.write("</routes>")
     out.close()
-    print time
+    return time
+
+if __name__ == '__main__':
+    sptime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/sparse/sparse.rou.xml",
+                          100,
+                          (5, 10))
+    print "Sparse: ", sptime
+
+    medtime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/medium/medium.rou.xml",
+                             100,
+                             (2, 5))
+    print "Medium: ", medtime
+
+    densetime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/dense/dense.rou.xml",
+                               100,
+                               (1, 2))
+    print "Dense: ", densetime
