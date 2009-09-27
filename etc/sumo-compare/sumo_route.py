@@ -33,7 +33,7 @@ def generate_route(file, ncars, time_sep, vel_range=(10,14), nlanes=6):
                                                                                                                        departlane,
                                                                                                                        arrivallane,
                                                                                                                        departspeed))
-        time += random.randint(5, 10)
+        time += random.randint(*time_sep)
 
         out.write("<route edges=\"e0 e1 e2\"/></vehicle>\n")
 
@@ -43,16 +43,16 @@ def generate_route(file, ncars, time_sep, vel_range=(10,14), nlanes=6):
 
 if __name__ == '__main__':
     sptime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/sparse/sparse.rou.xml",
-                          100,
-                          (5, 10))
+                          1000000,
+                          (7, 10))
     print "Sparse: ", sptime
 
     medtime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/medium/medium.rou.xml",
-                             100,
-                             (2, 5))
+                             1000000,
+                             (3, 6))
     print "Medium: ", medtime
 
     densetime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/dense/dense.rou.xml",
-                               100,
+                               1000000,
                                (1, 2))
     print "Dense: ", densetime
