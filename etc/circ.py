@@ -24,13 +24,13 @@ def ext_tangents(c0, r0, c1, r1):
     delc_theta = math.pi/2 - math.atan2(delc[1], delc[0])
     delc_len = math.sqrt(numpy.dot(delc, delc))
     theta = math.atan2(delr, delc_len)
-    z = math.pi/2 - theta + delc_theta
-    l0 = (r0*numpy.array([math.cos(z), math.sin(z)]) + c0,
-          r1*numpy.array([math.cos(z), math.sin(z)]) + c1)
-    z = -(math.pi/2 - theta) + delc_theta
-    l1 = (r0*numpy.array([math.cos(z), math.sin(z)]) + c0,
-          r1*numpy.array([math.cos(z), math.sin(z)]) + c1)
-    return l0, l1
+    z0 = math.pi/2 - theta + delc_theta
+    l0 = (r0*numpy.array([math.cos(z0), math.sin(z0)]) + c0,
+          r1*numpy.array([math.cos(z0), math.sin(z0)]) + c1)
+    z1 = -(math.pi/2 - theta) + delc_theta
+    l1 = (r0*numpy.array([math.cos(z1), math.sin(z1)]) + c0,
+          r1*numpy.array([math.cos(z1), math.sin(z1)]) + c1)
+    return (z0, l0), (z1, l1)
 
 def ramp(p0, n0, p1, n1, rad):
     c0 = rad*numpy.array([n0[1], -n0[0]]) + p0
