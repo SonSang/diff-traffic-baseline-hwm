@@ -135,25 +135,25 @@
           <base>
             <road_membership parent_road_ref="road-sn" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
           </base>
-          <divider value="0.25">
+          <divider value="0.092624">
             <road_membership parent_road_ref="road-ne-circle" interval_start="0.0" interval_end="1.0" lane_position="-1"/>
           </divider>
-          <divider value="0.35">
+          <divider value="0.25">
             <road_membership parent_road_ref="road-we" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
           </divider>
-          <divider value="0.45">
+          <divider value="0.342624">
             <road_membership parent_road_ref="road-nw-circle" interval_start="0" interval_end="1" lane_position="-1"/>
           </divider>
-          <divider value="0.55">
+          <divider value="0.5">
             <road_membership parent_road_ref="road-ns" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
           </divider>
-          <divider value="0.65">
+          <divider value="0.592624">
             <road_membership parent_road_ref="road-sw-circle" interval_start="0.0" interval_end="1.0" lane_position="-1"/>
           </divider>
           <divider value="0.75">
             <road_membership parent_road_ref="road-ew" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
           </divider>
-          <divider value="0.85">
+          <divider value="0.842624">
             <road_membership parent_road_ref="road-se-circle" interval_start="0.0" interval_end="1" lane_position="-1"/>
           </divider>
         </interval>
