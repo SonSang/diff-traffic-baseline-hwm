@@ -678,6 +678,10 @@ int lane::merge_intent(float local_t, float gamma_c) const
         return 0;
 
     int mycell = static_cast<int>(std::floor(local_t*ncells));
+    if(mycell < 0)
+        mycell = 0;
+    else if(mycell >= ncells)
+        mycell = ncells-1;
     if(data[mycell].rho <= 1e-4)
         return 0;
 
@@ -698,6 +702,10 @@ int lane::merge_intent(float local_t, float gamma_c) const
     if(left_la)
     {
         int othercell = static_cast<int>(std::floor(left_t*left_la->ncells));
+        if(othercell < 0)
+            othercell = 0;
+        else if(othercell >= ncells)
+            othercell = ncells-1;
         float other_u = to_u(left_la->data[othercell].rho, left_la->data[othercell].y, left_la->speedlimit, gamma_c);
         left_factor   = (other_u > ahead_u) ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
@@ -705,6 +713,10 @@ int lane::merge_intent(float local_t, float gamma_c) const
     if(right_la)
     {
         int othercell = static_cast<int>(std::floor(right_t*right_la->ncells));
+        if(othercell < 0)
+            othercell = 0;
+        else if(othercell >= ncells)
+            othercell = ncells-1;
         float other_u = to_u(right_la->data[othercell].rho, right_la->data[othercell].y, right_la->speedlimit, gamma_c);
         right_factor  = (other_u > ahead_u) ? (other_u - ahead_u)/speedlimit : 0.0f;
     }
