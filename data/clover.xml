@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network version="1.2" name="intersection-test" xmlns:xi="http://www.w3.org/2001/XInclude" gamma="0.5">
+  <roads>
+    <road id="road-ew" name="i-80-ew">
+      <line_rep>
+	<points>
+	  -500.0 -10.0 0.0 0.0
+	   500.0 -10.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+    <road id="road-ne-circle" name="road-ne-circle">
+      <line_rep>
+	<points>
+10.0 40.0 0.0 0.0
+11.4683045111 49.2705098312 0.0 0.0
+15.7294901688 57.6335575688 0.0 0.0
+22.3664424312 64.2705098312 0.0 0.0
+30.7294901688 68.5316954889 0.0 0.0
+40.0 70.0 0.0 0.0
+49.2705098312 68.5316954889 0.0 0.0
+57.6335575688 64.2705098312 0.0 0.0
+64.2705098312 57.6335575688 0.0 0.0
+68.5316954889 49.2705098312 0.0 0.0
+70.0 40.0 0.0 0.0
+68.5316954889 30.7294901688 0.0 0.0
+64.2705098312 22.3664424312 0.0 0.0
+57.6335575688 15.7294901688 0.0 0.0
+49.2705098312 11.4683045111 0.0 0.0
+40.0 10.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+    <road id="road-we" name="i-80-we">
+      <line_rep>
+	<points>
+	  500.0 10.0 0.0 0.0
+	  -500.0 10.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+    <road id="road-se-circle" name="road-se-circle">
+      <line_rep>
+	<points>
+40.0 -10.0 0.0 0.0
+36.864146102 -10.164343139 0.0 0.0
+33.7626492755 -10.655571978 0.0 0.0
+30.7294901688 -11.4683045111 0.0 0.0
+27.7979007077 -12.5936362707 0.0 0.0
+25.0 -14.0192378865 0.0 0.0
+22.3664424312 -15.7294901688 0.0 0.0
+19.9260818092 -17.7056552357 0.0 0.0
+17.7056552357 -19.9260818092 0.0 0.0
+15.7294901688 -22.3664424312 0.0 0.0
+14.0192378865 -25.0 0.0 0.0
+12.5936362707 -27.7979007077 0.0 0.0
+11.4683045111 -30.7294901688 0.0 0.0
+10.655571978 -33.7626492755 0.0 0.0
+10.164343139 -36.864146102 0.0 0.0
+10.0 -40.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+    <road id="road-sn" name="i-80-sn">
+      <line_rep>
+	<points>
+	   10.0 -500.0 0.0 0.0
+	   10.0  500.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+    <road id="road-ns" name="i-80-ns">
+      <line_rep>
+	<points>
+	  -10.0  500.0 0.0 0.0
+	  -10.0 -500.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+  </roads>
+  <lanes>
+    <lane id="ns-ew" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="0.5398" lane_position="-1"/>
+	  </base>
+	  <divider value="0.47318">
+	    <road_membership parent_road_ref="road-ne-circle" interval_start="0.0" interval_end="1.0" lane_position="-1"/>
+	  </divider>
+	  <divider value="0.596595">
+	    <road_membership parent_road_ref="road-we" interval_start="0.4602" interval_end="1.0" lane_position="-1"/>
+	  </divider>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="we-sn" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="0.5398" lane_position="-1"/>
+	  </base>
+	  <divider value="0.47318">
+	    <road_membership parent_road_ref="road-se-circle" interval_start="0.0" interval_end="1.0" lane_position="-1"/>
+	  </divider>
+	  <divider value="0.596595">
+	    <road_membership parent_road_ref="road-sn" interval_start="0.4602" interval_end="1.0" lane_position="-1"/>
+	  </divider>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ew-0" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="1.0" lane_position="1.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ew-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ew-1" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="1.0" lane_position="2.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ew-2" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ew-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ew-2" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="1.0" lane_position="3.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ew-2" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-we-0" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="1.0" lane_position="1.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-we-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-we-1" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="1.0" lane_position="2.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-we-2" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-we-0" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-we-2" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="1.0" lane_position="3.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-we-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-sn-0" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="1.0" lane_position="1.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-sn-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-sn-1" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="1.0" lane_position="2.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-sn-2" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-sn-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-sn-2" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="1.0" lane_position="3.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-sn-2" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ns-0" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ns" interval_start="0.0" interval_end="1.0" lane_position="1.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ns-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ns-1" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ns" interval_start="0.0" interval_end="1.0" lane_position="2.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ns-2" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ns-0" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ns-2" speedlimit="16.667">
+      <start>
+	<dead_end/>
+      </start>
+      <end>
+	<dead_end/>
+      </end>
+      <road_intervals>
+	<interval>
+	  <base>
+	    <road_membership parent_road_ref="road-ns" interval_start="0.0" interval_end="1.0" lane_position="3.0"/>
+	  </base>
+	</interval>
+      </road_intervals>
+      <adjacency_intervals>
+	<left>
+	  <interval>
+	    <base>
+	      <lane_adjacency/>
+	    </base>
+	  </interval>
+	</left>
+	<right>
+	  <interval>
+	    <base>
+	      <lane_adjacency lane_ref="lane-ns-1" interval_start="0.0" interval_end="1.0"/>
+	    </base>
+	  </interval>
+	</right>
+      </adjacency_intervals>
+    </lane>
+    </lanes>
+    <intersections>
+    </intersections>
+  </network>
