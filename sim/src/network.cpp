@@ -205,6 +205,11 @@ bool network::xml_read(xmlTextReaderPtr reader)
         inter.initialize_state_lanes();
     }
 
+    foreach(lane &la, lanes)
+    {
+        la.auto_scale_memberships();
+    }
+
     lanes[0].data         = 0;
     lanes[0].rs           = 0;
     lanes[0].merge_states = 0;

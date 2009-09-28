@@ -85,6 +85,7 @@ struct lane
     bool xml_read(xmlTextReaderPtr reader);
 
     float calc_length() const;
+    void  auto_scale_memberships();
     void scale_offsets(float f);
 
     lane* left_adjacency(float &t) const;

@@ -293,6 +293,36 @@ float lane::calc_length() const
     return length;
 }
 
+void lane::auto_scale_memberships()
+{
+    std::vector<float> mlengths;
+    mlengths.push_back(0);
+
+    {
+        const road_membership *rom = &(road_memberships.base_data);
+        int p = -1;
+        while(1)
+        {
+            float length = std::abs((rom->interval[1] - rom->interval[0]))*rom->parent_road.dp->rep.offset_length(rom->lane_position) + mlengths.back();
+
+            mlengths.push_back(length);
+
+            ++p;
+            if(p >= static_cast<int>(road_memberships.entries.size()))
+                break;
+            rom = &(road_memberships.entries[p].data);
+        }
+    }
+
+    float inv_total_len = 1.0f/mlengths.back();
+
+    for(size_t i = 0; i < road_memberships.entries.size(); ++i)
+        road_memberships.entries[i].divider = mlengths[i+1]*inv_total_len;
+
+    return;
+}
+
+
 void lane::scale_offsets(float f)
 {
     road_membership *rom = &(road_memberships.base_data);
