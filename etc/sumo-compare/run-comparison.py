@@ -124,9 +124,12 @@ def logentry(simname, datafile, res):
 
 root = '/home/sewall/unc/traffic/hwm/etc/sumo-compare'
 
-input_files = ( ('sparse', 0, 75000, 'sparse.rou.xml', 'sparse.net.xml', 'sparse-hwm.xml'),
-                ('medium', 0, 75000, 'medium.rou.xml', 'medium.net.xml', 'medium-hwm.xml'),
-                ('dense',  0, 75000, 'dense.rou.xml',  'dense.net.xml',  'dense-hwm.xml'))
+input_files = (
+#    ('sparse', 0, 75000, 'sparse.rou.xml', 'sparse.net.xml', 'sparse-hwm.xml'),
+#    ('medium', 0, 75000, 'medium.rou.xml', 'medium.net.xml', 'medium-hwm.xml'),
+    ('med-dense', 0, 75000, 'med-dense.rou.xml', 'med-dense.net.xml', 'med-dense-hwm.xml'),
+#    ('dense',  0, 75000, 'dense.rou.xml',  'dense.net.xml',  'dense-hwm.xml')
+    )
 
 exes = ['/home/sewall/src/sumo-0.11.0/src/sumo', '/home/sewall/unc/traffic/hwm/test-progs/run-sim']
 

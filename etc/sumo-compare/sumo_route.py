@@ -52,6 +52,11 @@ if __name__ == '__main__':
                              (3, 6))
     print "Medium: ", medtime
 
+    meddensetime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/med-dense/med-dense.rou.xml",
+                               1000000,
+                               (2, 3))
+    print "Med-Dense: ", meddensetime
+
     densetime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/dense/dense.rou.xml",
                                1000000,
                                (1, 2))
