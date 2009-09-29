@@ -4,7 +4,7 @@ import random
 def okaylanes(lanemap, time):
     ok = []
     for (lno, i) in enumerate(lanemap):
-        if i == -1 or i - time > 1:
+        if i == -1 or time - i > 1:
             ok.append(lno)
     if len(ok) == 0:
         return range(len(lanemap))
