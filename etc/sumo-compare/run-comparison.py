@@ -136,15 +136,18 @@ exes = ['/home/sewall/src/sumo-0.11.0/src/sumo', '/home/sewall/unc/traffic/hwm/t
 
 if __name__ == '__main__':
     start = time.time()
+    if(len(sys.argv) < 3):
+        print "Need sim_iters and name string"
+        sys.exit(1)
 
     sim_iters = int(sys.argv[1])
     if(sim_iters < 1):
         print "Need positive sim_iters"
         sys.exit(1)
 
-    logfile_name = "%s_%s_%s.log" % (socket.gethostname(),
+    logfile_name = "%s_%s_%s_%s.log" % (socket.gethostname(),
                                      time.strftime("%m_%d_%y_%H%M_%S"),
-                                     "sumohwmcompare")
+                                     "sumohwmcompare", sys.argv[2])
     logfile = open(logfile_name, 'w')
     print >> logfile, loghead()
     print "Log is %s" % logfile_name
