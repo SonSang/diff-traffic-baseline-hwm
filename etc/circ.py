@@ -2,6 +2,7 @@ import math
 import numpy
 import pylab
 import matplotlib
+import scipy.linalg
 
 def circle(center, radius, angint, ccw, nsteps):
     angint2 = [ math.fmod(x + 2*math.pi, 2*math.pi) for x in angint ]
@@ -32,42 +33,122 @@ def ext_tangents(c0, r0, c1, r1):
           r1*numpy.array([math.cos(z1), math.sin(z1)]) + c1)
     return (z0, l0), (z1, l1)
 
+def min_arc(a0, a1):
+    a0 = math.fmod(a0 + 2*math.pi, 2*math.pi)
+    a1 = math.fmod(a1 + 2*math.pi, 2*math.pi)
+    if(a0 > a1):
+        a0, a1 = a1, a0
+    if(2*math.pi-a1 + a0 < a1 - a0):
+        a0, a1 = a1, a0
+    return a0, a1
+
+def tan_circ(plist, radius=None):
+    p    = plist[1]
+    back = plist[0] - plist[1]
+    fwd  = plist[2] - plist[1]
+    blen = scipy.linalg.norm(back)
+    back /= blen
+    flen = scipy.linalg.norm(fwd)
+    fwd  /= flen
+
+    det = back[1]*fwd[0] - back[0]*fwd[1]
+
+    if(det > 0):
+        back_t = numpy.array([ back[1], -back[0]])
+        fwd_t  = numpy.array([ -fwd[1],  fwd[0]])
+    elif det < 0:
+        back_t = numpy.array([-back[1], back[0]])
+        fwd_t  = numpy.array([  fwd[1], -fwd[0]])
+    else:
+        return (plist[2], None, None, None, None, plist[2])
+
+    if not radius:
+        radius = min(blen, flen) * (1-numpy.dot(fwd, back))/math.sqrt(1-numpy.dot(fwd, back)**2)
+        alpha = min(blen, flen)
+    else:
+        alpha = radius*(fwd_t[0]-back_t[0])/(back[0] - fwd[0])
+        # alpha = radius*(1+numpy.dot(fwd, back))/math.sqrt(1-numpy.dot(fwd, back)**2)
+
+    # d0 = 2*radius/math.sqrt(1-numpy.dot(fwd, back))
+    #print d0*math.sqrt(1+numpy.dot(fwd, back))/2
+
+    angle0 = math.atan2(-back_t[1], -back_t[0])#*180.0/math.pi
+    angle1 = math.atan2( -fwd_t[1],  -fwd_t[0])#*180.0/math.pi
+
+    angle0, angle1 = min_arc(angle0, angle1)
+
+    center0 = alpha * back + radius*back_t + p
+    return (alpha * back + p, angle0, center0, radius, angle1, alpha * fwd + p)
+
+def run_tan_circ(pts, debug=False):
+    lastpt = pts[0]
+    res = [lastpt]
+    # pylab.clf()
+    # ax = pylab.subplot(111)
+    for idx in xrange(1, len(pts)-1):
+        rad = 70
+        (p0, angle0, center, thisrad, angle1, p1) = tan_circ(pts[idx-1:idx+2], rad)
+
+        if center == None:
+            continue
+
+#        res.append(p0)
+        res += circle(center, thisrad, (angle1, angle0), False, 6)
+
+        # linedata = zip(lastpt, p0)
+        # l0 = matplotlib.lines.Line2D(linedata[0], linedata[1], color='black', linewidth=2.0 )
+        # ax.add_line(l0)
+
+        # if debug:
+        #     linedata = zip(pts[idx-1], pts[idx])
+        #     l1 = matplotlib.lines.Line2D(linedata[0], linedata[1], color='blue', linewidth=1.0 )
+        #     ax.add_line(l1)
+
+        # if debug:
+        #     cshape = matplotlib.patches.Cshape(center, thisrad, ec='none', facecolor='#00ff00', fill=True)
+        #     ax.add_patch(cshape)
+        # cshape = matplotlib.patches.Arc(center, 2*thisrad, 2*thisrad, 0.0, angle0*180/math.pi, angle1*180/math.pi, edgecolor='black', lw=2.0, fill=False)
+        # ax.add_patch(cshape)
+
+        # lastpt = p1
+
+    # linedata = zip(lastpt, pts[-1])
+    # l0 = matplotlib.lines.Line2D(linedata[0], linedata[1], color='black', linewidth=2.0)
+    # ax.add_line(l0)
+    res.append(pts[-1])
+
+    # if debug:
+    #     linedata = zip(pts[-2], pts[-1])
+    #     l1 = matplotlib.lines.Line2D(linedata[0], linedata[1], color='blue', linewidth=1.0)
+    #     ax.add_line(l1)
+
+    # ax.axis('auto')
+    # ax.axis('equal')
+
+    # pylab.show()
+    return res
+
 def ramp(p0, n0, p1, n1, rad):
-    c0 = rad*numpy.array([n0[1], -n0[0]]) + p0
-    c1 = rad*numpy.array([n1[1], -n1[0]]) + p1
-    print c0, c1
+    pass
 
 if __name__ == '__main__':
-    c0 = numpy.array([70, 10])
-    r0 = 10
-    c1 = numpy.array([10, 70])
-    r1 = 20
-    (l0, l1) =  ext_tangents(c0, r0, c1, r1)
-    print l0, l1
-    pylab.clf()
-    ax = pylab.subplot(111)
-    circle = matplotlib.patches.Circle(c0, r0, ec='none', facecolor='#00ff00', fill=True)
-    ax.add_patch(circle)
-    circle = matplotlib.patches.Circle(c1, r1, ec='none', facecolor='#ff0000', fill=True)
-    ax.add_patch(circle)
+    nepts = numpy.array([[200, 10], [150, 10], [10, 150], [10, 200]], dtype=numpy.float32)
+    nwpts = numpy.array([[-10, 200], [-10, 150], [-150, 10], [-200, 10]], dtype=numpy.float32)
+    swpts = numpy.array([[-200, -10], [-150, -10], [-10, -150], [-10, -200]], dtype=numpy.float32)
+    septs = numpy.array([[10, -200], [10, -150], [150, -10], [200, -10]], dtype=numpy.float32)
+    res = run_tan_circ(septs)
+    for (x,y) in res:
+        print x,y, 0.0, 0.0
+    # pylab.clf()
+    # ax = pylab.subplot(111)
+    # for i in xrange(1, len(res)):
+    #     linedata = zip(res[i-1], res[i])
+    #     l0 = matplotlib.lines.Line2D(linedata[0], linedata[1], color='black', linewidth=2.0)
+    #     ax.add_line(l0)
 
-    pl0 = matplotlib.lines.Line2D((l0[0][0], l0[1][0]),
-                                  (l0[0][1], l0[1][1]),
-                                  color='blue', linewidth=1.0 )
-    ax.add_line(pl0)
-    pl1 = matplotlib.lines.Line2D((l1[0][0], l1[1][0]),
-                                  (l1[0][1], l1[1][1]),
-                                  color='blue', linewidth=1.0 )
-    ax.add_line(pl1)
+    #     print res[i-1], res[i]
 
-    ax.axis('auto')
-    ax.axis('equal')
+    # ax.axis('auto')
+    # ax.axis('equal')
 
-    pylab.show()
-
-
-    # ramp(numpy.array([70, 10]),
-    #      numpy.array([-1, 0]),
-    #      numpy.array([10, 70]),
-    #      numpy.array([0, 1]),
-    #      20)
+    # pylab.show()

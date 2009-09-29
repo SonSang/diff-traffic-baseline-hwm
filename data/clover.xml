@@ -9,6 +9,26 @@
 	</points>
       </line_rep>
     </road>
+    <road id="road-ne-ramp" name="road-ne-ramp">
+      <line_rep>
+	<points>
+	  200.0 10.0 0.0 0.0
+	  178.994949341 10.0 0.0 0.0
+	  168.044536788 10.8618161583 0.0 0.0
+	  157.363759735 13.4260438593 0.0 0.0
+	  147.215614359 17.6295433068 0.0 0.0
+	  137.84998168 23.3688103938 0.0 0.0
+	  129.497474658 30.5025253169 0.0 0.0
+	  30.5025253169 129.497474658 0.0 0.0
+	  23.3688103938 137.84998168 0.0 0.0
+	  17.6295433068 147.215614359 0.0 0.0
+	  13.4260438593 157.363759735 0.0 0.0
+	  10.8618161583 168.044536788 0.0 0.0
+	  10.0 178.994949341 0.0 0.0
+	  10.0 200.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
     <road id="road-ne-circle" name="road-ne-circle">
       <line_rep>
 	<points>
@@ -36,6 +56,26 @@
 	<points>
 	  500.0 10.0 0.0 0.0
 	  -500.0 10.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
+    <road id="road-se-ramp" name="road-se-ramp">
+      <line_rep>
+	<points>
+	  10.0 -200.0 0.0 0.0
+	  10.0 -178.994949341 0.0 0.0
+	  10.8618161583 -168.044536788 0.0 0.0
+	  13.4260438593 -157.363759735 0.0 0.0
+	  17.6295433068 -147.215614359 0.0 0.0
+	  23.3688103938 -137.84998168 0.0 0.0
+	  30.5025253169 -129.497474658 0.0 0.0
+	  129.497474658 -30.5025253169 0.0 0.0
+	  137.84998168 -23.3688103938 0.0 0.0
+	  147.215614359 -17.6295433068 0.0 0.0
+	  157.363759735 -13.4260438593 0.0 0.0
+	  168.044536788 -10.8618161583 0.0 0.0
+	  178.994949341 -10.0 0.0 0.0
+	  200.0 -10.0 0.0 0.0
 	</points>
       </line_rep>
     </road>
@@ -69,6 +109,26 @@
         </points>
       </line_rep>
     </road>
+    <road id="road-nw-ramp" name="road-nw-ramp">
+      <line_rep>
+	<points>
+	  -10.0 200.0 0.0 0.0
+	  -10.0 178.994949341 0.0 0.0
+	  -10.8618161583 168.044536788 0.0 0.0
+	  -13.4260438593 157.363759735 0.0 0.0
+	  -17.6295433068 147.215614359 0.0 0.0
+	  -23.3688103938 137.84998168 0.0 0.0
+	  -30.5025253169 129.497474658 0.0 0.0
+	  -129.497474658 30.5025253169 0.0 0.0
+	  -137.84998168 23.3688103938 0.0 0.0
+	  -147.215614359 17.6295433068 0.0 0.0
+	  -157.363759735 13.4260438593 0.0 0.0
+	  -168.044536788 10.8618161583 0.0 0.0
+	  -178.994949341 10.0 0.0 0.0
+	  -200.0 10.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
     <road id="road-nw-circle" name="road-nw-circle">
       <line_rep>
         <points>
@@ -99,6 +159,26 @@
         </points>
       </line_rep>
     </road>
+    <road id="road-sw-ramp" name="road-sw-ramp">
+      <line_rep>
+	<points>
+	  -200.0 -10.0 0.0 0.0
+	  -178.994949341 -10.0 0.0 0.0
+	  -168.044536788 -10.8618161583 0.0 0.0
+	  -157.363759735 -13.4260438593 0.0 0.0
+	  -147.215614359 -17.6295433068 0.0 0.0
+	  -137.84998168 -23.3688103938 0.0 0.0
+	  -129.497474658 -30.5025253169 0.0 0.0
+	  -30.5025253169 -129.497474658 0.0 0.0
+	  -23.3688103938 -137.84998168 0.0 0.0
+	  -17.6295433068 -147.215614359 0.0 0.0
+	  -13.4260438593 -157.363759735 0.0 0.0
+	  -10.8618161583 -168.044536788 0.0 0.0
+	  -10.0 -178.994949341 0.0 0.0
+	  -10.0 -200.0 0.0 0.0
+	</points>
+      </line_rep>
+    </road>
     <road id="road-sw-circle" name="road-sw-circle">
       <line_rep>
         <points>
@@ -123,6 +203,130 @@
     </road>
   </roads>
   <lanes>
+    <lane id="lane-ne-ramp" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-ne-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+	      <lane_adjacency/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-nw-ramp" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-nw-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+	      <lane_adjacency/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-sw-ramp" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-sw-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+	      <lane_adjacency/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-se-ramp" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-se-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+	      <lane_adjacency/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
     <lane id="loops" speedlimit="16.667">
       <start>
         <dead_end/>
