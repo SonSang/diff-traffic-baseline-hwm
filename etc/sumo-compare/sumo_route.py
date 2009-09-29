@@ -6,10 +6,7 @@ def okaylanes(lanemap, time):
     for (lno, i) in enumerate(lanemap):
         if i == -1 or time - i > 1:
             ok.append(lno)
-    if len(ok) == 0:
-        return range(len(lanemap))
-    else:
-        return ok
+    return ok
 
 def generate_route(file, ncars, time_sep, vel_range=(10,14), nlanes=6):
     out = open(file, 'w')
@@ -23,6 +20,9 @@ def generate_route(file, ncars, time_sep, vel_range=(10,14), nlanes=6):
     time = 0
     for i in xrange(0, N):
         valid_lanes = okaylanes(lanelast, time)
+        while len(valid_lanes) == 0:
+            time += 1
+            valid_lanes = okaylanes(lanelast, time)
         departlane = valid_lanes[random.randint(0, len(valid_lanes)-1)]
         arrivallane = random.randint(0, nlanes-1)
         departspeed = random.uniform(*vel_range)
@@ -61,3 +61,8 @@ if __name__ == '__main__':
                                1000000,
                                (1, 2))
     print "Dense: ", densetime
+
+    megadensetime = generate_route("/home/sewall/unc/traffic/hwm/etc/sumo-compare/megadense/megadense.rou.xml",
+                               1000000,
+                               (0, 1))
+    print "Mega dense: ", megadensetime
