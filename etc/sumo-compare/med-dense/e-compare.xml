@@ -1,0 +1,5 @@
+<edges>
+  <edge id="e0" fromnode="n0" tonode="n1" priority="1" nolanes="6" speed="16.11"/>
+  <edge id="e1" fromnode="n1" tonode="n2" priority="1" nolanes="6" speed="16.11"/>
+  <edge id="e2" fromnode="n2" tonode="n3" priority="1" nolanes="6" speed="16.11"/>
+</edges>
