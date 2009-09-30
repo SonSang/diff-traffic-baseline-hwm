@@ -131,9 +131,9 @@ available_cars = { 'tbird' :
                                     [ 0.364705882353, 0.639215686275, 1.0 ]]
                         },
                    'bmw' :
-                   {'body': 'bmw_body_obj',
-                    'wheel': 'bmw_wheel_obj',
-                    'wheel-flip': 'bmw_wheel_flip_obj',
+                   {'body': 'bmw-body-obj',
+                    'wheel': 'bmw-wheel-obj',
+                    'wheel-flip': 'bmw-wheel-flip-obj',
                     'wheel-radius' : 0.709*0.5,
                     'wheel_points': [[   0.0,  0.726, -0.508],
                                      [ 2.885,  0.726, -0.508],
@@ -380,8 +380,10 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
 ##        steer_curve[fr] = zrot * 18.0 / math.pi
 
 def read_car_record(fp, t, ncars, cardict):
+    print t
     for i in xrange(0, ncars):
         data = fp.readline().rstrip().split()
+        print i, data
         id = int(data[0])
         rec = [float(x) for x in data[1:]]
         if(cardict.has_key(id)):
@@ -528,7 +530,7 @@ def build_car(scn, id, color, car, scale):
 
 if __name__ == '__main__':
     print "Loading data"
-    cars = load_traffic("/playpen/sewall/traffic/hwm/blender/output.txt")
+    cars = load_traffic("/home/sewall/unc/traffic/hwm/output.txt")
     print "Data loaded"
     print cars[3].nx, cars[3].ny
     scn = bpy.data.scenes.active
