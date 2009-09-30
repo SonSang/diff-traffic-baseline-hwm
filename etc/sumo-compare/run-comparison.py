@@ -132,7 +132,7 @@ input_files = (
     ('megadense', 0, 75000, 'megadense.rou.xml', 'megadense.net.xml', 'megadense-hwm.xml'),
     )
 
-exes = ['/home/sewall/src/sumo-0.11.0/src/sumo', '/home/sewall/unc/traffic/hwm/test-progs/run-sim']
+exes = ['/home/sewall/src/sumo/src/sumo', '/home/sewall/unc/traffic/hwm/test-progs/run-sim']
 
 if __name__ == '__main__':
     start = time.time()
@@ -157,14 +157,14 @@ if __name__ == '__main__':
         (route_file, sumo_net, hwm_net) = ( os.path.join(root, jobname, x) for x in ifc[3:] )
         print "Doing job file %s" % (jobname,)
 
-        print "Doing sumo run"
-        res = run_sumo_test(exes[0],
-                            time_interval + (route_file, sumo_net),
-                            sim_iters)
-        print >> logfile, logentry("sumo",jobname, res)
-        logfile.flush()
-        print "Done with sumo run"
-        print "*" * 70
+        print "Skipping sumo run"
+        # res = run_sumo_test(exes[0],
+        #                     time_interval + (route_file, sumo_net),
+        #                     sim_iters)
+        # print >> logfile, logentry("sumo",jobname, res)
+        # logfile.flush()
+        # print "Done with sumo run"
+        # print "*" * 70
 
         print "Doing hwm run"
         res = run_hwm_test(exes[1],

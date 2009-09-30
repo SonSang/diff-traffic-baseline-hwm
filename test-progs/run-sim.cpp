@@ -2,8 +2,8 @@
 #include <omp.h>
 #include <boost/lexical_cast.hpp>
 
-#include "xmmintrin.h"
-#include "pmmintrin.h"
+// #include "xmmintrin.h"
+// #include "pmmintrin.h"
 
 int main(int argc, char * argv[])
 {
@@ -13,8 +13,8 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
-    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+    // _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    // _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
 
     printf("%s version: %s\n", argv[0], hwm_version_string());
 

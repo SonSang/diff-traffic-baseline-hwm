@@ -22,7 +22,7 @@
 #define CAR_REAR_AXLE 3.5f
 
 typedef enum {DATA, CELLS, MERGES} draw_type;
-#define H (4.1f*CAR_LENGTH)
+#define H (12.1f*CAR_LENGTH)
 
 const char* hwm_version_string();
 

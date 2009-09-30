@@ -909,8 +909,10 @@ void lane::advance_carticles(float dt, float gamma_c)
 
             int first_cell = static_cast<int>(std::floor(back_of_carticle*ncells));
             int last_cell  = static_cast<int>(std::floor(front_of_carticle*ncells));
-            assert(first_cell >= 0);
-            assert(last_cell < static_cast<int>(ncells));
+            if(first_cell < 0)
+                first_cell = 0;
+            if(last_cell >= ncells)
+                last_cell = ncells-1;
 
             for(int i = first_cell; i < last_cell; ++i)
                 merge_states[i].transition = del_y;
@@ -921,8 +923,8 @@ void lane::advance_carticles(float dt, float gamma_c)
                 cart.y += 1.0f;
 
                 lane *llane = lane::left_adjacency(cart.x);
-                assert(llane);
-                llane->carticles[1].push_back(cart);
+                if(llane)
+                    llane->carticles[1].push_back(cart);
 
                 continue;
             }
@@ -932,8 +934,8 @@ void lane::advance_carticles(float dt, float gamma_c)
                 cart.y -= 1.0f;
 
                 lane *rlane = lane::right_adjacency(cart.x);
-                assert(rlane);
-                rlane->carticles[1].push_back(cart);
+                if(rlane)
+                    rlane->carticles[1].push_back(cart);
 
                 continue;
             }
