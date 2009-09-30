@@ -67,6 +67,15 @@ struct adjacency
     static const int NO_ADJACENCY = 0;
     lane_id neighbor; //< The right incident lane.
 
+    float merge_weight; //< Desireablity of merging across this
+                        //< adjacency
+
+    float weighted_merge() const
+    {
+        const float f = (*uni)();
+        return merge_weight - f;
+    }
+
     float neighbor_interval[2]; //< The parametric interval
                                //< in the neighbor corresponding
                                //< to this adjacency
@@ -74,6 +83,9 @@ struct adjacency
     int find_source(float x) const;
 
     std::vector<source_sink> source_sinks;
+
+    typedef boost::minstd_rand base_generator_type;
+    static boost::variate_generator<base_generator_type&, boost::uniform_real<> > *uni;
 };
 
 //! A single continuous road lane
@@ -91,6 +103,9 @@ struct lane
 
     lane* left_lane(float &t) const;
     lane* right_lane(float &t) const;
+
+    const adjacency &left_adjacency(float &t) const;
+    const adjacency &right_adjacency(float &t) const;
 
     lane* upstream_lane() const;
     lane* downstream_lane() const;

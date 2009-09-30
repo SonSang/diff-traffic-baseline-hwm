@@ -240,6 +240,9 @@ bool network::xml_read(xmlTextReaderPtr reader)
 network::~network()
 {
     free(name);
+    delete generator;
+    delete uni_dist;
+    delete adjacency::uni;
     free(lanes[0].data);
     free(lanes[0].rs);
     free(lanes[0].merge_states);
@@ -247,6 +250,10 @@ network::~network()
 
 void network::prepare(float h)
 {
+    generator      = new base_generator_type(42u);
+    uni_dist       = new boost::uniform_real<>(0,1);
+    adjacency::uni = new boost::variate_generator<base_generator_type&, boost::uniform_real<> >(*generator, *uni_dist);
+
     global_time = 0.0f;
 
     int total = 0;

@@ -259,13 +259,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -302,13 +302,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -345,13 +345,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-0" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -388,13 +388,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-we-0" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -446,25 +446,25 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
             </base>
             <divider value="0.086640">
               <lane_adjacency/>
             </divider>
             <divider value="0.25">
-              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
             </divider>
             <divider value="0.336640">
               <lane_adjacency/>
             </divider>
             <divider value="0.5">
-              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
             </divider>
             <divider value="0.586640">
               <lane_adjacency/>
             </divider>
             <divider value="0.75">
-              <lane_adjacency lane_ref="lane-we-0" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
             </divider>
             <divider value="0.836640">
               <lane_adjacency/>
@@ -498,26 +498,26 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.0" interval_end="0.361633"/>
+              <lane_adjacency lane_ref="lane-sw-ramp" merge_weight="0.045" interval_start="0.0" interval_end="0.361633"/>
             </base>
             <divider value="0.333333">
               <lane_adjacency/>
             </divider>
             <divider value="0.466667">
-              <lane_adjacency lane_ref="loops" interval_start="0.75" interval_end="0.836640"/>
+              <lane_adjacency lane_ref="loops" merge_weight="0.045" interval_start="0.75" interval_end="0.836640"/>
             </divider>
             <divider value="0.53333">
               <lane_adjacency/>
             </divider>
             <divider value="0.666667">
-              <lane_adjacency lane_ref="lane-se-ramp" interval_start="0.638367" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-se-ramp" merge_weight="0.045" interval_start="0.638367" interval_end="1.0"/>
             </divider>
           </interval>
         </right>
@@ -541,14 +541,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-0" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -572,14 +572,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-3" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-3" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -610,7 +610,7 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -634,26 +634,26 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ne-ramp" interval_start="0.0" interval_end="0.361633"/>
+              <lane_adjacency lane_ref="lane-ne-ramp" merge_weight="0.045" interval_start="0.0" interval_end="0.361633"/>
             </base>
             <divider value="0.33333">
               <lane_adjacency/>
             </divider>
             <divider value="0.466667">
-              <lane_adjacency lane_ref="loops" interval_start="0.25" interval_end="0.336640"/>
+              <lane_adjacency lane_ref="loops" merge_weight="0.045" interval_start="0.25" interval_end="0.336640"/>
             </divider>
             <divider value="0.53333">
               <lane_adjacency/>
             </divider>
             <divider value="0.66667">
-              <lane_adjacency lane_ref="lane-nw-ramp" interval_start="0.638367" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-nw-ramp" merge_weight="0.045" interval_start="0.638367" interval_end="1.0"/>
             </divider>
           </interval>
         </right>
@@ -677,14 +677,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -708,14 +708,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-3" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-3" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -746,7 +746,7 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -770,26 +770,26 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-se-ramp" interval_start="0.0" interval_end="0.361633"/>
+              <lane_adjacency lane_ref="lane-se-ramp" merge_weight="0.045" interval_start="0.0" interval_end="0.361633"/>
             </base>
             <divider value="0.33333">
               <lane_adjacency/>
             </divider>
             <divider value="0.466667">
-              <lane_adjacency lane_ref="loops" interval_start="0.0" interval_end="0.086640"/>
+              <lane_adjacency lane_ref="loops" merge_weight="0.045" interval_start="0.0" interval_end="0.086640"/>
             </divider>
             <divider value="0.53333">
               <lane_adjacency/>
             </divider>
             <divider value="0.66667">
-              <lane_adjacency lane_ref="lane-ne-ramp" interval_start="0.638367" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ne-ramp" merge_weight="0.045" interval_start="0.638367" interval_end="1.0"/>
             </divider>
           </interval>
         </right>
@@ -813,14 +813,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -844,14 +844,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-3" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-3" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -882,7 +882,7 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -906,26 +906,26 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-nw-ramp" interval_start="0.0" interval_end="0.361633"/>
+              <lane_adjacency lane_ref="lane-nw-ramp" merge_weight="0.045" interval_start="0.0" interval_end="0.361633"/>
             </base>
             <divider value="0.33333">
               <lane_adjacency/>
             </divider>
             <divider value="0.466667">
-              <lane_adjacency lane_ref="loops" interval_start="0.5" interval_end="0.586640"/>
+              <lane_adjacency lane_ref="loops" merge_weight="0.045" interval_start="0.5" interval_end="0.586640"/>
             </divider>
             <divider value="0.53333">
               <lane_adjacency/>
             </divider>
             <divider value="0.66667">
-              <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.638367" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sw-ramp" merge_weight="0.045" interval_start="0.638367" interval_end="1.0"/>
             </divider>
           </interval>
         </right>
@@ -949,14 +949,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -980,14 +980,14 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-3" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-3" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-1" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -1018,7 +1018,7 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-2" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-2" merge_weight="0.009" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>

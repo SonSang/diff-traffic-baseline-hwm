@@ -12,7 +12,10 @@
 #include <cstring>
 #include <algorithm>
 #include <ctype.h>
-#include "boost/foreach.hpp"
+#include <boost/foreach.hpp>
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/variate_generator.hpp>
 
 #define foreach BOOST_FOREACH
 
@@ -163,6 +166,10 @@ struct network
     int carticle_ids;
 
     float bb[4]; //< Minx, maxx, miny, maxy
+
+    typedef boost::minstd_rand base_generator_type;
+    base_generator_type *generator;
+    boost::uniform_real<> *uni_dist;
 
     char * name;
     std::vector<road> roads;

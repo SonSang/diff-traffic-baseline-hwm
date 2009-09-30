@@ -217,6 +217,7 @@ bool adjacency::xml_read(xmlTextReaderPtr reader)
                                  lm("interval_start", neighbor_interval),
                                  lm("interval_end", neighbor_interval+1));
 
+    merge_weight = 0;
     if(!read_attributes(vl, reader))
     {
         neighbor.sp = 0;
@@ -236,6 +237,8 @@ bool adjacency::xml_read(xmlTextReaderPtr reader)
             }
         }
     }
+    else
+        get_attribute(merge_weight, reader, BAD_CAST "merge_weight");
 
     return true;
 };
@@ -259,6 +262,9 @@ int adjacency::find_source(float x) const
     }
     return start+1;
 }
+
+typedef boost::minstd_rand base_generator_type;
+boost::variate_generator<base_generator_type&, boost::uniform_real<> > *adjacency::uni;
 
 bool lane::xml_read(xmlTextReaderPtr reader)
 {
@@ -376,6 +382,24 @@ lane* lane::right_lane(float &t) const
         t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
 
     return adj.neighbor.dp;
+}
+
+const adjacency &lane::left_adjacency(float &t) const
+{
+    const adjacency &adj = left.get_rescale(t);
+    if(adj.neighbor.dp)
+        t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
+
+    return adj;
+}
+
+const adjacency &lane::right_adjacency(float &t) const
+{
+    const adjacency &adj = right.get_rescale(t);
+    if(adj.neighbor.dp)
+        t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
+
+    return adj;
 }
 
 lane* lane::upstream_lane() const
@@ -720,14 +744,23 @@ struct lc_curve
 
 int lane::merge_intent(float local_t, float gamma_c) const
 {
-    float left_t = local_t;
-    const lane *left_la = left_lane(left_t);
-
-    float right_t = local_t;
-    const lane *right_la = right_lane(right_t);
+    float            left_t   = local_t;
+    const adjacency &l_adj    = left_adjacency(left_t);
+    const lane      *left_la  = l_adj.neighbor.dp;
+    float            right_t  = local_t;
+    const adjacency &r_adj    = right_adjacency(right_t);
+    const lane      *right_la = r_adj.neighbor.dp;
 
     if(!(left_la || right_la))
         return 0;
+
+    const float left_weight  = l_adj.weighted_merge();
+    const float right_weight = r_adj.weighted_merge();
+
+    if(left_weight > right_weight && left_weight > 0.0f)
+        return -1;
+    else if(right_weight > left_weight && right_weight > 0.0f)
+        return 1;
 
     int mycell = static_cast<int>(std::floor(local_t*ncells));
     if(mycell < 0)
