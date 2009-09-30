@@ -506,7 +506,6 @@
           <interval>
             <base>
               <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.0" interval_end="0.361633"/>
-              <lane_adjacency/>
             </base>
             <divider value="0.333333">
               <lane_adjacency/>
