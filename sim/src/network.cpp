@@ -124,13 +124,33 @@ bool network::xml_read(xmlTextReaderPtr reader)
     foreach(lane &la, lanes)
     {
         // convert end points
-        if(la.start.end_type == lane_end::INTERSECTION)
+        switch(la.start.end_type)
+        {
+        case lane_end::LANE:
+            if(!la.start.lane.retrieve_ptr(lanes, lane_refs))
+                return false;
+            break;
+        case lane_end::INTERSECTION:
             if(!la.start.inters.retrieve_ptr(intersections, intersection_refs))
                 return false;
+            break;
+        default:
+            break;
+        }
 
-        if(la.end.end_type == lane_end::INTERSECTION)
+        switch(la.end.end_type)
+        {
+        case lane_end::LANE:
+            if(!la.end.lane.retrieve_ptr(lanes, lane_refs))
+                return false;
+            break;
+        case lane_end::INTERSECTION:
             if(!la.end.inters.retrieve_ptr(intersections, intersection_refs))
                 return false;
+            break;
+        default:
+            break;
+        }
 
         // convert road_memberships
         road_intervals &ri = la.road_memberships;

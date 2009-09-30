@@ -409,10 +409,10 @@
     </lane>
     <lane id="loops" speedlimit="16.667">
       <start>
-        <dead_end/>
+        <lane_ref ref="loops"/>
       </start>
       <end>
-        <dead_end/>
+        <lane_ref ref="loops"/>
       </end>
       <road_intervals>
         <interval>

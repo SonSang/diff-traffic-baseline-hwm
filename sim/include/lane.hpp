@@ -4,9 +4,10 @@
 //! Information about a lane's outgoing BC
 struct lane_end
 {
-    typedef enum {TAPER, DEAD_END, INTERSECTION} type; //< Types of ends.
+    typedef enum {TAPER, DEAD_END, LANE, INTERSECTION} type; //< Types of ends.
 
     type end_type;        //< The type of this BC.
+    lane_id lane; //< Reference to adjoining lane (if there is one)
     intersection_id inters; //< Reference to the intersection this lane is incident to.
     int intersect_in_ref; //< Reference to this lane's local id in inters.
 };

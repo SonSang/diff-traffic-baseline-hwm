@@ -41,6 +41,16 @@ static bool read_int_ref(void *item, xmlTextReaderPtr reader)
     return read_attributes(vl, reader);
 }
 
+static bool read_lane_ref(void *item, xmlTextReaderPtr reader)
+{
+    lane_end *le = reinterpret_cast<lane_end*>(item);
+    le->end_type = lane_end::LANE;
+
+    boost::fusion::vector<list_matcher<char*> > vl(lm("ref", &(le->lane.sp)));
+
+    return read_attributes(vl, reader);
+}
+
 static bool read_taper(void *item, xmlTextReaderPtr reader)
 {
     lane_end *le = reinterpret_cast<lane_end*>(item);
@@ -64,6 +74,10 @@ static bool read_start(void *item, xmlTextReaderPtr reader)
           &(l->start),
           read_int_ref},
          {0,
+          BAD_CAST "lane_ref",
+          &(l->start),
+          read_lane_ref},
+         {0,
           BAD_CAST "taper",
           &(l->start),
           read_taper}};
@@ -85,6 +99,10 @@ static bool read_end(void *item, xmlTextReaderPtr reader)
           BAD_CAST "dead_end",
           &(l->end),
           read_dead_end},
+         {0,
+          BAD_CAST "lane_ref",
+          &(l->end),
+          read_lane_ref},
          {0,
           BAD_CAST "intersection_ref",
           &(l->end),
@@ -367,6 +385,8 @@ lane* lane::upstream_lane() const
     case lane_end::DEAD_END:
     case lane_end::TAPER:
         return 0;
+    case lane_end::LANE:
+        return start.lane.dp;
     case lane_end::INTERSECTION:
         return start.inters.dp->outgoing_state(start.intersect_in_ref);
     default:
@@ -382,6 +402,8 @@ lane* lane::downstream_lane() const
     case lane_end::DEAD_END:
     case lane_end::TAPER:
         return 0;
+    case lane_end::LANE:
+        return end.lane.dp;
     case lane_end::INTERSECTION:
         return end.inters.dp->incoming_state(end.intersect_in_ref);
     default:
@@ -950,7 +972,8 @@ void lane::advance_carticles(float dt, float gamma_c)
         if(cart.x > 1.0 - CAR_REAR_AXLE * inv_len)
         {
             lane *next;
-            if(end.end_type == lane_end::INTERSECTION)
+            if(end.end_type == lane_end::LANE ||
+               end.end_type == lane_end::INTERSECTION)
             {
                 if((next = downstream_lane()))
                 {
@@ -965,7 +988,6 @@ void lane::advance_carticles(float dt, float gamma_c)
             }
             continue;
         }
-
         carticles[1].push_back(cart);
     }
 }
