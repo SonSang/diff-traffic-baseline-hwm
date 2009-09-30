@@ -548,7 +548,7 @@ void intersection::draw_param_data(float t) const
 
         glColor3f(0.0, 1.0, 0.0);
         float x = t;
-        lane *left_lane = la->left_adjacency(x);
+        lane *left_lane = la->left_lane(x);
 
         if(left_lane)
         {
@@ -561,7 +561,7 @@ void intersection::draw_param_data(float t) const
             glEnd();
         }
         x = t;
-        lane *right_lane = la->right_adjacency(x);
+        lane *right_lane = la->right_lane(x);
 
         if(right_lane)
         {
@@ -651,7 +651,7 @@ public:
                 draw_car();
 
                 float left_x = t;
-                lane *left_lane = la.left_adjacency(left_x);
+                lane *left_lane = la.left_lane(left_x);
 
                 if(left_lane)
                 {
@@ -663,7 +663,7 @@ public:
                 }
 
                 float right_x = t;
-                lane *right_lane = la.right_adjacency(right_x);
+                lane *right_lane = la.right_lane(right_x);
 
                 if(right_lane)
                 {

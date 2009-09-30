@@ -89,8 +89,8 @@ struct lane
     void  auto_scale_memberships();
     void scale_offsets(float f);
 
-    lane* left_adjacency(float &t) const;
-    lane* right_adjacency(float &t) const;
+    lane* left_lane(float &t) const;
+    lane* right_lane(float &t) const;
 
     lane* upstream_lane() const;
     lane* downstream_lane() const;

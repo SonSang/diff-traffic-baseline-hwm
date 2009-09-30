@@ -144,7 +144,7 @@ static bool read_left_interval(void *item, xmlTextReaderPtr reader)
     return l->left.xml_read(reader, BAD_CAST "lane_adjacency");
 }
 
-static bool read_left_adjacency(void *item, xmlTextReaderPtr reader)
+static bool read_left_lane(void *item, xmlTextReaderPtr reader)
 {
     xml_elt read[] =
         {{0,
@@ -164,7 +164,7 @@ static bool read_right_interval(void *item, xmlTextReaderPtr reader)
     return l->right.xml_read(reader, BAD_CAST "lane_adjacency");
 }
 
-static bool read_right_adjacency(void *item, xmlTextReaderPtr reader)
+static bool read_right_lane(void *item, xmlTextReaderPtr reader)
 {
     xml_elt read[] =
         {{0,
@@ -184,11 +184,11 @@ static bool read_adjacency(void *item, xmlTextReaderPtr reader)
         {{0,
           BAD_CAST "left",
           item,
-          read_left_adjacency},
+          read_left_lane},
          {0,
           BAD_CAST "right",
           item,
-          read_right_adjacency}};
+          read_right_lane}};
 
     if(!read_elements(reader, sizeof(read)/sizeof(read[0]), read, BAD_CAST "adjacency_intervals"))
         return false;
@@ -360,7 +360,7 @@ void lane::scale_offsets(float f)
     }
 }
 
-lane* lane::left_adjacency(float &t) const
+lane* lane::left_lane(float &t) const
 {
     const adjacency &adj = left.get_rescale(t);
     if(adj.neighbor.dp)
@@ -369,7 +369,7 @@ lane* lane::left_adjacency(float &t) const
     return adj.neighbor.dp;
 }
 
-lane* lane::right_adjacency(float &t) const
+lane* lane::right_lane(float &t) const
 {
     const adjacency &adj = right.get_rescale(t);
     if(adj.neighbor.dp)
@@ -721,10 +721,10 @@ struct lc_curve
 int lane::merge_intent(float local_t, float gamma_c) const
 {
     float left_t = local_t;
-    const lane *left_la = left_adjacency(left_t);
+    const lane *left_la = left_lane(left_t);
 
     float right_t = local_t;
-    const lane *right_la = right_adjacency(right_t);
+    const lane *right_la = right_lane(right_t);
 
     if(!(left_la || right_la))
         return 0;
@@ -787,7 +787,7 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
         return false;
 
     float other_t = c.x;
-    const lane *other_la = (dir == -1) ? left_adjacency(other_t) : right_adjacency(other_t);
+    const lane *other_la = (dir == -1) ? left_lane(other_t) : right_lane(other_t);
     assert(other_la);
 
     float end = lc_curve::end(c.u);
@@ -944,7 +944,7 @@ void lane::advance_carticles(float dt, float gamma_c)
                 assert(cart.lane_change_dir() == -1);
                 cart.y += 1.0f;
 
-                lane *llane = lane::left_adjacency(cart.x);
+                lane *llane = lane::left_lane(cart.x);
                 if(llane)
                     llane->carticles[1].push_back(cart);
 
@@ -955,7 +955,7 @@ void lane::advance_carticles(float dt, float gamma_c)
                 assert(cart.lane_change_dir() == 1);
                 cart.y -= 1.0f;
 
-                lane *rlane = lane::right_adjacency(cart.x);
+                lane *rlane = lane::right_lane(cart.x);
                 if(rlane)
                     rlane->carticles[1].push_back(cart);
 
@@ -1032,7 +1032,7 @@ void lane::apply_merges(float dt, float gamma_c)
             merge_states[i].transition *= -1;
 
             float param = i*inv_ncells;
-            lane *la = left_adjacency(param);
+            lane *la = left_lane(param);
             if(la)
             {
                 int neighbor_cell = static_cast<int>(std::floor(param*la->ncells));
@@ -1059,7 +1059,7 @@ void lane::apply_merges(float dt, float gamma_c)
         else if(merge_states[i].transition > 0.0f)
         {
             float param = i*inv_ncells;
-            lane *la = right_adjacency(param);
+            lane *la = right_lane(param);
             if(la)
             {
                 int neighbor_cell = static_cast<int>(std::floor(param*la->ncells));
