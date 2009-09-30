@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 
     float finish_time = boost::lexical_cast<float>(argv[2]);
 
-    size_t count;
+    size_t count = 0;
     foreach(const input_car &ic, icars)
     {
         if(ic.time > finish_time)
