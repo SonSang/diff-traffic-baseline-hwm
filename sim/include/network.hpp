@@ -16,7 +16,7 @@
 
 #define foreach BOOST_FOREACH
 
-#define LANE_WIDTH 2.5f
+#define LANE_WIDTH 3.62f
 #define CAR_LENGTH 4.5f
 //* This is the position of the car's axle from the FRONT bumper of the car
 #define CAR_REAR_AXLE 3.5f

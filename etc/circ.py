@@ -86,7 +86,7 @@ def run_tan_circ(pts, debug=False):
     # pylab.clf()
     # ax = pylab.subplot(111)
     for idx in xrange(1, len(pts)-1):
-        rad = 70
+        rad = 200 - (4  + 3/2)*3.62
         (p0, angle0, center, thisrad, angle1, p1) = tan_circ(pts[idx-1:idx+2], rad)
 
         if center == None:
@@ -131,14 +131,74 @@ def run_tan_circ(pts, debug=False):
 def ramp(p0, n0, p1, n1, rad):
     pass
 
+def ne_circle(center, rad, nsteps):
+    ne_circle_center = center
+    ne_circle_ang = (math.pi, 3*math.pi/2)
+    ne_circle_ccw = False
+
+    res = circle(ne_circle_center,
+                 rad,
+                 ne_circle_ang,
+                 ne_circle_ccw,
+                 nsteps)
+    for (ct, (x,y)) in enumerate(res):
+        print "%+8.5f %+8.5f %+8.5f 0.0" %  (x, y, 1.0-ct/float(nsteps-1))
+
+def se_circle(center, rad, nsteps):
+    se_circle_center = (center[0], -center[1])
+    se_circle_ang = (math.pi/2, math.pi)
+    se_circle_ccw = False
+
+    res = circle(se_circle_center,
+                 rad,
+                 se_circle_ang,
+                 se_circle_ccw,
+                 nsteps)
+    for (ct, (x,y)) in enumerate(res):
+        print "%+8.5f %+8.5f %+8.5f 0.0" %  (x, y, ct/float(nsteps-1))
+
+def nw_circle(center, rad, nsteps):
+    nw_circle_center = (-center[0], center[1])
+    nw_circle_ang = (3*math.pi/2, 0)
+    nw_circle_ccw = False
+
+    res = circle(nw_circle_center,
+                 rad,
+                 nw_circle_ang,
+                 nw_circle_ccw,
+                 nsteps)
+    for (ct, (x,y)) in enumerate(res):
+        print "%+8.5f %+8.5f %+8.5f 0.0" %  (x, y, ct/float(nsteps-1))
+
+def sw_circle(center, rad, nsteps):
+    sw_circle_center = (-center[0], -center[1])
+    sw_circle_ang = (0, math.pi/2)
+    sw_circle_ccw = False
+
+    res = circle(sw_circle_center,
+                 rad,
+                 sw_circle_ang,
+                 sw_circle_ccw,
+                 nsteps)
+    for (ct, (x,y)) in enumerate(res):
+        print "%+8.5f %+8.5f %+8.5f 0.0" %  (x, y, 1.0-ct/float(nsteps-1))
+
 if __name__ == '__main__':
-    nepts = numpy.array([[200, 10], [150, 10], [10, 150], [10, 200]], dtype=numpy.float32)
-    nwpts = numpy.array([[-10, 200], [-10, 150], [-150, 10], [-200, 10]], dtype=numpy.float32)
-    swpts = numpy.array([[-200, -10], [-150, -10], [-10, -150], [-10, -200]], dtype=numpy.float32)
-    septs = numpy.array([[10, -200], [10, -150], [150, -10], [200, -10]], dtype=numpy.float32)
-    res = run_tan_circ(septs)
-    for (x,y) in res:
-        print x,y, 0.0, 0.0
+    neramppts = numpy.array([[500.0, 18.1], [325.0, 18.1], [18.1, 325.0], [18.1, 500.0]], dtype=numpy.float32)
+    nwramppts = numpy.array([[-18.1, 500], [-18.1, 325.0], [-325.0, 18.1], [-500, 18.1]], dtype=numpy.float32)
+    swramppts = numpy.array([[-500, -18.1], [-325.0, -18.1], [-18.1, -325.0], [-18.1, -500]], dtype=numpy.float32)
+    seramppts = numpy.array([[18.1, -500], [18.1, -325.0], [325.0, -18.1], [500, -18.1]], dtype=numpy.float32)
+
+    res = run_tan_circ(seramppts)
+    for (ct, (x,y)) in enumerate(res):
+        print "%+8.5f %+8.5f %+8.5f 0.0" %  (x, y, 1.0-ct/float(nsteps-1))
+
+    # circle_radius = 81.9
+    # nsteps = 24
+    # center = (100, 100)
+
+    # sw_circle(center, circle_radius, nsteps)
+
     # pylab.clf()
     # ax = pylab.subplot(111)
     # for i in xrange(1, len(res)):

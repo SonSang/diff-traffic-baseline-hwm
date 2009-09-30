@@ -175,7 +175,7 @@ void line_rep::points_string(const char *str)
         if(sscanf(str, "%f %f %f %f", &x, &y, &z, &o) != 4)
             break;
 
-        points.push_back(point(x, y, 5.0*z));
+        points.push_back(point(x, y, 6.0*z));
 
         while(*str && *str != '\n')
             ++str;

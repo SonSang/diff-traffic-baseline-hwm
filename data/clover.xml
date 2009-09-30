@@ -3,201 +3,233 @@
   <roads>
     <road id="road-we" name="i-80-ew">
       <line_rep>
-	<points>
-	  -500.0 -10.0 0.0 0.0
-	  +500.0 -10.0 0.0 0.0
-	</points>
+        <points>
+          -1500.0 -18.1 0.0 0.0
+          +1500.0 -18.1 0.0 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-ne-ramp" name="road-ne-ramp">
       <line_rep>
-	<points>
-	  200.0         10.0          0.0    0.0
-	  178.994949341 10.0          0.0    0.0
-	  168.044536788 10.8618161583 0.0909 0.0
-	  157.363759735 13.4260438593 0.1818 0.0
-	  147.215614359 17.6295433068 0.2727 0.0
-	  137.84998168  23.3688103938 0.3636 0.0
-	  129.497474658 30.5025253169 0.4545 0.0
-	  30.5025253169 129.497474658 0.5454 0.0
-	  23.3688103938 137.84998168  0.6363 0.0
-	  17.6295433068 147.215614359 0.7272 0.0
-	  13.4260438593 157.363759735 0.8181 0.0
-	  10.8618161583 168.044536788 0.9090 0.0
-	  10.0          178.994949341 1.0    0.0
-	  10.0          200.0         1.0    0.0
-	</points>
+        <points>
+          +500.00000 +18.10000 +0.00000 0.0
+          +400.34546 +18.10000 +0.04348 0.0
+          +371.89003 +20.33949 +0.08696 0.0
+          +344.13527 +27.00282 +0.13043 0.0
+          +317.76459 +37.92591 +0.17391 0.0
+          +293.42732 +52.83981 +0.21739 0.0
+          +271.72274 +71.37728 +0.26087 0.0
+          +71.37728 +271.72270 +0.30435 0.0
+          +52.83981 +293.42729 +0.34783 0.0
+          +37.92591 +317.76456 +0.39130 0.0
+          +27.00282 +344.13524 +0.43478 0.0
+          +20.33949 +371.89000 +0.47826 0.0
+          +18.10000 +400.34543 +0.52174 0.0
+          +18.10000 +500.00000 +0.56522 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-ne-circle" name="road-ne-circle">
       <line_rep>
-	<points>
-	  10.0 40.0                   1.0     0.0
-	  11.4683045111 49.2705098312 1.0     0.0
-	  15.7294901688 57.6335575688 0.92307 0.0
-	  22.3664424312 64.2705098312 0.84615 0.0
-	  30.7294901688 68.5316954889 0.76923 0.0
-	  40.0 70.0                   0.69230 0.0
-	  49.2705098312 68.5316954889 0.61538 0.0
-	  57.6335575688 64.2705098312 0.53846 0.0
-	  64.2705098312 57.6335575688 0.46153 0.0
-	  68.5316954889 49.2705098312 0.38461 0.0
-	  70.0 40.0                   0.30769 0.0
-	  68.5316954889 30.7294901688 0.23076 0.0
-	  64.2705098312 22.3664424312 0.15384 0.0
-	  57.6335575688 15.7294901688 0.07692 0.0
-	  49.2705098312 11.4683045111 0.0     0.0
-	  40.0 10.0                   0.0     0.0
-	</points>
+        <points>
+          +18.10000 +100.00000 +1.00000 0.0
+          +19.81301 +116.66305 +0.95652 0.0
+          +24.88039 +132.62905 +0.91304 0.0
+          +33.09017 +147.23012 +0.86957 0.0
+          +44.09890 +159.85547 +0.82609 0.0
+          +57.44607 +169.97695 +0.78261 0.0
+          +72.57336 +177.17117 +0.73913 0.0
+          +88.84795 +181.13718 +0.69565 0.0
+          +105.58905 +181.70907 +0.65217 0.0
+          +122.09636 +178.86293 +0.60870 0.0
+          +137.67933 +172.71780 +0.56522 0.0
+          +151.68610 +163.53075 +0.52174 0.0
+          +163.53075 +151.68610 +0.47826 0.0
+          +172.71780 +137.67933 +0.43478 0.0
+          +178.86293 +122.09636 +0.39130 0.0
+          +181.70907 +105.58905 +0.34783 0.0
+          +181.13718 +88.84795 +0.30435 0.0
+          +177.17117 +72.57336 +0.26087 0.0
+          +169.97695 +57.44607 +0.21739 0.0
+          +159.85547 +44.09890 +0.17391 0.0
+          +147.23012 +33.09017 +0.13043 0.0
+          +132.62905 +24.88039 +0.08696 0.0
+          +116.66305 +19.81301 +0.04348 0.0
+          +100.00000 +18.10000 +0.00000 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-ew" name="i-80-we">
       <line_rep>
-	<points>
-	  +500.0 10.0 0.0 0.0
-	  -500.0 10.0 0.0 0.0
-	</points>
+        <points>
+          +1500.0 18.1 0.0 0.0
+          -1500.0 18.1 0.0 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-se-ramp" name="road-se-ramp">
       <line_rep>
-	<points>
-	  10.0          -200.0         1.0     0.0
-	  10.0          -178.994949341 1.0     0.0
-	  10.8618161583 -168.044536788 0.90909 0.0
-	  13.4260438593 -157.363759735 0.81818 0.0
-	  17.6295433068 -147.215614359 0.72727 0.0
-	  23.3688103938 -137.84998168  0.63636 0.0
-	  30.5025253169 -129.497474658 0.54545 0.0
-	  129.497474658 -30.5025253169 0.45454 0.0
-	  137.84998168  -23.3688103938 0.36363 0.0
-	  147.215614359 -17.6295433068 0.27272 0.0
-	  157.363759735 -13.4260438593 0.18181 0.0
-	  168.044536788 -10.8618161583 0.09090 0.0
-	  178.994949341 -10.0          0.0     0.0
-	  200.0         -10.0          0.0     0.0
-	</points>
+        <points>
+          +18.10000 -500.00000 +1.00000 0.0
+          +18.10000 -400.34546 +0.95652 0.0
+          +20.33949 -371.89003 +0.91304 0.0
+          +27.00282 -344.13527 +0.86957 0.0
+          +37.92591 -317.76459 +0.82609 0.0
+          +52.83981 -293.42732 +0.78261 0.0
+          +71.37728 -271.72274 +0.73913 0.0
+          +271.72270 -71.37728 +0.69565 0.0
+          +293.42729 -52.83981 +0.65217 0.0
+          +317.76456 -37.92591 +0.60870 0.0
+          +344.13524 -27.00282 +0.56522 0.0
+          +371.89000 -20.33949 +0.52174 0.0
+          +400.34543 -18.10000 +0.47826 0.0
+          +500.00000 -18.10000 +0.43478 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-se-circle" name="road-se-circle">
       <line_rep>
-	<points>
-	  40.0          -10.0          0.0     0.0
-	  49.2705098312 -11.4683045111 0.0     0.0
-	  57.6335575688 -15.7294901688 0.07692 0.0
-	  64.2705098312 -22.3664424312 0.15384 0.0
-	  68.5316954889 -30.7294901688 0.23076 0.0
-	  70.0          -40.0          0.30769 0.0
-	  68.5316954889 -49.2705098312 0.38461 0.0
-	  64.2705098312 -57.6335575688 0.46153 0.0
-	  57.6335575688 -64.2705098312 0.53846 0.0
-	  49.2705098312 -68.5316954889 0.61538 0.0
-	  40.0          -70.0          0.69230 0.0
-          30.7294901688 -68.5316954889 0.76923 0.0
-          22.3664424312 -64.2705098312 0.84615 0.0
-          15.7294901688 -57.6335575688 0.92307 0.0
-          11.4683045111 -49.2705098312 1.0     0.0
-          10.0          -40.0          1.0     0.0
+        <points>
+          +100.00000 -18.10000 +0.00000 0.0
+          +116.66305 -19.81301 +0.04348 0.0
+          +132.62905 -24.88039 +0.08696 0.0
+          +147.23012 -33.09017 +0.13043 0.0
+          +159.85547 -44.09890 +0.17391 0.0
+          +169.97695 -57.44607 +0.21739 0.0
+          +177.17117 -72.57336 +0.26087 0.0
+          +181.13718 -88.84795 +0.30435 0.0
+          +181.70907 -105.58905 +0.34783 0.0
+          +178.86293 -122.09636 +0.39130 0.0
+          +172.71780 -137.67933 +0.43478 0.0
+          +163.53075 -151.68610 +0.47826 0.0
+          +151.68610 -163.53075 +0.52174 0.0
+          +137.67933 -172.71780 +0.56522 0.0
+          +122.09636 -178.86293 +0.60870 0.0
+          +105.58905 -181.70907 +0.65217 0.0
+          +88.84795 -181.13718 +0.69565 0.0
+          +72.57336 -177.17117 +0.73913 0.0
+          +57.44607 -169.97695 +0.78261 0.0
+          +44.09890 -159.85547 +0.82609 0.0
+          +33.09017 -147.23012 +0.86957 0.0
+          +24.88039 -132.62905 +0.91304 0.0
+          +19.81301 -116.66305 +0.95652 0.0
+          +18.10000 -100.00000 +1.00000 0.0
         </points>
       </line_rep>
     </road>
     <road id="road-sn" name="i-80-sn">
       <line_rep>
         <points>
-          10.0 -500.0 1.0 1.0
-          10.0  500.0 1.0 1.0
+          18.1 -1500.0 1.0 1.0
+          18.1  1500.0 1.0 1.0
         </points>
       </line_rep>
     </road>
     <road id="road-nw-ramp" name="road-nw-ramp">
       <line_rep>
-	<points>
-	  -10.0          200.0         1.0     0.0
-	  -10.0          178.994949341 1.0     0.0
-	  -10.8618161583 168.044536788 0.90909 0.0
-	  -13.4260438593 157.363759735 0.81818 0.0
-	  -17.6295433068 147.215614359 0.72727 0.0
-	  -23.3688103938 137.84998168  0.63636 0.0
-	  -30.5025253169 129.497474658 0.54545 0.0
-	  -129.497474658 30.5025253169 0.45454 0.0
-	  -137.84998168  23.3688103938 0.36363 0.0
-	  -147.215614359 17.6295433068 0.27272 0.0
-	  -157.363759735 13.4260438593 0.18181 0.0
-	  -168.044536788 10.8618161583 0.09090 0.0
-	  -178.994949341 10.0          0.0     0.0
-	  -200.0         10.0          0.0     0.0
-	</points>
+        <points>
+          -18.10000 +500.00000 +1.00000 0.0
+          -18.10000 +400.34546 +0.95652 0.0
+          -20.33949 +371.89003 +0.91304 0.0
+          -27.00282 +344.13527 +0.86957 0.0
+          -37.92591 +317.76459 +0.82609 0.0
+          -52.83981 +293.42732 +0.78261 0.0
+          -71.37728 +271.72274 +0.73913 0.0
+          -271.72270 +71.37728 +0.69565 0.0
+          -293.42729 +52.83981 +0.65217 0.0
+          -317.76456 +37.92591 +0.60870 0.0
+          -344.13524 +27.00282 +0.56522 0.0
+          -371.89000 +20.33949 +0.52174 0.0
+          -400.34543 +18.10000 +0.47826 0.0
+          -500.00000 +18.10000 +0.43478 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-nw-circle" name="road-nw-circle">
       <line_rep>
         <points>
-          -40.0          10.0          0.0     0.0
-          -49.2705098312 11.4683045111 0.0     0.0
-          -57.6335575688 15.7294901688 0.07692 0.0
-          -64.2705098312 22.3664424312 0.15384 0.0
-          -68.5316954889 30.7294901688 0.23076 0.0
-          -70.0          40.0          0.30769 0.0
-          -68.5316954889 49.2705098312 0.38461 0.0
-          -64.2705098312 57.6335575688 0.46153 0.0
-          -57.6335575688 64.2705098312 0.53846 0.0
-          -49.2705098312 68.5316954889 0.61538 0.0
-          -40.0          70.0          0.69230 0.0
-          -30.7294901688 68.5316954889 0.76923 0.0
-          -22.3664424312 64.2705098312 0.84615 0.0
-          -15.7294901688 57.6335575688 0.92307 0.0
-          -11.4683045111 49.2705098312 1.0     0.0
-          -10.0          40.0          1.0     0.0
+          -100.00000 +18.10000 +0.00000 0.0
+          -116.66305 +19.81301 +0.04348 0.0
+          -132.62905 +24.88039 +0.08696 0.0
+          -147.23012 +33.09017 +0.13043 0.0
+          -159.85547 +44.09890 +0.17391 0.0
+          -169.97695 +57.44607 +0.21739 0.0
+          -177.17117 +72.57336 +0.26087 0.0
+          -181.13718 +88.84795 +0.30435 0.0
+          -181.70907 +105.58905 +0.34783 0.0
+          -178.86293 +122.09636 +0.39130 0.0
+          -172.71780 +137.67933 +0.43478 0.0
+          -163.53075 +151.68610 +0.47826 0.0
+          -151.68610 +163.53075 +0.52174 0.0
+          -137.67933 +172.71780 +0.56522 0.0
+          -122.09636 +178.86293 +0.60870 0.0
+          -105.58905 +181.70907 +0.65217 0.0
+          -88.84795 +181.13718 +0.69565 0.0
+          -72.57336 +177.17117 +0.73913 0.0
+          -57.44607 +169.97695 +0.78261 0.0
+          -44.09890 +159.85547 +0.82609 0.0
+          -33.09017 +147.23012 +0.86957 0.0
+          -24.88039 +132.62905 +0.91304 0.0
+          -19.81301 +116.66305 +0.95652 0.0
+          -18.10000 +100.00000 +1.00000 0.0
         </points>
       </line_rep>
     </road>
     <road id="road-ns" name="i-80-ns">
       <line_rep>
         <points>
-          -10.0  500.0 1.0 1.0
-          -10.0 -500.0 1.0 1.0
+          -18.1  1500.0 1.0 1.0
+          -18.1 -1500.0 1.0 1.0
         </points>
       </line_rep>
     </road>
     <road id="road-sw-ramp" name="road-sw-ramp">
       <line_rep>
-	<points>
-	  -200.0         -10.0          0.0    0.0
-	  -178.994949341 -10.0          0.0    0.0
-	  -168.044536788 -10.8618161583 0.0909 0.0
-	  -157.363759735 -13.4260438593 0.1818 0.0
-	  -147.215614359 -17.6295433068 0.2727 0.0
-	  -137.84998168  -23.3688103938 0.3636 0.0
-	  -129.497474658 -30.5025253169 0.4545 0.0
-	  -30.5025253169 -129.497474658 0.5454 0.0
-	  -23.3688103938 -137.84998168  0.6363 0.0
-	  -17.6295433068 -147.215614359 0.7272 0.0
-	  -13.4260438593 -157.363759735 0.8181 0.0
-	  -10.8618161583 -168.044536788 0.9090 0.0
-	  -10.0          -178.994949341 1.0    0.0
-	  -10.0          -200.0         1.0    0.0
-	</points>
+        <points>
+          -500.00000 -18.10000 +0.00000 0.0
+          -400.34546 -18.10000 +0.04348 0.0
+          -371.89003 -20.33949 +0.08696 0.0
+          -344.13527 -27.00282 +0.13043 0.0
+          -317.76459 -37.92591 +0.17391 0.0
+          -293.42732 -52.83981 +0.21739 0.0
+          -271.72274 -71.37728 +0.26087 0.0
+          -71.37728 -271.72270 +0.30435 0.0
+          -52.83981 -293.42729 +0.34783 0.0
+          -37.92591 -317.76456 +0.39130 0.0
+          -27.00282 -344.13524 +0.43478 0.0
+          -20.33949 -371.89000 +0.47826 0.0
+          -18.10000 -400.34543 +0.52174 0.0
+          -18.10000 -500.00000 +0.56522 0.0
+        </points>
       </line_rep>
     </road>
     <road id="road-sw-circle" name="road-sw-circle">
       <line_rep>
         <points>
-          -10.0          -40.0          1.0     0.0
-          -11.4683045111 -49.2705098312 1.0     0.0
-          -15.7294901688 -57.6335575688 0.92307 0.0
-          -22.3664424312 -64.2705098312 0.84615 0.0
-          -30.7294901688 -68.5316954889 0.76923 0.0
-          -40.0          -70.0          0.69230 0.0
-          -49.2705098312 -68.5316954889 0.61538 0.0
-          -57.6335575688 -64.2705098312 0.53846 0.0
-          -64.2705098312 -57.6335575688 0.46153 0.0
-          -68.5316954889 -49.2705098312 0.38461 0.0
-          -70.0          -40.0          0.30769 0.0
-          -68.5316954889 -30.7294901688 0.23076 0.0
-          -64.2705098312 -22.3664424312 0.15384 0.0
-          -57.6335575688 -15.7294901688 0.07692 0.0
-          -49.2705098312 -11.4683045111 0.0     0.0
-          -40.0          -10.0          0.0     0.0
+          -18.10000 -100.00000 +1.00000 0.0
+          -19.81301 -116.66305 +0.95652 0.0
+          -24.88039 -132.62905 +0.91304 0.0
+          -33.09017 -147.23012 +0.86957 0.0
+          -44.09890 -159.85547 +0.82609 0.0
+          -57.44607 -169.97695 +0.78261 0.0
+          -72.57336 -177.17117 +0.73913 0.0
+          -88.84795 -181.13718 +0.69565 0.0
+          -105.58905 -181.70907 +0.65217 0.0
+          -122.09636 -178.86293 +0.60870 0.0
+          -137.67933 -172.71780 +0.56522 0.0
+          -151.68610 -163.53075 +0.52174 0.0
+          -163.53075 -151.68610 +0.47826 0.0
+          -172.71780 -137.67933 +0.43478 0.0
+          -178.86293 -122.09636 +0.39130 0.0
+          -181.70907 -105.58905 +0.34783 0.0
+          -181.13718 -88.84795 +0.30435 0.0
+          -177.17117 -72.57336 +0.26087 0.0
+          -169.97695 -57.44607 +0.21739 0.0
+          -159.85547 -44.09890 +0.17391 0.0
+          -147.23012 -33.09017 +0.13043 0.0
+          -132.62905 -24.88039 +0.08696 0.0
+          -116.66305 -19.81301 +0.04348 0.0
+          -100.00000 -18.10000 +0.00000 0.0
         </points>
       </line_rep>
     </road>
@@ -213,34 +245,34 @@
       <road_intervals>
         <interval>
           <base>
-            <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="0.3" lane_position="-1.0"/>
+            <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="0.33333" lane_position="-1.0"/>
           </base>
-	  <divider value="0.337122">
+          <divider value="0.361633">
             <road_membership parent_road_ref="road-ne-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
-	  <divider value="0.662878">
-            <road_membership parent_road_ref="road-sn" interval_start="0.7" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
+          </divider>
+          <divider value="0.638367">
+            <road_membership parent_road_ref="road-sn" interval_start="0.66667" interval_end="1.0" lane_position="-1.0"/>
+          </divider>
         </interval>
       </road_intervals>
       <adjacency_intervals>
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.0" interval_end="0.3"/>
+              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.0" interval_end="0.33333"/>
             </base>
-	    <divider value="0.337122">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.662878">
-	      <lane_adjacency lane_ref="lane-sn-0" interval_start="0.7" interval_end="1.0"/>
-	    </divider>
+            <divider value="0.361633">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.638367">
+              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.66667" interval_end="1.0"/>
+            </divider>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-	      <lane_adjacency/>
+              <lane_adjacency/>
             </base>
           </interval>
         </right>
@@ -256,34 +288,34 @@
       <road_intervals>
         <interval>
           <base>
-            <road_membership parent_road_ref="road-ns" interval_start="0.0" interval_end="0.3" lane_position="-1.0"/>
+            <road_membership parent_road_ref="road-ns" interval_start="0.0" interval_end="0.33333" lane_position="-1.0"/>
           </base>
-	  <divider value="0.337122">
+          <divider value="0.361633">
             <road_membership parent_road_ref="road-nw-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
-	  <divider value="0.662878">
-            <road_membership parent_road_ref="road-ew" interval_start="0.7" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
+          </divider>
+          <divider value="0.638367">
+            <road_membership parent_road_ref="road-ew" interval_start="0.66667" interval_end="1.0" lane_position="-1.0"/>
+          </divider>
         </interval>
       </road_intervals>
       <adjacency_intervals>
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.0" interval_end="0.3"/>
+              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.0" interval_end="0.33333"/>
             </base>
-	    <divider value="0.337122">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.662878">
-	      <lane_adjacency lane_ref="lane-ew-0" interval_start="0.7" interval_end="1.0"/>
-	    </divider>
+            <divider value="0.361633">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.638367">
+              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.66667" interval_end="1.0"/>
+            </divider>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-	      <lane_adjacency/>
+              <lane_adjacency/>
             </base>
           </interval>
         </right>
@@ -299,34 +331,34 @@
       <road_intervals>
         <interval>
           <base>
-            <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="0.3" lane_position="-1.0"/>
+            <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="0.33333" lane_position="-1.0"/>
           </base>
-	  <divider value="0.337122">
+          <divider value="0.361633">
             <road_membership parent_road_ref="road-sw-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
-	  <divider value="0.662878">
-            <road_membership parent_road_ref="road-ns" interval_start="0.7" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
+          </divider>
+          <divider value="0.638367">
+            <road_membership parent_road_ref="road-ns" interval_start="0.66667" interval_end="1.0" lane_position="-1.0"/>
+          </divider>
         </interval>
       </road_intervals>
       <adjacency_intervals>
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-0" interval_start="0.0" interval_end="0.3"/>
+              <lane_adjacency lane_ref="lane-we-0" interval_start="0.0" interval_end="0.33333"/>
             </base>
-	    <divider value="0.337122">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.662878">
-	      <lane_adjacency lane_ref="lane-ns-0" interval_start="0.7" interval_end="1.0"/>
-	    </divider>
+            <divider value="0.361633">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.638367">
+              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.66667" interval_end="1.0"/>
+            </divider>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-	      <lane_adjacency/>
+              <lane_adjacency/>
             </base>
           </interval>
         </right>
@@ -342,34 +374,34 @@
       <road_intervals>
         <interval>
           <base>
-            <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="0.3" lane_position="-1.0"/>
+            <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="0.33333" lane_position="-1.0"/>
           </base>
-	  <divider value="0.337122">
+          <divider value="0.361633">
             <road_membership parent_road_ref="road-se-ramp" interval_start="0.0" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
-	  <divider value="0.662878">
-            <road_membership parent_road_ref="road-we" interval_start="0.7" interval_end="1.0" lane_position="-1.0"/>
-	  </divider>
+          </divider>
+          <divider value="0.638367">
+            <road_membership parent_road_ref="road-we" interval_start="0.66667" interval_end="1.0" lane_position="-1.0"/>
+          </divider>
         </interval>
       </road_intervals>
       <adjacency_intervals>
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.0" interval_end="0.3"/>
+              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.0" interval_end="0.33333"/>
             </base>
-	    <divider value="0.337122">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.662878">
-	      <lane_adjacency lane_ref="lane-we-0" interval_start="0.7" interval_end="1.0"/>
-	    </divider>
+            <divider value="0.361633">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.638367">
+              <lane_adjacency lane_ref="lane-we-0" interval_start="0.66667" interval_end="1.0"/>
+            </divider>
           </interval>
         </left>
         <right>
           <interval>
             <base>
-	      <lane_adjacency/>
+              <lane_adjacency/>
             </base>
           </interval>
         </right>
@@ -385,27 +417,27 @@
       <road_intervals>
         <interval>
           <base>
-            <road_membership parent_road_ref="road-sn" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
+            <road_membership parent_road_ref="road-sn" interval_start="0.466667" interval_end="0.53333" lane_position="-1"/>
           </base>
-          <divider value="0.092624">
+          <divider value="0.086640">
             <road_membership parent_road_ref="road-ne-circle" interval_start="0.0" interval_end="1.0" lane_position="-1"/>
           </divider>
           <divider value="0.25">
-            <road_membership parent_road_ref="road-ew" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
+            <road_membership parent_road_ref="road-ew" interval_start="0.466667" interval_end="0.53333" lane_position="-1"/>
           </divider>
-          <divider value="0.342624">
+          <divider value="0.336640">
             <road_membership parent_road_ref="road-nw-circle" interval_start="0" interval_end="1" lane_position="-1"/>
           </divider>
           <divider value="0.5">
-            <road_membership parent_road_ref="road-ns" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
+            <road_membership parent_road_ref="road-ns" interval_start="0.466667" interval_end="0.53333" lane_position="-1"/>
           </divider>
-          <divider value="0.592624">
+          <divider value="0.586640">
             <road_membership parent_road_ref="road-sw-circle" interval_start="0.0" interval_end="1.0" lane_position="-1"/>
           </divider>
           <divider value="0.75">
-            <road_membership parent_road_ref="road-we" interval_start="0.4602" interval_end="0.5398" lane_position="-1"/>
+            <road_membership parent_road_ref="road-we" interval_start="0.466667" interval_end="0.53333" lane_position="-1"/>
           </divider>
-          <divider value="0.842624">
+          <divider value="0.836640">
             <road_membership parent_road_ref="road-se-circle" interval_start="0.0" interval_end="1" lane_position="-1"/>
           </divider>
         </interval>
@@ -414,29 +446,29 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.4602" interval_end="0.5398"/>
+              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.466667" interval_end="0.53333"/>
             </base>
-	    <divider value="0.092624">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.25">
-	      <lane_adjacency lane_ref="lane-ew-0" interval_start="0.4602" interval_end="0.5398"/>
-	    </divider>
-	    <divider value="0.342624">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.5">
-	      <lane_adjacency lane_ref="lane-ns-0" interval_start="0.4602" interval_end="0.5398"/>
-	    </divider>
-	    <divider value="0.592624">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.75">
-	      <lane_adjacency lane_ref="lane-we-0" interval_start="0.4602" interval_end="0.5398"/>
-	    </divider>
-	    <divider value="0.842624">
-	      <lane_adjacency/>
-	    </divider>
+            <divider value="0.086640">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.25">
+              <lane_adjacency lane_ref="lane-ew-0" interval_start="0.466667" interval_end="0.53333"/>
+            </divider>
+            <divider value="0.336640">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.5">
+              <lane_adjacency lane_ref="lane-ns-0" interval_start="0.466667" interval_end="0.53333"/>
+            </divider>
+            <divider value="0.586640">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.75">
+              <lane_adjacency lane_ref="lane-we-0" interval_start="0.466667" interval_end="0.53333"/>
+            </divider>
+            <divider value="0.836640">
+              <lane_adjacency/>
+            </divider>
           </interval>
         </left>
         <right>
@@ -473,21 +505,22 @@
         <right>
           <interval>
             <base>
-	      <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.0" interval_end="0.337122"/>
+              <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.0" interval_end="0.361633"/>
+              <lane_adjacency/>
             </base>
-	    <divider value="0.3">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.4602">
-	      <lane_adjacency lane_ref="loops" interval_start="0.75" interval_end="0.842624"/>
-	    </divider>
-	    <divider value="0.5398">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.7">
-	      <lane_adjacency lane_ref="lane-se-ramp" interval_start="0.662878" interval_end="1.0"/>
-	    </divider>
-	  </interval>
+            <divider value="0.333333">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.466667">
+              <lane_adjacency lane_ref="loops" interval_start="0.75" interval_end="0.836640"/>
+            </divider>
+            <divider value="0.53333">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.666667">
+              <lane_adjacency lane_ref="lane-se-ramp" interval_start="0.638367" interval_end="1.0"/>
+            </divider>
+          </interval>
         </right>
       </adjacency_intervals>
     </lane>
@@ -516,7 +549,7 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-0" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -533,6 +566,37 @@
         <interval>
           <base>
             <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="1.0" lane_position="3.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency lane_ref="lane-we-3" interval_start="0.0" interval_end="1.0"/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+              <lane_adjacency lane_ref="lane-we-1" interval_start="0.0" interval_end="1.0"/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-we-3" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-we" interval_start="0.0" interval_end="1.0" lane_position="4.0"/>
           </base>
         </interval>
       </road_intervals>
@@ -578,20 +642,20 @@
         <right>
           <interval>
             <base>
-	      <lane_adjacency lane_ref="lane-ne-ramp" interval_start="0.0" interval_end="0.337122"/>
+              <lane_adjacency lane_ref="lane-ne-ramp" interval_start="0.0" interval_end="0.361633"/>
             </base>
-	    <divider value="0.3">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.4602">
-              <lane_adjacency lane_ref="loops" interval_start="0.25" interval_end="0.342624"/>
-	    </divider>
-	    <divider value="0.5398">
+            <divider value="0.33333">
               <lane_adjacency/>
-	    </divider>
-	    <divider value="0.7">
-              <lane_adjacency lane_ref="lane-nw-ramp" interval_start="0.662878" interval_end="1.0"/>
-	    </divider>
+            </divider>
+            <divider value="0.466667">
+              <lane_adjacency lane_ref="loops" interval_start="0.25" interval_end="0.336640"/>
+            </divider>
+            <divider value="0.53333">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.66667">
+              <lane_adjacency lane_ref="lane-nw-ramp" interval_start="0.638367" interval_end="1.0"/>
+            </divider>
           </interval>
         </right>
       </adjacency_intervals>
@@ -645,7 +709,7 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency/>
+              <lane_adjacency lane_ref="lane-ew-3" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
@@ -653,6 +717,37 @@
           <interval>
             <base>
               <lane_adjacency lane_ref="lane-ew-1" interval_start="0.0" interval_end="1.0"/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ew-3" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-ew" interval_start="0.0" interval_end="1.0" lane_position="4.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+              <lane_adjacency lane_ref="lane-ew-2" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -683,20 +778,20 @@
         <right>
           <interval>
             <base>
-	      <lane_adjacency lane_ref="lane-se-ramp" interval_start="0.0" interval_end="0.337122"/>
+              <lane_adjacency lane_ref="lane-se-ramp" interval_start="0.0" interval_end="0.361633"/>
             </base>
-	    <divider value="0.3">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.4602">
-	      <lane_adjacency lane_ref="loops" interval_start="0.0" interval_end="0.092624"/>
-	    </divider>
-	    <divider value="0.5398">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.7">
-	      <lane_adjacency lane_ref="lane-ne-ramp" interval_start="0.662878" interval_end="1.0"/>
-	    </divider>
+            <divider value="0.33333">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.466667">
+              <lane_adjacency lane_ref="loops" interval_start="0.0" interval_end="0.086640"/>
+            </divider>
+            <divider value="0.53333">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.66667">
+              <lane_adjacency lane_ref="lane-ne-ramp" interval_start="0.638367" interval_end="1.0"/>
+            </divider>
           </interval>
         </right>
       </adjacency_intervals>
@@ -726,7 +821,7 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-1" interval_start="0.0" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-0" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
@@ -743,6 +838,37 @@
         <interval>
           <base>
             <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="1.0" lane_position="3.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency lane_ref="lane-sn-3" interval_start="0.0" interval_end="1.0"/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+              <lane_adjacency lane_ref="lane-sn-1" interval_start="0.0" interval_end="1.0"/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-sn-3" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-sn" interval_start="0.0" interval_end="1.0" lane_position="4.0"/>
           </base>
         </interval>
       </road_intervals>
@@ -788,20 +914,20 @@
         <right>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-nw-ramp" interval_start="0.0" interval_end="0.337122"/>
+              <lane_adjacency lane_ref="lane-nw-ramp" interval_start="0.0" interval_end="0.361633"/>
             </base>
-	    <divider value="0.3">
+            <divider value="0.33333">
               <lane_adjacency/>
-	    </divider>
-	    <divider value="0.4602">
-              <lane_adjacency lane_ref="loops" interval_start="0.5" interval_end="0.592624"/>
-	    </divider>
-	    <divider value="0.5398">
-	      <lane_adjacency/>
-	    </divider>
-	    <divider value="0.7">
-              <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.662878" interval_end="1.0"/>
-	    </divider>
+            </divider>
+            <divider value="0.466667">
+              <lane_adjacency lane_ref="loops" interval_start="0.5" interval_end="0.586640"/>
+            </divider>
+            <divider value="0.53333">
+              <lane_adjacency/>
+            </divider>
+            <divider value="0.66667">
+              <lane_adjacency lane_ref="lane-sw-ramp" interval_start="0.638367" interval_end="1.0"/>
+            </divider>
           </interval>
         </right>
       </adjacency_intervals>
@@ -855,7 +981,7 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency/>
+              <lane_adjacency lane_ref="lane-ns-3" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </left>
@@ -863,6 +989,37 @@
           <interval>
             <base>
               <lane_adjacency lane_ref="lane-ns-1" interval_start="0.0" interval_end="1.0"/>
+            </base>
+          </interval>
+        </right>
+      </adjacency_intervals>
+    </lane>
+    <lane id="lane-ns-3" speedlimit="16.667">
+      <start>
+        <dead_end/>
+      </start>
+      <end>
+        <dead_end/>
+      </end>
+      <road_intervals>
+        <interval>
+          <base>
+            <road_membership parent_road_ref="road-ns" interval_start="0.0" interval_end="1.0" lane_position="4.0"/>
+          </base>
+        </interval>
+      </road_intervals>
+      <adjacency_intervals>
+        <left>
+          <interval>
+            <base>
+              <lane_adjacency/>
+            </base>
+          </interval>
+        </left>
+        <right>
+          <interval>
+            <base>
+              <lane_adjacency lane_ref="lane-ns-2" interval_start="0.0" interval_end="1.0"/>
             </base>
           </interval>
         </right>
