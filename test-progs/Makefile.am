@@ -1,7 +1,7 @@
 AM_CXXFLAGS = -I$(top_srcdir)/sim/include $(BOOST_CPPFLAGS) $(LIBXML2_CFLAGS) $(OPENMP_CXXFLAGS)
 ADD_LIBS = $(top_builddir)/sim/src/libhwm_net.la
 
-EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp road-geom.cpp run-sim.cpp
+EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp road-geom.cpp run-sim.cpp replay-sim.cpp
 
 noinst_PROGRAMS = interval-test inhomo-test lane-test xml-test car-data-test road-geom run-sim count-cars
 
@@ -30,7 +30,7 @@ count_cars_SOURCES = count-cars.cpp
 count_cars_LDADD   = $(ADD_LIBS)
 
 if DO_VISUAL
-noinst_PROGRAMS += showlane shownetwork showsim
+noinst_PROGRAMS += showlane shownetwork showsim replay-sim
 
 showlane_SOURCES = showlane.cpp \
 		   plot.cpp     \
@@ -42,6 +42,10 @@ showlane_LDADD    = $(ADD_LIBS) $(CAIRO_LIBS) $(FLTK_LDFLAGS)
 shownetwork_SOURCES  = shownetwork.cpp arcball.hpp
 shownetwork_CXXFLAGS = $(AM_CXXFLAGS) $(FLTK_GL_CXXFLAGS)
 shownetwork_LDADD    = $(ADD_LIBS) $(FLTK_GL_LDFLAGS)
+
+replay_sim_SOURCES  = replay-sim.cpp arcball.hpp
+replay_sim_CXXFLAGS = $(AM_CXXFLAGS) $(FLTK_GL_CXXFLAGS)
+replay_sim_LDADD    = $(ADD_LIBS) $(FLTK_GL_LDFLAGS)
 
 showsim_SOURCES = showsim.cpp \
 		  plot.cpp    \
