@@ -315,70 +315,6 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
         layer_curve[intime]  = 1
         layer_curve[outtime] = 0
 
-#@print_timing
-#def apply_curve_motion(id, cartype, carseries, road_nurb, the_road, carobj, steerobj, wheelblen):
-#    ipo = carobj.getIpo()
-#    ipo_consts = [(Blender.Ipo.OB_LOCX, 'LocX'),
-#                  (Blender.Ipo.OB_LOCY, 'LocY'),
-#                  (Blender.Ipo.OB_LOCZ, 'LocZ'),
-#                  (Blender.Ipo.OB_ROTX, 'RotX'),
-#                  (Blender.Ipo.OB_ROTY, 'RotY'),
-#                  (Blender.Ipo.OB_ROTZ, 'RotZ')]
-#
-#    ipo_curves = []
-#    for ipc in ipo_consts:
-#        if ipo[ipc[0]] != None:
-#            ipo[ipc[0]] = None
-#        curv = ipo.addCurve(ipc[1])
-#        ipo_curves.append(curv)
-#
-#    start = road_nurb.knots[ 0]
-#    end   = road_nurb.knots[-1]
-#
-##    steer_ipo = steerobj.getIpo()
-##    if steer_ipo[Blender.Ipo.OB_ROTZ] != None:
-##        steer_ipo[Blender.Ipo.OB_ROTZ] = None
-##    steer_curve = steer_ipo.addCurve('RotZ')
-#
-#    len = end-start
-#
-#    ustep = len/the_road.length
-#
-#    for i in xrange(0, carseries.nrecs()):
-#        fr = carseries.time[i]*fps
-#
-#        u = start + carseries.x[i]*ustep
-##        pts = road_nurb.ck(u,2)
-#        pts = road_nurb.ck(u,1)
-#        blpt = Blender.Mathutils.Vector(pts[0])
-#        bltan = Blender.Mathutils.Vector(pts[1])
-##        blnorm = Blender.Mathutils.Vector(pts[2])
-##
-##        curvature = blnorm.length
-##
-#        bltan = bltan.normalize()
-#
-#        ylocal = Blender.Mathutils.CrossVecs(Blender.Mathutils.Vector([0, 0, 1]), bltan)
-#        ylocal.normalize()
-#        zlocal = Blender.Mathutils.CrossVecs(bltan, ylocal)
-#
-#        yoffs = carseries.y[i] - (the_road.nlanes-1)*the_road.lanewidth*0.5
-#        zoffs = cartype['z-offs']
-#
-#        ipo_curves[0][fr] = blpt[0] + yoffs*ylocal[0] + zoffs*zlocal[0]
-#        ipo_curves[1][fr] = blpt[1] + yoffs*ylocal[1] + zoffs*zlocal[1]
-#        ipo_curves[2][fr] = blpt[2] + yoffs*ylocal[2] + zoffs*zlocal[2]
-#
-#        mat = Blender.Mathutils.Matrix(bltan, ylocal, zlocal)
-#        e = mat.toEuler()
-#
-#        ipo_curves[3][fr] = e.x * 0.1
-#        ipo_curves[4][fr] = e.y * 0.1
-#        ipo_curves[5][fr] = e.z * 0.1
-#
-##        zrot = math.atan(wheelblen*curvature)
-##        steer_curve[fr] = zrot * 18.0 / math.pi
-
 def read_car_record(fp, t, ncars, cardict):
     for i in xrange(0, ncars):
         data = fp.readline().rstrip().split()
@@ -467,19 +403,19 @@ def build_car(scn, id, color, car, scale):
     body_cons[Blender.Constraint.Settings.TARGET] = root
     print "Copied body"
 
-# Wheel ordering
-######################
-#                    #
-# + y ^              #
-#                    #
-# + x ->             #
-#                    #
-#^out of wheel_obj
-#  -0-----1-         #
-#  |        |<-front #
-#  -3-----2-         #
-#                    #
-######################
+    # Wheel ordering
+    # ######################
+    # #                    #
+    # # + y ^              #
+    # #                    #
+    # # + x ->             #
+    # #                    #
+    # #^out of wheel_obj   #
+    # #  -0-----1-         #
+    # #  |        |<-front #
+    # #  -3-----2-         #
+    # #                    #
+    # ######################
 
     print "Copying wheels"
 
@@ -550,5 +486,3 @@ if __name__ == '__main__':
     print "Cars done"
     Blender.Registry.SetKey('import_traffic', cartypes)
     print "All done"
-
-    ##Blender.Save("moab-200cars-downsamp.blend")
