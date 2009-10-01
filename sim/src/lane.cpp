@@ -726,17 +726,17 @@ struct lc_curve
 
     static inline float y(float t)
     {
-        return ((((8.82028322e+00   * t +
-                   -2.20507827e+01) * t +
-                  1.57957371e+01)   * t +
-                 -1.64277512e+00)   * t +
-                7.83366742e-02)     * t +
-            -4.01831320e-04;
+        return ((((8.7025182813*t+
+                   -21.7562980512*t) +
+                  15.5458393998*t) +
+                 -1.56245957436*t) +
+                0.0709664576132*t) +
+        -0.000283090356282;
     }
 
     static inline float end(float speed)
     {
-        return 9.539*std::pow(speed, -0.5f);
+        return 11.50731f*std::pow(speed, -0.5f);
     }
 
     float y_;
