@@ -13,19 +13,19 @@
       <line_rep>
         <points>
           +500.00000 +18.10000 +0.00000 0.0
-          +400.34546 +18.10000 +0.04348 0.0
-          +371.89003 +20.33949 +0.08696 0.0
-          +344.13527 +27.00282 +0.13043 0.0
-          +317.76459 +37.92591 +0.17391 0.0
-          +293.42732 +52.83981 +0.21739 0.0
-          +271.72274 +71.37728 +0.26087 0.0
-          +71.37728 +271.72270 +0.30435 0.0
-          +52.83981 +293.42729 +0.34783 0.0
-          +37.92591 +317.76456 +0.39130 0.0
-          +27.00282 +344.13524 +0.43478 0.0
-          +20.33949 +371.89000 +0.47826 0.0
-          +18.10000 +400.34543 +0.52174 0.0
-          +18.10000 +500.00000 +0.56522 0.0
+          +400.34546 +18.10000 +0.07692 0.0
+          +371.89003 +20.33949 +0.15385 0.0
+          +344.13527 +27.00282 +0.23077 0.0
+          +317.76459 +37.92591 +0.30769 0.0
+          +293.42732 +52.83981 +0.38462 0.0
+          +271.72274 +71.37728 +0.46154 0.0
+          +71.37728 +271.72270 +0.53846 0.0
+          +52.83981 +293.42729 +0.61538 0.0
+          +37.92591 +317.76456 +0.69231 0.0
+          +27.00282 +344.13524 +0.76923 0.0
+          +20.33949 +371.89000 +0.84615 0.0
+          +18.10000 +400.34543 +0.92308 0.0
+          +18.10000 +500.00000 +1.00000 0.0
         </points>
       </line_rep>
     </road>
@@ -71,19 +71,19 @@
       <line_rep>
         <points>
           +18.10000 -500.00000 +1.00000 0.0
-          +18.10000 -400.34546 +0.95652 0.0
-          +20.33949 -371.89003 +0.91304 0.0
-          +27.00282 -344.13527 +0.86957 0.0
-          +37.92591 -317.76459 +0.82609 0.0
-          +52.83981 -293.42732 +0.78261 0.0
-          +71.37728 -271.72274 +0.73913 0.0
-          +271.72270 -71.37728 +0.69565 0.0
-          +293.42729 -52.83981 +0.65217 0.0
-          +317.76456 -37.92591 +0.60870 0.0
-          +344.13524 -27.00282 +0.56522 0.0
-          +371.89000 -20.33949 +0.52174 0.0
-          +400.34543 -18.10000 +0.47826 0.0
-          +500.00000 -18.10000 +0.43478 0.0
+          +18.10000 -400.34546 +0.92308 0.0
+          +20.33949 -371.89003 +0.84615 0.0
+          +27.00282 -344.13527 +0.76923 0.0
+          +37.92591 -317.76459 +0.69231 0.0
+          +52.83981 -293.42732 +0.61538 0.0
+          +71.37728 -271.72274 +0.53846 0.0
+          +271.72270 -71.37728 +0.46154 0.0
+          +293.42729 -52.83981 +0.38462 0.0
+          +317.76456 -37.92591 +0.30769 0.0
+          +344.13524 -27.00282 +0.23077 0.0
+          +371.89000 -20.33949 +0.15385 0.0
+          +400.34543 -18.10000 +0.07692 0.0
+          +500.00000 -18.10000 +0.00000 0.0
         </points>
       </line_rep>
     </road>
@@ -129,19 +129,19 @@
       <line_rep>
         <points>
           -18.10000 +500.00000 +1.00000 0.0
-          -18.10000 +400.34546 +0.95652 0.0
-          -20.33949 +371.89003 +0.91304 0.0
-          -27.00282 +344.13527 +0.86957 0.0
-          -37.92591 +317.76459 +0.82609 0.0
-          -52.83981 +293.42732 +0.78261 0.0
-          -71.37728 +271.72274 +0.73913 0.0
-          -271.72270 +71.37728 +0.69565 0.0
-          -293.42729 +52.83981 +0.65217 0.0
-          -317.76456 +37.92591 +0.60870 0.0
-          -344.13524 +27.00282 +0.56522 0.0
-          -371.89000 +20.33949 +0.52174 0.0
-          -400.34543 +18.10000 +0.47826 0.0
-          -500.00000 +18.10000 +0.43478 0.0
+          -18.10000 +400.34546 +0.92308 0.0
+          -20.33949 +371.89003 +0.84615 0.0
+          -27.00282 +344.13527 +0.76923 0.0
+          -37.92591 +317.76459 +0.69231 0.0
+          -52.83981 +293.42732 +0.61538 0.0
+          -71.37728 +271.72274 +0.53846 0.0
+          -271.72270 +71.37728 +0.46154 0.0
+          -293.42729 +52.83981 +0.38462 0.0
+          -317.76456 +37.92591 +0.30769 0.0
+          -344.13524 +27.00282 +0.23077 0.0
+          -371.89000 +20.33949 +0.15385 0.0
+          -400.34543 +18.10000 +0.07692 0.0
+          -500.00000 +18.10000 +0.00000 0.0
         </points>
       </line_rep>
     </road>
@@ -187,19 +187,19 @@
       <line_rep>
         <points>
           -500.00000 -18.10000 +0.00000 0.0
-          -400.34546 -18.10000 +0.04348 0.0
-          -371.89003 -20.33949 +0.08696 0.0
-          -344.13527 -27.00282 +0.13043 0.0
-          -317.76459 -37.92591 +0.17391 0.0
-          -293.42732 -52.83981 +0.21739 0.0
-          -271.72274 -71.37728 +0.26087 0.0
-          -71.37728 -271.72270 +0.30435 0.0
-          -52.83981 -293.42729 +0.34783 0.0
-          -37.92591 -317.76456 +0.39130 0.0
-          -27.00282 -344.13524 +0.43478 0.0
-          -20.33949 -371.89000 +0.47826 0.0
-          -18.10000 -400.34543 +0.52174 0.0
-          -18.10000 -500.00000 +0.56522 0.0
+          -400.34546 -18.10000 +0.07692 0.0
+          -371.89003 -20.33949 +0.15385 0.0
+          -344.13527 -27.00282 +0.23077 0.0
+          -317.76459 -37.92591 +0.30769 0.0
+          -293.42732 -52.83981 +0.38462 0.0
+          -271.72274 -71.37728 +0.46154 0.0
+          -71.37728 -271.72270 +0.53846 0.0
+          -52.83981 -293.42729 +0.61538 0.0
+          -37.92591 -317.76456 +0.69231 0.0
+          -27.00282 -344.13524 +0.76923 0.0
+          -20.33949 -371.89000 +0.84615 0.0
+          -18.10000 -400.34543 +0.92308 0.0
+          -18.10000 -500.00000 +1.00000 0.0
         </points>
       </line_rep>
     </road>
@@ -259,13 +259,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.098" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.098" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -302,13 +302,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.098" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.098" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -345,13 +345,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.098" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.098" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -388,13 +388,13 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.045" interval_start="0.0" interval_end="0.33333"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.098" interval_start="0.0" interval_end="0.33333"/>
             </base>
             <divider value="0.361633">
               <lane_adjacency/>
             </divider>
             <divider value="0.638367">
-              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.045" interval_start="0.66667" interval_end="1.0"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.098" interval_start="0.66667" interval_end="1.0"/>
             </divider>
           </interval>
         </left>
@@ -446,25 +446,25 @@
         <left>
           <interval>
             <base>
-              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-sn-0" merge_weight="0.501" interval_start="0.466667" interval_end="0.53333"/>
             </base>
             <divider value="0.086640">
               <lane_adjacency/>
             </divider>
             <divider value="0.25">
-              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-ew-0" merge_weight="0.501" interval_start="0.466667" interval_end="0.53333"/>
             </divider>
             <divider value="0.336640">
               <lane_adjacency/>
             </divider>
             <divider value="0.5">
-              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-ns-0" merge_weight="0.501" interval_start="0.466667" interval_end="0.53333"/>
             </divider>
             <divider value="0.586640">
               <lane_adjacency/>
             </divider>
             <divider value="0.75">
-              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.061" interval_start="0.466667" interval_end="0.53333"/>
+              <lane_adjacency lane_ref="lane-we-0" merge_weight="0.501" interval_start="0.466667" interval_end="0.53333"/>
             </divider>
             <divider value="0.836640">
               <lane_adjacency/>
