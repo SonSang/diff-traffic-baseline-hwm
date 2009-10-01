@@ -276,15 +276,15 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
     leftmat = find_mat(mats, "leftturn")
     assert leftmat != None
 
-    # tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
-    # mats[tailmat].setIpo(tail_ipo)
-    # t_curve = tail_ipo.addCurve("Emit")
-    # frame = carseries.time[0]*fps
-    # t_curve[frame] = 0.0
-    # t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
-    # for bp in carseries.brakepoints:
-    #     t_curve[bp[0]*fps] = 1.0
-    #     t_curve[bp[1]*fps] = 0.0
+    tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
+    mats[tailmat].setIpo(tail_ipo)
+    t_curve = tail_ipo.addCurve("Emit")
+    frame = carseries.time[0]*fps
+    t_curve[frame] = 0.0
+    t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+    for bp in carseries.brakepoints:
+        t_curve[bp[0]*fps] = 1.0
+        t_curve[bp[1]*fps] = 0.0
 
     right_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[rightmat].getName()))
     mats[rightmat].setIpo(right_ipo)
@@ -414,7 +414,7 @@ def load_traffic(file):
         print "Processing lanechanges and brakepoints"
         for i in cars.keys():
             cars[i].process_lanechanges(2.0, 0.1)
-        #     cars[i].process_brakepoints()
+            cars[i].process_brakepoints()
         # print "Pickling data to %s" % (froot+".pkc",)
         # pick = open(froot+".pkc", 'wb')
         # cPickle.dump((the_road, cars), pick)

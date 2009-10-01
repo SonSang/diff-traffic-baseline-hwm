@@ -60,14 +60,25 @@ class car(object):
                     if self.lanechanges[lc-1][1] >= self.lanechanges[lc][0]:
                         self.lanechanges[lc-1][1] = self.lanechanges[lc][0] - my_eps
     def process_brakepoints(self):
+        if self.nrecs() < 2:
+            return
+        self.accelerations.append(0)
+        for i in xrange(1, self.nrecs()):
+            self.accelerations.append((self.xv[i]-self.xv[i-1])/self.time[i])
+        self.accelerations[0] = self.accelerations[1]
         current_start = None
         i = 0
         while i < self.nrecs():
             if current_start == None:
-                if self.acceleration[i] < 0:
-                    current_start = i
-            elif self.acceleration[i] >= 0:
-                self.brakepoints.append((self.time[current_start], self.time[i-1]))
+                if self.accelerations[i] < -1e-4:
+                    if len(self.brakepoints) > 1 and self.time[i] - self.brakepoints[-1][1] < 1.0:
+                        current_start = self.brakepoints[-1][0] # merge consecutives
+                        self.brakepoints.pop()
+                    else:
+                        current_start = i
+            elif self.accelerations[i] >= 0:
+                if self.time[i-1] - self.time[current_start] > 0.5: # don't record short decelerations
+                    self.brakepoints.append((self.time[current_start], self.time[i-1]))
                 current_start = None
             i += 1
         if current_start != None:
