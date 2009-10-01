@@ -8,11 +8,11 @@ import random
 import array
 
 class car(object):
-    __slots__ = ["id", "time", "x", "y", "z", "nx", "ny", "xv", "yv", "lanechanges", "brakepoints"]
+    __slots__ = ["id", "time", "x", "y", "z", "nx", "ny", "xv", "yv", "accelerations", "lanechanges", "brakepoints"]
     __module__ = "traffic"
     def __init__(self, id):
         self.id = id
-        for i in self.__slots__[:-1]:
+        for i in self.__slots__[1:-2]:
             setattr(self, i, array.array('f'))
         self.lanechanges = []
         self.brakepoints = []
