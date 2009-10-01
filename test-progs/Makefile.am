@@ -1,7 +1,7 @@
 AM_CXXFLAGS = -I$(top_srcdir)/sim/include $(BOOST_CPPFLAGS) $(LIBXML2_CFLAGS) $(OPENMP_CXXFLAGS)
 ADD_LIBS = $(top_builddir)/sim/src/libhwm_net.la
 
-EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp road-geom.cpp run-sim.cpp replay-sim.cpp
+EXTRA_DIST = showsim.cpp showlane.cpp shownetwork.cpp plot.cpp plot.hpp plotwin.hpp xml-test.cpp car-data-test.cpp road-geom.cpp run-sim.cpp count_cars.cpp replay-sim.cpp
 
 noinst_PROGRAMS = interval-test inhomo-test lane-test xml-test car-data-test road-geom run-sim count-cars
 
