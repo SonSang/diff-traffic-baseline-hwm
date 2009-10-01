@@ -276,32 +276,32 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
     leftmat = find_mat(mats, "leftturn")
     assert leftmat != None
 
-#    tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
-#    mats[tailmat].setIpo(tail_ipo)
-#    t_curve = tail_ipo.addCurve("Emit")
-#    frame = carseries.time[0]*fps
-#    t_curve[frame] = 0.0
-#    t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
-#    for bp in carseries.brakepoints:
-#        t_curve[bp[0]*fps] = 1.0
-#        t_curve[bp[1]*fps] = 0.0
+    # tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
+    # mats[tailmat].setIpo(tail_ipo)
+    # t_curve = tail_ipo.addCurve("Emit")
+    # frame = carseries.time[0]*fps
+    # t_curve[frame] = 0.0
+    # t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+    # for bp in carseries.brakepoints:
+    #     t_curve[bp[0]*fps] = 1.0
+    #     t_curve[bp[1]*fps] = 0.0
 
-#    right_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[rightmat].getName()))
-#    mats[rightmat].setIpo(right_ipo)
-#    right_curve = right_ipo.addCurve("Emit")
-#    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
-#
-#    left_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[leftmat].getName()))
-#    mats[leftmat].setIpo(left_ipo)
-#    left_curve = left_ipo.addCurve("Emit")
-#    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+    right_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[rightmat].getName()))
+    mats[rightmat].setIpo(right_ipo)
+    right_curve = right_ipo.addCurve("Emit")
+    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
 
-#    for lc in carseries.lanechanges:
-#        if lc[2] == -1:
-#            ccurve = right_curve
-#        else :
-#            ccurve = left_curve
-#        do_blinker(ccurve, lc[0], lc[1], 0.1)
+    left_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[leftmat].getName()))
+    mats[leftmat].setIpo(left_ipo)
+    left_curve = left_ipo.addCurve("Emit")
+    right_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
+
+    for lc in carseries.lanechanges:
+        if lc[2] == 1:
+            ccurve = right_curve
+        else:
+            ccurve = left_curve
+        do_blinker(ccurve, lc[0], lc[1], 0.1)
 
     intime  = carseries.time[ 0]*fps
     outtime = carseries.time[-1]*fps
@@ -380,10 +380,8 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
 ##        steer_curve[fr] = zrot * 18.0 / math.pi
 
 def read_car_record(fp, t, ncars, cardict):
-    print t
     for i in xrange(0, ncars):
         data = fp.readline().rstrip().split()
-        print i, data
         id = int(data[0])
         rec = [float(x) for x in data[1:]]
         if(cardict.has_key(id)):
@@ -413,27 +411,14 @@ def load_traffic(file):
             read_car_record(fp, t, ncars, cars)
             li = fp.readline().rstrip().split()
         fp.close()
-#        min_int = 1e10
-#        min_car = -1
-#        max_int = -1
-#        max_car = -1
-#        print "Processing lanechanges and brakepoints"
-#        for i in cars.keys():
-#            cars[i].process_lanechanges(2.0, 0.1)
-#            cars[i].process_brakepoints()
-#            iv = cars[i].interval()
-#            if iv < min_int:
-#                min_int = iv
-#                min_car = i
-#            elif iv > max_int:
-#                max_int = iv
-#                max_car = i
-#        print "Slowest car is", max_car, " which takes", max_int, "seconds"
-#        print "Fastest car is", min_car, " which takes", min_int, "seconds"
-#        print "Pickling data to %s" % (froot+".pkc",)
-#        pick = open(froot+".pkc", 'wb')
-#        cPickle.dump((the_road, cars), pick)
-#        pick.close()
+        print "Processing lanechanges and brakepoints"
+        for i in cars.keys():
+            cars[i].process_lanechanges(2.0, 0.1)
+        #     cars[i].process_brakepoints()
+        # print "Pickling data to %s" % (froot+".pkc",)
+        # pick = open(froot+".pkc", 'wb')
+        # cPickle.dump((the_road, cars), pick)
+        # pick.close()
 
     print "Read %d cars" % len(cars.keys())
     return cars
@@ -532,7 +517,6 @@ if __name__ == '__main__':
     print "Loading data"
     cars = load_traffic("/home/sewall/unc/traffic/hwm/output.txt")
     print "Data loaded"
-    print cars[3].nx, cars[3].ny
     scn = bpy.data.scenes.active
     scn.setLayers(range(1, 21))
 

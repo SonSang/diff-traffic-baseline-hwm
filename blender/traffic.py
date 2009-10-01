@@ -28,18 +28,9 @@ class car(object):
     def process_lanechanges(self, leadin, leadout):
         current_start = None
         current_dir = 0
-        lasty = self.y[0]
         i = 1
         while i < self.nrecs():
-            dy = self.y[i] - lasty
-            if dy < 0.0:
-                dy = -1
-            elif dy > 0.0:
-                dy = 1
-            else:
-                dy = 0
-
-            lasty = self.y[i]
+            dy = self.yv[i]
             if current_start == None:
                 if dy != 0:
                     current_start = i
