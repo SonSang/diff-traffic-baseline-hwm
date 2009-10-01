@@ -30,11 +30,12 @@ typedef enum {DATA, CELLS, MERGES} draw_type;
 const char* hwm_version_string();
 
 struct source_sink;
+struct lane;
 
 struct carticle
 {
     carticle() {}
-    carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), motion_state(0) {}
+    carticle(float ix, float iu) : x(ix), theta(0.0f), u(iu), y(0.0f), motion_state(0), lastlane(0) {}
 
     int id;
     float x; //< Parametric position of carticle's rear axle along current lane.
@@ -88,6 +89,7 @@ struct carticle
     }
 
     int motion_state; //< Lane-change/source-sink state - -1 is left change, 1 right, 0 none, -2 is left turn,  2 right turn
+    const lane *lastlane;
     source_sink *turn_target;
 };
 

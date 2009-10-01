@@ -823,6 +823,9 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
     const lane *other_la = (dir == -1) ? left_lane(other_t) : right_lane(other_t);
     assert(other_la);
 
+    if(other_la == c.lastlane)
+        return false;
+
     float end = lc_curve::end(c.u);
     int lastcell = static_cast<int>(std::ceil(other_t*other_la->ncells + end*c.u/other_la->h));
 
@@ -979,7 +982,10 @@ void lane::advance_carticles(float dt, float gamma_c)
 
                 lane *llane = lane::left_lane(cart.x);
                 if(llane)
+                {
+                    cart.lastlane = this;
                     llane->carticles[1].push_back(cart);
+                }
 
                 continue;
             }
@@ -990,7 +996,10 @@ void lane::advance_carticles(float dt, float gamma_c)
 
                 lane *rlane = lane::right_lane(cart.x);
                 if(rlane)
+                {
+                    cart.lastlane = this;
                     rlane->carticles[1].push_back(cart);
+                }
 
                 continue;
             }
@@ -1011,11 +1020,13 @@ void lane::advance_carticles(float dt, float gamma_c)
                 if((next = downstream_lane()))
                 {
                     cart.x = (cart.x - (1.0 - CAR_REAR_AXLE * inv_len)) * ncells*h/(next->ncells*next->h);
+                    cart.lastlane = this;
                     next->carticles[1].push_back(cart);
                 }
                 else
                 {
                     cart.x = 1.0f - CAR_REAR_AXLE * inv_len;
+                    cart.lastlane = this;
                     carticles[1].push_back(cart);
                 }
             }
