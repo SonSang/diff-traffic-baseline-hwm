@@ -235,7 +235,7 @@
     </road>
   </roads>
   <lanes>
-    <lane id="lane-ne-ramp" speedlimit="16.667">
+    <lane id="lane-ne-ramp" speedlimit="20.1168">
       <start>
         <dead_end/>
       </start>
@@ -278,7 +278,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-nw-ramp" speedlimit="16.667">
+    <lane id="lane-nw-ramp" speedlimit="20.1168">
       <start>
         <dead_end/>
       </start>
@@ -321,7 +321,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-sw-ramp" speedlimit="16.667">
+    <lane id="lane-sw-ramp" speedlimit="20.1168">
       <start>
         <dead_end/>
       </start>
@@ -364,7 +364,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-se-ramp" speedlimit="16.667">
+    <lane id="lane-se-ramp" speedlimit="20.1168">
       <start>
         <dead_end/>
       </start>
@@ -407,7 +407,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="loops" speedlimit="16.667">
+    <lane id="loops" speedlimit="20.1168">
       <start>
         <lane_ref ref="loops"/>
       </start>
@@ -480,7 +480,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-we-0" speedlimit="16.667">
+    <lane id="lane-we-0" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -523,7 +523,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-we-1" speedlimit="16.667">
+    <lane id="lane-we-1" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -554,7 +554,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-we-2" speedlimit="16.667">
+    <lane id="lane-we-2" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -585,7 +585,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-we-3" speedlimit="16.667">
+    <lane id="lane-we-3" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -616,7 +616,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ew-0" speedlimit="16.667">
+    <lane id="lane-ew-0" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -659,7 +659,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ew-1" speedlimit="16.667">
+    <lane id="lane-ew-1" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -690,7 +690,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ew-2" speedlimit="16.667">
+    <lane id="lane-ew-2" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -721,7 +721,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ew-3" speedlimit="16.667">
+    <lane id="lane-ew-3" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -752,7 +752,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-sn-0" speedlimit="16.667">
+    <lane id="lane-sn-0" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -795,7 +795,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-sn-1" speedlimit="16.667">
+    <lane id="lane-sn-1" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -826,7 +826,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-sn-2" speedlimit="16.667">
+    <lane id="lane-sn-2" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -857,7 +857,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-sn-3" speedlimit="16.667">
+    <lane id="lane-sn-3" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -888,7 +888,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ns-0" speedlimit="16.667">
+    <lane id="lane-ns-0" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -931,7 +931,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ns-1" speedlimit="16.667">
+    <lane id="lane-ns-1" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -962,7 +962,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ns-2" speedlimit="16.667">
+    <lane id="lane-ns-2" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
@@ -993,7 +993,7 @@
         </right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane-ns-3" speedlimit="16.667">
+    <lane id="lane-ns-3" speedlimit="29.0576">
       <start>
         <dead_end/>
       </start>
