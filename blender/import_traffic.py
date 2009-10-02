@@ -267,7 +267,7 @@ def find_mat(matlist, name):
     return None
 
 @print_timing
-def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
+def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad, timeoffs):
     ipo_r = Blender.Ipo.New("Object", "car_%d_root_ipo" % id)
 
     ipo_consts = [(Blender.Ipo.OB_LOCX, 'LocX'),
@@ -282,7 +282,7 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
 
     zoffs = cartype['z-offs']
     for i in xrange(0, carseries.nrecs()):
-        fr = carseries.time[i]*fps
+        fr = (carseries.time[i]-timeoffs)*fps
 
         ipo_curves[0][fr] = carseries.x[i]
         ipo_curves[1][fr] = carseries.y[i]
@@ -291,7 +291,7 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
     zrot_curve = ipo_r.addCurve("RotZ")
     lastangle = math.atan2(carseries.ny[0],carseries.nx[0]) * 18.0/math.pi
     for i in xrange(0, carseries.nrecs()):
-        frame = carseries.time[i]*fps
+        frame = (carseries.time[i]-timeoffs)*fps
         angle = math.atan2(carseries.ny[i],carseries.nx[i]) * 18.0/math.pi
         if (angle - lastangle) > 18:
             angle = angle-36
@@ -304,17 +304,17 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
     ipo_s = Blender.Ipo.New("Object", "car_%d_steer_ipo" % id)
     zrot_curve = ipo_s.addCurve("dRotZ")
 #    for i in xrange(0, carseries.nrecs()):
-#        frame = carseries.time[i]*fps
+#        frame = (carseries.time[i]-timeoffs)*fps
 #        zrot_curve[frame] = carseries.steer_orientation[i] * 18.0/math.pi
     carobj[1].setIpo(ipo_s)
 
     ipo_d = Blender.Ipo.New("Object", "car_%d_drive_ipo" % id)
     yrot_curve = ipo_d.addCurve("RotY")
-    frame = carseries.time[0]*fps
+    frame = (carseries.time[0]-timeoffs)*fps
     yrot_curve[frame] = 0
     lasty = yrot_curve[frame]
     for i in xrange(1, carseries.nrecs()):
-        frame = carseries.time[i]*fps
+        frame = (carseries.time[i]-timeoffs)*fps
         dx = carseries.x[i]-carseries.x[i-1]
         dy = carseries.y[i]-carseries.y[i-1]
         dist = math.sqrt(dx*dx+dy*dy)
@@ -334,7 +334,7 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
     tail_ipo = Blender.Ipo.New("Material", "car_%d_%s_ipo" % (id, mats[tailmat].getName()))
     mats[tailmat].setIpo(tail_ipo)
     t_curve = tail_ipo.addCurve("Emit")
-    frame = carseries.time[0]*fps
+    frame = (carseries.time[0]-timeoffs)*fps
     t_curve[frame] = 0.0
     t_curve.interpolation = Blender.IpoCurve.InterpTypes.CONST
     for bp in carseries.brakepoints:
@@ -358,8 +358,8 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad):
             ccurve = left_curve
         do_blinker(ccurve, lc[0], lc[1], 0.1)
 
-    intime  = carseries.time[ 0]*fps
-    outtime = carseries.time[-1]*fps
+    intime  = (carseries.time[ 0]-timeoffs)*fps
+    outtime = (carseries.time[-1]-timeoffs)*fps
     for i in carobj:
         ipo_v = i.getIpo()
         if ipo_v == None:
@@ -511,6 +511,10 @@ if __name__ == '__main__':
     scn = bpy.data.scenes.active
     scn.setLayers(range(1, 21))
 
+    timeoffs = cars.values()[0].time[0]
+    for i in cars.values():
+        if i.time[0] < timeoffs:
+            timeoffs = i.time[0]
     #Blender.Registry.RemoveKey('import_traffic')
     cartypes = Blender.Registry.GetKey('import_traffic')
     if cartypes == None:
@@ -535,7 +539,7 @@ if __name__ == '__main__':
             print "Done making car"
             print "Applying basic motion to car"
             wheel_rad = available_cars[car]['wheel-radius']
-            apply_basic_motion(id, available_cars[cartypes[id]], cars[id], ci, wheel_rad)
+            apply_basic_motion(id, available_cars[cartypes[id]], cars[id], ci, wheel_rad, timeoffs)
             print "Done applyng basic motion"
         print "Done processing car ", id
     print "Cars done"
