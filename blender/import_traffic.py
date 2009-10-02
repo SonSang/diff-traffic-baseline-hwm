@@ -370,18 +370,20 @@ def apply_basic_motion(id, cartype, carseries, carobj, wheel_rad, timeoffs):
         layer_curve[intime]  = 1
         layer_curve[outtime] = 0
 
-def read_car_record(fp, t, ncars, cardict):
+def read_car_record(fp, t, ncars, cardict, time_cutoff=None):
     for i in xrange(0, ncars):
         data = fp.readline().rstrip().split()
         id = int(data[0])
         rec = [float(x) for x in data[1:]]
+        the_car = None
         if(cardict.has_key(id)):
             the_car = cardict[id]
-        else:
+        elif not time_cutoff or t < time_cutoff:
             the_car = traffic.car(id)
             cardict[id] = the_car
-        for i in it.izip(the_car.__slots__[1:], [t] + rec):
-            getattr(the_car, i[0]).append(i[1])
+        if the_car:
+            for i in it.izip(the_car.__slots__[1:], [t] + rec):
+                getattr(the_car, i[0]).append(i[1])
 
 @print_timing
 def load_traffic(file):
@@ -396,10 +398,11 @@ def load_traffic(file):
         fp = open(file, 'r')
         cars = dict()
         li = fp.readline().rstrip().split()
+        time_cutoff = None
         while li:
             t    = float(li[0])
             ncars = int(li[1])
-            read_car_record(fp, t, ncars, cars)
+            read_car_record(fp, t, ncars, cars, time_cutoff)
             li = fp.readline().rstrip().split()
         fp.close()
         print "Processing lanechanges and brakepoints"
