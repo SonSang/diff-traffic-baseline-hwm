@@ -5,11 +5,11 @@ import itertools as it
 def okaylanes(lanemap, time):
     ok = []
     for num, l_time in lanemap.items():
-        if l_time == -1 or time - l_time > 1:
+        if l_time == -1 or time - l_time > 0.25:
             ok.append(num)
     return ok
 
-def generate_route(file, ncars, time_sep, vel_range=(10,14), lanelist=xrange(6)):
+def generate_route(file, ncars, time_sep, vel_range=(25.0, 29.0), lanelist=xrange(6)):
     out = open(file, 'w')
     out.write("<routes>\n")
 
@@ -20,17 +20,17 @@ def generate_route(file, ncars, time_sep, vel_range=(10,14), lanelist=xrange(6))
     for i in xrange(0, N):
         valid_lanes = okaylanes(lanelast, time)
         while len(valid_lanes) == 0:
-            time += 1
+            time += random.uniform(*time_sep)
             valid_lanes = okaylanes(lanelast, time)
         departlane = valid_lanes[random.randint(0, len(valid_lanes)-1)]
         departspeed = random.uniform(*vel_range)
 
         lanelast[departlane] = time
 
-        out.write("<vehicle id=\"0_%02d\" depart=\"%d\" departlane=\"%d\" departspeed=\"%d\"/>\n" % (i, time,
+        out.write("<vehicle id=\"0_%02d\" depart=\"%f\" departlane=\"%d\" departspeed=\"%d\"/>\n" % (i, time,
                                                                                                     departlane,
                                                                                                     departspeed))
-        time += random.randint(*time_sep)
+        time += random.uniform(*time_sep)
 
     out.write("</routes>")
     out.close()
@@ -39,7 +39,7 @@ def generate_route(file, ncars, time_sep, vel_range=(10,14), lanelist=xrange(6))
 if __name__ == '__main__':
     clovertime = generate_route("/home/sewall/unc/traffic/hwm/data/clover.rou.xml",
                                 10000,
-                                (0, 0),
+                                (0, 0.5),
                                 lanelist=xrange(5, 21))
 
     print "Clover end time: ", clovertime
