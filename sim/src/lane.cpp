@@ -402,6 +402,30 @@ const adjacency &lane::right_adjacency(float &t) const
     return adj;
 }
 
+const adjacency &lane::left_adjacency(float &t, float &myend) const
+{
+    const intervals<adjacency>::entry_id loc = left.find(t);
+
+    myend = left.entries.empty() ? 1.0f : left.entries[loc+1].divider;
+    const adjacency &adj = (loc == -1) ?  left.base_data : left.entries[loc].data;
+    if(adj.neighbor.dp)
+        t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
+
+    return adj;
+}
+
+const adjacency &lane::right_adjacency(float &t, float &myend) const
+{
+    const intervals<adjacency>::entry_id loc = right.find(t);
+
+    myend = right.entries.empty() ? 1.0f : right.entries[loc+1].divider;
+    const adjacency &adj = (loc == -1) ?  right.base_data : right.entries[loc].data;
+    if(adj.neighbor.dp)
+        t = t*(adj.neighbor_interval[1]-adj.neighbor_interval[0]) + adj.neighbor_interval[0];
+
+    return adj;
+}
+
 lane* lane::upstream_lane() const
 {
     switch(start.end_type)
@@ -820,13 +844,18 @@ bool lane::merge_possible(carticle &c, int dir, float gamma_c) const
         return false;
 
     float other_t = c.x;
-    const lane *other_la = (dir == -1) ? left_lane(other_t) : right_lane(other_t);
+    float end_int;
+    const adjacency &other_adj = (dir == -1) ? left_adjacency(other_t, end_int) : right_adjacency(other_t, end_int);
+    const lane *other_la = other_adj.neighbor.dp;
     assert(other_la);
 
     if(other_la == c.lastlane)
         return false;
 
     float end = lc_curve::end(c.u);
+    if(c.x + end/(h*ncells) > end_int)
+        return false;
+
     int lastcell = static_cast<int>(std::ceil(other_t*other_la->ncells + end*c.u/other_la->h));
 
     if(lastcell >= static_cast<int>(other_la->ncells))

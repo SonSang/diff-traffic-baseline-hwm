@@ -107,6 +107,9 @@ struct lane
     const adjacency &left_adjacency(float &t) const;
     const adjacency &right_adjacency(float &t) const;
 
+    const adjacency &left_adjacency(float &t, float &myend) const;
+    const adjacency &right_adjacency(float &t, float &myend) const;
+
     lane* upstream_lane() const;
     lane* downstream_lane() const;
 
