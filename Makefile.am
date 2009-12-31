@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = data
+EXTRA_DIST =
 
-SUBDIRS = sim test-progs ogre etc doc
+SUBDIRS = doc libarz
 
 
