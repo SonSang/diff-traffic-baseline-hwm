@@ -12,19 +12,19 @@ AC_LANG([C++])
 AX_OPENMP([AC_SUBST(OPENMP_CXXFLAGS)] ,
 	  [AC_MSG_FAILURE([cannot find flag for OpenMP])])
 
-AC_ARG_WITH([libroad-include],
-  [AS_HELP_STRING([--with-libroad-include],
-    [set include location for libroad @<:@default=@:>@])],
-  [LIBROAD_INCLUDE=$withval],
-  [LIBROAD_INCLUDE=])
-AC_SUBST(LIBROAD_INCLUDE)
+AC_ARG_WITH([libroad-cflags],
+  [AS_HELP_STRING([--with-libroad-cflags],
+    [set cflags for libroad @<:@default=@:>@])],
+  [LIBROAD_CFLAGS=$withval],
+  [LIBROAD_CFLAGS=])
+AC_SUBST(LIBROAD_CFLAGS)
 
-AC_ARG_WITH([libroad-libdir],
-  [AS_HELP_STRING([--with-libroad-libdir],
-    [set libdir location for libroad @<:@default=@:>@])],
-  [LIBROAD_LIBDIR=$withval],
-  [LIBROAD_LIBDIR=])
-AC_SUBST(LIBROAD_LIBDIR)
+AC_ARG_WITH([libroad-libs],
+  [AS_HELP_STRING([--with-libroad-libs],
+    [set lib location for libroad @<:@default=@:>@])],
+  [LIBROAD_LIBS=$withval],
+  [LIBROAD_LIBS=])
+AC_SUBST(LIBROAD_LIBS)
 
 AC_ARG_ENABLE([tvmet-optimize],
   [AS_HELP_STRING([--enable-tvmet-optimize],
@@ -75,6 +75,9 @@ LT_INIT
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+PKG_CHECK_MODULES(LIBXMLPP, libxml++-2.6 >= 2.10.0)
+PKG_CHECK_MODULES(GLIBMM, glibmm-2.4 >= 2.12.0)
+
 
 AC_PROG_TRY_DOXYGEN
 
@@ -101,6 +104,31 @@ AS_IF([test x"$have_tvmet_conf" != xno],
 AS_IF([test x"$tvmet_optimize" != xno],
       [TVMET_CFLAGS+=" -finline-limit=5000 --param max-inline-insns-single=5000 --param inline-unit-growth=5000 --param large-function-growth=5000 -DTVMET_OPTIMIZE -O2 -ftemplate-depth-200 -fomit-frame-pointer"],
       [TVMET_CFLAGS+=" -DTVMET_DEBUG"])
+
+AS_IF([test x"$enable_visual" != xno],
+            [AC_CHECK_PROG(have_fltk, fltk-config, [yes], [no])
+	     PUSH_LIBS=$LIBS
+	     LIBS=
+	     AC_SEARCH_LIBS([glewInit], [GLEW], [have_glew=yes], [have_glew=no])
+	     GLEW_LIBS=$LIBS
+	     LIBS=$PUSH_LIBS
+             AS_IF([test \( x"$have_fltk" = xno -o x"$have_glew" = xno \) -a x"$enable_visual" != xcheck],
+             AC_MSG_FAILURE([--enable-visual given but test for fltk-config or glew failed!]))])
+
+AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_glew" = xyes],
+            [visual_ok=yes
+             FLTK_CXXFLAGS=`fltk-config --cxxflags`
+             FLTK_LDFLAGS=`fltk-config --ldflags`
+             FLTK_GL_CXXFLAGS=`fltk-config --cxxflags --use-gl`
+             FLTK_GL_LDFLAGS=`fltk-config --ldflags --use-gl`
+             AC_SUBST([FLTK_CXXFLAGS])
+             AC_SUBST([FLTK_LDFLAGS])
+             AC_SUBST([FLTK_GL_CXXFLAGS])
+             AC_SUBST([FLTK_GL_LDFLAGS])
+	     AC_SUBST([GLEW_LIBS])],
+      [visual_ok=no])
+
+AM_CONDITIONAL(DO_VISUAL, test x"$visual_ok" = xyes)
 
 # Checks for libraries.
 BOOST_REQUIRE([1.39])
@@ -131,7 +159,8 @@ AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 AC_CONFIG_FILES([Makefile
 		 doc/Makefile
 		 doc/Doxyfile
-		 libarz/Makefile])
+		 libarz/Makefile
+		 test/Makefile])
 
 AC_OUTPUT
 
@@ -142,10 +171,26 @@ echo "
   Prefix..................: $prefix
   TVMET_CFLAGS............: $TVMET_CFLAGS
   TVMET_LIBS..............: $TVMET_LIBS
-  LIBROAD_INCLUDE.........: $LIBROAD_INCLUDE
-  LIBROAD_LIBDIR..........: $LIBROAD_LIBDIR
+  GLIBMM_CFLAGS...........: $GLIBMM_CFLAGS
+  GLIBMM_LIBS.............: $GLIBMM_LIBS
+  LIBXMLPP_CFLAGS.........: $LIBXMLPP_CFLAGS
+  LIBXMLPP_LIBS...........: $LIBXMLPP_LIBS
+  LIBROAD_CFLAGS..........: $LIBROAD_CFLAGS
+  LIBROAD_LIBS............: $LIBROAD_LIBS
   Boost CPPFLAGS..........: $BOOST_CPPFLAGS
   OpenMP CXXFLAGS.........: $OPENMP_CXXFLAGS"
+if test -z $DO_VISUAL; then
+echo "
+  Building visual: yes
+    FLTK_CXXFLAGS...: $FLTK_CXXFLAGS
+    FLTK_LDFLAGS....: $FLTK_LDFLAGS
+    FLTK_GL_CXXFLAGS: $FLTK_GL_CXXFLAGS
+    FLTK_GL_LDFLAGS.: $FLTK_GL_LDFLAGS
+    GLEW_LIBS.......: $GLEW_LIBS"
+else
+echo "
+  Building visual: no"
+fi
 if test -n "$BOOST_UNIT_TEST_FRAMEWORK_LIBS"; then
 echo "
   Doing tests: yes
