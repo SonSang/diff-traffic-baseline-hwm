@@ -9,8 +9,22 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_LANG([C++])
 
-AX_OPENMP([AC_SUBST(OPENMP_CXXFLAGS)],
+AX_OPENMP([AC_SUBST(OPENMP_CXXFLAGS)] ,
 	  [AC_MSG_FAILURE([cannot find flag for OpenMP])])
+
+AC_ARG_WITH([libroad-include],
+  [AS_HELP_STRING([--with-libroad-include],
+    [set include location for libroad @<:@default=@:>@])],
+  [LIBROAD_INCLUDE=$withval],
+  [LIBROAD_INCLUDE=])
+AC_SUBST(LIBROAD_INCLUDE)
+
+AC_ARG_WITH([libroad-libdir],
+  [AS_HELP_STRING([--with-libroad-libdir],
+    [set libdir location for libroad @<:@default=@:>@])],
+  [LIBROAD_LIBDIR=$withval],
+  [LIBROAD_LIBDIR=])
+AC_SUBST(LIBROAD_LIBDIR)
 
 AC_ARG_ENABLE([tvmet-optimize],
   [AS_HELP_STRING([--enable-tvmet-optimize],
@@ -128,6 +142,8 @@ echo "
   Prefix..................: $prefix
   TVMET_CFLAGS............: $TVMET_CFLAGS
   TVMET_LIBS..............: $TVMET_LIBS
+  LIBROAD_INCLUDE.........: $LIBROAD_INCLUDE
+  LIBROAD_LIBDIR..........: $LIBROAD_LIBDIR
   Boost CPPFLAGS..........: $BOOST_CPPFLAGS
   OpenMP CXXFLAGS.........: $OPENMP_CXXFLAGS"
 if test -n "$BOOST_UNIT_TEST_FRAMEWORK_LIBS"; then
