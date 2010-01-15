@@ -6,24 +6,24 @@ LF='
 # First see if there is a version file (included in release tarballs),
 # then try git-describe, then default.
 if test -d .git -o -f .git
-then
-    VN=$(git describe --abbrev=4 HEAD 2>/dev/null)
-    if test x"$VN" == x"" -o x"$VN" == x"$LF"
-    then
+	then
+	VN=$(git describe --abbrev=4 HEAD 2>/dev/null)
+	if test x"$VN" == x"" -o x"$VN" == x"$LF"
+	then
 	VN=$(git log --pretty=format:"%h" -n 1)
-    fi
-    git update-index -q --refresh
-    test -z "$(git diff-index --name-only HEAD --)" ||
-    VN="$VN.dirty"
+	fi
+	git update-index -q --refresh >/dev/null 2>/dev/null
+	test -z "$(git diff-index --name-only HEAD --)" ||
+	VN="$VN.dirty"
+	echo "$VN">version
 else
-    if test -f VERSION-FILE
+    if test -f version
     then
-	VN=$(cat VERSION-FILE)
+	VN=$(cat version)
     else
 	VN="unknown"
     fi
 fi
 
-echo "$VN" > VERSION-FILE
 echo $(expr "$VN" : v*'\(.*\)')
 

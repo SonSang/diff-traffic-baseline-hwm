@@ -44,6 +44,18 @@ AH_TEMPLATE([GIT_VERSION],
 
 AC_DEFINE_UNQUOTED(GIT_VERSION, "$GIT_VERSION")
 
+AH_TEMPLATE([HOSTNAME],
+	    [Build system])
+
+AC_DEFINE_UNQUOTED(HOSTNAME, "$HOSTNAME")
+
+BUILD_DATE=`date --rfc-3339=seconds`
+AC_SUBST(BUILD_DATE)
+AH_TEMPLATE([BUILD_DATE],
+	    [Build date (actually configuration date)])
+
+AC_DEFINE_UNQUOTED(BUILD_DATE, "$BUILD_DATE")
+
 LT_INIT
 
 # Checks for programs.
@@ -77,11 +89,7 @@ AS_IF([test x"$tvmet_optimize" != xno],
       [TVMET_CFLAGS+=" -DTVMET_DEBUG"])
 
 # Checks for libraries.
-BOOST_REQUIRE([1.37])
-BOOST_FOREACH
-BOOST_UTILITY
-BOOST_TYPETRAITS
-BOOST_STATICASSERT
+BOOST_REQUIRE([1.39])
 
 AS_IF([test x"$boost_optimize" != xno],
       [BOOST_CPPFLAGS+=" -DBOOST_DISABLE_ASSERTS"],
@@ -115,8 +123,9 @@ AC_OUTPUT
 
 echo "
   $PACKAGE_NAME version $PACKAGE_VERSION-$GIT_VERSION
+  Configuration host......: $HOSTNAME
+  Configuration date......: $BUILD_DATE
   Prefix..................: $prefix
-  Debug Build.............: $debug
   TVMET_CFLAGS............: $TVMET_CFLAGS
   TVMET_LIBS..............: $TVMET_LIBS
   Boost CPPFLAGS..........: $BOOST_CPPFLAGS
