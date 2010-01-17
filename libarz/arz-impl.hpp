@@ -86,10 +86,13 @@ template <typename T>
 arz<T>::full_q::full_q(const q &__restrict__ o,
                        const T               u_max,
                        const T               gamma)
-    : base(o),
-      u_eq_(eq::u_eq(base::rho(), u_max, gamma)),
-      u_ (base::y()/base::rho() - u_eq_)
-{}
+    : base(o)
+{
+    u_eq_ = eq::u_eq(base::rho(), u_max, gamma);
+    u_    = base::rho() < epsilon() ? u_max :
+            std::max(base::y()/base::rho() + u_eq_,
+                     static_cast<T>(0));
+}
 
 template <typename T>
 arz<T>::full_q::full_q(const T in_rho, const T in_u,

@@ -16,7 +16,9 @@ inline T arz<T>::eq::u(const T rho, const T y,
                        const T u_max,
                        const T gamma)
 {
-    return y/rho + u_eq(rho, u_max, gamma);
+    if(rho < epsilon())
+        return u_max;
+    return std::max(y/rho + u_eq(rho, u_max, gamma), static_cast<T>(0));
 }
 
 template <typename T>
