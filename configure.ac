@@ -4,7 +4,7 @@ AC_INIT([hwm],[0.2],[jasonsewall@gmail.com])
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign color-tests])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_SRCDIR([libarz/arz.hpp])
+AC_CONFIG_SRCDIR([libhybrid/arz.hpp])
 AC_CONFIG_HEADERS([config.h])
 
 AC_LANG([C++])
@@ -159,7 +159,7 @@ AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 AC_CONFIG_FILES([Makefile
 		 doc/Makefile
 		 doc/Doxyfile
-		 libarz/Makefile
+		 libhybrid/Makefile
 		 test/Makefile])
 
 AC_OUTPUT

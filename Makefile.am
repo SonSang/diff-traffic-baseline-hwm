@@ -2,6 +2,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST =
 
-SUBDIRS = doc libarz test
+SUBDIRS = doc libhybrid test
 
 

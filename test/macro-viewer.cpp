@@ -8,7 +8,7 @@
 #include "arcball.hpp"
 #include "libroad/hwm_network.hpp"
 #include "libroad/hwm_draw.hpp"
-#include "libarz/macro-sim.hpp"
+#include "libhybrid/macro-sim.hpp"
 
 static inline void blackbody(float *rgb, const float val)
 {

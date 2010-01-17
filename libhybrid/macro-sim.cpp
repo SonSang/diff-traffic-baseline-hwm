@@ -81,6 +81,11 @@ namespace macro
             q_count  += l.N;
             rs_count += l.N + 1;
 
+            if(l.N > 5)
+            {
+                l.q[2].rho() = 0.5;
+                l.q[2].y()   = 5.5;
+            }
             l.fill_y(gamma);
         }
         std::cout << "min_h is " << min_h << std::endl;
