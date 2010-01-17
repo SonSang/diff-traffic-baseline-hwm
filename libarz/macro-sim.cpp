@@ -69,6 +69,9 @@ namespace macro
             throw std::exception();
         std::cout << "Done." << std::endl;
 
+        memset(q_base, 0, sizeof(arz<float>::q)*cell_count);
+        memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(cell_count+lanes.size()));
+
         size_t q_count  = 0;
         size_t rs_count = 0;
         BOOST_FOREACH(lane &l, lanes)
@@ -77,11 +80,11 @@ namespace macro
             l.rs      = rs_base + rs_count;
             q_count  += l.N;
             rs_count += l.N + 1;
+
+            l.fill_y(gamma);
         }
         std::cout << "min_h is " << min_h << std::endl;
 
-        memset(q_base, 0, sizeof(arz<float>::q)*cell_count);
-        memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(cell_count+lanes.size()));
     }
 
     lane::lane() : parent(0), length(0), inv_length(0), h(0), N(0), q(0), rs(0)
@@ -192,6 +195,21 @@ namespace macro
         {
             q[i]     -= coefficient*(rs[i].right_fluctuation + rs[i+1].left_fluctuation);
             q[i].y() -= q[i].y()*coefficient*relaxation_factor;
+            q[i].fix();
+        }
+    }
+
+    void lane::fill_y(const float gamma)
+    {
+        for(size_t i = 0; i < N; ++i)
+        {
+            if(q[i].rho() > 0.0)
+                q[i].y() /= q[i].rho();
+
+            q[i].y() = arz<float>::eq::y(q[i].rho(),
+                                         q[i].y(),
+                                         parent->speedlimit,
+                                         gamma);
             q[i].fix();
         }
     }

@@ -32,6 +32,8 @@ namespace macro
         float collect_riemann(const float gamma, const float inv_gamma);
         void  update         (const float dt,    const float relaxation_factor);
 
+        void fill_y(const float gamma);
+
         hwm::lane                    *parent;
         float                         length;
         float                         inv_length;
