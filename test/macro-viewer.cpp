@@ -10,6 +10,33 @@
 #include "libroad/hwm_draw.hpp"
 #include "libarz/macro-sim.hpp"
 
+static inline void blackbody(float *rgb, const float val)
+{
+   if(val <= 0.0) // clamp low to black
+       rgb[0] = rgb[1] = rgb[2] = 0.0f;
+   else if(val >= 1.0f) // and high to white
+       rgb[0] = rgb[1] = rgb[2] = 1.0f;
+   else if(val < 1.0f/3.0f) // go to [1, 0, 0] over [0, 1/3)
+   {
+       rgb[0] = val*3.0f;
+       rgb[1] = 0.0f;
+       rgb[2] = 0.0f;
+   }
+   else if(val < 2.0f/3.0f)  // go to [1, 1, 0] over [1/3, 2/3)
+   {
+       rgb[0] = 1.0f;
+       rgb[1] = (val-1.0f/3.0f)*3.0f;
+       rgb[2] = 0.0f;
+   }
+   else // go to [1, 1, 1] over [2/3, 1.0)
+   {
+       rgb[0] = 1.0f;
+       rgb[1] = 1.0f;
+       rgb[2] = (val-2.0f/3.0f)*3.0f;
+   }
+   return;
+}
+
 static const float CAR_LENGTH = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
 static const float CAR_REAR_AXLE = 3.5f;
@@ -23,7 +50,8 @@ public:
                                                           glew_state(GLEW_OK+1),
                                                           light_position(50.0, 100.0, 50.0, 1.0),
                                                           tex_(0),
-                                                          sim(0)
+                                                          sim(0),
+                                                          drawfield(RHO)
     {
         lastmouse[0] = 0.0f;
         lastmouse[1] = 0.0f;
@@ -74,9 +102,9 @@ public:
             glGenTextures(1, &tex_);
             glEnable(GL_TEXTURE_2D);
             glBindTexture (GL_TEXTURE_2D, tex_);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
             glDisable(GL_TEXTURE_2D);
@@ -155,34 +183,47 @@ public:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDisable(GL_LIGHTING);
 
+            glColor3f(1.0, 1.0, 1.0);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glEnable(GL_LIGHTING);
+
             glEnable(GL_TEXTURE_2D);
-            glBindTexture (GL_TEXTURE_2D, tex_);
-            std::vector<vec4f> colors(100);
-            for(size_t i = 0; i < colors.size(); ++i)
+            std::vector<vec4f> colors;
+            BOOST_FOREACH(macro::lane &l, sim->lanes)
             {
-                colors[i][0] = colors[i][1] = colors[i][2] = static_cast<float>(i)/(colors.size()-1);
-                colors[i][3] = 1.0f;
+                if(!l.parent->active)
+                    continue;
+
+                glBindTexture (GL_TEXTURE_2D, tex_);
+
+                colors.resize(l.N);
+                for(size_t i = 0; i < l.N; ++i)
+                {
+                    float val;
+                    if(drawfield == RHO)
+                        val = l.q[i].rho();
+                    else
+                        val = arz<float>::eq::u(l.q[i].rho(),
+                                                l.q[i].y(),
+                                                l.parent->speedlimit,
+                                                sim->gamma)/l.parent->speedlimit;
+
+                    blackbody(colors[i].data(), val);
+                    colors[i][3] = 1.0f;
+                }
+
+                glTexImage2D (GL_TEXTURE_2D,
+                              0,
+                              GL_RGBA,
+                              l.N,
+                              1,
+                              0,
+                              GL_RGBA,
+                              GL_FLOAT,
+                              colors[0].data());
+
+                network_drawer.draw_lane_solid(l.parent->id);
             }
-
-            glTexImage2D (GL_TEXTURE_2D,
-                          0,
-                          GL_RGBA,
-                          100,
-                          1,
-                          0,
-                          GL_RGBA,
-                          GL_FLOAT,
-                          colors[0].data());
-
-            glColor3f(0.5, 0.5, 0.5);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glEnable(GL_LIGHTING);
-            network_drawer.draw_lanes_solid();
-
-            glColor3f(1.0, 0.5, 0.5);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glEnable(GL_LIGHTING);
-            network_drawer.draw_fictitious_lanes_solid();
 
             glDisable(GL_TEXTURE_2D);
 
@@ -275,6 +316,18 @@ public:
                     }
                 }
                 break;
+            case ' ':
+                if(sim)
+                {
+                    sim->step();
+                }
+                break;
+            case 'p':
+                drawfield = RHO;
+                break;
+            case 'u':
+                drawfield = U;
+                break;
             case 't':
                 car_pos += 0.02f;
                 if(car_pos > 1.0f)
@@ -313,6 +366,8 @@ public:
     vec4f             light_position;
     GLuint            tex_;
     macro::simulator *sim;
+    typedef enum {RHO, U} draw_type;
+    draw_type         drawfield;
 };
 
 int main(int argc, char *argv[])
@@ -332,7 +387,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    macro::simulator s(&net, 0.5, 10.0f, 0.4f);
+    macro::simulator s(&net, 0.5, 10.0f, 0.0f);
     s.initialize();
 
     fltkview mv(0, 0, 500, 500, "fltk View");
