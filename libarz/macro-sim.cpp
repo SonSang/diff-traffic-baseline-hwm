@@ -178,7 +178,7 @@ namespace macro
 
         for(size_t i = 0; i < N; ++i)
         {
-            q[i] -= coefficient*(rs[i].left_fluctuation + rs[i+1].right_fluctuation);
+            q[i]     -= coefficient*(rs[i].right_fluctuation + rs[i+1].left_fluctuation);
             q[i].y() -= q[i].y()*coefficient*relaxation_factor;
         }
     }
