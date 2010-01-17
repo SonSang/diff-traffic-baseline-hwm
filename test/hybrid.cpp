@@ -1,4 +1,4 @@
-#include "libhybrid/macro-sim.hpp"
+#include "libhybrid/hybrid-sim.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -16,10 +16,10 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    macro::simulator s(&net, 0.5, 10.0f, 0.4f);
-    s.initialize();
+    hybrid::simulator s(&net);
+    s.macro_initialize(0.5, 10.0f, 0.4f);
 
-    s.step();
+    s.macro_step();
 
     return 0;
 }

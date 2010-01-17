@@ -106,6 +106,7 @@ namespace hybrid
             q[i]     -= coefficient*(rs[i].right_fluctuation + rs[i+1].left_fluctuation);
             q[i].y() -= q[i].y()*coefficient*relaxation_factor;
             q[i].fix();
+
         }
     }
 
@@ -115,7 +116,6 @@ namespace hybrid
         {
             if(q[i].rho() > 0.0)
                 q[i].y() /= q[i].rho();
-
             q[i].y() = arz<float>::eq::y(q[i].rho(),
                                          q[i].y(),
                                          parent->speedlimit,
@@ -124,14 +124,17 @@ namespace hybrid
         }
     }
 
-    void simulator::macro_initialize(const float gamma, const float h_suggest, const float relaxation_factor)
+    void simulator::macro_initialize(const float in_gamma, const float h_suggest, const float rf)
     {
-        min_h = std::numeric_limits<float>::max();
+        gamma             = in_gamma;
+        relaxation_factor = rf;
+        min_h             = std::numeric_limits<float>::max();
 
         // initialize new lanes, compute how many cells to allocate
         size_t cell_count = 0;
         BOOST_FOREACH(lane &l, lanes)
         {
+            l.macro_initialize(h_suggest);
             cell_count += l.N;
             min_h = std::min(min_h, l.h);
         }
@@ -163,11 +166,17 @@ namespace hybrid
             if(l.N > 5)
             {
                 l.q[2].rho() = 0.5;
-                l.q[2].y()   = 5.5;
+                l.q[2].y()   = 1.5;
             }
             l.fill_y(gamma);
         }
         std::cout << "min_h is " << min_h << std::endl;
+    }
+
+    void simulator::macro_cleanup()
+    {
+        free(q_base);
+        free(rs_base);
     }
 
     float simulator::macro_step(const float cfl)
@@ -191,7 +200,6 @@ namespace hybrid
                 l->update(dt, relaxation_factor);
         }
 
-        time += dt;
         return dt;
     }
 };

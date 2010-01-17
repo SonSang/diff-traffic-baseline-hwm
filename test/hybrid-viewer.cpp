@@ -8,7 +8,7 @@
 #include "arcball.hpp"
 #include "libroad/hwm_network.hpp"
 #include "libroad/hwm_draw.hpp"
-#include "libhybrid/macro-sim.hpp"
+#include "libhybrid/hybrid-sim.hpp"
 
 static inline void blackbody(float *rgb, const float val)
 {
@@ -189,7 +189,7 @@ public:
 
             glEnable(GL_TEXTURE_2D);
             std::vector<vec4f> colors;
-            BOOST_FOREACH(macro::lane &l, sim->lanes)
+            BOOST_FOREACH(hybrid::lane &l, sim->lanes)
             {
                 if(!l.parent->active)
                     continue;
@@ -319,7 +319,7 @@ public:
             case ' ':
                 if(sim)
                 {
-                    sim->step();
+                    sim->macro_step();
                 }
                 break;
             case 'p':
@@ -365,7 +365,7 @@ public:
     GLuint            glew_state;
     vec4f             light_position;
     GLuint            tex_;
-    macro::simulator *sim;
+    hybrid::simulator *sim;
     typedef enum {RHO, U} draw_type;
     draw_type         drawfield;
 };
@@ -387,8 +387,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    macro::simulator s(&net, 0.5, 10.0f, 0.0f);
-    s.initialize();
+    hybrid::simulator s(&net);
+    s.macro_initialize(0.5, 10.0f, 0.0f);
+    BOOST_FOREACH(hybrid::lane &l, s.lanes)
+    {
+        s.macro_lanes.push_back(&l);
+    }
 
     fltkview mv(0, 0, 500, 500, "fltk View");
 
