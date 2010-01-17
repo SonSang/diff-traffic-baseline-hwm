@@ -1,11 +1,14 @@
 lib_LTLIBRARIES = libhybrid.la
 
-libhybrid_la_SOURCES  = macro-sim.cpp
+libhybrid_la_SOURCES  = hybrid.cpp \
+	                hybrid-macro.cpp \
+			macro-sim.cpp
 
 pkginclude_HEADERS  = arz.hpp \
 		      arz-eq.hpp \
 		      arz-impl.hpp \
-		      macro-sim.hpp
+		      macro-sim.hpp \
+	              hybrid-sim.hpp
 
 libhybrid_la_CPPFLAGS =  $(LIBROAD_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS)
 
