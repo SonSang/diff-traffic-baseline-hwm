@@ -110,6 +110,7 @@ namespace macro
 
         if(maxspeed < arz<float>::epsilon())
             maxspeed = min_h;
+
         const float dt = cfl*min_h/maxspeed;
 
         BOOST_FOREACH(lane &l, lanes)
@@ -144,6 +145,8 @@ namespace macro
         else
             rs[0].clear();
 
+        assert(rs[0].check());
+
         for(size_t i = 1; i < N; ++i)
         {
             *fq[1] = arz<float>::full_q(q[i],
@@ -156,6 +159,9 @@ namespace macro
                           1.0f/parent->speedlimit,
                           gamma,
                           inv_gamma);
+
+            assert(rs[i].check());
+
             maxspeed = std::max(std::max(std::abs(rs[i].speeds[0]), std::abs(rs[i].speeds[1])),
                                 maxspeed);
             std::swap(fq[0], fq[1]);
@@ -173,6 +179,8 @@ namespace macro
         else
             rs[N].clear();
 
+        assert(rs[N].check());
+
         return maxspeed;
     }
 
@@ -184,6 +192,7 @@ namespace macro
         {
             q[i]     -= coefficient*(rs[i].right_fluctuation + rs[i+1].left_fluctuation);
             q[i].y() -= q[i].y()*coefficient*relaxation_factor;
+            q[i].fix();
         }
     }
 };

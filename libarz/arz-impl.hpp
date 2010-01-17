@@ -69,6 +69,23 @@ inline T& arz<T>::q::y()
     return (*this)[1];
 }
 
+template <typename T>
+inline void arz<T>::q::fix()
+{
+    if(rho() < epsilon())
+        rho() = epsilon();
+    if(y() > -epsilon())
+        y() = -epsilon();
+    assert(check());
+}
+
+template <typename T>
+inline bool arz<T>::q::check() const
+{
+    return std::isfinite(rho()) && rho() >= 0 && rho() <= 1.0f
+    && std::isfinite(y()) && y() <= 0;
+}
+
 // full_q implemenation
 template <typename T>
 arz<T>::full_q::full_q()
@@ -80,7 +97,9 @@ arz<T>::full_q::full_q(const full_q &__restrict__ o)
     : base(o),
       u_eq_(o.u_eq_),
       u_(o.u_)
-{}
+{
+    assert(check());
+}
 
 template <typename T>
 arz<T>::full_q::full_q(const q &__restrict__ o,
@@ -92,6 +111,7 @@ arz<T>::full_q::full_q(const q &__restrict__ o,
     u_    = base::rho() < epsilon() ? u_max :
             std::max(base::y()/base::rho() + u_eq_,
                      static_cast<T>(0));
+    assert(check());
 }
 
 template <typename T>
@@ -103,6 +123,7 @@ arz<T>::full_q::full_q(const T in_rho, const T in_u,
     u_eq_       = eq::u_eq(base::rho(), u_max, gamma);
     u_          = in_u;
     base::y()   = base::rho()*(u() - u_eq_);
+    assert(check());
 }
 
 template <typename T>
@@ -201,6 +222,13 @@ inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &__restrict__ q_l
     res.y()    = res.rho()*(res.u() - res.u_eq());
 
     return res;
+}
+
+template <typename T>
+inline bool arz<T>::full_q::check() const
+{
+    return q::check() && std::isfinite(u()) && u() >= 0.0f
+    && std::isfinite(u_eq()) && u_eq() >= 0.0f;
 }
 
 template <typename T>
@@ -369,6 +397,20 @@ template <typename T>
 inline void arz<T>::riemann_solution::clear()
 {
     memset(this, 0, sizeof(*this));
+}
+
+template <typename T>
+inline bool arz<T>::riemann_solution::check() const
+{
+    return std::isfinite(waves[0][0])
+    && std::isfinite(waves[0][1])
+    && std::isfinite(waves[1][0])
+    && std::isfinite(waves[1][1])
+    && std::isfinite(left_fluctuation[0])
+    && std::isfinite(left_fluctuation[1])
+    && std::isfinite(right_fluctuation[0])
+    && std::isfinite(right_fluctuation[1])
+    && std::isfinite(speeds[0]) && std::isfinite(speeds[1]);
 }
 
 #endif

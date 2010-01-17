@@ -147,6 +147,9 @@ struct arz
         inline const T  y() const;
         inline       T& y();
         /*@}*/
+
+        void fix();
+        bool check() const;
     };
 
     /** Convenience class storing intermediate data usefil in computation.
@@ -241,6 +244,8 @@ struct arz
         inline T lambda_1(const T u_max,
                           const T gamma) const;
 
+        bool check() const;
+
         T u_eq_; /**< Equilibrium velocity.*/
         T u_;    /**< Velocity. */
     };
@@ -321,6 +326,8 @@ struct arz
         /** Zero-out data structure.
          */
         inline void clear();
+
+        bool check() const;
 
         q waves[2];          /**< Storage for the two solution waves.*/
         q left_fluctuation;  /**< Storage for the left-going fluctuation.*/
