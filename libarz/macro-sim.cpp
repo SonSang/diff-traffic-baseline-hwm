@@ -136,7 +136,8 @@ namespace macro
                                     gamma);
 
         float maxspeed = 0.0f;
-        if(!parent->upstream_lane())
+        const hwm::lane *upstream = parent->upstream_lane();
+        if(!upstream)
         {
             rs[0].starvation_riemann(*fq[0],
                                      parent->speedlimit,
@@ -146,7 +147,19 @@ namespace macro
             maxspeed = std::max(rs[0].speeds[1], maxspeed);
         }
         else
-            rs[0].clear();
+        {
+            const lane &sim_upstream = *(upstream->user_data<lane>());
+            rs[0].riemann(arz<float>::full_q(sim_upstream.q[sim_upstream.N-1],
+                                             upstream->speedlimit,
+                                             gamma),
+                          *fq[0],
+                          parent->speedlimit,
+                          1.0f/parent->speedlimit,
+                          gamma,
+                          inv_gamma);
+            maxspeed = std::max(std::max(std::abs(rs[0].speeds[0]), std::abs(rs[0].speeds[1])),
+                                maxspeed);
+        }
 
         assert(rs[0].check());
 
@@ -170,7 +183,8 @@ namespace macro
             std::swap(fq[0], fq[1]);
         }
 
-        if(!parent->downstream_lane())
+        const hwm::lane *downstream = parent->downstream_lane();
+        if(!downstream)
         {
             rs[N].stop_riemann(*fq[0],
                                parent->speedlimit,
@@ -180,7 +194,20 @@ namespace macro
             maxspeed = std::max(std::abs(rs[N].speeds[0]), maxspeed);
         }
         else
-            rs[N].clear();
+        {
+            const lane &sim_downstream = *(downstream->user_data<lane>());
+
+            rs[N].riemann(*fq[0],
+                          arz<float>::full_q(sim_downstream.q[0],
+                                             downstream->speedlimit,
+                                             gamma),
+                          parent->speedlimit,
+                          1.0f/parent->speedlimit,
+                          gamma,
+                          inv_gamma);
+            maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
+                                maxspeed);
+        }
 
         assert(rs[N].check());
 
