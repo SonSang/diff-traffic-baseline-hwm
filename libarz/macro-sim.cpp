@@ -108,6 +108,8 @@ namespace macro
                                     maxspeed);
         }
 
+        if(maxspeed < arz<float>::epsilon())
+            maxspeed = min_h;
         const float dt = cfl*min_h/maxspeed;
 
         BOOST_FOREACH(lane &l, lanes)
