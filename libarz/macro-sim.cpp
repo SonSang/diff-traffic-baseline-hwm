@@ -103,15 +103,17 @@ namespace macro
         float maxspeed = 0.0f;
         BOOST_FOREACH(lane &l, lanes)
         {
-            maxspeed = std::max(l.collect_riemann(gamma, 1.0f/gamma),
-                                maxspeed);
+            if(l.parent->active)
+                maxspeed = std::max(l.collect_riemann(gamma, 1.0f/gamma),
+                                    maxspeed);
         }
 
         const float dt = cfl*min_h/maxspeed;
 
         BOOST_FOREACH(lane &l, lanes)
         {
-            l.update(dt, relaxation_factor);
+            if(l.parent->active)
+                l.update(dt, relaxation_factor);
         }
 
         time += dt;
