@@ -7,9 +7,27 @@ namespace hybrid
         parent             = in_parent;
         parent->user_datum = this;
         length             = parent->length();
+        inv_length         = 1.0f/length;
     }
 
-    simulator::simulator(hwm::network *net) : hnet(net), time(0.0f)
+    struct car_sort
+    {
+        inline bool operator()(const car &l, const car &r)
+        {
+            return l.position < r.position;
+        }
+    };
+
+    void lane::car_swap()
+    {
+        cars[0].swap(cars[1]);
+        std::sort(cars[0].begin(), cars[0].end(), car_sort());
+    }
+
+    simulator::simulator(hwm::network *net) : hnet(net),
+                                              time(0.0f),
+                                              q_base(0),
+                                              rs_base(0)
     {
         assert(hnet);
 

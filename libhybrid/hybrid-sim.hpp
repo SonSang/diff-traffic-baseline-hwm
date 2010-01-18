@@ -3,15 +3,21 @@
 
 namespace hybrid
 {
+    struct simulator;
+    struct lane;
+
     struct car
     {
         //common data
         size_t id;
-        float  position;
-        float  velocity;
-        float  acceleration;
+        double position;
+        double velocity;
+        double acceleration;
 
         // micro data
+        void compute_acceleration(const car &f, const float distance, const simulator &sim);
+        void compute_intersection_acceleration(const simulator &sim, const lane &l);
+        void integrate(double timestep, const lane &l);
 
         // macro data
     };
@@ -19,12 +25,26 @@ namespace hybrid
     struct lane
     {
         // common data
-        void              initialize(hwm::lane *parent);
+        void                     initialize(hwm::lane *parent);
+
+        const std::vector<car>  &current_cars() const { return cars[0]; }
+        std::vector<car>        &current_cars()       { return cars[0]; }
+        const car               &current_car(size_t i) const { return cars[0][i]; }
+        car                     &current_car(size_t i)       { return cars[0][i]; };
+
+        const std::vector<car>  &next_cars() const { return cars[1]; };
+        std::vector<car>        &next_cars()       { return cars[1]; };
+
+        void                    car_swap();
+
         hwm::lane        *parent;
         float             length;
+        float             inv_length;
         std::vector<car>  cars[2];
 
         // micro data
+        void   compute_lane_accelerations(double timestep, const simulator &sim);
+        double settle_pass(const double timestep, const double epsilon, const double epsilon_2, const simulator &sim);
 
         // macro data
         void  macro_initialize(const float h_suggest);
@@ -51,10 +71,20 @@ namespace hybrid
         float              time;
 
         // micro
-        void  micro_initialize();
-        void  micro_cleanup();
-        float micro_step();
+        void   micro_initialize(const double a_max, const double a_pref, const double v_pref,
+                                const double delte, const double length);
+        void   micro_cleanup();
+        void   settle(const double timestep);
+        double acceleration(const double leader_velocity, const double follower_velocity, const double distance) const;
+        void   compute_accelerations(double timestep);
+        void   update(double timestep);
+
         std::vector<lane*> micro_lanes;
+        double a_max;
+        double a_pref;
+        double v_pref;
+        double delta;
+        double car_length;
 
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);

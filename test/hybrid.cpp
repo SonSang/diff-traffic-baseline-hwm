@@ -17,9 +17,39 @@ int main(int argc, char *argv[])
     }
 
     hybrid::simulator s(&net);
-    s.macro_initialize(0.5, 10.0f, 0.4f);
+    s.micro_initialize(0.73,
+                       1.67,
+                       33,
+                       4,
+                       5);
+    BOOST_FOREACH(hybrid::lane &l, s.lanes)
+    {
+        if(l.parent->active)
+            s.micro_lanes.push_back(&l);
+    }
 
-    s.macro_step();
+    static const int cars_per_lane = 1;
+    BOOST_FOREACH(hybrid::lane *l, s.micro_lanes)
+    {
+        if(!l->parent->active)
+            continue;
+
+        double p = 0.1;
+        for (int i = 0; i < cars_per_lane; i++)
+        {
+            //TODO Just creating some cars here...
+            hybrid::car tmp;
+            tmp.position = p;
+            tmp.velocity = 33;
+            l->current_cars().push_back(tmp);
+            //Cars need a minimal distance spacing
+            p += (15.0 / l->length);
+        }
+    }
+
+    s.settle(0.033);
+
+    s.update(0.033);
 
     return 0;
 }
