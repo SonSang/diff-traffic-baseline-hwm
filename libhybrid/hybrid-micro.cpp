@@ -60,12 +60,12 @@ namespace hybrid
                              const simulator &sim)
     {
         double max_acceleration = epsilon;
-        while(true)
+        do
         {
             std::vector<car>::reverse_iterator c = current_cars().rbegin();
-            while(c != current_cars().rend())
+            while(boost::next(c) != current_cars().rend())
             {
-                bool remove = false;
+                bool   remove            = false;
                 double last_acceleration = std::numeric_limits<double>::max();
                 while(true)
                 {
@@ -100,6 +100,8 @@ namespace hybrid
 
             car_swap();
         }
+        while(max_acceleration > epsilon);
+
         return max_acceleration;
     }
 
