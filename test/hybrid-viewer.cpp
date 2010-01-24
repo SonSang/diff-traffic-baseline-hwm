@@ -189,24 +189,24 @@ public:
 
             glEnable(GL_TEXTURE_2D);
             std::vector<vec4f> colors;
-            BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+            BOOST_FOREACH(hybrid::lane *l, sim->macro_lanes)
             {
-                if(!l.parent->active)
+                if(!l->parent->active)
                     continue;
 
                 glBindTexture (GL_TEXTURE_2D, tex_);
 
-                colors.resize(l.N);
-                for(size_t i = 0; i < l.N; ++i)
+                colors.resize(l->N);
+                for(size_t i = 0; i < l->N; ++i)
                 {
                     float val;
                     if(drawfield == RHO)
-                        val = l.q[i].rho();
+                        val = l->q[i].rho();
                     else
-                        val = arz<float>::eq::u(l.q[i].rho(),
-                                                l.q[i].y(),
-                                                l.parent->speedlimit,
-                                                sim->gamma)/l.parent->speedlimit;
+                        val = arz<float>::eq::u(l->q[i].rho(),
+                                                l->q[i].y(),
+                                                l->parent->speedlimit,
+                                                sim->gamma)/l->parent->speedlimit;
 
                     blackbody(colors[i].data(), val);
                     colors[i][3] = 1.0f;
@@ -215,17 +215,37 @@ public:
                 glTexImage2D (GL_TEXTURE_2D,
                               0,
                               GL_RGBA,
-                              l.N,
+                              l->N,
                               1,
                               0,
                               GL_RGBA,
                               GL_FLOAT,
                               colors[0].data());
 
-                network_drawer.draw_lane_solid(l.parent->id);
+                network_drawer.draw_lane_solid(l->parent->id);
             }
-
             glDisable(GL_TEXTURE_2D);
+
+            BOOST_FOREACH(hybrid::lane *l, sim->micro_lanes)
+            {
+                if(!l->parent->active)
+                    continue;
+
+                glColor3f(0.9, 0.9, 1.0);
+                network_drawer.draw_lane_solid(l->parent->id);
+
+                glColor3f(1.0, 0.0, 0.0);
+                BOOST_FOREACH(const hybrid::car &c, l->current_cars())
+                {
+                    mat4x4f trans(l->parent->point_frame(c.position));
+                    mat4x4f ttrans(tvmet::trans(trans));
+
+                    glPushMatrix();
+                    glMultMatrixf(ttrans.data());
+                    car_drawer.draw();
+                    glPopMatrix();
+                }
+            }
 
             glColor3f(0.5, 0.5, 1.0);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -319,7 +339,7 @@ public:
             case ' ':
                 if(sim)
                 {
-                    sim->macro_step();
+                    sim->update(0.033);
                 }
                 break;
             case 'p':
@@ -388,11 +408,36 @@ int main(int argc, char *argv[])
     }
 
     hybrid::simulator s(&net);
-    s.macro_initialize(0.5, 10.0f, 0.0f);
+    s.micro_initialize(0.73,
+                       1.67,
+                       33,
+                       4,
+                       5);
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        s.macro_lanes.push_back(&l);
+        s.micro_lanes.push_back(&l);
     }
+
+    static const int cars_per_lane = 3;
+    BOOST_FOREACH(hybrid::lane *l, s.micro_lanes)
+    {
+        if(!l->parent->active)
+            continue;
+
+        double p = 0.1;
+        for (int i = 0; i < cars_per_lane; i++)
+        {
+            //TODO Just creating some cars here...
+            hybrid::car tmp;
+            tmp.position = p;
+            tmp.velocity = 33;
+            l->current_cars().push_back(tmp);
+            //Cars need a minimal distance spacing
+            p += (15.0 / l->length);
+        }
+    }
+
+    s.settle(0.033);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
 
