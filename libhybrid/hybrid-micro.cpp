@@ -41,7 +41,7 @@ namespace hybrid
 
     void car::integrate(const double timestep, const lane& l)
     {
-        position += (velocity     * timestep)/l.inv_length;
+        position += (velocity     * timestep)*l.inv_length;
         velocity +=  acceleration * timestep;
     }
 
