@@ -24,6 +24,7 @@ namespace hybrid
     void lane::car_swap()
     {
         cars[0].swap(cars[1]);
+        cars[1].clear();
         std::sort(cars[0].begin(), cars[0].end(), car_sort());
     }
 
