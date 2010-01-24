@@ -60,47 +60,40 @@ namespace hybrid
                              const simulator &sim)
     {
         double max_acceleration = epsilon;
-        do
+        int i = static_cast<int>(current_cars().size())-1;
+        while(!current_cars().empty() && i >= 0)
         {
-            std::vector<car>::reverse_iterator c = current_cars().rbegin();
-            while(boost::next(c) != current_cars().rend())
+            car &c = current_car(i);
+
+            double last_acceleration = std::numeric_limits<double>::max();
+            while(true)
             {
-                bool   remove            = false;
-                double last_acceleration = std::numeric_limits<double>::max();
-                while(true)
+                compute_lane_accelerations(timestep, sim);
+
+                c.velocity = std::max(c.velocity + c.acceleration * timestep,
+                                       0.0);
+
+                max_acceleration = std::max(std::abs(c.acceleration), max_acceleration);
+
+                if( std::abs(c.acceleration) > std::abs(last_acceleration)
+                    or c.position > 1.0
+                    or ((std::abs(c.acceleration - last_acceleration) < epsilon_2) and (std::abs(c.acceleration) > epsilon)))
                 {
-                    compute_lane_accelerations(timestep, sim);
-
-                    c->velocity = std::max(c->velocity + c->acceleration * timestep,
-                                           0.0);
-
-                    max_acceleration = std::max(std::abs(c->acceleration), max_acceleration);
-
-                    if( std::abs(c->acceleration) > std::abs(last_acceleration)
-                        or c->position > 1.0
-                        or ((std::abs(c->acceleration - last_acceleration) < epsilon_2) and (std::abs(c->acceleration) > epsilon)))
-                    {
-                        remove = true;
-                        break;
-                    }
-                    else if(std::abs(c->acceleration) < epsilon)
-                    {
-                        remove = false;
-                        break;
-                    }
-
-                    last_acceleration = c->acceleration;
+                    for(int j = i; j < static_cast<int>(current_cars().size())-1; ++j)
+                        current_car(j) = current_car(j+1);
+                    current_cars().pop_back();
+                    break;
+                }
+                else if(std::abs(c.acceleration) < epsilon)
+                {
+                    --i;
+                    break;
                 }
 
-                if(!remove)
-                    next_cars().push_back(*c);
-
-                ++c;
+                last_acceleration = c.acceleration;
             }
 
-            car_swap();
         }
-        while(max_acceleration > epsilon);
 
         return max_acceleration;
     }
