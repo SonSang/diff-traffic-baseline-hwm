@@ -2,6 +2,9 @@
 
 namespace hybrid
 {
+    lane::lane() : parent(0), N(0), q(0), rs(0)
+    {}
+
     void lane::initialize(hwm::lane *in_parent)
     {
         parent             = in_parent;
