@@ -7,6 +7,7 @@ namespace hybrid
         N = static_cast<size_t>(std::ceil(length/h_suggest));
         assert(N > 0);
         h = length/N;
+        inv_h = 1.0f/h;
     }
 
     float lane::collect_riemann(const float gamma, const float inv_gamma)
@@ -99,7 +100,7 @@ namespace hybrid
 
     void lane::update(const float dt, const float relaxation_factor)
     {
-        const float coefficient = dt/h;
+        const float coefficient = dt*inv_h;
 
         for(size_t i = 0; i < N; ++i)
         {

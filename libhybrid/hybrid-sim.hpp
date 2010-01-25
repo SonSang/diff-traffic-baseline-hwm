@@ -55,6 +55,7 @@ namespace hybrid
         void  fill_y(const float gamma);
 
         float                         h;
+        float                         inv_h;
         size_t                        N;
         arz<float>::q                *q;
         arz<float>::riemann_solution *rs;
