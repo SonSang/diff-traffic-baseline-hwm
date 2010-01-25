@@ -10,6 +10,11 @@ namespace hybrid
         inv_h = 1.0f/h;
     }
 
+    int lane::which_cell(const float pos) const
+    {
+        return static_cast<int>(std::floor(pos*N));
+    }
+
     float lane::collect_riemann(const float gamma, const float inv_gamma)
     {
         arz<float>::full_q  full_q_buff[2];
@@ -108,6 +113,43 @@ namespace hybrid
             q[i].y() -= q[i].y()*coefficient*relaxation_factor;
             q[i].fix();
 
+        }
+    }
+
+    void lane::clear_macro()
+    {
+        memset(q, 0, sizeof(arz<float>::q)*N);
+    }
+
+    void lane::convert_cars(const simulator &sim)
+    {
+        BOOST_FOREACH(car &c, current_cars())
+        {
+            const float car_front = c.position+sim.rear_bumper_offset()*inv_length;
+            const float car_back  = c.position+sim.front_bumper_offset()*inv_length;
+
+            const int front_cell = which_cell(car_front);
+            const int back_cell  = which_cell(car_back);
+
+            if(front_cell >= 0)
+            {
+                float front_coverage = car_front*N - front_cell;
+                q[front_cell].rho() += front_coverage;
+                q[front_cell].y()   += front_coverage*c.velocity;
+            }
+
+            for(int i = front_cell+1; i < back_cell-1; ++i)
+            {
+                q[i].rho() = 1.0f;
+                q[i].y()   = c.velocity;
+            }
+
+            if(back_cell < N)
+            {
+                float back_coverage  = (back_cell+1) - car_back*N;
+                q[back_cell].rho()  += back_coverage;
+                q[back_cell].y()    += back_coverage*c.velocity;
+            }
         }
     }
 

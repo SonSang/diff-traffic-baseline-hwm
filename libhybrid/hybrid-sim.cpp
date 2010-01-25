@@ -75,5 +75,15 @@ namespace hybrid
         micro_cleanup();
         macro_cleanup();
     }
+
+    float simulator::rear_bumper_offset() const
+    {
+        return -rear_bumper_rear_axle;
+    }
+
+    float simulator::front_bumper_offset() const
+    {
+        return car_length-rear_bumper_rear_axle;
+    }
 };
 

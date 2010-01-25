@@ -99,13 +99,14 @@ namespace hybrid
     }
 
     void simulator::micro_initialize(const double in_a_max, const double in_a_pref, const double in_v_pref,
-                                     const double in_delta, const double in_length)
+                                     const double in_delta, const double in_length, const double rear_axle)
     {
-        a_max      = in_a_max;
-        a_pref     = in_a_pref;
-        v_pref     = in_v_pref;
-        delta      = in_delta;
-        car_length = in_length;
+        a_max                 = in_a_max;
+        a_pref                = in_a_pref;
+        v_pref                = in_v_pref;
+        delta                 = in_delta;
+        car_length            = in_length;
+        rear_bumper_rear_axle = rear_axle;
     }
 
     void simulator::settle(const double timestep)

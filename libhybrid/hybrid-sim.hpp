@@ -50,8 +50,11 @@ namespace hybrid
 
         // macro data
         void  macro_initialize(const float h_suggest);
+        int   which_cell(float pos) const;
         float collect_riemann(const float gamma, const float inv_gamma);
         void  update         (const float dt,    const float relaxation_factor);
+        void  clear_macro();
+        void  convert_cars(const simulator &sim);
         void  fill_y(const float gamma);
 
         float                         h;
@@ -68,6 +71,8 @@ namespace hybrid
 
         ~simulator();
         void initialize();
+        float rear_bumper_offset()  const;
+        float front_bumper_offset() const;
 
         hwm::network      *hnet;
         std::vector<lane>  lanes;
@@ -75,7 +80,7 @@ namespace hybrid
 
         // micro
         void   micro_initialize(const double a_max, const double a_pref, const double v_pref,
-                                const double delte, const double length);
+                                const double delta, const double length, const double rear_axle);
         void   micro_cleanup();
         void   settle(const double timestep);
         double acceleration(const double leader_velocity, const double follower_velocity, const double distance) const;
@@ -88,6 +93,7 @@ namespace hybrid
         double v_pref;
         double delta;
         double car_length;
+        double rear_bumper_rear_axle;
 
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);

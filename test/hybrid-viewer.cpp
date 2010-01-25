@@ -412,7 +412,8 @@ int main(int argc, char *argv[])
                        1.67,
                        33,
                        4,
-                       5);
+                       5,
+                       1.0);
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
         s.micro_lanes.push_back(&l);
