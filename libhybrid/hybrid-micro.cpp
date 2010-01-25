@@ -14,7 +14,7 @@ namespace hybrid
         hwm::lane *hwm_downstream = l.parent->downstream_lane();
 
         double next_velocity = velocity;
-        double distance = (1.0 - position) * l.length;
+        double distance      = (1.0 - position) * l.length - sim.front_bumper_offset();
         while(distance < min_for_free_movement)
         {
             if(!hwm_downstream)
@@ -76,7 +76,7 @@ namespace hybrid
                 max_acceleration = std::max(std::abs(c.acceleration), max_acceleration);
 
                 if( std::abs(c.acceleration) > std::abs(last_acceleration)
-                    or c.position > 1.0
+                    or c.position+sim.front_bumper_offset()*inv_length >= 1.0
                     or ((std::abs(c.acceleration - last_acceleration) < epsilon_2) and (std::abs(c.acceleration) > epsilon)))
                 {
                     for(int j = i; j < static_cast<int>(current_cars().size())-1; ++j)
@@ -174,7 +174,7 @@ namespace hybrid
             {
                 BOOST_FOREACH(car &c, l->current_cars())
                 {
-                    if(c.position > 1.0)
+                    if(c.position >= 1.0)
                     {
                         hwm::lane *hwm_downstream = l->parent->downstream_lane();
                         assert(hwm_downstream);

@@ -237,6 +237,8 @@ public:
                 glColor3f(1.0, 0.0, 0.0);
                 BOOST_FOREACH(const hybrid::car &c, l->current_cars())
                 {
+                    assert(c.position >= 0);
+                    assert(c.position < 1.0);
                     mat4x4f trans(l->parent->point_frame(c.position));
                     mat4x4f ttrans(tvmet::trans(trans));
 
@@ -425,7 +427,7 @@ int main(int argc, char *argv[])
         if(!l->parent->active)
             continue;
 
-        double p = 0.1;
+        double p = -s.rear_bumper_offset()*l->inv_length;
         for (int i = 0; i < cars_per_lane; i++)
         {
             //TODO Just creating some cars here...
@@ -434,7 +436,9 @@ int main(int argc, char *argv[])
             tmp.velocity = 33;
             l->current_cars().push_back(tmp);
             //Cars need a minimal distance spacing
-            p += (15.0 / l->length);
+            p += (15.0 * l->inv_length);
+            if(p + s.front_bumper_offset()*l->inv_length >= 1.0)
+                break;
         }
     }
 

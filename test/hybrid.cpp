@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         if(!l->parent->active)
             continue;
 
-        double p = 0.1;
+        double p = s.rear_bumper_offset()*l->inv_length;
         for (int i = 0; i < cars_per_lane; i++)
         {
             //TODO Just creating some cars here...
