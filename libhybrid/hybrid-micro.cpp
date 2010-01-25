@@ -14,7 +14,7 @@ namespace hybrid
         hwm::lane *hwm_downstream = l.parent->downstream_lane();
 
         double next_velocity = velocity;
-        double distance      = (1.0 - position) * l.length - sim.front_bumper_offset();
+        double distance      = (1.0 - position) * l.length - sim.rear_bumper_offset();
         while(distance < min_for_free_movement)
         {
             if(!hwm_downstream)
