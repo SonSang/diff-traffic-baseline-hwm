@@ -37,7 +37,6 @@ namespace hybrid
         }
 
         acceleration = sim.acceleration(next_velocity, velocity, distance);
-        std::cout << "next v: " << next_velocity << " velocty: " << velocity << " dist: " << distance << " accel: " << acceleration << std::endl;
     }
 
     void car::integrate(const double timestep, const lane& l)
