@@ -88,12 +88,12 @@ namespace hybrid
         void   update(double timestep);
 
         std::vector<lane*> micro_lanes;
-        double a_max;
-        double a_pref;
-        double v_pref;
-        double delta;
-        double car_length;
-        double rear_bumper_rear_axle;
+        double             a_max;
+        double             a_pref;
+        double             v_pref;
+        double             delta;
+        double             car_length;
+        double             rear_bumper_rear_axle;
 
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);
