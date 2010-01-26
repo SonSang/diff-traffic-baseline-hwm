@@ -125,20 +125,28 @@ namespace hybrid
     {
         BOOST_FOREACH(car &c, current_cars())
         {
-            const float car_front = c.position+sim.rear_bumper_offset()*inv_length;
-            const float car_back  = c.position+sim.front_bumper_offset()*inv_length;
+            const float car_back  = c.position+sim.rear_bumper_offset()*inv_length;
+            const float car_front = c.position+sim.front_bumper_offset()*inv_length;
 
-            const int front_cell = which_cell(car_front);
-            const int back_cell  = which_cell(car_back);
+            const int start_cell = which_cell(car_back);
+            const int end_cell   = which_cell(car_front);
 
-            if(front_cell >= 0)
+            if(start_cell == end_cell)
             {
-                float front_coverage = car_front*N - front_cell;
-                q[front_cell].rho() += front_coverage;
-                q[front_cell].y()   += front_coverage*c.velocity;
+                float coverage       = sim.car_length*inv_h;
+                q[start_cell].rho() += coverage;
+                q[start_cell].y()   += coverage*c.velocity;
+                continue;
             }
 
-            for(int i = front_cell+1; i < back_cell-1; ++i)
+            if(start_cell >= 0)
+            {
+                float start_coverage = (start_cell+1) - car_back*N;
+                q[start_cell].rho() += start_coverage;
+                q[start_cell].y()   += start_coverage*c.velocity;
+            }
+
+            for(int i = start_cell+1; i < end_cell-1; ++i)
             {
                 q[i].rho() = 1.0f;
                 q[i].y()   = c.velocity;
@@ -146,9 +154,10 @@ namespace hybrid
 
             if(end_cell < static_cast<int>(N))
             {
-                float back_coverage  = (back_cell+1) - car_back*N;
-                q[back_cell].rho()  += back_coverage;
-                q[back_cell].y()    += back_coverage*c.velocity;
+                float end_coverage  = car_front*N - end_cell;
+                q[end_cell].rho()  += end_coverage;
+                assert(q[end_cell].rho() <= 1.0f);
+                q[end_cell].y()    += end_coverage*c.velocity;
             }
         }
     }
