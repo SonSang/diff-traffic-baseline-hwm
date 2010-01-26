@@ -454,13 +454,15 @@ int main(int argc, char *argv[])
     s.settle(0.033);
 
     s.convert_cars();
-    fltkview mv(0, 0, 500, 500, "fltk View");
 
-    mv.sim = &s;
+    {
+        fltkview mv(0, 0, 500, 500, "fltk View");
+        mv.sim = &s;
 
-    mv.take_focus();
-    Fl::visual(FL_DOUBLE|FL_DEPTH);
+        mv.take_focus();
+        Fl::visual(FL_DOUBLE|FL_DEPTH);
 
-    mv.show(1, argv);
-    return Fl::run();
+        mv.show(1, argv);
+        return Fl::run();
+    }
 }
