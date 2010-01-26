@@ -222,6 +222,22 @@ namespace hybrid
         free(rs_base);
     }
 
+    void simulator::convert_cars()
+    {
+        BOOST_FOREACH(lane *l, macro_lanes)
+        {
+            l->clear_macro();
+        }
+        BOOST_FOREACH(lane *l, macro_lanes)
+        {
+            l->convert_cars(*this);
+        }
+        BOOST_FOREACH(lane *l, macro_lanes)
+        {
+            l->fill_y(gamma);
+        }
+    }
+
     float simulator::macro_step(const float cfl)
     {
         float maxspeed = 0.0f;

@@ -98,6 +98,7 @@ namespace hybrid
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);
         void  macro_cleanup();
+        void  convert_cars();
         float macro_step(const float cfl=1.0f);
 
         std::vector<lane*>            macro_lanes;
