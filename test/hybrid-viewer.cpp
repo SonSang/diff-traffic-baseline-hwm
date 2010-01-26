@@ -231,8 +231,13 @@ public:
                 if(!l->parent->active)
                     continue;
 
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glDisable(GL_LIGHTING);
                 glColor3f(0.9, 0.9, 1.0);
-                network_drawer.draw_lane_solid(l->parent->id);
+                network_drawer.draw_lane_wire(l->parent->id);
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glEnable(GL_LIGHTING);
 
                 glColor3f(1.0, 0.0, 0.0);
                 BOOST_FOREACH(const hybrid::car &c, l->current_cars())
@@ -342,6 +347,7 @@ public:
                 if(sim)
                 {
                     sim->update(0.033);
+                    sim->macro_step(0.033);
                 }
                 break;
             case 'p':
@@ -416,9 +422,12 @@ int main(int argc, char *argv[])
                        4,
                        5,
                        1.0);
+    s.macro_initialize(0.5, 10.0f, 0.0f);
+
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
         s.micro_lanes.push_back(&l);
+        s.macro_lanes.push_back(&l);
     }
 
     static const int cars_per_lane = 3;
@@ -444,6 +453,7 @@ int main(int argc, char *argv[])
 
     s.settle(0.033);
 
+    s.convert_cars();
     fltkview mv(0, 0, 500, 500, "fltk View");
 
     mv.sim = &s;
