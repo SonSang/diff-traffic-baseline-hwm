@@ -144,7 +144,7 @@ namespace hybrid
                 q[i].y()   = c.velocity;
             }
 
-            if(back_cell < N)
+            if(end_cell < static_cast<int>(N))
             {
                 float back_coverage  = (back_cell+1) - car_back*N;
                 q[back_cell].rho()  += back_coverage;
