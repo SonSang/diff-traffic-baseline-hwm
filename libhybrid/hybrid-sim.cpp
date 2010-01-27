@@ -85,5 +85,13 @@ namespace hybrid
     {
         return car_length-rear_bumper_rear_axle;
     }
+
+    void simulator::car_swap()
+    {
+        BOOST_FOREACH(lane &l, lanes)
+        {
+            l.car_swap();
+        }
+    }
 };
 

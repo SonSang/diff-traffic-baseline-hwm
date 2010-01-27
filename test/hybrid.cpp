@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     s.settle(0.033);
 
     s.update(0.033);
+    s.car_swap();
 
     return 0;
 }

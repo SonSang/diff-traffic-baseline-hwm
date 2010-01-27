@@ -86,6 +86,7 @@ namespace hybrid
         void initialize();
         float rear_bumper_offset()  const;
         float front_bumper_offset() const;
+        void  car_swap();
 
         hwm::network      *hnet;
         std::vector<lane>  lanes;

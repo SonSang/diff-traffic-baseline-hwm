@@ -347,7 +347,8 @@ public:
                 if(sim)
                 {
                     sim->update(0.033);
-                    sim->macro_step(0.033);
+                    sim->macro_step(1.0);
+                    sim->car_swap();
                 }
                 break;
             case 'p':

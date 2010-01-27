@@ -188,12 +188,6 @@ namespace hybrid
                 }
             }
         }
-
-        BOOST_FOREACH(lane *l, micro_lanes)
-        {
-            if(l->parent->active)
-                l->car_swap();
-        }
     }
 
     void simulator::micro_cleanup()
