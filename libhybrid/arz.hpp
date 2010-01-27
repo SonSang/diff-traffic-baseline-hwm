@@ -332,6 +332,7 @@ struct arz
         q waves[2];          /**< Storage for the two solution waves.*/
         q left_fluctuation;  /**< Storage for the left-going fluctuation.*/
         q right_fluctuation; /**< Storage for the right-going fluctuation.*/
+        q q_0;               /**< Storage for the middle state of this solution.*/
         T speeds[2];         /**< Storage for the two speeds.*/
     };
 };

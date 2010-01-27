@@ -239,7 +239,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
                                               const T                    gamma,
                                               const T                    inv_gamma)
 {
-    const full_q *q_0;
+    const full_q *fq_0;
     full_q        q_m;
 
     if(q_l.rho() < VACUUM_EPS)
@@ -251,7 +251,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         waves [1] = q_l;
 
         q_m.clear();
-        q_0 = &q_m;
+        fq_0 = &q_m;
     }
     else if(q_r.rho() < VACUUM_EPS)
     {   // case 5
@@ -268,11 +268,11 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         waves [1] = q(0.0, 0.0);
 
         if(lambda_0_l > 0.0)
-            q_0 = &q_l;
+            fq_0 = &q_l;
         else
         {
             q_m = centered_rarefaction(q_l, u_max, gamma, inv_gamma);
-            q_0 = &q_m;
+            fq_0 = &q_m;
         }
     }
     else if(std::abs(q_l.u() - q_r.u()) < epsilon())
@@ -283,7 +283,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         speeds[1] = q_r.u();
         waves [1] = q_r - q_l;
 
-        q_0 = &q_l;
+        fq_0 = &q_l;
     }
     else if(q_l.u() > q_r.u())
     {   // case 1
@@ -296,7 +296,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         speeds[1] = q_r.u();
         waves [1] = q_r - q_m;
 
-        q_0 = (speeds[0] >= 0.0) ? &q_l : &q_m;
+        fq_0 = (speeds[0] >= 0.0) ? &q_l : &q_m;
     }
     else if(u_max + q_l.u() - q_l.u_eq() > q_r.u())
     {   // case 2
@@ -312,13 +312,13 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         waves [1] = q_r - q_m;
 
         if(lambda0_l >= 0.0)
-            q_0 = &q_l;
+            fq_0 = &q_l;
         else if(lambda0_m < 0.0)
-            q_0 = &q_m;
+            fq_0 = &q_m;
         else
         {
             q_m = centered_rarefaction(q_l, u_max, gamma, inv_gamma);
-            q_0 = &q_m;
+            fq_0 = &q_m;
         }
     }
     else
@@ -338,16 +338,17 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         waves [1] = q_r - q_m;
 
         if(lambda0_l >= 0.0)
-            q_0 = &q_l;
+            fq_0 = &q_l;
         else
         {
             q_m = centered_rarefaction(q_l, u_max, gamma, inv_gamma);
-            q_0 = &q_m;
+            fq_0 = &q_m;
         }
     }
 
-    left_fluctuation  = q_0->flux() - q_l. flux();
-    right_fluctuation = q_r. flux() - q_0->flux();
+    left_fluctuation  = fq_0->flux() -  q_l. flux();
+    right_fluctuation =  q_r. flux() - fq_0->flux();
+    q_0               = arz<float>::q(fq_0->rho(), fq_0->y());
 }
 
 template <typename T>
@@ -369,6 +370,7 @@ inline void arz<T>::riemann_solution::starvation_riemann(const full_q &__restric
     waves [1]         = q_r;
     left_fluctuation  = q(0.0, 0.0);
     right_fluctuation = q_r.flux();
+    q_0               = arz<float>::q(q_r.rho(), q_r.y());
 }
 
 template <typename T>
@@ -391,6 +393,7 @@ inline void arz<T>::riemann_solution::stop_riemann(const full_q &__restrict__ q_
     waves [1]         = q(0.0, 0.0);
     left_fluctuation  = -q_l.flux();
     right_fluctuation = q(0.0, 0.0);
+    q_0               = arz<float>::q(0, 0);
 }
 
 template <typename T>
