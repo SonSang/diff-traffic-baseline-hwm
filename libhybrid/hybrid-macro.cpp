@@ -2,6 +2,31 @@
 
 namespace hybrid
 {
+    flux_capacitor::flux_capacitor() : rho_accum(0.0), u_accum(0.0)
+    {}
+
+    void flux_capacitor::update(const arz<float>::riemann_solution &rs, const float coefficient)
+    {
+        const float delta_rho = coefficient*(rs.waves[0].rho());
+        rho_accum += delta_rho;
+        u_accum   += delta_rho*rs.speeds[1];
+    }
+
+    bool flux_capacitor::check() const
+    {
+        return rho_accum >= 1.0f-arz<float>::epsilon();
+    }
+
+    car flux_capacitor::emit()
+    {
+        rho_accum    -= 1.0f;
+        car res;
+        res.position  = 0.0f;
+        res.velocity  = u_accum;
+        u_accum      *= rho_accum;
+        return res;
+    }
+
     void lane::macro_initialize(const float h_suggest)
     {
         N = static_cast<size_t>(std::ceil(length/h_suggest));
