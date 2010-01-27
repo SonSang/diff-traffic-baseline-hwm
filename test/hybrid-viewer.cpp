@@ -456,14 +456,20 @@ int main(int argc, char *argv[])
 
     s.convert_cars();
 
+    BOOST_FOREACH(hybrid::lane *l, s.micro_lanes)
     {
-        fltkview mv(0, 0, 500, 500, "fltk View");
-        mv.sim = &s;
+        if(!l->parent->active)
+            continue;
 
-        mv.take_focus();
-        Fl::visual(FL_DOUBLE|FL_DEPTH);
-
-        mv.show(1, argv);
-        return Fl::run();
+        l->current_cars().clear();
     }
+
+    fltkview mv(0, 0, 500, 500, "fltk View");
+    mv.sim = &s;
+
+    mv.take_focus();
+    Fl::visual(FL_DOUBLE|FL_DEPTH);
+
+    mv.show(1, argv);
+    return Fl::run();
 }

@@ -5,11 +5,11 @@ namespace hybrid
     flux_capacitor::flux_capacitor() : rho_accum(0.0), u_accum(0.0)
     {}
 
-    void flux_capacitor::update(const arz<float>::riemann_solution &rs, const float coefficient)
+    void flux_capacitor::update(const arz<float>::riemann_solution &rs, const float dt)
     {
-        const float delta_rho = coefficient*(rs.waves[0].rho());
-        rho_accum += delta_rho;
-        u_accum   += delta_rho*rs.speeds[1];
+        const float delta_rho  = dt*rs.q_0.rho();
+        rho_accum             += delta_rho;
+        u_accum               += delta_rho*rs.speeds[1];
     }
 
     bool flux_capacitor::check() const
@@ -137,7 +137,16 @@ namespace hybrid
             q[i]     -= coefficient*(rs[i].right_fluctuation + rs[i+1].left_fluctuation);
             q[i].y() -= q[i].y()*coefficient*relaxation_factor;
             q[i].fix();
-
+        }
+        hwm::lane *downstream = parent->downstream_lane();
+        if(downstream)
+        {
+            capacitor.update(rs[N], dt);
+            if(capacitor.check())
+            {
+                lane &sim_downstream = *(downstream->user_data<lane>());
+                sim_downstream.next_cars().push_back(capacitor.emit());
+            }
         }
     }
 
