@@ -28,6 +28,16 @@ namespace hybrid
         std::sort(cars[0].begin(), cars[0].end(), car_sort());
     }
 
+    bool lane::is_micro() const
+    {
+        return sim_type == MICRO;
+    }
+
+    bool lane::is_macro() const
+    {
+        return sim_type == MACRO;
+    }
+
     simulator::simulator(hwm::network *net) : hnet(net),
                                               time(0.0f),
                                               q_base(0),

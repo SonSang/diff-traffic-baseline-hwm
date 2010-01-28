@@ -118,10 +118,10 @@ namespace hybrid
         do
         {
             max_acceleration = EPSILON;
-            BOOST_FOREACH(lane *l, micro_lanes)
+            BOOST_FOREACH(lane &l, lanes)
             {
-                if(l->parent->active)
-                    max_acceleration = std::max(l->settle_pass(timestep, EPSILON, EPSILON_2, *this),
+                if(l.is_micro() && l.parent->active)
+                    max_acceleration = std::max(l.settle_pass(timestep, EPSILON, EPSILON_2, *this),
                                                 max_acceleration);
             }
 
@@ -146,10 +146,10 @@ namespace hybrid
 
     void simulator::compute_accelerations(const double timestep)
     {
-        BOOST_FOREACH(lane *l, micro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            if(l->parent->active)
-                l->compute_lane_accelerations(timestep, *this);
+            if(l.is_micro() && l.parent->active)
+                l.compute_lane_accelerations(timestep, *this);
         }
     }
 
@@ -157,34 +157,34 @@ namespace hybrid
     {
         compute_accelerations(timestep);
 
-        BOOST_FOREACH(lane *l, micro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            if(l->parent->active)
+            if(l.is_micro() && l.parent->active)
             {
-                BOOST_FOREACH(car &c, l->current_cars())
+                BOOST_FOREACH(car &c, l.current_cars())
                 {
-                    c.integrate(timestep, *l);
+                    c.integrate(timestep, l);
                 }
             }
         }
 
-        BOOST_FOREACH(lane *l, micro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            if(l->parent->active)
+            if(l.is_micro() && l.parent->active)
             {
-                BOOST_FOREACH(car &c, l->current_cars())
+                BOOST_FOREACH(car &c, l.current_cars())
                 {
                     if(c.position >= 1.0)
                     {
-                        hwm::lane *hwm_downstream = l->parent->downstream_lane();
+                        hwm::lane *hwm_downstream = l.parent->downstream_lane();
                         assert(hwm_downstream);
                         lane *downstream = hwm_downstream->user_data<lane>();
 
-                        c.position = (c.position - 1.0f)*l->length * downstream->inv_length;
+                        c.position = (c.position - 1.0f)*l.length * downstream->inv_length;
                         downstream->next_cars().push_back(c);
                     }
                     else
-                        l->next_cars().push_back(c);
+                        l.next_cars().push_back(c);
                 }
             }
         }

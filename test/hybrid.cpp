@@ -23,28 +23,23 @@ int main(int argc, char *argv[])
                        4,
                        5,
                        1.0);
-    BOOST_FOREACH(hybrid::lane &l, s.lanes)
-    {
-        if(l.parent->active)
-            s.micro_lanes.push_back(&l);
-    }
 
     static const int cars_per_lane = 1;
-    BOOST_FOREACH(hybrid::lane *l, s.micro_lanes)
+    BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        if(!l->parent->active)
+        if(!l.parent->active)
             continue;
 
-        double p = s.rear_bumper_offset()*l->inv_length;
+        double p = s.rear_bumper_offset()*l.inv_length;
         for (int i = 0; i < cars_per_lane; i++)
         {
             //TODO Just creating some cars here...
             hybrid::car tmp;
             tmp.position = p;
             tmp.velocity = 33;
-            l->current_cars().push_back(tmp);
+            l.current_cars().push_back(tmp);
             //Cars need a minimal distance spacing
-            p += (15.0 / l->length);
+            p += (15.0 / l.length);
         }
     }
 

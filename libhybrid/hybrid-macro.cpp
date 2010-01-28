@@ -267,27 +267,30 @@ namespace hybrid
 
     void simulator::convert_cars()
     {
-        BOOST_FOREACH(lane *l, macro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            l->clear_macro();
+            if(l.is_macro())
+                l.clear_macro();
         }
-        BOOST_FOREACH(lane *l, macro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            l->convert_cars(*this);
+            if(l.is_macro())
+                l.convert_cars(*this);
         }
-        BOOST_FOREACH(lane *l, macro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            l->fill_y(gamma);
+            if(l.is_macro())
+                l.fill_y(gamma);
         }
     }
 
     float simulator::macro_step(const float cfl)
     {
         float maxspeed = 0.0f;
-        BOOST_FOREACH(lane *l, macro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            if(l->parent->active)
-                maxspeed = std::max(l->collect_riemann(gamma, 1.0f/gamma),
+            if(l.is_macro() && l.parent->active)
+                maxspeed = std::max(l.collect_riemann(gamma, 1.0f/gamma),
                                     maxspeed);
         }
 
@@ -296,10 +299,10 @@ namespace hybrid
 
         const float dt = cfl*min_h/maxspeed;
 
-        BOOST_FOREACH(lane *l, macro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            if(l->parent->active)
-                l->update(dt, relaxation_factor);
+            if(l.is_macro() && l.parent->active)
+                l.update(dt, relaxation_factor);
         }
 
         return dt;

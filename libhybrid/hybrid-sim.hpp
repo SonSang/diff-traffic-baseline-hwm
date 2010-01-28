@@ -36,6 +36,8 @@ namespace hybrid
 
     struct lane
     {
+        typedef enum {MACRO, MICRO} sim_t;
+
         lane();
 
         // common data
@@ -50,11 +52,15 @@ namespace hybrid
         std::vector<car>        &next_cars()       { return cars[1]; };
 
         void                    car_swap();
+        bool                    is_micro() const;
+        bool                    is_macro() const;
 
         hwm::lane        *parent;
         float             length;
         float             inv_length;
         std::vector<car>  cars[2];
+        sim_t             sim_type;
+
 
         // micro data
         void   compute_lane_accelerations(double timestep, const simulator &sim);
@@ -101,7 +107,6 @@ namespace hybrid
         void   compute_accelerations(double timestep);
         void   update(double timestep);
 
-        std::vector<lane*> micro_lanes;
         double             a_max;
         double             a_pref;
         double             v_pref;
@@ -115,7 +120,6 @@ namespace hybrid
         void  convert_cars();
         float macro_step(const float cfl=1.0f);
 
-        std::vector<lane*>            macro_lanes;
         arz<float>::q                *q_base;
         arz<float>::riemann_solution *rs_base;
         float                         gamma;
