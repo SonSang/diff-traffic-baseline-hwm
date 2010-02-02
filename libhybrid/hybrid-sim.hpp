@@ -3,6 +3,8 @@
 
 namespace hybrid
 {
+    typedef enum {MACRO=1, MICRO=2} sim_t;
+
     struct simulator;
     struct lane;
 
@@ -36,8 +38,6 @@ namespace hybrid
 
     struct lane
     {
-        typedef enum {MACRO, MICRO} sim_t;
-
         lane();
 
         // common data
@@ -61,13 +61,16 @@ namespace hybrid
         std::vector<car>  cars[2];
         sim_t             sim_type;
 
+        void distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
 
         // micro data
+        void   micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         void   compute_lane_accelerations(double timestep, const simulator &sim);
         double settle_pass(const double timestep, const double epsilon, const double epsilon_2, const simulator &sim);
 
         // macro data
         void  macro_initialize(const float h_suggest);
+        void  macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         int   which_cell(float pos) const;
         float collect_riemann(const float gamma, const float inv_gamma);
         void  update         (const float dt,    const float relaxation_factor);
@@ -94,6 +97,8 @@ namespace hybrid
         float front_bumper_offset() const;
         void  car_swap();
 
+        void hybrid_step();
+
         hwm::network      *hnet;
         std::vector<lane>  lanes;
         float              time;
@@ -117,7 +122,7 @@ namespace hybrid
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);
         void  macro_cleanup();
-        void  convert_cars();
+        void  convert_cars(sim_t sim_mask);
         float macro_step(const float cfl=1.0f);
 
         arz<float>::q                *q_base;

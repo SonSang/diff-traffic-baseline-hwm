@@ -346,9 +346,7 @@ public:
             case ' ':
                 if(sim)
                 {
-                    sim->update(0.033);
-                    sim->macro_step(1.0);
-                    sim->car_swap();
+                    sim->hybrid_step();
                 }
                 break;
             case 'p':
@@ -425,6 +423,14 @@ int main(int argc, char *argv[])
                        1.0);
     s.macro_initialize(0.5, 10.0f, 0.0f);
 
+    BOOST_FOREACH(hybrid::lane &l, s.lanes)
+    {
+        if(l.parent->id == "lane0a" || l.parent->id == "lane0c")
+            l.sim_type = hybrid::MACRO;
+        else
+            l.sim_type = hybrid::MICRO;
+    }
+
     static const int cars_per_lane = 3;
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
@@ -448,14 +454,12 @@ int main(int argc, char *argv[])
 
     s.settle(0.033);
 
-    s.convert_cars();
+    s.convert_cars(hybrid::MACRO);
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        if(!l.parent->active)
-            continue;
-
-        l.current_cars().clear();
+        if(l.is_macro())
+            l.current_cars().clear();
     }
 
     fltkview mv(0, 0, 500, 500, "fltk View");

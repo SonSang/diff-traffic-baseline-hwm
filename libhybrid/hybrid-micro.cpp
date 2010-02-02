@@ -13,28 +13,10 @@ namespace hybrid
 
         hwm::lane *hwm_downstream = l.parent->downstream_lane();
 
-        double next_velocity = velocity;
-        double distance      = (1.0 - position) * l.length - sim.rear_bumper_offset();
-        while(distance < min_for_free_movement)
-        {
-            if(!hwm_downstream)
-            {
-                next_velocity = 0.0;
-                break;
-            }
-
-            lane *downstream = hwm_downstream->user_data<lane>();
-            if(downstream->current_cars().empty())
-                distance += downstream->length;
-            else
-            {
-                next_velocity  = downstream->current_cars().front().velocity;
-                distance      += downstream->current_cars().front().position*downstream->length;
-                break;
-            }
-
-            hwm_downstream = hwm_downstream->downstream_lane();
-        }
+        float next_velocity = 0.0f;
+        float distance      = (1.0 - position) * l.length - sim.rear_bumper_offset();
+        if(hwm_downstream)
+            hwm_downstream->user_data<lane>()->distance_to_car(distance, next_velocity, min_for_free_movement, sim);
 
         acceleration = sim.acceleration(next_velocity, velocity, distance);
     }
@@ -43,6 +25,34 @@ namespace hybrid
     {
         position += (velocity     * timestep)*l.inv_length;
         velocity = std::max(0.0, velocity + acceleration * timestep);
+    }
+
+    void lane::micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
+    {
+        if(current_cars().empty())
+        {
+            distance += length;
+            if(distance >= distance_max)
+            {
+                velocity = 0.0f;
+                distance = distance_max;
+            }
+            else
+            {
+                hwm::lane *hwm_downstream = parent->downstream_lane();
+                if(hwm_downstream)
+                    hwm_downstream->user_data<lane>()->distance_to_car(distance, velocity, distance_max, sim);
+                else
+                    velocity = 0.0f;
+            }
+        }
+        else
+        {
+            velocity  = current_cars().front().velocity;
+            distance += current_cars().front().position*length;
+        }
+
+        return;
     }
 
     void lane::compute_lane_accelerations(const double timestep, const simulator &sim)
@@ -178,10 +188,24 @@ namespace hybrid
                     {
                         hwm::lane *hwm_downstream = l.parent->downstream_lane();
                         assert(hwm_downstream);
+                        assert(hwm_downstream->active);
+
                         lane *downstream = hwm_downstream->user_data<lane>();
 
-                        c.position = (c.position - 1.0f)*l.length * downstream->inv_length;
-                        downstream->next_cars().push_back(c);
+                        switch(downstream->sim_type)
+                        {
+                        case MICRO:
+                            c.position = (c.position - 1.0f)*l.length * downstream->inv_length;
+                            downstream->next_cars().push_back(c);
+                            break;
+                        case MACRO:
+                            downstream->q[0].rho() = std::min(1.0, downstream->q[0].rho() + car_length/downstream->h);
+                            downstream->q[0].y()   = std::min(0.0f, arz<float>::eq::y(downstream->q[0].rho(), c.velocity,
+                                                                                      hwm_downstream->speedlimit,
+                                                                                      gamma));
+                            assert(downstream->q[0].check());
+                            break;
+                        }
                     }
                     else
                         l.next_cars().push_back(c);

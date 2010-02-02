@@ -8,7 +8,7 @@
 template <typename T>
 inline T arz<T>::epsilon()
 {
-    return std::numeric_limits<T>::epsilon();
+    return 1e-5;
 }
 
 // q implemenation

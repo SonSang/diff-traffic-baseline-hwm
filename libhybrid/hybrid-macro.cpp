@@ -35,6 +35,51 @@ namespace hybrid
         inv_h = 1.0f/h;
     }
 
+    void lane::macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
+    {
+        float rho_accum = 0.0f;
+        float u_accum = 0.0f;
+
+        int i = 0;
+        int start_cell = -1;
+        while(i < static_cast<int>(N) && rho_accum < 1.0)
+        {
+            if(q[i].rho() > arz<float>::epsilon() && start_cell == -1)
+            {
+                start_cell = i;
+                rho_accum += q[i].rho();
+                float u    = arz<float>::eq::u(q[i].rho(), q[i].y(), parent->speedlimit, sim.gamma);
+                u_accum   += q[i].rho()*u;
+            }
+            ++i;
+        }
+
+        if(rho_accum + arz<float>::epsilon() >= 1.0f)
+        {
+            distance += i*h;
+            velocity = u_accum;
+        }
+        else
+        {
+            distance += length;
+            if(distance >= distance_max)
+            {
+                velocity = 0.0f;
+                distance = distance_max;
+            }
+            else
+            {
+                hwm::lane *hwm_downstream = parent->downstream_lane();
+                if(hwm_downstream)
+                    hwm_downstream->user_data<lane>()->distance_to_car(distance, velocity, distance_max, sim);
+                else
+                    velocity = 0.0f;
+            }
+        }
+
+        return;
+    }
+
     int lane::which_cell(const float pos) const
     {
         return static_cast<int>(std::floor(pos*N));
@@ -265,21 +310,21 @@ namespace hybrid
         free(rs_base);
     }
 
-    void simulator::convert_cars()
+    void simulator::convert_cars(const sim_t sim_mask)
     {
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.is_macro())
+            if(l.sim_type & sim_mask)
                 l.clear_macro();
         }
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.is_macro())
+            if(l.sim_type & sim_mask)
                 l.convert_cars(*this);
         }
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.is_macro())
+            if(l.sim_type & sim_mask)
                 l.fill_y(gamma);
         }
     }

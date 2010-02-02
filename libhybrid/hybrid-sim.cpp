@@ -38,6 +38,20 @@ namespace hybrid
         return sim_type == MACRO;
     }
 
+    void lane::distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
+    {
+        switch(sim_type)
+        {
+        case MICRO:
+            return micro_distance_to_car(distance, velocity, distance_max, sim);
+        case MACRO:
+            return macro_distance_to_car(distance, velocity, distance_max, sim);
+        default:
+            assert(0);
+            return;
+        }
+    }
+
     simulator::simulator(hwm::network *net) : hnet(net),
                                               time(0.0f),
                                               q_base(0),
@@ -102,6 +116,20 @@ namespace hybrid
         {
             l.car_swap();
         }
+    }
+
+    void simulator::hybrid_step()
+    {
+        // fill in micro
+        convert_cars(MICRO);
+
+        // macro step (also emit cars)
+        const float dt = macro_step(1.0f);
+
+        // micro step
+        update(dt);
+
+        car_swap();
     }
 };
 
