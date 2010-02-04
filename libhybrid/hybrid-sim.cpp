@@ -38,6 +38,25 @@ namespace hybrid
         return sim_type == MACRO;
     }
 
+    bool lane::occupied() const
+    {
+        switch(sim_type)
+        {
+        case MICRO:
+            return !current_cars().empty() || !next_cars().empty();
+        case MACRO:
+            for(size_t i = 0; i < N; ++i)
+            {
+                if(q[i].rho() > 3*arz<float>::epsilon())
+                    return true;
+            }
+            return false;
+        default:
+            assert(0);
+            return false;
+        }
+    }
+
     void lane::distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
         switch(sim_type)
@@ -131,5 +150,34 @@ namespace hybrid
 
         car_swap();
     }
-};
 
+    void simulator::advance_intersections(float dt)
+    {
+        BOOST_FOREACH(hwm::intersection_pair &ip, hnet->intersections)
+        {
+            hwm::intersection &i = ip.second;
+
+            i.state_time += dt;
+            if(i.locked || i.state_time > i.states[i.current_state].duration)
+            {
+                bool free = true;
+                BOOST_FOREACH(const hwm::lane_pair &lp, i.states[i.current_state].fict_lanes)
+                {
+                    if(lp.second.user_data<lane>()->occupied())
+                    {
+                        free = false;
+                        break;
+                    }
+                }
+
+                if(free)
+                {
+                    i.unlock();
+                    i.advance_state();
+                }
+                else
+                    i.lock();
+            }
+        }
+    }
+}

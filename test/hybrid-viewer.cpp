@@ -337,10 +337,7 @@ public:
             case 'n':
                 if(sim)
                 {
-                    BOOST_FOREACH(hwm::intersection_pair &i, sim->hnet->intersections)
-                    {
-                        i.second.advance_state();
-                    }
+                    sim->advance_intersections(0.5);
                 }
                 break;
             case ' ':

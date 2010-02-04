@@ -54,6 +54,7 @@ namespace hybrid
         void                    car_swap();
         bool                    is_micro() const;
         bool                    is_macro() const;
+        bool                    occupied() const;
 
         hwm::lane        *parent;
         float             length;
@@ -98,6 +99,8 @@ namespace hybrid
         void  car_swap();
 
         void hybrid_step();
+
+        void advance_intersections(float dt);
 
         hwm::network      *hnet;
         std::vector<lane>  lanes;
