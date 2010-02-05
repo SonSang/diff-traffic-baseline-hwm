@@ -352,6 +352,37 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
 }
 
 template <typename T>
+inline void arz<T>::riemann_solution::inhomogeneous_riemann(const full_q &__restrict__ q_l,
+                                                            const full_q &__restrict__ q_r,
+                                                            const float u_max_l,
+                                                            const float u_max_r,
+                                                            const float gamma,
+                                                            const float inv_gamma)
+{
+    const full_q q_m_r(eq::inv_u_eq(q_r.u() - q_l.u() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma),
+                       q_r.u(),
+                       u_max_r,
+                       gamma);
+
+    const float rho_m_l = eq::rho_m_l_solve(q_m_r.rho()*q_r.u(), q_l.u() - q_l.u_eq(), u_max_l, gamma);
+    const full_q q_m_l(rho_m_l,
+                       q_m_r.rho()*q_r.u()/rho_m_l,
+                       u_max_l,
+                       gamma);
+
+    const T flux_0_diff = q_m_l.flux_0() - q_l.flux_0();
+    speeds[0]           = std::abs(flux_0_diff) < epsilon() ? 0.0 : flux_0_diff/(q_m_l.rho() - q_l.rho());
+    waves [0]           = q_m_l - q_l;
+
+    speeds[1]           = q_r.u();
+    waves [1]           = q_r - q_m_r;
+
+    left_fluctuation  = q_m_l.flux() - q_l.flux();
+    right_fluctuation = q_r.flux()   - q_m_r.flux();
+    q_0               = arz<float>::q(q_m_r.rho(), q_m_r.y()); // choice of right value is (fairly) arbitrary
+};
+
+template <typename T>
 inline void arz<T>::riemann_solution::starvation_riemann(const full_q &__restrict__ q_r,
                                                          const T                    u_max,
                                                          const T                    inv_u_max,

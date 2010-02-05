@@ -93,6 +93,19 @@ struct arz
         static inline T u_eq_prime(const T rho,
                                    const T u_max,
                                    const T gamma);
+
+        /** Compute left-middle state in inhomogeneous speedlimit situations
+         *  \tparam T The arithmetic type for the computation.
+         *  \param[in] flow_m_r The flux 0 component of the right cell
+         *  \param[in] relv The different between the left velocity and the left u_eq
+         *  \param[in] u_max_l The speed limit of the left cell
+         *  \param[in] gamma The gamma for the domain
+         *  \returns The above equation computed with the input params.
+         */
+        static inline T rho_m_l_solve(const T flow_m_r,
+                                      const T relv,
+                                      const T u_max_l,
+                                      const T gamma);
     };
 
     /** Unknowns for the ARZ equations.
@@ -296,6 +309,22 @@ struct arz
                             const T                    inv_u_max,
                             const T                    gamma,
                             const T                    inv_gamma);
+
+
+        /** Compute the full riemann solution with inhomogeneous speedlimits, store in this instance.
+         *  \param q_l The left state.
+         *  \param q_r The right state.
+         *  \param u_max_l The maximum speed of the left cell
+         *  \param u_max_r The maximum speed of the right cell.
+         *  \param gamma The gamma for this region.
+         *  \param inv_gamma 1.0/gamma.
+         */
+        inline void inhomogeneous_riemann(const full_q &__restrict__ q_l,
+                                          const full_q &__restrict__ q_r,
+                                          float                      u_max_l,
+                                          float                      u_max_r,
+                                          float                      gamma,
+                                          float                      inv_gamma);
 
         /** Compute the one-sided riemann solution where there is no inflow, store in this instance.
          *  \param q_r The right state.

@@ -108,14 +108,14 @@ namespace hybrid
         else
         {
             const lane &sim_upstream = *(upstream->user_data<lane>());
-            rs[0].riemann(arz<float>::full_q(sim_upstream.q[sim_upstream.N-1],
-                                             upstream->speedlimit,
-                                             gamma),
-                          *fq[0],
-                          parent->speedlimit,
-                          1.0f/parent->speedlimit,
-                          gamma,
-                          inv_gamma);
+            rs[0].inhomogeneous_riemann(arz<float>::full_q(sim_upstream.q[sim_upstream.N-1],
+                                                           upstream->speedlimit,
+                                                           gamma),
+                                        *fq[0],
+                                        upstream->speedlimit,
+                                        parent->speedlimit,
+                                        gamma,
+                                        inv_gamma);
             maxspeed = std::max(std::max(std::abs(rs[0].speeds[0]), std::abs(rs[0].speeds[1])),
                                 maxspeed);
         }
@@ -156,14 +156,14 @@ namespace hybrid
         {
             const lane &sim_downstream = *(downstream->user_data<lane>());
 
-            rs[N].riemann(*fq[0],
-                          arz<float>::full_q(sim_downstream.q[0],
-                                             downstream->speedlimit,
-                                             gamma),
-                          parent->speedlimit,
-                          1.0f/parent->speedlimit,
-                          gamma,
-                          inv_gamma);
+            rs[N].inhomogeneous_riemann(*fq[0],
+                                        arz<float>::full_q(sim_downstream.q[0],
+                                                           downstream->speedlimit,
+                                                           gamma),
+                                        parent->speedlimit,
+                                        downstream->speedlimit,
+                                        gamma,
+                                        inv_gamma);
             maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
                                 maxspeed);
         }
