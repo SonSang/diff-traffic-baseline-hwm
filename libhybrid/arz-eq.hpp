@@ -26,6 +26,7 @@ inline T arz<T>::eq::u_eq(const T rho,
                           const T u_max,
                           const T gamma)
 {
+    assert(rho >= 0.0f);
     return u_max*(1.0 - std::pow(rho, gamma));
 }
 
@@ -71,29 +72,83 @@ inline T secant(const T x0, const T x1, const T bottom, const T top, const T tol
 }
 
 template <typename T>
-struct inv_rho_m_l
+inline T fundamental_diagram(const T rho, const T relv, const T u_max, const T gamma)
 {
-    inv_rho_m_l(const T flow_m_r, const T relv, const T u_max_l, const T gamma) :
-        flow_m_r_(flow_m_r), relv_(relv), u_max_l_(u_max_l), gamma_(gamma)
+    return rho*(arz<T>::eq::u_eq(rho, u_max, gamma) + relv);
+}
+
+template <typename T>
+inline T critical_density(const T relv, const T u_max, const T gamma)
+{
+    return std::pow((u_max + relv)/(u_max*(1.0f+gamma)), 1.0f/gamma);
+}
+
+template <typename T>
+inline T max_flow(const T relv, const T u_max, const T gamma)
+{
+    return fundamental_diagram(critical_density(relv, u_max, gamma), relv, u_max, gamma);
+}
+
+template <typename T>
+inline T demand(T rho, const T relv, const T u_max, const T gamma)
+{
+    const T crit = critical_density(relv, u_max, gamma);
+    if(rho > crit)
+        rho = crit;
+    return fundamental_diagram(rho, relv, u_max, gamma);
+}
+
+template <typename T>
+struct inv_fd
+{
+    inv_fd(const T flow, const T relv, const T u_max, const T gamma) :
+        flow_(flow), relv_(relv), u_max_(u_max), gamma_(gamma)
     {}
 
-    T operator()(const T rho_m_l) const
+    T operator()(const T rho) const
     {
-        return flow_m_r_/rho_m_l - u_max_l_*(1.0 - std::pow(rho_m_l, gamma_)) - relv_;
+        const T fd0 = fundamental_diagram(rho, relv_, u_max_, gamma_);
+        return fd0-flow_;
     }
 
-    T flow_m_r_;
+    T flow_;
     T relv_;
-    T u_max_l_;
+    T u_max_;
     T gamma_;
 };
 
 template <typename T>
-inline T arz<T>::eq::rho_m_l_solve(const T flow_m_r, const T relv, const T u_max_l, const T gamma)
+inline T inv_demand(const T flow, const T relv, const T u_max, const T gamma)
 {
-    const inv_rho_m_l<T> solver(flow_m_r, relv, u_max_l, gamma);
+     const T crit = critical_density(relv, u_max, gamma);
+     const T max_flow = fundamental_diagram(crit, relv, u_max, gamma);
 
-    return secant<T, inv_rho_m_l<T> >(0.3, 0.7, 1e-4, 1.0, 5e-6, 100, solver);
+    if(flow + 1e-3f >= max_flow)
+        return crit;
+
+    const inv_fd<T> solver(flow, relv, u_max, gamma);
+    return secant<T, inv_fd<T> >(crit*0.3f, crit, 1e-4, crit, 5e-8, 500, solver);
 }
 
+template <typename T>
+inline T inv_supply(const T flow, const T relv, const T u_max, const T gamma)
+{
+    const T crit = critical_density(relv, u_max, gamma);
+    const T max_flow = fundamental_diagram(crit, relv, u_max, gamma);
+
+    if(flow + 1e-3f >= max_flow)
+        return crit;
+
+    const inv_fd<T> solver(flow, relv, u_max, gamma);
+    return secant<T, inv_fd<T> >(crit*1.3f, 1.0, crit, 1.0, 5e-8, 500, solver);
+}
+
+template <typename T>
+inline T supply(T rho, const T relv, const T u_max, const T gamma)
+{
+    const T crit = critical_density(relv, u_max, gamma);
+    if(rho <= crit)
+        rho = crit;
+    return fundamental_diagram(rho, relv, u_max, gamma);
+}
 #endif

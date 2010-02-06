@@ -422,16 +422,16 @@ int main(int argc, char *argv[])
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        if(l.parent->id == "lane0a" || l.parent->id == "lane0c")
-            l.sim_type = hybrid::MACRO;
-        else
-            l.sim_type = hybrid::MICRO;
+        l.sim_type = hybrid::MACRO;
     }
 
     static const int cars_per_lane = 3;
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
         if(!l.parent->active)
+            continue;
+
+        if(l.parent->id != "lane0a")
             continue;
 
         double p = -s.rear_bumper_offset()*l.inv_length;

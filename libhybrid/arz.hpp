@@ -319,12 +319,12 @@ struct arz
          *  \param gamma The gamma for this region.
          *  \param inv_gamma 1.0/gamma.
          */
-        inline void inhomogeneous_riemann(const full_q &__restrict__ q_l,
-                                          const full_q &__restrict__ q_r,
-                                          float                      u_max_l,
-                                          float                      u_max_r,
-                                          float                      gamma,
-                                          float                      inv_gamma);
+        inline void lebaque_inhomogeneous_riemann(const full_q &__restrict__ q_l,
+                                                  const full_q &__restrict__ q_r,
+                                                  float                      u_max_l,
+                                                  float                      u_max_r,
+                                                  float                      gamma,
+                                                  float                      inv_gamma);
 
         /** Compute the one-sided riemann solution where there is no inflow, store in this instance.
          *  \param q_r The right state.
