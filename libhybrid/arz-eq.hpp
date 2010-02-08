@@ -43,6 +43,8 @@ inline T arz<T>::eq::u_eq_prime(const T rho,
                                 const T u_max,
                                 const T gamma)
 {
+    if(rho < epsilon())
+        return 0.0;
     return -u_max*gamma*std::pow(rho, gamma - 1);
 }
 
@@ -58,9 +60,9 @@ inline T secant(const T x0, const T x1, const T bottom, const T top, const T tol
     for(int i = 0; std::abs(fn) > tol && std::abs(denom) > tol && i < maxiter; ++i)
     {
         T newxn = xn - (xn - xn_1)/denom * fn;
-        while(newxn <= bottom)
+        while(newxn <= bottom && newxn != xn)
             newxn = (newxn + xn)*0.5;
-        while(newxn >= top)
+        while(newxn >= top && newxn != xn)
             newxn = (newxn + xn)*0.5;
         xn_1 = xn;
         xn = newxn;

@@ -40,7 +40,7 @@ struct arz
          *  \param[in] u_max The maximum velocity for the domain.
          *  \param[in] gamma  The gamma for the domain.
          *  \returns The above equation computed with the input params.
- */
+         */
         static inline T y(const T rho, const T u,
                           const T u_max,
                           const T gamma);

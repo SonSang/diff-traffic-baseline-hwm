@@ -3,12 +3,13 @@
 
 #include <limits>
 #include <cstring>
+#include <cstdio>
 
 // arz implementation
 template <typename T>
 inline T arz<T>::epsilon()
 {
-    return 1e-5;
+    return 1e-3;
 }
 
 // q implemenation
@@ -72,10 +73,18 @@ inline T& arz<T>::q::y()
 template <typename T>
 inline void arz<T>::q::fix()
 {
-    if(rho() < epsilon())
-        rho() = epsilon();
-    if(y() > -epsilon())
-        y() = -epsilon();
+    if(rho() <= epsilon())
+    {
+        rho() = 0.0;
+        y()   = 0.0;
+    }
+    else if(rho() > 1.0-epsilon())
+    {
+        rho() = 1.0-epsilon();
+    }
+    else if(y() > -epsilon())
+        y() = 0.0;
+
     assert(check());
 }
 
@@ -108,7 +117,7 @@ arz<T>::full_q::full_q(const q &__restrict__ o,
     : base(o)
 {
     u_eq_ = eq::u_eq(base::rho(), u_max, gamma);
-    u_    = base::rho() < epsilon() ? u_max :
+    u_    = base::rho() <= 2*epsilon() ? u_max :
             std::max(base::y()/base::rho() + u_eq_,
                      static_cast<T>(0));
     assert(check());
@@ -121,7 +130,7 @@ arz<T>::full_q::full_q(const T in_rho, const T in_u,
 {
     base::rho() = in_rho;
     u_eq_       = eq::u_eq(base::rho(), u_max, gamma);
-    u_          = in_u;
+    u_          = std::min(u_eq_, in_u);
     base::y()   = base::rho()*(u() - u_eq_);
     assert(check());
 }
@@ -382,7 +391,7 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
                                                                     const float gamma,
                                                                     const float inv_gamma)
 {
-    const T rho_m = eq::inv_u_eq(q_r.u() - q_l.u() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma);
+    const T rho_m = std::min(static_cast<float>(1.0), eq::inv_u_eq(q_r.u() - q_l.u() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma));
 
     const T demand_l = demand(q_l.rho(),  q_l.u() - q_l.u_eq(), u_max_l, gamma);
     const T supply_r = supply(rho_m,      q_l.u() - q_l.u_eq(), u_max_r, gamma);
@@ -398,21 +407,36 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
         m_l_rho = inv_supply(supply_r, q_l.u() - q_l.u_eq(), u_max_l, gamma);
         m_r_rho = rho_m;
     }
+    assert(m_l_rho >= 0.0 && m_l_rho <= 1.0);
+    assert(m_r_rho >= 0.0 && m_r_rho <= 1.0);
+
+    const float ueq = eq::u_eq(m_l_rho, u_max_l, gamma);
 
     const full_q q_m_l(m_l_rho,
-                       q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l, gamma),
+                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l, gamma)),
                        u_max_l,
                        gamma);
     const full_q q_m_r(m_r_rho,
-                       q_l.u() - q_l.u_eq() + eq::u_eq(m_r_rho, u_max_r, gamma),
+                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_r_rho, u_max_r, gamma)),
                        u_max_r,
                        gamma);
 
+
+    printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
+    printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.rho(),q_m_l.rho(), q_m_r.rho(),q_r.rho());
+    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.y(),  q_m_l.y(), q_m_r.y(),    q_r.y()  );
+    printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.u(),  q_m_l.u(), q_m_r.u(),    q_r.u()  );
+    printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
+           q_l.lambda_0(u_max_l, gamma),
+           q_l.lambda_0(u_max_l, gamma),
+           q_l.lambda_0(u_max_r, gamma),
+           q_l.lambda_0(u_max_r, gamma));
+
     clear();
 
-    const T flux_0_diff = q_m_l.flux_0() - q_l.flux_0();
-    speeds[0]           = std::abs(flux_0_diff) < epsilon() ? 0.0 : flux_0_diff/(q_m_l.rho() - q_l.rho());
-    waves [0]           = q_m_l - q_l;
+    const T rho_diff = q_m_l.rho() - q_l.rho();
+    speeds[0]        = std::abs(rho_diff) < epsilon() ? 0.0 : (q_m_l.flux_0() - q_l.flux_0())/rho_diff;
+    waves [0]        = q_m_l - q_l;
 
     speeds[1]           = q_r.u();
     waves [1]           = q_r - q_m_r;
