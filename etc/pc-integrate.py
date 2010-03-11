@@ -101,32 +101,31 @@ def ih_poisson(start, limit, pc):
         E = exp_rvar(U)
         k += 1
         t = pc.inv_integrate(E + pc.integrate(t))
-        print t
         if t > limit:
             return
         yield t
 
 def show_poisson_proc(ax, start_end, pc):
-    gen = ih_poisson(start_end[0], start_end[1], pc)
-    res = []
-    try:
-        while True:
-            res.append(gen.next())
-    except StopIteration:
-        pass
-
     ax = pc.plot(ax, True, False, max(start_end[1], pc.end()))
-    maxy = max(max(pc.data), pc.inf)
-    for i in res:
-        l0 = matplotlib.lines.Line2D((i, i), (0, maxy), color='black', linewidth=1.0)
-        ax.add_line(l0)
 
+    gen = ih_poisson(start_end[0], start_end[1], pc)
+    res = list(gen)
+    maxy = max(max(pc.data), pc.inf)
+    ax = plot_events(ax, res, maxy)
+
+    return ax
+
+def plot_events(ax, res, height):
+    for i in res:
+        l0 = matplotlib.lines.Line2D((i, i), (0, height), color='black', linewidth=1.0)
+        ax.add_line(l0)
     return ax
 
 if __name__ == '__main__':
     pylab.clf()
     i = pc_func(lambda x: 0.5*(math.cos(x)+1), 0.1, 1000)
-    # ax = i.plot(pylab.axes(), True, True, 20)
-    show_poisson_proc(pylab.axes(), (0, i.end()), i)
-    # plot_inv_web(ax, i, 2.0)
+##    ax = i.plot(pylab.axes(), True, True, 100)
+    ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
+##    plot_inv_web(ax, i, 2.0)
+    ax.axis('equal')
     pylab.show()
