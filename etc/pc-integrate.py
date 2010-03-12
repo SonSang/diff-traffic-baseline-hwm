@@ -5,6 +5,8 @@ import matplotlib
 import bisect
 import random
 
+car_length = 4.5
+
 class pc_data(object):
     def __init__(self, dx, data, inf):
         self.dx = dx
@@ -74,6 +76,13 @@ def pc_func(func, dx, n):
         x += dx
     return pc_data(dx, data, func(x))
 
+def pc_avg(places, dx, n, fac=1):
+    data = numpy.zeros((n))
+    inv_dx = 1.0/dx
+    for p in places:
+        data[int(math.floor(p*inv_dx))] += fac
+    return pc_data(dx, data, 0)
+
 def plot_inv_web(ax, pc, y):
     x = pc.inv_integrate(y)
     l0 = matplotlib.lines.Line2D((0, x), (y, y), color='black', linewidth=1.0)
@@ -123,12 +132,19 @@ def plot_events(ax, res, height):
     return ax
 
 if __name__ == '__main__':
-    i = pc_func(lambda x: 0.5*(math.cos(x)+1), 0.1, 1000)
-    random.seed(1994)
-    print list(ih_poisson(0, i.end(), i))
-    # pylab.clf()
-    # ax = i.plot(pylab.axes(), True, True, 100)
+    i = pc_func(lambda x: 1/car_length*1.1*(math.cos(x)+1), 10.0*car_length, 10)
+    # i = pc_func(lambda x: 1/car_length, car_length, 1)
+    print car_length*i.integrate(i.end())
+    # random.seed(1994)
+    gen = list(ih_poisson(0, i.end(), i))
+    pylab.clf()
+    ax = pylab.axes()
+    ax = i.plot(ax, True, False, i.end())
+    ax = plot_events(ax, gen, max(i.data))
+
+    i2 = pc_avg(gen, 10.0*car_length, 10, 1.0/car_length)
+    ax = i2.plot(ax, True, False, i2.end())
     # ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
     # plot_inv_web(ax, i, 2.0)
     # ax.axis('equal')
-    # pylab.show()
+    pylab.show()
