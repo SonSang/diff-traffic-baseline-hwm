@@ -11,7 +11,10 @@
 template <typename T>
 struct pc_data
 {
-    pc_data(const T in_dx, const std::vector<T> &in_data, const T in_inf)
+    typedef std::vector<T>                          arr_t;
+    typedef typename std::vector<T>::const_iterator arr_citr_t;
+
+    pc_data(const T in_dx, const arr_t &in_data, const T in_inf)
         : dx(in_dx), inf(in_inf)
     {
         build(in_data);
@@ -22,7 +25,7 @@ struct pc_data
         return (integration[i+1]-integration[i])/dx;
     }
 
-    void build(const std::vector<T> &data)
+    void build(const arr_t &data)
     {
         integration.resize(data.size()+1);
         integration[0] = 0.0f;
@@ -46,11 +49,11 @@ struct pc_data
 
     T inv_integrate(const T v) const
     {
-        typename std::vector<T>::const_iterator s = integration.begin();
+        arr_citr_t s = integration.begin();
         return inv_integrate(v, s);
     }
 
-    T inv_integrate(const T v, typename std::vector<T>::const_iterator &start) const
+    T inv_integrate(const T v, arr_citr_t &start) const
     {
         assert(v >= integration.front());
 
@@ -64,7 +67,7 @@ struct pc_data
         else
         {
             assert(start < integration.end());
-            typename std::vector<T>::const_iterator idx = boost::prior(std::upper_bound(start, integration.end(), v));
+            arr_citr_t idx = boost::prior(std::upper_bound(start, integration.end(), v));
             const size_t idx_no = idx - integration.begin();
             x = (v - *idx)/(*this)[idx_no] + idx_no * dx;
             start = idx;
@@ -74,14 +77,14 @@ struct pc_data
     }
 
     T                     dx;
-    std::vector<T>        integration;
+    arr_t        integration;
     T                     inf;
 };
 
 template <typename F, typename T>
 pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
 {
-    std::vector<T> data(n);
+    typename pc_data<T>::arr_t data(n);
     T x = 0;
     BOOST_FOREACH(T &e, data)
     {
@@ -92,10 +95,10 @@ pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
 }
 
 template <typename T>
-pc_data<T> pc_from_avg(const std::vector<T> &obs, const T dx, const size_t n)
+pc_data<T> pc_from_avg(const typename pc_data<T>::arr_t &obs, const T dx, const size_t n)
 {
     const T inv_dx = 1/dx;
-    std::vector<T> data(n, 0);
+    typename pc_data<T>::arr_t data(n, 0);
     BOOST_FOREACH(const T &o, obs)
     {
         if(o < 0.0)
