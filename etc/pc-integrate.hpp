@@ -11,12 +11,17 @@ template <typename T>
 struct pc_data
 {
     pc_data(const T in_dx, const std::vector<T> &in_data, const T in_inf)
-        : dx(in_dx), data(in_data), inf(in_inf)
+        : dx(in_dx), inf(in_inf)
     {
-        build();
+        build(in_data);
     }
 
-    void build()
+    T operator[](const size_t i) const
+    {
+        return (integration[i+1]-integration[i])/dx;
+    }
+
+    void build(const std::vector<T> &data)
     {
         integration.resize(data.size()+1);
         integration[0] = 0.0f;
@@ -26,9 +31,9 @@ struct pc_data
 
     T integrate(const T x) const
     {
-        if(x > data.size()*dx)
+        if(x > (integration.size()-1)*dx)
         {
-            const T local = x - data.size()*dx;
+            const T local = x - (integration.size()-1)*dx;
             return integration.back() + local*inf;
         }
 
@@ -52,7 +57,7 @@ struct pc_data
         if( v >= integration.back())
         {
             const T last_v = integration.back();
-            x = (v - last_v)/inf + data.size()*dx;
+            x = (v - last_v)/inf + (integration.size()-1)*dx;
             start = integration.end();
         }
         else
@@ -60,7 +65,7 @@ struct pc_data
             assert(start < integration.end());
             typename std::vector<T>::const_iterator idx = boost::prior(std::upper_bound(start, integration.end(), v));
             const size_t idx_no = idx - integration.begin();
-            x = (v - *idx)/data[idx_no] + idx_no * dx;
+            x = (v - *idx)/(*this)[idx_no] + idx_no * dx;
             start = idx;
         }
 
@@ -68,7 +73,6 @@ struct pc_data
     }
 
     T                     dx;
-    const std::vector<T> &data;
     std::vector<T>        integration;
     T                     inf;
 };

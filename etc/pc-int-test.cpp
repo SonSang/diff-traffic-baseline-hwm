@@ -13,11 +13,8 @@ int main(int argc, char **argv)
     }
 
     pc_data<float> pcd(dx, d, 0.0);
-
-    for(size_t i = 0; i < pcd.data.size(); ++i)
-    {
-        std::cout << pcd.data[i] << " ";
-    }
+    for(size_t i = 1; i < pcd.integration.size(); ++i)
+        std::cout << pcd[i-1] << " ";
     std::cout << std::endl;
 
     std::cout << pcd.integrate(3.4) << std::endl;
