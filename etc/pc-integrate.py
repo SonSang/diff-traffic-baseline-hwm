@@ -112,19 +112,21 @@ def plot_web(ax, pc, x):
 def exp_rvar(p):
     return -math.log(p)
 
-def ih_poisson(start, limit, pc):
+def ih_poisson(start, end, pc, limit=0):
     t = start
     arg = pc.integrate(t)
     last_start = 0
+    count = 0
     while True:
         U = random.random()
         E = exp_rvar(U)
         # t = pc.inv_integrate(E + pc.integrate(t))
         arg += E
         t, last_start = pc.inv_integrate(arg, last_start)
-        if t > limit:
+        if t >= end or (limit > 0 and count > limit):
             return
         yield t
+        count += 1
 
 def show_poisson_proc(ax, start_end, pc):
     ax = pc.plot(ax, True, False, max(start_end[1], pc.end()))
