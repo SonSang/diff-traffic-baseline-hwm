@@ -1,18 +1,17 @@
 #include "pc-integrate.hpp"
 #include <iostream>
 
+struct identity
+{
+    float operator()(const float x) const
+    {
+        return x;
+    }
+};
+
 int main(int argc, char **argv)
 {
-    const float dx = 0.5f;
-
-    std::vector<float> d(10);
-    for(size_t i = 0; i < d.size(); ++i)
-    {
-        const float x = i*dx;
-        d[i] = x;
-    }
-
-    pc_data<float> pcd(dx, d, 0.0);
+    pc_data<float> pcd = pc_from_func(identity(), 0.5f, 10);
     for(size_t i = 1; i < pcd.integration.size(); ++i)
         std::cout << pcd[i-1] << " ";
     std::cout << std::endl;

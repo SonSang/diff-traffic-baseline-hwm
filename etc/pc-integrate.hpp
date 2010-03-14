@@ -76,4 +76,17 @@ struct pc_data
     std::vector<T>        integration;
     T                     inf;
 };
+
+template <typename F, typename T>
+pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
+{
+    std::vector<T> data(n);
+    T x = 0;
+    for(size_t i = 0; i < n; ++i)
+    {
+        data[i] = 0.5*(func(x) + func(x+dx));
+        x += dx;
+    }
+    return pc_data<T>(dx, data, n);
+}
 #endif
