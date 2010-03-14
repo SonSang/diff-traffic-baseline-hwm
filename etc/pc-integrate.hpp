@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <boost/utility.hpp>
+#include <boost/foreach.hpp>
 
 template <typename T>
 struct pc_data
@@ -86,6 +87,23 @@ pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
     {
         data[i] = 0.5*(func(x) + func(x+dx));
         x += dx;
+    }
+    return pc_data<T>(dx, data, n);
+}
+
+template <typename T>
+pc_data<T> pc_from_avg(const std::vector<T> &obs, const T dx, const size_t n)
+{
+    const T inv_dx = 1/dx;
+    std::vector<T> data(n, 0);
+    BOOST_FOREACH(const T &o, obs)
+    {
+        if(o < 0.0)
+            continue;
+        const size_t idx = o*inv_dx;
+        if(idx >= n)
+            continue;
+        data[idx] += inv_dx;
     }
     return pc_data<T>(dx, data, n);
 }

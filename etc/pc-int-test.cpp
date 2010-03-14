@@ -20,5 +20,16 @@ int main(int argc, char **argv)
     std::cout << pcd.inv_integrate(1.0) << std::endl;
     std::cout << pcd.inv_integrate(pcd.integrate(3.4)) << std::endl;
     std::cout << pcd.integrate(pcd.inv_integrate(1.0)) << std::endl;
+
+    std::vector<float> obs;
+    obs.push_back(1.0);
+    obs.push_back(1.1);
+    obs.push_back(4.3);
+
+    pc_data<float> pca = pc_from_avg(obs, 0.5f, 10);
+    for(size_t i = 1; i < pca.integration.size(); ++i)
+        std::cout << pca[i-1] << " ";
+    std::cout << std::endl;
+
     return 0;
 };
