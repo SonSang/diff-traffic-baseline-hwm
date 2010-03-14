@@ -29,7 +29,7 @@ class pc_data(object):
     def __getitem__(self, idx):
         if(idx >= self.n):
             return self.inf
-        return self.integration[idx+1] - self.integration[idx]
+        return (self.integration[idx+1] - self.integration[idx])/self.dx
     def integrate(self, t):
         if t >= self.n*self.dx:
             local = t - self.n*self.dx
@@ -85,7 +85,9 @@ def pc_avg(places, dx, n, fac=1):
     data = numpy.zeros((n))
     inv_dx = 1.0/dx
     for p in places:
-        data[int(math.floor(p*inv_dx))] += fac
+        data[int(math.floor(p*inv_dx))] += 1
+    for i in xrange(len(data)):
+        data[i] *= fac
     return pc_data(dx, data, 0)
 
 def plot_inv_web(ax, pc, y):
@@ -137,23 +139,19 @@ def plot_events(ax, res, height):
     return ax
 
 if __name__ == '__main__':
-    i = pc_func(lambda x: 1/car_length*1.1*(math.cos(x)+1), 10.0*car_length, 10)
-    # i = pc_func(lambda x: 1/car_length, car_length, 1)
-    random.seed(1994)
-    # gen = list(ih_poisson(0, i.end(), i))
+#    i = pc_func(lambda x: 1/car_length*0.1*(math.cos(x)+1), 10.0*car_length, 10)
+    i = pc_func(lambda x: 1/car_length, 10.0*car_length, 10)
+    #    random.seed(1994)
+    gen = list(ih_poisson(0, i.end(), i))
+    print len(gen)
     pylab.clf()
     ax = pylab.axes()
-    ax = i.plot(ax, True, True, i.end()+200)
-    # ax = plot_events(ax, gen, max(i))
+    ax = i.plot(ax, True, False, i.end())
+    ax = plot_events(ax, gen, max(i))
 
-    # i2 = pc_avg(gen, 10.0*car_length, 10, 1.0/car_length)
-    # ax = i2.plot(ax, True, False, i2.end())
-    # # ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
-    plot_web(ax, i, 100.0)
-    plot_web(ax, i, 400.0)
-    plot_web(ax, i, 250.0)
-    plot_inv_web(ax, i, 80.0)
-    plot_inv_web(ax, i, 110.0)
+    i2 = pc_avg(gen, 10.0*car_length, 10, 1.0/car_length)
+    ax = i2.plot(ax, True, False, i2.end())
+#    ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
 
     # # ax.axis('equal')
     pylab.show()
