@@ -76,9 +76,17 @@ struct pc_data
         return x;
     }
 
+    void write(std::ostream &o) const
+    {
+        o << (integration.size() ? integration.size()-1 : 0) << " " << dx << " ";
+        for(size_t i = 1; i < integration.size(); ++i)
+            o << (*this)[i-1] << " ";
+        o << inf << std::endl;
+    }
+
     T                     dx;
     arr_t        integration;
-    T                     inf;
+    T                    inf;
 };
 
 template <typename F, typename T>
@@ -91,7 +99,7 @@ pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
         e  = 0.5*(func(x) + func(x+dx));
         x += dx;
     }
-    return pc_data<T>(dx, data, n);
+    return pc_data<T>(dx, data, func(x));
 }
 
 template <typename T>
@@ -108,6 +116,6 @@ pc_data<T> pc_from_avg(const typename pc_data<T>::arr_t &obs, const T dx, const 
             continue;
         data[idx] += inv_dx;
     }
-    return pc_data<T>(dx, data, n);
+    return pc_data<T>(dx, data, 0);
 }
 #endif

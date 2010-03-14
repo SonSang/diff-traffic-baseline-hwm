@@ -4,6 +4,7 @@ import pylab
 import matplotlib
 import bisect
 import random
+import sys
 
 car_length = 4.5
 
@@ -76,6 +77,15 @@ class pc_data(object):
             ax.plot(list(x)+[extra], list(self.integration)+[self.integration[-1] + self.inf*(extra-x[-1])])
         return ax
 
+def pc_string(str):
+    lst = str.split()
+    n = int(lst[0])
+    dx = float(lst[1])
+    inf = float(lst[-1])
+    data = [float(x) for x in lst[2:-1]]
+    assert len(data) == n
+    return pc_data(dx, data, inf)
+
 def pc_func(func, dx, n):
     data = numpy.zeros((n))
     x = 0
@@ -145,19 +155,12 @@ def plot_events(ax, res, height):
     return ax
 
 if __name__ == '__main__':
-#    i = pc_func(lambda x: 1/car_length*0.1*(math.cos(x)+1), 10.0*car_length, 10)
-    i = pc_func(lambda x: 0.01*1/car_length, 10.0*car_length, 10)
+    i = pc_string(sys.stdin.readline().rstrip())
+    gen = [float(x) for x in sys.stdin.readline().rstrip().split()]
 
-    #    random.seed(1994)
-    gen = list(ih_poisson(0, i.end(), i, i.integrate(i.end())))
     pylab.clf()
     ax = pylab.axes()
     ax = i.plot(ax, True, False, i.end())
     ax = plot_events(ax, gen, max(i))
 
-    i2 = pc_avg(gen, 100.0*car_length, 1)
-    ax = i2.plot(ax, True, False, i2.end())
-    # ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
-
-    # # ax.axis('equal')
     pylab.show()
