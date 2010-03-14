@@ -50,7 +50,7 @@ class pc_data(object):
             assert(start + 1 < len(self.integration))
             idx = bisect.bisect_right(self.integration, v, start)
             last_v = self.integration[idx-1]
-            t = (v-last_v)/self[idx-1] * self.dx + (idx-1) * self.dx
+            t = (v-last_v)/self[idx-1] + (idx-1) * self.dx
             next_start = idx-1
         return t, next_start
     def plot(self, ax, data, integrate, extra):
@@ -84,13 +84,13 @@ def pc_func(func, dx, n):
         x += dx
     return pc_data(dx, data, func(x))
 
-def pc_avg(places, dx, n, fac=1):
+def pc_avg(places, dx, n):
     data = numpy.zeros((n))
     inv_dx = 1.0/dx
     for p in places:
         data[int(math.floor(p*inv_dx))] += 1
     for i in xrange(len(data)):
-        data[i] *= fac
+        data[i] *= inv_dx
     return pc_data(dx, data, 0)
 
 def plot_inv_web(ax, pc, y):
@@ -146,18 +146,18 @@ def plot_events(ax, res, height):
 
 if __name__ == '__main__':
 #    i = pc_func(lambda x: 1/car_length*0.1*(math.cos(x)+1), 10.0*car_length, 10)
-    i = pc_func(lambda x: 1/car_length, 10.0*car_length, 10)
+    i = pc_func(lambda x: 0.01*1/car_length, 10.0*car_length, 10)
+
     #    random.seed(1994)
-    gen = list(ih_poisson(0, i.end(), i))
-    print len(gen)
+    gen = list(ih_poisson(0, i.end(), i, i.integrate(i.end())))
     pylab.clf()
     ax = pylab.axes()
     ax = i.plot(ax, True, False, i.end())
     ax = plot_events(ax, gen, max(i))
 
-    i2 = pc_avg(gen, 100.0*car_length, 1, 1.0/car_length)
+    i2 = pc_avg(gen, 100.0*car_length, 1)
     ax = i2.plot(ax, True, False, i2.end())
-#    ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
+    # ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
 
     # # ax.axis('equal')
     pylab.show()
