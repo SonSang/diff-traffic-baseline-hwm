@@ -83,9 +83,9 @@ pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
 {
     std::vector<T> data(n);
     T x = 0;
-    for(size_t i = 0; i < n; ++i)
+    BOOST_FOREACH(T &e, data)
     {
-        data[i] = 0.5*(func(x) + func(x+dx));
+        e = 0.5*(func(x) + func(x+dx));
         x += dx;
     }
     return pc_data<T>(dx, data, n);
