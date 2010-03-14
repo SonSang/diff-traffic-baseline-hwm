@@ -39,17 +39,20 @@ class pc_data(object):
             cell = math.floor(scaled)
             local = scaled - cell
             return (1.0-local)*self.integration[cell] + local*self.integration[cell+1]
-    def inv_integrate(self, v):
+    def inv_integrate(self, v, start=0):
         if v < self.integration[0]:
             raise Exception("Value is beyond range of integral!")
         if v > self.integration[-1]:
             last_v = self.integration[-1]
             t = (v-last_v)/self.inf + self.n*self.dx
+            next_start = len(self.integration)-1
         else:
-            idx = bisect.bisect_right(self.integration, v)
+            assert(start + 1 < len(self.integration))
+            idx = bisect.bisect_right(self.integration, v, start)
             last_v = self.integration[idx-1]
             t = (v-last_v)/self[idx-1] * self.dx + (idx-1) * self.dx
-        return t
+            next_start = idx-1
+        return t, next_start
     def plot(self, ax, data, integrate, extra):
         assert extra >= self.n*self.dx
         if data:
@@ -91,7 +94,7 @@ def pc_avg(places, dx, n, fac=1):
     return pc_data(dx, data, 0)
 
 def plot_inv_web(ax, pc, y):
-    x = pc.inv_integrate(y)
+    x,ignore = pc.inv_integrate(y)
     l0 = matplotlib.lines.Line2D((0, x), (y, y), color='black', linewidth=1.0)
     l1 = matplotlib.lines.Line2D((x, x), (0, y), color='black', linewidth=1.0)
     ax.add_line(l0)
@@ -112,12 +115,13 @@ def exp_rvar(p):
 def ih_poisson(start, limit, pc):
     t = start
     arg = pc.integrate(t)
+    last_start = 0
     while True:
         U = random.random()
         E = exp_rvar(U)
         # t = pc.inv_integrate(E + pc.integrate(t))
         arg += E
-        t = pc.inv_integrate(arg)
+        t, last_start = pc.inv_integrate(arg, last_start)
         if t > limit:
             return
         yield t
@@ -149,7 +153,7 @@ if __name__ == '__main__':
     ax = i.plot(ax, True, False, i.end())
     ax = plot_events(ax, gen, max(i))
 
-    i2 = pc_avg(gen, 10.0*car_length, 10, 1.0/car_length)
+    i2 = pc_avg(gen, 100.0*car_length, 1, 1.0/car_length)
     ax = i2.plot(ax, True, False, i2.end())
 #    ax = show_poisson_proc(pylab.axes(), (0, i.end()), i)
 
