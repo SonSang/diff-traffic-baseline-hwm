@@ -1,4 +1,4 @@
-#include "pc-integrate.hpp"
+#include "pc-poisson.hpp"
 #include <iostream>
 
 struct identity
@@ -30,6 +30,11 @@ int main(int argc, char **argv)
     for(size_t i = 1; i < pca.integration.size(); ++i)
         std::cout << pca[i-1] << " ";
     std::cout << std::endl;
+
+    inhomogeneous_poisson<float> ihp(0.0f, pcd);
+
+    for(size_t i = 0; i < 4; ++i)
+        std::cout << ihp.next() << std::endl;
 
     return 0;
 };
