@@ -61,16 +61,16 @@ struct pc_data
         if( v >= integration.back())
         {
             const T last_v = integration.back();
-            x = (v - last_v)/inf + (integration.size()-1)*dx;
-            start = integration.end();
+            x              = (v - last_v)/inf + (integration.size()-1)*dx;
+            start          = integration.end();
         }
         else
         {
             assert(start < integration.end());
-            arr_citr_t idx = boost::prior(std::upper_bound(start, integration.end(), v));
-            const size_t idx_no = idx - integration.begin();
-            x = (v - *idx)/(*this)[idx_no] + idx_no * dx;
-            start = idx;
+            const arr_citr_t idx    = boost::prior(std::upper_bound(start, integration.end(), v));
+            const size_t     idx_no = idx - integration.begin();
+            x                       = (v - *idx)/(*this)[idx_no] + idx_no * dx;
+            start                   = idx;
         }
 
         return x;
@@ -88,7 +88,7 @@ pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
     T x = 0;
     BOOST_FOREACH(T &e, data)
     {
-        e = 0.5*(func(x) + func(x+dx));
+        e  = 0.5*(func(x) + func(x+dx));
         x += dx;
     }
     return pc_data<T>(dx, data, n);
