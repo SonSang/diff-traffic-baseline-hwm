@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     pc_data<float> pcd = pc_from_func(identity(), 0.05f, 100);
     pcd.write(std::cout);
 
-    BOOST_FOREACH(const float &p, poisson_points(0.0f, pcd.end(), 1000, pcd))
+    BOOST_FOREACH(const float &p, poisson_points(0.0f, pcd.end(), 1000, 0.0f, pcd))
     {
         std::cout << p << " ";
     }

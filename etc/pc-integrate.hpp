@@ -52,10 +52,10 @@ struct pc_integrator
 {
     typedef typename PC_T::real_t real_t;
 
-    pc_integrator(const PC_T &in_pc) : pc(in_pc), current_cell(0), current_sum(0.0)
+    pc_integrator(const PC_T *in_pc) : pc(in_pc), current_cell(0), current_sum(0.0)
     {}
 
-    pc_integrator(const pc_integrator<PC_T> &o)
+    pc_integrator(const pc_integrator<PC_T> *o)
         : pc(o.pc), current_cell(o.current_cell), current_sum(o.current_sum)
     {}
 
@@ -67,14 +67,14 @@ struct pc_integrator
 
     real_t integrate(const real_t x)
     {
-        assert(x >= current_cell*pc.dx);
+        assert(x >= current_cell*pc->dx);
 
-        while((current_cell+1)*pc.dx < x)
+        while((current_cell+1)*pc->dx < x)
         {
-            if(current_cell >= pc.n())
+            if(current_cell >= pc->n())
                 break;
 
-            current_sum += pc[current_cell]*pc.dx;
+            current_sum += (*pc)[current_cell]*pc->dx;
             ++current_cell;
         }
 
@@ -86,8 +86,8 @@ struct pc_integrator
          * return current_sum + local*pc.inf;
          */
 
-        const real_t last  = (current_cell < pc.n()) ? pc[current_cell] : pc.inf;
-        const real_t local = x - current_cell*pc.dx;
+        const real_t last  = (current_cell < pc->n()) ? (*pc)[current_cell] : pc->inf;
+        const real_t local = x - current_cell*pc->dx;
         return current_sum + local*last;
     }
 
@@ -95,20 +95,20 @@ struct pc_integrator
     {
         assert(v >= current_sum);
 
-        while(current_sum + pc[current_cell]*pc.dx < v)
+        while(current_sum + (*pc)[current_cell]*pc->dx < v)
         {
-            if(current_cell >= pc.n())
+            if(current_cell >= pc->n())
                 break;
 
-            current_sum += pc[current_cell]*pc.dx;
+            current_sum += (*pc)[current_cell]*pc->dx;
             ++current_cell;
         }
 
-        const real_t denom = current_cell < pc.n() ? pc[current_cell] : pc.inf;
-        return (v - current_sum)/denom + current_cell*pc.dx;
+        const real_t denom = current_cell < pc->n() ? (*pc)[current_cell] : pc->inf;
+        return (v - current_sum)/denom + current_cell*pc->dx;
     }
 
-    const PC_T &pc;
+    const PC_T *pc;
     size_t      current_cell;
     real_t      current_sum;
 };
