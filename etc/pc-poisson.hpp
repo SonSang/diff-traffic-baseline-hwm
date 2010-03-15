@@ -14,7 +14,6 @@ struct inhomogeneous_poisson
 {
     inhomogeneous_poisson(const T in_start, const pc_data<T> &in_pc) : t(in_start),
                                                                        pc(in_pc),
-                                                                       last_start(pc.integration.begin()),
                                                                        arg(pc.integrate(t))
 
     {
@@ -25,14 +24,13 @@ struct inhomogeneous_poisson
         const T u = drand48();
         const T e = exp_rvar(u);
         arg += e;
-        t = pc.inv_integrate(arg, last_start);
+        t = pc.inv_integrate(arg);
         return t;
     }
 
-    T                                t;
-    const pc_data<T>                &pc;
-    typename pc_data<T>::arr_citr_t  last_start;
-    T                                arg;
+    T                 t;
+    const pc_data<T> &pc;
+    T                 arg;
 };
 
 #endif

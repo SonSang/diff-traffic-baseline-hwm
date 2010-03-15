@@ -5,7 +5,6 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
-#include <boost/utility.hpp>
 #include <boost/foreach.hpp>
 
 template <typename T>
@@ -15,78 +14,78 @@ struct pc_data
     typedef typename std::vector<T>::const_iterator arr_citr_t;
 
     pc_data(const T in_dx, const arr_t &in_data, const T in_inf)
-        : dx(in_dx), inf(in_inf)
+        : dx(in_dx), data(in_data), inf(in_inf), current_cell(0), current_sum(0)
     {
-        build(in_data);
     }
 
     T operator[](const size_t i) const
     {
-        return (integration[i+1]-integration[i])/dx;
+        return data[i];
     }
 
-    void build(const arr_t &data)
+    void reset()
     {
-        integration.resize(data.size()+1);
-        integration[0] = 0.0f;
-        for(size_t i = 1; i < integration.size(); ++i)
-            integration[i] = integration[i-1] + data[i-1]*dx;
+        current_cell = 0;
+        current_sum  = 0;
     }
 
     T integrate(const T x) const
     {
-        if(x > (integration.size()-1)*dx)
+        assert(x >= current_cell*dx);
+
+        while((current_cell+1)*dx < x)
         {
-            const T local = x - (integration.size()-1)*dx;
-            return integration.back() + local*inf;
+            if(current_cell >= data.size())
+                break;
+
+            current_sum += data[current_cell]*dx;
+            ++current_cell;
         }
 
-        const T      scaled = x/dx;
-        const size_t cell   = std::floor(scaled);
-        const T      local  = scaled - cell;
-        return (1 - local)*integration[cell] + local*integration[cell+1];
+        /* i.e. if (current_cell < data.size())
+         * const T local = x/dx - current_cell;
+         * return current_sum + local*data[current_cell]*dx;
+         * else
+         * const T local = x - current_cell*dx;
+         * return current_sum + local*inf;
+         */
+
+        const T last  = (current_cell < data.size()) ? data[current_cell] : inf;
+        const T local = x - current_cell*dx;
+        return current_sum + local*last;
     }
 
     T inv_integrate(const T v) const
     {
-        arr_citr_t s = integration.begin();
-        return inv_integrate(v, s);
-    }
+        assert(v >= current_sum);
 
-    T inv_integrate(const T v, arr_citr_t &start) const
-    {
-        assert(v >= integration.front());
+        while(current_sum + data[current_cell]*dx < v)
+        {
+            if(current_cell >= data.size())
+                break;
 
-        T x;
-        if( v >= integration.back())
-        {
-            const T last_v = integration.back();
-            x              = (v - last_v)/inf + (integration.size()-1)*dx;
-            start          = integration.end();
-        }
-        else
-        {
-            assert(start < integration.end());
-            const arr_citr_t idx    = boost::prior(std::upper_bound(start, integration.end(), v));
-            const size_t     idx_no = idx - integration.begin();
-            x                       = (v - *idx)/(*this)[idx_no] + idx_no * dx;
-            start                   = idx;
+            current_sum += data[current_cell]*dx;
+            ++current_cell;
         }
 
-        return x;
+        const T denom = current_cell < data.size() ? data[current_cell] : inf;
+        return (v - current_sum)/denom + current_cell*dx;
     }
 
     void write(std::ostream &o) const
     {
-        o << (integration.size() ? integration.size()-1 : 0) << " " << dx << " ";
-        for(size_t i = 1; i < integration.size(); ++i)
-            o << (*this)[i-1] << " ";
+        o << data.size() << " " << dx << " ";
+        for(size_t i = 0; i < data.size(); ++i)
+            o << data[i] << " ";
         o << inf << std::endl;
     }
 
-    T                     dx;
-    arr_t        integration;
-    T                    inf;
+    T           dx;
+    const arr_t data;
+    T           inf;
+
+    mutable size_t current_cell;
+    mutable T      current_sum;
 };
 
 template <typename F, typename T>
