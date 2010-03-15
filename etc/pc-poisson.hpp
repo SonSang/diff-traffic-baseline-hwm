@@ -33,4 +33,19 @@ struct inhomogeneous_poisson
     T                 arg;
 };
 
+template <typename T>
+std::vector<T> poisson_points(const T start, const T end, const size_t quota, const pc_data<T> &pc)
+{
+    inhomogeneous_poisson<T> ipp(start, pc);
+
+    std::vector<T> res;
+    T candidate = ipp.next();
+    while(res.size() < quota && candidate < end)
+    {
+        res.push_back(candidate);
+        candidate = ipp.next();
+    }
+
+    return res;
+}
 #endif

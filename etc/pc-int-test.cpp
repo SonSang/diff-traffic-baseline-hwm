@@ -16,10 +16,10 @@ int main(int argc, char **argv)
     pc_data<float> pcd = pc_from_func(identity(), 0.05f, 100);
     pcd.write(std::cout);
 
-    inhomogeneous_poisson<float> ihp(0.0f, pcd);
-
-    for(size_t i = 0; i < 20; ++i)
-        std::cout << ihp.next() << " ";
+    BOOST_FOREACH(const float &p, poisson_points(0.0f, pcd.end(), 1000, pcd))
+    {
+        std::cout << p << " ";
+    }
     std::cout << std::endl;
 
     return 0;

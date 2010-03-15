@@ -29,6 +29,11 @@ struct pc_data
         current_sum  = 0;
     }
 
+    T end() const
+    {
+        return data.size()*dx;
+    }
+
     T integrate(const T x) const
     {
         assert(x >= current_cell*dx);
