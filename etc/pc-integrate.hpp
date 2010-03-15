@@ -10,71 +10,28 @@
 template <typename T>
 struct pc_data
 {
-    typedef std::vector<T>                          arr_t;
-    typedef typename std::vector<T>::const_iterator arr_citr_t;
+    typedef T                                            real_t;
+    typedef std::vector<real_t>                          arr_t;
+    typedef typename std::vector<real_t>::const_iterator arr_citr_t;
 
-    pc_data(const T in_dx, const arr_t &in_data, const T in_inf)
-        : dx(in_dx), data(in_data), inf(in_inf), current_cell(0), current_sum(0)
+    pc_data(const real_t in_dx, const arr_t &in_data, const real_t in_inf)
+        : dx(in_dx), data(in_data), inf(in_inf)
     {
     }
 
-    T operator[](const size_t i) const
+    real_t operator[](const size_t i) const
     {
         return data[i];
     }
 
-    void reset()
-    {
-        current_cell = 0;
-        current_sum  = 0;
-    }
-
-    T end() const
+    real_t end() const
     {
         return data.size()*dx;
     }
 
-    T integrate(const T x) const
+    size_t n() const
     {
-        assert(x >= current_cell*dx);
-
-        while((current_cell+1)*dx < x)
-        {
-            if(current_cell >= data.size())
-                break;
-
-            current_sum += data[current_cell]*dx;
-            ++current_cell;
-        }
-
-        /* i.e. if (current_cell < data.size())
-         * const T local = x/dx - current_cell;
-         * return current_sum + local*data[current_cell]*dx;
-         * else
-         * const T local = x - current_cell*dx;
-         * return current_sum + local*inf;
-         */
-
-        const T last  = (current_cell < data.size()) ? data[current_cell] : inf;
-        const T local = x - current_cell*dx;
-        return current_sum + local*last;
-    }
-
-    T inv_integrate(const T v) const
-    {
-        assert(v >= current_sum);
-
-        while(current_sum + data[current_cell]*dx < v)
-        {
-            if(current_cell >= data.size())
-                break;
-
-            current_sum += data[current_cell]*dx;
-            ++current_cell;
-        }
-
-        const T denom = current_cell < data.size() ? data[current_cell] : inf;
-        return (v - current_sum)/denom + current_cell*dx;
+        return data.size();
     }
 
     void write(std::ostream &o) const
@@ -85,12 +42,75 @@ struct pc_data
         o << inf << std::endl;
     }
 
-    T           dx;
-    const arr_t data;
-    T           inf;
+    T     dx;
+    arr_t data;
+    T     inf;
+};
 
-    mutable size_t current_cell;
-    mutable T      current_sum;
+template <typename PC_T>
+struct pc_integrator
+{
+    typedef typename PC_T::real_t real_t;
+
+    pc_integrator(const PC_T &in_pc) : pc(in_pc), current_cell(0), current_sum(0.0)
+    {}
+
+    pc_integrator(const pc_integrator<PC_T> &o)
+        : pc(o.pc), current_cell(o.current_cell), current_sum(o.current_sum)
+    {}
+
+    void reset()
+    {
+        current_cell = 0;
+        current_sum  = 0;
+    }
+
+    real_t integrate(const real_t x)
+    {
+        assert(x >= current_cell*pc.dx);
+
+        while((current_cell+1)*pc.dx < x)
+        {
+            if(current_cell >= pc.n())
+                break;
+
+            current_sum += pc[current_cell]*pc.dx;
+            ++current_cell;
+        }
+
+        /* i.e. if (current_cell < data.size())
+         * const real_t local = x/pc.dx - current_cell;
+         * return current_sum + local*pc[current_cell]*pc.dx;
+         * else
+         * const real_t local = x - current_cell*pc.dx;
+         * return current_sum + local*pc.inf;
+         */
+
+        const real_t last  = (current_cell < pc.n()) ? pc[current_cell] : pc.inf;
+        const real_t local = x - current_cell*pc.dx;
+        return current_sum + local*last;
+    }
+
+    real_t inv_integrate(const real_t v)
+    {
+        assert(v >= current_sum);
+
+        while(current_sum + pc[current_cell]*pc.dx < v)
+        {
+            if(current_cell >= pc.n())
+                break;
+
+            current_sum += pc[current_cell]*pc.dx;
+            ++current_cell;
+        }
+
+        const real_t denom = current_cell < pc.n() ? pc[current_cell] : pc.inf;
+        return (v - current_sum)/denom + current_cell*pc.dx;
+    }
+
+    const PC_T &pc;
+    size_t      current_cell;
+    real_t      current_sum;
 };
 
 template <typename F, typename T>

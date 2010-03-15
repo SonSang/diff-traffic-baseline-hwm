@@ -13,8 +13,8 @@ template <typename T>
 struct inhomogeneous_poisson
 {
     inhomogeneous_poisson(const T in_start, const pc_data<T> &in_pc) : t(in_start),
-                                                                       pc(in_pc),
-                                                                       arg(pc.integrate(t))
+                                                                       integrator(in_pc),
+                                                                       arg(integrator.integrate(t))
 
     {
     }
@@ -24,13 +24,14 @@ struct inhomogeneous_poisson
         const T u = drand48();
         const T e = exp_rvar(u);
         arg += e;
-        t = pc.inv_integrate(arg);
+        t = integrator.inv_integrate(arg);
         return t;
     }
 
-    T                 t;
-    const pc_data<T> &pc;
-    T                 arg;
+    T t;
+    pc_integrator<pc_data<T> > integrator;
+    T arg;
+
 };
 
 template <typename T>
