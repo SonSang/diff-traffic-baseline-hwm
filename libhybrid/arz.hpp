@@ -5,6 +5,7 @@
 /**@{*/
 
 #include "tvmet/Vector.h"
+#include <iostream>
 
 /** Class that implements the ARZ system of equations.
  *  For traffic flow.
@@ -366,6 +367,20 @@ struct arz
     };
 };
 /**@}*/
+
+inline std::ostream &operator<<(std::ostream &os, const arz<float>::riemann_solution &rs)
+{
+    os << "Waves:\n"
+       << 0   <<  " speed: " << rs.speeds[0] << "\n"
+       << rs.waves[0] <<"\n"
+       << "Left fluctuation:\n"
+       << rs.left_fluctuation << "\n\n"
+       << 1   <<  " speed: " << rs.speeds[1] << "\n"
+       << rs.waves[1] <<"\n"
+       << "Right fluctuation:\n"
+       << rs.right_fluctuation << std::endl;
+    return os;
+}
 
 #include "arz-eq.hpp"
 #include "arz-impl.hpp"

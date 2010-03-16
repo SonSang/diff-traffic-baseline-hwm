@@ -410,7 +410,7 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
     assert(m_l_rho >= 0.0 && m_l_rho <= 1.0);
     assert(m_r_rho >= 0.0 && m_r_rho <= 1.0);
 
-    const float ueq = eq::u_eq(m_l_rho, u_max_l, gamma);
+    //    const float ueq = eq::u_eq(m_l_rho, u_max_l, gamma);
 
     const full_q q_m_l(m_l_rho,
                        std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l, gamma)),
