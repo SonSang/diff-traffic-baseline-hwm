@@ -95,11 +95,8 @@ struct pc_integrator
     {
         assert(v >= current_sum);
 
-        while(current_sum + (*pc)[current_cell]*pc->dx < v)
+        while(current_cell < pc->n() && current_sum + (*pc)[current_cell]*pc->dx < v)
         {
-            if(current_cell >= pc->n())
-                break;
-
             current_sum += (*pc)[current_cell]*pc->dx;
             ++current_cell;
         }
