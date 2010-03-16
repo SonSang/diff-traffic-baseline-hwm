@@ -44,6 +44,16 @@ struct inhomogeneous_poisson
 
 };
 
+template <typename T, typename F>
+inline T texp(const T start, const T end, F &in_pc)
+{
+    const T lambda_start = in_pc.integrate(start);
+    F i2(in_pc);
+    const T d = 1 - std::exp(-(i2.integrate(end) - lambda_start));
+    const T u = drand48();
+    return in_pc.inv_integrate(lambda_start + exp_rvar(1 - d*u));
+}
+
 template <typename T>
 std::vector<T> poisson_points(const T start, const T end, const size_t quota, const T sep, const pc_data<T> &pc)
 {

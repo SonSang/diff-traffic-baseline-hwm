@@ -161,6 +161,7 @@ if __name__ == '__main__':
     pylab.clf()
     ax = pylab.axes()
     ax = i.plot(ax, True, False, i.end())
+    # pylab.hist(gen, 200, normed=False)
     ax = plot_events(ax, gen, max(i))
 
     pylab.show()

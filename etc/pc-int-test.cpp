@@ -5,7 +5,7 @@ struct identity
 {
     float operator()(const float x) const
     {
-        return x;
+        return 0.1*(std::cos(x)+1);
     }
 };
 
@@ -13,12 +13,19 @@ int main(int argc, char **argv)
 {
     srand48(10);
 
-    pc_data<float> pcd = pc_from_func(identity(), 0.05f, 100);
+    pc_data<float> pcd = pc_from_func(identity(), 0.05f, 1000);
     pcd.write(std::cout);
 
-    BOOST_FOREACH(const float &p, poisson_points(0.0f, pcd.end(), 1000, 0.0f, pcd))
+    const float sep      = 0.5;
+    const float interval = 100.0;
+
+    float last = 0.0;
+    pc_integrator<pc_data<float> > pci(&pcd);
+    for(size_t i = 0; i < 50; ++i)
     {
-        std::cout << p << " ";
+        const float c = texp(last+sep, std::min(last+sep+interval, 50.0f), pci);
+        std::cout << c << " ";
+        last = c;
     }
     std::cout << std::endl;
 
