@@ -27,6 +27,17 @@ struct inhomogeneous_poisson
         return t;
     }
 
+    T next_trunc(const float trunc)
+    {
+        const T u = drand48();
+        pc_integrator<pc_data<T> > i2(integrator);
+        const T d = 1 - std::exp(-(i2.integrate(trunc) - arg));
+        const T e = exp_rvar(1 - d*u);
+        arg += e;
+        t = integrator.inv_integrate(arg);
+        return t;
+    }
+
     T t;
     pc_integrator<pc_data<T> > integrator;
     T arg;
