@@ -50,19 +50,27 @@ class fundamental_diagram(object):
         self.irel = irel
         self.critical_rho = critval(self.irel, self.umax, self.gamma)
         self.critical_flux = self[self.critical_rho]
-    def plot(self, start, end, n):
+    def plot(self, n, **kwargs):
         x = []
         y = []
-        dx = (end-start)/float(n)
+        dx = 1/float(n)
         current_x = 0
         current_y = self[current_x]
-        while current_x < end:
+        while current_x < 1:
             if current_y >= 0:
                 x.append(current_x)
                 y.append(current_y)
+            else:
+                last_x = current_x-dx
+                last_y = self[current_x-dx]
+                if current_y * last_y < 0:
+                    m = (current_y - last_y)/dx
+                    b = current_y - m*current_x
+                    x.append(-b/m)
+                    y.append(0)
             current_x += dx
             current_y = self[current_x]
-        pylab.plot(np.array(x), np.array(y))
+        return pylab.plot(np.array(x), np.array(y), **kwargs)
 
 class supply(fundamental_diagram):
     def __init__(self, umax, gamma, irel):
@@ -94,7 +102,11 @@ if __name__ == '__main__':
     rho_r = 0.0
     u_r = 20.3333
 
+    rho_m = inv_u_eq(u_r - u_l() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma)
+
     irel = u_l - ueq(rho_l, u_max_l, gamma)
+    irel = 0
+    u_max_r = u_max_l
 
     d = demand(u_max_l, gamma, irel)
     s = supply(u_max_r, gamma, irel)
@@ -104,11 +116,9 @@ if __name__ == '__main__':
 
     x = np.linspace(0, 1, 50)
 
-    d.plot(0, 1, 100)
-    s.plot(0, 1, 100)
-
-
-#    pylab.axis([0, 1.0, 0.0, cmax+0.2])
+    d.plot(100, label="demand (right)")
+    s.plot(100, label="suppy (left)")
+    pylab.legend()
 
     if(len(sys.argv) == 2):
         pylab.savefig(sys.argv[1])
