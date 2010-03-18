@@ -117,7 +117,7 @@ arz<T>::full_q::full_q(const q &__restrict__ o,
     : base(o)
 {
     u_eq_ = eq::u_eq(base::rho(), u_max, gamma);
-    u_    = base::rho() <= 2*epsilon() ? u_max :
+    u_    = base::rho() <= std::numeric_limits<T>::epsilon() ? u_max :
             std::max(base::y()/base::rho() + u_eq_,
                      static_cast<T>(0));
     assert(check());
@@ -393,8 +393,10 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
 {
     const T rho_m = std::min(static_cast<float>(1.0), eq::inv_u_eq(q_r.u() - q_l.u() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma));
 
-    const T demand_l = demand(q_l.rho(),  q_l.u() - q_l.u_eq(), u_max_l, gamma);
-    const T supply_r = supply(rho_m,      q_l.u() - q_l.u_eq(), u_max_r, gamma);
+    printf("rho_m:     %8.5f\n", rho_m);
+
+    const T demand_l = std::max(0.0f, demand(q_l.rho(),  q_l.u() - q_l.u_eq(), u_max_l, gamma));
+    const T supply_r = std::max(0.0f, supply(rho_m,      q_l.u() - q_l.u_eq(), u_max_r, gamma));
 
     float m_l_rho, m_r_rho;
     if(demand_l <= supply_r)
@@ -412,25 +414,40 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
 
     //    const float ueq = eq::u_eq(m_l_rho, u_max_l, gamma);
 
-    const full_q q_m_l(m_l_rho,
-                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l, gamma)),
-                       u_max_l,
-                       gamma);
     const full_q q_m_r(m_r_rho,
-                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_r_rho, u_max_r, gamma)),
+                       q_r.u(),
+                       //                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_r_rho, u_max_r, gamma)),
                        u_max_r,
                        gamma);
 
+    const full_q q_m_l(m_l_rho,
+                       m_r_rho*q_m_r.u()/m_l_rho,
+                       //                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l, gamma)),
+                       u_max_l,
+                       gamma);
+
+
+    printf("demand_l:   %8.5f       supply_r:     %8.5f\n", demand_l, supply_r);
 
     printf("          q_l:        q_m_l:      q_m_r:      q_r\n");
     printf("rho:      %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.rho(),q_m_l.rho(), q_m_r.rho(),q_r.rho());
-    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.y(),  q_m_l.y(), q_m_r.y(),    q_r.y()  );
+    printf("y:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.y(),  q_m_l.y(), q_m_r.y(),    q_r.y()  )
+;    printf("u_eq:    %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.u_eq(),q_m_l.u_eq(), q_m_r.u_eq(),q_r.u_eq());
+    printf("u(real):  %8.5f       %8.5f       %8.5f       %8.5f\n", eq::u(q_l.rho(),q_l.y(), u_max_l, gamma), eq::u(q_m_l.rho(),q_m_l.y(), u_max_l, gamma), eq::u(q_m_r.rho(),q_m_r.y(), u_max_r, gamma), eq::u(q_r.rho(),q_r.y(), u_max_r, gamma));
     printf("u:        %8.5f       %8.5f       %8.5f       %8.5f\n", q_l.u(),  q_m_l.u(), q_m_r.u(),    q_r.u()  );
     printf("lambda_0: %8.5f       %8.5f       %8.5f       %8.5f\n",
            q_l.lambda_0(u_max_l, gamma),
            q_l.lambda_0(u_max_l, gamma),
            q_l.lambda_0(u_max_r, gamma),
            q_l.lambda_0(u_max_r, gamma));
+
+    printf("flux_0:                %8.5f       %8.5f\n",
+           q_m_l.flux_0(),
+           q_m_r.flux_0());
+
+    printf("flux_1:                %8.5f       %8.5f\n",
+           q_m_l.flux_1(),
+           q_m_r.flux_1());
 
     clear();
 

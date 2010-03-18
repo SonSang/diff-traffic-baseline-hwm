@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from matplotlib import rc
+import matplotlib
 import numpy as np
 import pylab
 import itertools as it
@@ -26,6 +27,9 @@ def lambda1(rho, y, umax, gamma):
 def ueq(rho, umax, gamma):
     return umax*(1.0-rho**gamma)
 
+def inv_ueq(u, umax, gamma):
+    return math.pow(1 - u/umax, 1.0/gamma)
+
 def ueq_prime(rho, umax, gamma):
     return -umax*gamma*rho**(gamma-1)
 
@@ -50,7 +54,7 @@ class fundamental_diagram(object):
         self.irel = irel
         self.critical_rho = critval(self.irel, self.umax, self.gamma)
         self.critical_flux = self[self.critical_rho]
-    def plot(self, n, **kwargs):
+    def plot(self, ax, n, **kwargs):
         x = []
         y = []
         dx = 1/float(n)
@@ -70,7 +74,7 @@ class fundamental_diagram(object):
                     y.append(0)
             current_x += dx
             current_y = self[current_x]
-        return pylab.plot(np.array(x), np.array(y), **kwargs)
+        return ax.plot(np.array(x), np.array(y), **kwargs)
 
 class supply(fundamental_diagram):
     def __init__(self, umax, gamma, irel):
@@ -93,20 +97,19 @@ class demand(fundamental_diagram):
 if __name__ == '__main__':
     gamma = 0.5
 
-    u_max_l = 33.3
-    u_max_r = 20.3
+    u_max_l = 4.3
+    u_max_r = 2.3
 
     rho_l = 0.00158
-    u_l = 18.3
+    u_l = 2.3
 
     rho_r = 0.0
-    u_r = 20.3333
-
-    rho_m = inv_u_eq(u_r - u_l() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma)
+    u_r = u_max_r
 
     irel = u_l - ueq(rho_l, u_max_l, gamma)
-    irel = 0
-    u_max_r = u_max_l
+    rho_m = inv_ueq(u_r - irel, u_max_r, gamma)
+
+    print irel, rho_m
 
     d = demand(u_max_l, gamma, irel)
     s = supply(u_max_r, gamma, irel)
@@ -116,9 +119,13 @@ if __name__ == '__main__':
 
     x = np.linspace(0, 1, 50)
 
-    d.plot(100, label="demand (right)")
-    s.plot(100, label="suppy (left)")
-    pylab.legend()
+    ax = pylab.axes()
+    ax.add_line(matplotlib.lines.Line2D((rho_l, rho_l), (0, max(0, d[rho_l])), color='orange'))
+    ax.add_line(matplotlib.lines.Line2D((rho_m, rho_m), (0, max(0, s[rho_m])), color='blue'))
+
+    d.plot(ax, 100, color='orange', label="demand (right)")
+    s.plot(ax, 100, color='blue', label="suppy (left)")
+    ax.legend()
 
     if(len(sys.argv) == 2):
         pylab.savefig(sys.argv[1])
