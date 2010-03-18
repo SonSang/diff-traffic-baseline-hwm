@@ -24,36 +24,36 @@ namespace pproc
 
         real_t next()
         {
-            const real_t u = drand48();
-            const real_t e = exp_rvar(u);
-            arg += e;
-            t = integrator.inv_integrate(arg);
+            const real_t u  = drand48();
+            const real_t e  = exp_rvar(u);
+            arg            += e;
+            t               = integrator.inv_integrate(arg);
             return t;
         }
 
         real_t next_trunc(const float trunc)
         {
-            const real_t u = drand48();
+            const real_t        u  = drand48();
             pc_integrator<PC_T> i2(integrator);
-            const real_t d = 1 - std::exp(-(i2.integrate(trunc) - arg));
-            const real_t e = exp_rvar(1 - d*u);
-            arg += e;
-            t = integrator.inv_integrate(arg);
+            const real_t        d  = 1 - std::exp(-(i2.integrate(trunc) - arg));
+            const real_t        e  = exp_rvar(1 - d*u);
+            arg                   += e;
+            t                      = integrator.inv_integrate(arg);
             return t;
         }
 
-        real_t               t;
+        real_t              t;
         pc_integrator<PC_T> integrator;
-        real_t               arg;
+        real_t              arg;
     };
 
     template <typename T, typename F>
     inline T texp(const T start, const T end, F &in_pc)
     {
         const T lambda_start = in_pc.integrate(start);
-        F i2(in_pc);
-        const T d = 1 - std::exp(-(i2.integrate(end) - lambda_start));
-        const T u = drand48();
+        F       i2(in_pc);
+        const T d            = 1 - std::exp(-(i2.integrate(end) - lambda_start));
+        const T u            = drand48();
         return in_pc.inv_integrate(lambda_start + exp_rvar(1 - d*u));
     }
 
@@ -61,11 +61,9 @@ namespace pproc
     std::vector<typename PC_T::real_t> poisson_points(const typename PC_T::real_t start, const typename PC_T::real_t end, const size_t quota, const typename PC_T::real_t sep, const PC_T &pc)
     {
         typedef typename PC_T::real_t real_t;
-
-        inhomogeneous_poisson<PC_T> ipp(start, pc);
-
-        std::vector<real_t> res;
-        real_t candidate = ipp.next();
+        inhomogeneous_poisson<PC_T>   ipp(start, pc);
+        std::vector<real_t>           res;
+        real_t                        candidate = ipp.next();
         while(res.size() < quota && candidate < end)
         {
             res.push_back(candidate);
@@ -73,10 +71,10 @@ namespace pproc
             while(1)
             {
                 inhomogeneous_poisson<PC_T> ipp_copy(ipp);
-                candidate = ipp.next();
+                candidate                  = ipp.next();
                 if(candidate - res.back() >= sep)
                     break;
-                ipp = ipp_copy;
+                ipp                        = ipp_copy;
             }
         }
 

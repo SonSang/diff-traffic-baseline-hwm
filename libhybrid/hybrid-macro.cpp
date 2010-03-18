@@ -105,7 +105,7 @@ namespace hybrid
     void lane::macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
         float rho_accum = 0.0f;
-        float u_accum = 0.0f;
+        float u_accum   = 0.0f;
 
         int i = 0;
         int start_cell = -1;

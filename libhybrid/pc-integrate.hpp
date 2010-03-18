@@ -143,10 +143,10 @@ namespace pproc
         {
             if(o < 0.0)
                 continue;
-            const size_t idx = o*inv_dx;
+            const size_t idx  = o*inv_dx;
             if(idx >= n)
                 continue;
-            data[idx] += inv_dx;
+            data[idx]        += inv_dx;
         }
         return pc_data<T>(dx, data, 0);
     }
