@@ -11,38 +11,40 @@ namespace pproc
         return -std::log(r);
     }
 
-    template <typename T>
+    template <typename PC_T>
     struct inhomogeneous_poisson
     {
-        inhomogeneous_poisson(const T in_start, const pc_data<T> &in_pc) : t(in_start),
+        typedef typename PC_T::real_t real_t;
+
+        inhomogeneous_poisson(const real_t in_start, const PC_T &in_pc) : t(in_start),
                                                                            integrator(&in_pc),
                                                                            arg(integrator.integrate(t))
         {
         }
 
-        T next()
+        real_t next()
         {
-            const T u = drand48();
-            const T e = exp_rvar(u);
+            const real_t u = drand48();
+            const real_t e = exp_rvar(u);
             arg += e;
             t = integrator.inv_integrate(arg);
             return t;
         }
 
-        T next_trunc(const float trunc)
+        real_t next_trunc(const float trunc)
         {
-            const T u = drand48();
-            pc_integrator<pc_data<T> > i2(integrator);
-            const T d = 1 - std::exp(-(i2.integrate(trunc) - arg));
-            const T e = exp_rvar(1 - d*u);
+            const real_t u = drand48();
+            pc_integrator<PC_T> i2(integrator);
+            const real_t d = 1 - std::exp(-(i2.integrate(trunc) - arg));
+            const real_t e = exp_rvar(1 - d*u);
             arg += e;
             t = integrator.inv_integrate(arg);
             return t;
         }
 
-        T                          t;
-        pc_integrator<pc_data<T> > integrator;
-        T                          arg;
+        real_t               t;
+        pc_integrator<PC_T> integrator;
+        real_t               arg;
     };
 
     template <typename T, typename F>
@@ -55,20 +57,22 @@ namespace pproc
         return in_pc.inv_integrate(lambda_start + exp_rvar(1 - d*u));
     }
 
-    template <typename T>
-    std::vector<T> poisson_points(const T start, const T end, const size_t quota, const T sep, const pc_data<T> &pc)
+    template <typename PC_T>
+    std::vector<typename PC_T::real_t> poisson_points(const typename PC_T::real_t start, const typename PC_T::real_t end, const size_t quota, const typename PC_T::real_t sep, const PC_T &pc)
     {
-        inhomogeneous_poisson<T> ipp(start, pc);
+        typedef typename PC_T::real_t real_t;
 
-        std::vector<T> res;
-        T candidate = ipp.next();
+        inhomogeneous_poisson<PC_T> ipp(start, pc);
+
+        std::vector<real_t> res;
+        real_t candidate = ipp.next();
         while(res.size() < quota && candidate < end)
         {
             res.push_back(candidate);
 
             while(1)
             {
-                inhomogeneous_poisson<T> ipp_copy(ipp);
+                inhomogeneous_poisson<PC_T> ipp_copy(ipp);
                 candidate = ipp.next();
                 if(candidate - res.back() >= sep)
                     break;

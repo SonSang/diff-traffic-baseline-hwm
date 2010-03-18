@@ -35,6 +35,11 @@ namespace hybrid
         inv_h = 1.0f/h;
     }
 
+    void lane::macro_instantiate()
+    {
+
+    }
+
     void lane::macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
         float rho_accum = 0.0f;

@@ -14,7 +14,6 @@ namespace pproc
     {
         typedef T                                            real_t;
         typedef std::vector<real_t>                          arr_t;
-        typedef typename std::vector<real_t>::const_iterator arr_citr_t;
 
         pc_data(const real_t in_dx, const arr_t &in_data, const real_t in_inf)
             : dx(in_dx), data(in_data), inf(in_inf)

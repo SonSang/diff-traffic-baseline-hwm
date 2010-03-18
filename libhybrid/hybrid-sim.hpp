@@ -71,6 +71,7 @@ namespace hybrid
 
         // macro data
         void  macro_initialize(const float h_suggest);
+        void  macro_instantiate();
         void  macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         int   which_cell(float pos) const;
         float collect_riemann(const float gamma, const float inv_gamma);
