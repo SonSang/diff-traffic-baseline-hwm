@@ -16,36 +16,46 @@ namespace pproc
         typedef std::vector<real_t>                          arr_t;
 
         pc_data(const real_t in_dx, const arr_t &in_data, const real_t in_inf)
-            : dx(in_dx), data(in_data), inf(in_inf)
+            : dx_(in_dx), data_(in_data), inf_(in_inf)
         {
         }
 
         real_t operator[](const size_t i) const
         {
-            return data[i];
+            return data_[i];
+        }
+
+        real_t dx() const
+        {
+            return dx_;
+        }
+
+        real_t inf() const
+        {
+            return inf_;
         }
 
         real_t end() const
         {
-            return data.size()*dx;
+            return data_.size()*dx();
         }
 
         size_t n() const
         {
-            return data.size();
+            return data_.size();
         }
 
         void write(std::ostream &o) const
         {
-            o << data.size() << " " << dx << " ";
-            for(size_t i = 0; i < data.size(); ++i)
-                o << data[i] << " ";
-            o << inf << std::endl;
+            o << data_.size() << " " << dx() << " ";
+            for(size_t i = 0; i < data_.size(); ++i)
+                o << data_[i] << " ";
+            o << inf() << std::endl;
         }
 
-        T     dx;
-        arr_t data;
-        T     inf;
+        T     dx_;
+        arr_t data_;
+        T     inf_;
     };
 
     template <typename PC_T>
@@ -68,27 +78,27 @@ namespace pproc
 
         real_t integrate(const real_t x)
         {
-            assert(x >= current_cell*pc->dx);
+            assert(x >= current_cell*pc->dx());
 
-            while((current_cell+1)*pc->dx < x)
+            while((current_cell+1)*pc->dx() < x)
             {
                 if(current_cell >= pc->n())
                     break;
 
-                current_sum += (*pc)[current_cell]*pc->dx;
+                current_sum += (*pc)[current_cell]*pc->dx();
                 ++current_cell;
             }
 
             /* i.e. if (current_cell < data.size())
-             * const real_t local = x/pc.dx - current_cell;
-             * return current_sum + local*pc[current_cell]*pc.dx;
+             * const real_t local = x/pc->dx() - current_cell;
+             * return current_sum + local*(*pc)[current_cell]*pc->dx();
              * else
-             * const real_t local = x - current_cell*pc.dx;
-             * return current_sum + local*pc.inf;
+             * const real_t local = x - current_cell*pc->dx();
+             * return current_sum + local*pc->inf();
              */
 
-            const real_t last  = (current_cell < pc->n()) ? (*pc)[current_cell] : pc->inf;
-            const real_t local = x - current_cell*pc->dx;
+            const real_t last  = (current_cell < pc->n()) ? (*pc)[current_cell] : pc->inf();
+            const real_t local = x - current_cell*pc->dx();
             return current_sum + local*last;
         }
 
@@ -96,14 +106,14 @@ namespace pproc
         {
             assert(v >= current_sum);
 
-            while(current_cell < pc->n() && current_sum + (*pc)[current_cell]*pc->dx < v)
+            while(current_cell < pc->n() && current_sum + (*pc)[current_cell]*pc->dx() < v)
             {
-                current_sum += (*pc)[current_cell]*pc->dx;
+                current_sum += (*pc)[current_cell]*pc->dx();
                 ++current_cell;
             }
 
-            const real_t denom = current_cell < pc->n() ? (*pc)[current_cell] : pc->inf;
-            return (v - current_sum)/denom + current_cell*pc->dx;
+            const real_t denom = current_cell < pc->n() ? (*pc)[current_cell] : pc->inf();
+            return (v - current_sum)/denom + current_cell*pc->dx();
         }
 
         const PC_T *pc;
