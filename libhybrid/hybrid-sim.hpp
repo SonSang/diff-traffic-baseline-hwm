@@ -71,7 +71,7 @@ namespace hybrid
 
         // macro data
         void  macro_initialize(const float h_suggest);
-        void  macro_instantiate();
+        void  macro_instantiate(const simulator &sim);
         void  macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         int   which_cell(float pos) const;
         float collect_riemann(const float gamma, const float inv_gamma);
@@ -116,12 +116,12 @@ namespace hybrid
         void   compute_accelerations(double timestep);
         void   update(double timestep);
 
-        double             a_max;
-        double             a_pref;
-        double             v_pref;
-        double             delta;
-        double             car_length;
-        double             rear_bumper_rear_axle;
+        double a_max;
+        double a_pref;
+        double v_pref;
+        double delta;
+        double car_length;
+        double rear_bumper_rear_axle;
 
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);

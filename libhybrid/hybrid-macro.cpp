@@ -1,4 +1,5 @@
 #include "hybrid-sim.hpp"
+#include "pc-poisson.hpp"
 
 namespace hybrid
 {
@@ -35,9 +36,70 @@ namespace hybrid
         inv_h = 1.0f/h;
     }
 
-    void lane::macro_instantiate()
+    struct lane_poisson_helper
     {
+        typedef float real_t;
 
+        lane_poisson_helper(const lane &l, const float scale) : dx_(l.h), n_(l.N), q_(l.q), scale_(scale)
+        {}
+
+        float operator[](size_t idx) const
+        {
+            return q_[idx].rho()*scale_;
+        }
+
+        float dx() const
+        {
+            return dx_;
+        }
+
+        float inf() const
+        {
+            return 0;
+        }
+
+        float end() const
+        {
+            return n()*dx();
+        }
+
+        size_t n() const
+        {
+            return n_;
+        }
+
+        float          dx_;
+        size_t         n_;
+        arz<float>::q *q_;
+        float          scale_;
+    };
+
+    void lane::macro_instantiate(const simulator &sim)
+    {
+        current_cars().clear();
+
+        lane_poisson_helper                               helper(*this, 1.0f/sim.car_length);
+        pproc::inhomogeneous_poisson<lane_poisson_helper> ip(-sim.rear_bumper_offset(), helper);
+
+        float candidate = ip.next();
+        while(candidate < helper.end()-sim.front_bumper_offset())
+        {
+            car c;
+            c.position     = candidate/helper.end();
+            c.velocity     = 0.0f;
+            c.acceleration = 0.0f;
+
+            current_cars().push_back(c);
+            std::cout << c.position << std::endl;
+            while(1)
+            {
+                pproc::inhomogeneous_poisson<lane_poisson_helper> ip_copy(ip);
+                candidate = ip.next();
+                if(candidate - current_cars().back().position*helper.end() >= sim.car_length)
+                    break;
+                ip = ip_copy;
+            }
+        }
     }
 
     void lane::macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const

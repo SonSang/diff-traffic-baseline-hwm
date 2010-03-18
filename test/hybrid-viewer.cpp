@@ -362,6 +362,24 @@ public:
                 if(car_pos < 0.0f)
                     car_pos = 0.0f;
                 break;
+            case 'c':
+                if(sim)
+                {
+                    sim->convert_cars(hybrid::MACRO);
+                }
+                break;
+            case 'm':
+                if(sim)
+                {
+                    BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+                    {
+                        if(l.sim_type != hybrid::MACRO)
+                            continue;
+
+                        l.macro_instantiate(*sim);
+                    }
+                }
+                break;
             default:
                 break;
             }
