@@ -7,136 +7,139 @@
 #include <algorithm>
 #include <boost/foreach.hpp>
 
-template <typename T>
-struct pc_data
+namespace pproc
 {
-    typedef T                                            real_t;
-    typedef std::vector<real_t>                          arr_t;
-    typedef typename std::vector<real_t>::const_iterator arr_citr_t;
-
-    pc_data(const real_t in_dx, const arr_t &in_data, const real_t in_inf)
-        : dx(in_dx), data(in_data), inf(in_inf)
+    template <typename T>
+    struct pc_data
     {
-    }
+        typedef T                                            real_t;
+        typedef std::vector<real_t>                          arr_t;
+        typedef typename std::vector<real_t>::const_iterator arr_citr_t;
 
-    real_t operator[](const size_t i) const
-    {
-        return data[i];
-    }
-
-    real_t end() const
-    {
-        return data.size()*dx;
-    }
-
-    size_t n() const
-    {
-        return data.size();
-    }
-
-    void write(std::ostream &o) const
-    {
-        o << data.size() << " " << dx << " ";
-        for(size_t i = 0; i < data.size(); ++i)
-            o << data[i] << " ";
-        o << inf << std::endl;
-    }
-
-    T     dx;
-    arr_t data;
-    T     inf;
-};
-
-template <typename PC_T>
-struct pc_integrator
-{
-    typedef typename PC_T::real_t real_t;
-
-    pc_integrator(const PC_T *in_pc) : pc(in_pc), current_cell(0), current_sum(0.0)
-    {}
-
-    pc_integrator(const pc_integrator<PC_T> *o)
-        : pc(o.pc), current_cell(o.current_cell), current_sum(o.current_sum)
-    {}
-
-    void reset()
-    {
-        current_cell = 0;
-        current_sum  = 0;
-    }
-
-    real_t integrate(const real_t x)
-    {
-        assert(x >= current_cell*pc->dx);
-
-        while((current_cell+1)*pc->dx < x)
+        pc_data(const real_t in_dx, const arr_t &in_data, const real_t in_inf)
+            : dx(in_dx), data(in_data), inf(in_inf)
         {
-            if(current_cell >= pc->n())
-                break;
-
-            current_sum += (*pc)[current_cell]*pc->dx;
-            ++current_cell;
         }
 
-        /* i.e. if (current_cell < data.size())
-         * const real_t local = x/pc.dx - current_cell;
-         * return current_sum + local*pc[current_cell]*pc.dx;
-         * else
-         * const real_t local = x - current_cell*pc.dx;
-         * return current_sum + local*pc.inf;
-         */
-
-        const real_t last  = (current_cell < pc->n()) ? (*pc)[current_cell] : pc->inf;
-        const real_t local = x - current_cell*pc->dx;
-        return current_sum + local*last;
-    }
-
-    real_t inv_integrate(const real_t v)
-    {
-        assert(v >= current_sum);
-
-        while(current_cell < pc->n() && current_sum + (*pc)[current_cell]*pc->dx < v)
+        real_t operator[](const size_t i) const
         {
-            current_sum += (*pc)[current_cell]*pc->dx;
-            ++current_cell;
+            return data[i];
         }
 
-        const real_t denom = current_cell < pc->n() ? (*pc)[current_cell] : pc->inf;
-        return (v - current_sum)/denom + current_cell*pc->dx;
-    }
+        real_t end() const
+        {
+            return data.size()*dx;
+        }
 
-    const PC_T *pc;
-    size_t      current_cell;
-    real_t      current_sum;
-};
+        size_t n() const
+        {
+            return data.size();
+        }
 
-template <typename F, typename T>
-pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
-{
-    typename pc_data<T>::arr_t data(n);
-    T x = 0;
-    BOOST_FOREACH(T &e, data)
+        void write(std::ostream &o) const
+        {
+            o << data.size() << " " << dx << " ";
+            for(size_t i = 0; i < data.size(); ++i)
+                o << data[i] << " ";
+            o << inf << std::endl;
+        }
+
+        T     dx;
+        arr_t data;
+        T     inf;
+    };
+
+    template <typename PC_T>
+    struct pc_integrator
     {
-        e  = 0.5*(func(x) + func(x+dx));
-        x += dx;
-    }
-    return pc_data<T>(dx, data, func(x));
-}
+        typedef typename PC_T::real_t real_t;
 
-template <typename T>
-pc_data<T> pc_from_avg(const typename pc_data<T>::arr_t &obs, const T dx, const size_t n)
-{
-    const T inv_dx = 1/dx;
-    typename pc_data<T>::arr_t data(n, 0);
-    BOOST_FOREACH(const T &o, obs)
+        pc_integrator(const PC_T *in_pc) : pc(in_pc), current_cell(0), current_sum(0.0)
+        {}
+
+        pc_integrator(const pc_integrator<PC_T> *o)
+            : pc(o.pc), current_cell(o.current_cell), current_sum(o.current_sum)
+        {}
+
+        void reset()
+        {
+            current_cell = 0;
+            current_sum  = 0;
+        }
+
+        real_t integrate(const real_t x)
+        {
+            assert(x >= current_cell*pc->dx);
+
+            while((current_cell+1)*pc->dx < x)
+            {
+                if(current_cell >= pc->n())
+                    break;
+
+                current_sum += (*pc)[current_cell]*pc->dx;
+                ++current_cell;
+            }
+
+            /* i.e. if (current_cell < data.size())
+             * const real_t local = x/pc.dx - current_cell;
+             * return current_sum + local*pc[current_cell]*pc.dx;
+             * else
+             * const real_t local = x - current_cell*pc.dx;
+             * return current_sum + local*pc.inf;
+             */
+
+            const real_t last  = (current_cell < pc->n()) ? (*pc)[current_cell] : pc->inf;
+            const real_t local = x - current_cell*pc->dx;
+            return current_sum + local*last;
+        }
+
+        real_t inv_integrate(const real_t v)
+        {
+            assert(v >= current_sum);
+
+            while(current_cell < pc->n() && current_sum + (*pc)[current_cell]*pc->dx < v)
+            {
+                current_sum += (*pc)[current_cell]*pc->dx;
+                ++current_cell;
+            }
+
+            const real_t denom = current_cell < pc->n() ? (*pc)[current_cell] : pc->inf;
+            return (v - current_sum)/denom + current_cell*pc->dx;
+        }
+
+        const PC_T *pc;
+        size_t      current_cell;
+        real_t      current_sum;
+    };
+
+    template <typename F, typename T>
+    pc_data<T> pc_from_func(const F &func, const T dx, const size_t n)
     {
-        if(o < 0.0)
-            continue;
-        const size_t idx = o*inv_dx;
-        if(idx >= n)
-            continue;
-        data[idx] += inv_dx;
+        typename pc_data<T>::arr_t data(n);
+        T x = 0;
+        BOOST_FOREACH(T &e, data)
+        {
+            e  = 0.5*(func(x) + func(x+dx));
+            x += dx;
+        }
+        return pc_data<T>(dx, data, func(x));
     }
-    return pc_data<T>(dx, data, 0);
+
+    template <typename T>
+    pc_data<T> pc_from_avg(const typename pc_data<T>::arr_t &obs, const T dx, const size_t n)
+    {
+        const T inv_dx = 1/dx;
+        typename pc_data<T>::arr_t data(n, 0);
+        BOOST_FOREACH(const T &o, obs)
+        {
+            if(o < 0.0)
+                continue;
+            const size_t idx = o*inv_dx;
+            if(idx >= n)
+                continue;
+            data[idx] += inv_dx;
+        }
+        return pc_data<T>(dx, data, 0);
+    }
 }
 #endif

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 {
     srand48(10);
 
-    pc_data<float> pcd = pc_from_func(identity(), 0.05f, 1000);
+    pproc::pc_data<float> pcd = pproc::pc_from_func(identity(), 0.05f, 1000);
     pcd.write(std::cout);
 
     const float sep      = car_length;
@@ -24,11 +24,11 @@ int main(int argc, char **argv)
     for(int j = 0; j < 1000; ++j)
     {
         float last = -sep;
-        pc_integrator<pc_data<float> > pci(&pcd);
+        pproc::pc_integrator<pproc::pc_data<float> > pci(&pcd);
         size_t i = 0;
         for(; last + sep < 50.0; ++i)
         {
-            const float c = texp(last+sep, last+sep+interval, pci);
+            const float c = pproc::texp(last+sep, last+sep+interval, pci);
             last = c;
         }
         std::cout << i << " ";
