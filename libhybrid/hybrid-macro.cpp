@@ -76,12 +76,15 @@ namespace hybrid
 
     void lane::macro_instantiate(const simulator &sim)
     {
+        typedef pproc::inhomogeneous_poisson<simulator::rand_gen_t, lane_poisson_helper> ih_poisson_t;
+
         current_cars().clear();
 
-        lane_poisson_helper                               helper(*this, 1.0f/sim.car_length);
-        pproc::inhomogeneous_poisson<lane_poisson_helper> ip(-sim.rear_bumper_offset(), helper);
+        lane_poisson_helper helper(*this, 1.0f/sim.car_length);
+        ih_poisson_t        ip(-sim.rear_bumper_offset(), helper, sim.uni);
 
         float candidate = ip.next();
+
         while(candidate < helper.end()-sim.front_bumper_offset())
         {
             car c;
@@ -90,10 +93,9 @@ namespace hybrid
             c.acceleration = 0.0f;
 
             current_cars().push_back(c);
-            std::cout << c.position << std::endl;
             while(1)
             {
-                pproc::inhomogeneous_poisson<lane_poisson_helper> ip_copy(ip);
+                ih_poisson_t ip_copy(ip);
                 candidate = ip.next();
                 if(candidate - current_cars().back().position*helper.end() >= sim.car_length)
                     break;

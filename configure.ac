@@ -132,6 +132,7 @@ AM_CONDITIONAL(DO_VISUAL, test x"$visual_ok" = xyes)
 
 # Checks for libraries.
 BOOST_REQUIRE([1.39])
+BOOST_RANDOM
 
 AS_IF([test x"$boost_optimize" != xno],
       [BOOST_CPPFLAGS+=" -DBOOST_DISABLE_ASSERTS"],

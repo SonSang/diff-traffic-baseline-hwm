@@ -441,8 +441,6 @@ int main(int argc, char *argv[])
                        1.0);
     s.macro_initialize(0.5, 2.1*4.5, 0.0f);
 
-    std::cout << s.rear_bumper_offset() << std::endl;
-
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
         l.sim_type = hybrid::MACRO;
@@ -466,7 +464,7 @@ int main(int argc, char *argv[])
             tmp.velocity = 33;
             l.current_cars().push_back(tmp);
             //Cars need a minimal distance spacing
-            p += (15.0 * l.inv_length);
+            p += (25.0 * l.inv_length);
             if(p + s.front_bumper_offset()*l.inv_length >= 1.0)
                 break;
         }

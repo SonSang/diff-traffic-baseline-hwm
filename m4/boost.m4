@@ -510,6 +510,11 @@ AC_DEFUN([BOOST_PROGRAM_OPTIONS],
                 [boost::program_options::options_description d("test");])
 ])# BOOST_PROGRAM_OPTIONS
 
+# BOOST_RANDOM()
+# ---------------
+# Look for Boost.Random
+AC_DEFUN([BOOST_RANDOM],
+[BOOST_FIND_HEADER([boost/random.hpp])])
 
 # BOOST_REF()
 # -----------

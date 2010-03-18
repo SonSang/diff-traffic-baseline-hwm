@@ -1,5 +1,6 @@
 #include "libroad/hwm_network.hpp"
 #include "arz.hpp"
+#include <boost/random.hpp>
 
 namespace hybrid
 {
@@ -103,9 +104,15 @@ namespace hybrid
 
         void advance_intersections(float dt);
 
-        hwm::network      *hnet;
-        std::vector<lane>  lanes;
-        float              time;
+        hwm::network          *hnet;
+        std::vector<lane>      lanes;
+        float                  time;
+        typedef boost::rand48  base_generator_type;
+        base_generator_type   *generator;
+        boost::uniform_real<> *uni_dist;
+        typedef boost::variate_generator<base_generator_type&,
+            boost::uniform_real<> > rand_gen_t;
+        rand_gen_t            *uni;
 
         // micro
         void   micro_initialize(const double a_max, const double a_pref, const double v_pref,

@@ -76,6 +76,10 @@ namespace hybrid
                                               q_base(0),
                                               rs_base(0)
     {
+        generator = new base_generator_type(42u);
+        uni_dist  = new boost::uniform_real<>(0,1);
+        uni       = new boost::variate_generator<base_generator_type&, boost::uniform_real<> >(*generator, *uni_dist);
+
         assert(hnet);
 
         // figure out how many lanes to create
@@ -115,6 +119,10 @@ namespace hybrid
 
     simulator::~simulator()
     {
+        delete generator;
+        delete uni_dist;
+        delete uni;
+
         micro_cleanup();
         macro_cleanup();
     }
