@@ -42,7 +42,7 @@
 	</right>
       </adjacency_intervals>
     </lane>
-    <lane id="lane0b" speedlimit="20.3333">
+    <lane id="lane0b" speedlimit="28.3333">
       <start>
 	<lane_ref ref="lane0a"/>
       </start>
