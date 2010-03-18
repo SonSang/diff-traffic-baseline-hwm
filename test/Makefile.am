@@ -1,4 +1,4 @@
-noinst_PROGRAMS = hybrid ih-riemann-test
+noinst_PROGRAMS = hybrid ih-riemann-test pc-int-test
 
 EXTRA_DIST = arcball.hpp
 
@@ -11,6 +11,11 @@ ih_riemann_test_SOURCES  = ih-riemann-test.cpp
 ih_riemann_test_CPPFLAGS = $(LIBROAD_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS) -I$(top_srcdir)
 ih_riemann_test_LDFLAGS  = $(LDFLAGS)
 ih_riemann_test_LDADD    = $(top_builddir)/libhybrid/libhybrid.la
+
+pc_int_test_SOURCES  = pc-int-test.cpp
+pc_int_test_CPPFLAGS = $(LIBROAD_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS) -I$(top_srcdir)
+pc_int_test_LDFLAGS  = $(LDFLAGS)
+pc_int_test_LDADD    = $(top_builddir)/libhybrid/libhybrid.la
 
 if DO_VISUAL
 noinst_PROGRAMS += hybrid-viewer

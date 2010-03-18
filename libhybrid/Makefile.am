@@ -7,7 +7,9 @@ libhybrid_la_SOURCES  = hybrid-sim.cpp \
 pkginclude_HEADERS  = arz.hpp \
 		      arz-eq.hpp \
 		      arz-impl.hpp \
-	              hybrid-sim.hpp
+	              hybrid-sim.hpp \
+		      pc-integrate.hpp \
+		      pc-poisson.hpp
 
 libhybrid_la_CPPFLAGS =  $(LIBROAD_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS)
 
