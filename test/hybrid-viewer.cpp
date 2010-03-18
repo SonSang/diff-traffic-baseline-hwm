@@ -377,6 +377,17 @@ public:
                             continue;
 
                         l.macro_instantiate(*sim);
+
+                        float pos;
+                        if(l.macro_find_first(pos, *sim))
+                            std::cout << "Lane: " << l.parent->id << "first at " << pos << std::endl;
+                        else
+                            std::cout << "Lane: " << l.parent->id << "empty. (no first)" << std::endl;
+
+                        if(l.macro_find_last(pos, *sim))
+                            std::cout << "Lane: " << l.parent->id << "last at " << pos << std::endl;
+                        else
+                            std::cout << "Lane: " << l.parent->id << "empty. (no last)" << std::endl;
                     }
                 }
                 break;

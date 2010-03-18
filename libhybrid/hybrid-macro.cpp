@@ -74,6 +74,44 @@ namespace hybrid
         float          scale_;
     };
 
+    struct lane_poisson_helper_reverse
+    {
+        typedef float real_t;
+
+        lane_poisson_helper_reverse(const lane &l, const float scale) : dx_(l.h), n_(l.N), q_(l.q), scale_(scale)
+        {}
+
+        float operator[](size_t idx) const
+        {
+            return q_[n_-1-idx].rho()*scale_;
+        }
+
+        float dx() const
+        {
+            return dx_;
+        }
+
+        float inf() const
+        {
+            return 0;
+        }
+
+        float end() const
+        {
+            return n()*dx();
+        }
+
+        size_t n() const
+        {
+            return n_;
+        }
+
+        float          dx_;
+        size_t         n_;
+        arz<float>::q *q_;
+        float          scale_;
+    };
+
     void lane::macro_instantiate(const simulator &sim)
     {
         typedef pproc::inhomogeneous_poisson<simulator::rand_gen_t, lane_poisson_helper> ih_poisson_t;
@@ -102,6 +140,40 @@ namespace hybrid
                 ip = ip_copy;
             }
         }
+    }
+
+    bool lane::macro_find_first(float &param, const simulator &sim) const
+    {
+        typedef pproc::inhomogeneous_poisson<simulator::rand_gen_t, lane_poisson_helper> ih_poisson_t;
+
+        lane_poisson_helper helper(*this, 1.0f/sim.car_length);
+        ih_poisson_t        ip(-sim.rear_bumper_offset(), helper, sim.uni);
+
+        const float candidate = ip.next();
+        if(candidate < helper.end()-sim.front_bumper_offset())
+        {
+            param = candidate/helper.end();
+            return true;
+        }
+        else
+            return false;
+    }
+
+    bool lane::macro_find_last(float &param, const simulator &sim) const
+    {
+        typedef pproc::inhomogeneous_poisson<simulator::rand_gen_t, lane_poisson_helper_reverse> ih_poisson_t;
+
+        lane_poisson_helper_reverse helper(*this, 1.0f/sim.car_length);
+        ih_poisson_t                ip(sim.front_bumper_offset(), helper, sim.uni);
+
+        const float candidate = helper.end() - ip.next();
+        if(candidate + sim.rear_bumper_offset() > 0)
+        {
+            param = candidate/helper.end();
+            return true;
+        }
+        else
+            return false;
     }
 
     void lane::macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
