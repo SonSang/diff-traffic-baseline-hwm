@@ -6,6 +6,7 @@
 
 #include "tvmet/Vector.h"
 #include <iostream>
+#include "libhybrid/libhybrid-common.hpp"
 
 /** Class that implements the ARZ system of equations.
  *  For traffic flow.

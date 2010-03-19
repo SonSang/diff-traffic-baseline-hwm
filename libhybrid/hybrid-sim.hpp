@@ -1,4 +1,5 @@
 #include "libroad/hwm_network.hpp"
+#include "libhybrid/libhybrid-common.hpp"
 #include "arz.hpp"
 #include <boost/random.hpp>
 

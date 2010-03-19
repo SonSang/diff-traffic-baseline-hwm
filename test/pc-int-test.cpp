@@ -13,6 +13,8 @@ struct identity
 
 int main(int argc, char **argv)
 {
+    std::cerr << libhybrid_package_string() << std::endl;
+
     srand48(10);
 
     pproc::pc_data<float> pcd = pproc::pc_from_func(identity(), 0.05f, 1000);

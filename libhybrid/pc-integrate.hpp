@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <boost/foreach.hpp>
+#include "libhybrid/libhybrid-common.hpp"
 
 namespace pproc
 {

@@ -2,6 +2,8 @@
 
 int main(int argc, char *argv[])
 {
+    std::cerr << libhybrid_package_string() << std::endl;
+
     arz<float>::q left(0.00158,
                        -0.02165);
 
