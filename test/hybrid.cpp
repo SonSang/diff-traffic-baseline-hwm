@@ -3,6 +3,11 @@
 int main(int argc, char *argv[])
 {
     std::cerr << libhybrid_package_string() << std::endl;
+    if(argc < 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " <network file>" << std::endl;
+        return 1;
+    }
 
     hwm::network net(hwm::load_xml_network(argv[1], vec3f(1.0, 1.0, 15.0f)));
     net.build_intersections();
