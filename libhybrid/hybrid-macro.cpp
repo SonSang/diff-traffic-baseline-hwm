@@ -18,12 +18,10 @@ namespace hybrid
         return rho_accum >= 1.0f-arz<float>::epsilon();
     }
 
-    car flux_capacitor::emit()
+    car flux_capacitor::emit(simulator &sim)
     {
         rho_accum    -= 1.0f;
-        car res;
-        res.position  = 0.0f;
-        res.velocity  = u_accum;
+        const car res(sim.make_car(0.0f, u_accum, 0.0f));
         u_accum      *= rho_accum;
         return res;
     }
@@ -112,7 +110,7 @@ namespace hybrid
         float          scale_;
     };
 
-    void lane::macro_instantiate(const simulator &sim)
+    void lane::macro_instantiate(simulator &sim)
     {
         typedef pproc::inhomogeneous_poisson<simulator::rand_gen_t, lane_poisson_helper> ih_poisson_t;
 
@@ -125,12 +123,11 @@ namespace hybrid
 
         while(candidate < helper.end()-sim.front_bumper_offset())
         {
-            car c;
-            c.position     = candidate/helper.end();
-            c.velocity     = velocity(c.position, sim.gamma);
-            c.acceleration = 0.0f;
+            const float position = candidate/helper.end();
+            current_cars().push_back(sim.make_car(position,
+                                                  velocity(position, sim.gamma),
+                                                  0.0f));
 
-            current_cars().push_back(c);
             while(1)
             {
                 ih_poisson_t ip_copy(ip);
@@ -339,14 +336,14 @@ namespace hybrid
         return maxspeed;
     }
 
-    void lane::update(const float dt, const float relaxation_factor)
+    void lane::update(const float dt, simulator &sim)
     {
         const float coefficient = dt*inv_h;
 
         for(size_t i = 0; i < N; ++i)
         {
             q[i]     -= coefficient*(rs[i].right_fluctuation + rs[i+1].left_fluctuation);
-            q[i].y() -= q[i].y()*coefficient*relaxation_factor;
+            q[i].y() -= q[i].y()*coefficient*sim.relaxation_factor;
             q[i].fix();
         }
         hwm::lane *downstream = parent->downstream_lane();
@@ -356,7 +353,7 @@ namespace hybrid
             if(capacitor.check())
             {
                 lane &sim_downstream = *(downstream->user_data<lane>());
-                sim_downstream.next_cars().push_back(capacitor.emit());
+                sim_downstream.next_cars().push_back(capacitor.emit(sim));
             }
         }
     }
@@ -513,7 +510,7 @@ namespace hybrid
         BOOST_FOREACH(lane &l, lanes)
         {
             if(l.is_macro() && l.parent->active)
-                l.update(dt, relaxation_factor);
+                l.update(dt, *this);
         }
 
         return dt;

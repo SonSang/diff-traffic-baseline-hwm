@@ -73,6 +73,7 @@ namespace hybrid
 
     simulator::simulator(hwm::network *net) : hnet(net),
                                               time(0.0f),
+                                              car_id_counter(1),
                                               q_base(0),
                                               rs_base(0)
     {
@@ -143,6 +144,12 @@ namespace hybrid
         {
             l.car_swap();
         }
+    }
+
+    car simulator::make_car(const double position, const double velocity,
+                            const double acceleration)
+    {
+        return car(car_id_counter++, position, velocity, acceleration);
     }
 
     void simulator::hybrid_step()

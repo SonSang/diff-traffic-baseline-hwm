@@ -11,6 +11,13 @@ namespace hybrid
 
     struct car
     {
+        car() : id(0) {}
+        car(const size_t in_id, const double in_position,
+            const double in_velocity, const double in_acceleration)
+            : id(in_id), position(in_position),
+              velocity(in_velocity), acceleration(in_acceleration)
+        {}
+
         //common data
         size_t id;
         double position;
@@ -31,7 +38,7 @@ namespace hybrid
 
         void update(const arz<float>::riemann_solution &rs, const float coefficient);
         bool check() const;
-        car  emit();
+        car  emit(simulator &sim);
 
         float rho_accum;
         float u_accum;
@@ -72,14 +79,14 @@ namespace hybrid
 
         // macro data
         void  macro_initialize(const float h_suggest);
-        void  macro_instantiate(const simulator &sim);
+        void  macro_instantiate(simulator &sim);
         bool  macro_find_first(float &param, const simulator &sim) const;
         bool  macro_find_last(float &param, const simulator &sim) const;
         void  macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         int   which_cell(float pos) const;
         float velocity(float pos, float gamma) const;
         float collect_riemann(const float gamma, const float inv_gamma);
-        void  update         (const float dt,    const float relaxation_factor);
+        void  update         (const float dt,    simulator  &sim);
         void  clear_macro();
         void  convert_cars(const simulator &sim);
         void  fill_y(const float gamma);
@@ -98,10 +105,12 @@ namespace hybrid
         simulator(hwm::network *net);
 
         ~simulator();
-        void initialize();
+        void  initialize();
         float rear_bumper_offset()  const;
         float front_bumper_offset() const;
         void  car_swap();
+
+        car make_car(const double position, const double velocity, const double acceleration);
 
         void hybrid_step();
 
@@ -116,6 +125,7 @@ namespace hybrid
         typedef boost::variate_generator<base_generator_type&,
             boost::uniform_real<> > rand_gen_t;
         rand_gen_t            *uni;
+        size_t                 car_id_counter;
 
         // micro
         void   micro_initialize(const double a_max, const double a_pref, const double v_pref,

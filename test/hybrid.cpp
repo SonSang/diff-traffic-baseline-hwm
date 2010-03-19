@@ -37,10 +37,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < cars_per_lane; i++)
         {
             //TODO Just creating some cars here...
-            hybrid::car tmp;
-            tmp.position = p;
-            tmp.velocity = 33;
-            l.current_cars().push_back(tmp);
+            l.current_cars().push_back(s.make_car(p, 33, 0));
             //Cars need a minimal distance spacing
             p += (15.0 / l.length);
         }
