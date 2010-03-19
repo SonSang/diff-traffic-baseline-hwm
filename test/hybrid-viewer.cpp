@@ -454,28 +454,39 @@ int main(int argc, char *argv[])
                        4);
     s.macro_initialize(0.5, 2.1*4.5, 0.0f);
 
-    BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        l.sim_type = hybrid::MACRO;
-    }
+        hybrid::lane &l = s.get_lane_by_name("lane0a");
+        l.sim_type = hybrid::MICRO;
 
-    static const int cars_per_lane = 3;
-    BOOST_FOREACH(hybrid::lane &l, s.lanes)
-    {
-        if(!l.parent->active)
-            continue;
+        const int cars_per_lane = 3;
+        double    p             = -s.rear_bumper_offset()*l.inv_length;
 
-        if(l.parent->id != "lane0a")
-            continue;
-
-        double p = -s.rear_bumper_offset()*l.inv_length;
         for (int i = 0; i < cars_per_lane; i++)
         {
             //TODO Just creating some cars here...
-            l.current_cars().push_back(s.make_car(p, 33, 0));
+            l.current_cars().push_back(s.make_car(p, 10, 0));
 
             //Cars need a minimal distance spacing
             p += (25.0 * l.inv_length);
+            if(p + s.front_bumper_offset()*l.inv_length >= 1.0)
+                break;
+        }
+    }
+
+    {
+        hybrid::lane &l = s.get_lane_by_name("lane0b");
+        l.sim_type = hybrid::MACRO;
+
+        const int cars_per_lane = 8;
+        double    p             = -s.rear_bumper_offset()*l.inv_length;
+
+        for (int i = 0; i < cars_per_lane; i++)
+        {
+            //TODO Just creating some cars here...
+            l.current_cars().push_back(s.make_car(p, 0, 0));
+
+            //Cars need a minimal distance spacing
+            p += (6.0 * l.inv_length);
             if(p + s.front_bumper_offset()*l.inv_length >= 1.0)
                 break;
         }

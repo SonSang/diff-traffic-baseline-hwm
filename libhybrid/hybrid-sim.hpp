@@ -111,7 +111,10 @@ namespace hybrid
         float front_bumper_offset() const;
         void  car_swap();
 
-        car make_car(const double position, const double velocity, const double acceleration);
+        car   make_car(const double position, const double velocity, const double acceleration);
+
+        lane       &get_lane_by_name(const str &s);
+        const lane &get_lane_by_name(const str &s) const;
 
         void hybrid_step();
 

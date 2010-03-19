@@ -155,6 +155,22 @@ namespace hybrid
         return car(car_id_counter++, position, velocity, acceleration);
     }
 
+    lane &simulator::get_lane_by_name(const str &s)
+    {
+        const hwm::lane_map::iterator res(hnet->lanes.find(s));
+        if(res == hnet->lanes.end())
+            throw std::runtime_error("No such lane!");
+        return *(res->second.user_data<lane>());
+    }
+
+    const lane &simulator::get_lane_by_name(const str &s) const
+    {
+        const hwm::lane_map::iterator res(hnet->lanes.find(s));
+        if(res == hnet->lanes.end())
+            throw std::runtime_error("No such lane!");
+        return *(res->second.user_data<const lane>());
+    }
+
     void simulator::hybrid_step()
     {
         // fill in micro
