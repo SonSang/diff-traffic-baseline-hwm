@@ -173,45 +173,30 @@ namespace hybrid
             return false;
     }
 
-    void lane::macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
+    void lane::macro_distance_to_car(float &distance, float &vel, const float distance_max, const simulator &sim) const
     {
-        float rho_accum = 0.0f;
-        float u_accum   = 0.0f;
-
-        int i = 0;
-        int start_cell = -1;
-        while(i < static_cast<int>(N) && rho_accum < 1.0)
+        float param;
+        if(macro_find_first(param, sim))
         {
-            if(q[i].rho() > arz<float>::epsilon() && start_cell == -1)
-            {
-                start_cell = i;
-                rho_accum += q[i].rho();
-                float u    = arz<float>::eq::u(q[i].rho(), q[i].y(), parent->speedlimit, sim.gamma);
-                u_accum   += q[i].rho()*u;
-            }
-            ++i;
-        }
-
-        if(rho_accum + arz<float>::epsilon() >= 1.0f)
-        {
-            distance += i*h;
-            velocity = u_accum;
+            std::cout << "param: " << param << std::endl;
+            distance += param*length;
+            vel       = velocity(param, sim.gamma);
         }
         else
         {
             distance += length;
             if(distance >= distance_max)
             {
-                velocity = 0.0f;
+                vel      = 0.0f;
                 distance = distance_max;
             }
             else
             {
                 hwm::lane *hwm_downstream = parent->downstream_lane();
                 if(hwm_downstream)
-                    hwm_downstream->user_data<lane>()->distance_to_car(distance, velocity, distance_max, sim);
+                    hwm_downstream->user_data<lane>()->distance_to_car(distance, vel, distance_max, sim);
                 else
-                    velocity = 0.0f;
+                    vel = 0.0f;
             }
         }
 
