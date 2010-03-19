@@ -71,11 +71,14 @@ namespace hybrid
         }
     }
 
-    simulator::simulator(hwm::network *net) : hnet(net),
-                                              time(0.0f),
-                                              car_id_counter(1),
-                                              q_base(0),
-                                              rs_base(0)
+    simulator::simulator(hwm::network *net, float length, float rear_axle)
+        : hnet(net),
+          car_length(length),
+          rear_bumper_rear_axle(rear_axle),
+          time(0.0f),
+          car_id_counter(1),
+          q_base(0),
+          rs_base(0)
     {
         generator = new base_generator_type(42u);
         uni_dist  = new boost::uniform_real<>(0,1);

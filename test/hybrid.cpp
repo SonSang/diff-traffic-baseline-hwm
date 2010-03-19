@@ -19,13 +19,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    hybrid::simulator s(&net);
+    hybrid::simulator s(&net,
+                        5.0f,
+                        1.0);
     s.micro_initialize(0.73,
                        1.67,
                        33,
-                       4,
-                       5,
-                       1.0);
+                       4);
 
     static const int cars_per_lane = 1;
     BOOST_FOREACH(hybrid::lane &l, s.lanes)

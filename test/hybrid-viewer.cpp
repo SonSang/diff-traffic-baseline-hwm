@@ -443,13 +443,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    hybrid::simulator s(&net);
+    hybrid::simulator s(&net,
+                        4.5,
+                        1.0);
     s.micro_initialize(0.73,
                        1.67,
                        33,
-                       4,
-                       4.5,
-                       1.0);
+                       4);
     s.macro_initialize(0.5, 2.1*4.5, 0.0f);
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)

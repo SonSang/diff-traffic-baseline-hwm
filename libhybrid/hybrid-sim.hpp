@@ -102,7 +102,7 @@ namespace hybrid
     struct simulator
     {
         // common
-        simulator(hwm::network *net);
+        simulator(hwm::network *net, float length, float rear_axle);
 
         ~simulator();
         void  initialize();
@@ -118,6 +118,8 @@ namespace hybrid
 
         hwm::network          *hnet;
         std::vector<lane>      lanes;
+        float                  car_length;
+        float                  rear_bumper_rear_axle;
         float                  time;
         typedef boost::rand48  base_generator_type;
         base_generator_type   *generator;
@@ -127,9 +129,10 @@ namespace hybrid
         rand_gen_t            *uni;
         size_t                 car_id_counter;
 
+
         // micro
         void   micro_initialize(const double a_max, const double a_pref, const double v_pref,
-                                const double delta, const double length, const double rear_axle);
+                                const double delta);
         void   micro_cleanup();
         void   settle(const double timestep);
         double acceleration(const double leader_velocity, const double follower_velocity, const double distance) const;
@@ -140,8 +143,6 @@ namespace hybrid
         double a_pref;
         double v_pref;
         double delta;
-        double car_length;
-        double rear_bumper_rear_axle;
 
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);
