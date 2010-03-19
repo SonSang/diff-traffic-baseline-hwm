@@ -127,7 +127,7 @@ namespace hybrid
         {
             car c;
             c.position     = candidate/helper.end();
-            c.velocity     = 0.0f;
+            c.velocity     = velocity(c.position, sim.gamma);
             c.acceleration = 0.0f;
 
             current_cars().push_back(c);
@@ -224,6 +224,31 @@ namespace hybrid
     int lane::which_cell(const float pos) const
     {
         return static_cast<int>(std::floor(pos*N));
+    }
+
+    float lane::velocity(const float pos, const float gamma) const
+    {
+        const int   cell  = which_cell(pos);
+        const float local = pos*N - cell;
+        assert(cell >= 0);
+        assert(cell < static_cast<int>(N));
+
+        const arz<float>::full_q q_c(q[cell], parent->speedlimit, gamma);
+        if(local < 0.5f)
+        {
+            if(cell == 0)
+                return q_c.u();
+
+            const arz<float>::full_q q_c_m(q[cell-1], parent->speedlimit, gamma);
+            return (local+0.5f) * q_c.u() + (0.5f-local) * q_c_m.u();
+        }
+        //local >= 0.5f
+
+        if(cell == static_cast<int>(N)-1)
+            return q_c.u();
+
+        const arz<float>::full_q q_c_p(q[cell+1], parent->speedlimit, gamma);
+        return (1.5f-local) * q_c.u() + (local-0.5f) * q_c_p.u();
     }
 
     float lane::collect_riemann(const float gamma, const float inv_gamma)

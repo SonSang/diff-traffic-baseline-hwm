@@ -77,6 +77,7 @@ namespace hybrid
         bool  macro_find_last(float &param, const simulator &sim) const;
         void  macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         int   which_cell(float pos) const;
+        float velocity(float pos, float gamma) const;
         float collect_riemann(const float gamma, const float inv_gamma);
         void  update         (const float dt,    const float relaxation_factor);
         void  clear_macro();
