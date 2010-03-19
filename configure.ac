@@ -142,13 +142,6 @@ AS_IF([test x"$boost_optimize" != xno],
       [BOOST_CPPFLAGS+=" -DBOOST_DISABLE_ASSERTS"],
       [])
 
-AS_IF([test x"$enable_tests" != xno],
-	    [BOOST_TEST
-	     AS_IF([test -z "$BOOST_UNIT_TEST_FRAMEWORK_LIBS" -a x"$enable_tests" != xcheck],
-	           AC_MSG_FAILURE([--enable-tests given but test for Boost Unit test framework failed!]))])
-
-AM_CONDITIONAL(DO_TESTS, test -n "$BOOST_UNIT_TEST_FRAMEWORK_LIBS")
-
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -196,15 +189,6 @@ echo "
 else
 echo "
   Building visual: no"
-fi
-if test -n "$BOOST_UNIT_TEST_FRAMEWORK_LIBS"; then
-echo "
-  Doing tests: yes
-    Boost TEST LDFLAGS....: $BOOST_UNIT_TEST_FRAMEWORK_LDFLAGS
-    Boost TEST LIBS.......: $BOOST_UNIT_TEST_FRAMEWORK_LIBS"
-else
-echo "
-  Doing tests: no"
 fi
 if test x"$try_doxygen" != xno -a -n "$DOXYGEN"; then
 echo "
