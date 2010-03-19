@@ -18,6 +18,7 @@ namespace hybrid
         if(hwm_downstream)
             hwm_downstream->user_data<lane>()->distance_to_car(distance, next_velocity, min_for_free_movement, sim);
 
+        std::cout << "distance: " << distance << " velocity: " << next_velocity << std::endl;
         acceleration = sim.acceleration(next_velocity, velocity, distance);
     }
 

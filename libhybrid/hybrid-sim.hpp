@@ -33,18 +33,6 @@ namespace hybrid
         // macro data
     };
 
-    struct flux_capacitor
-    {
-        flux_capacitor();
-
-        void update(const arz<float>::riemann_solution &rs, const float coefficient);
-        bool check() const;
-        car  emit(simulator &sim);
-
-        float rho_accum;
-        float u_accum;
-    };
-
     struct lane
     {
         lane();
@@ -92,7 +80,6 @@ namespace hybrid
         void  convert_cars(const simulator &sim);
         void  fill_y(const float gamma);
 
-        flux_capacitor                capacitor;
         float                         h;
         float                         inv_h;
         size_t                        N;

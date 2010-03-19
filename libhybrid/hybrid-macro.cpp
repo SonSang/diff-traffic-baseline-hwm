@@ -3,29 +3,6 @@
 
 namespace hybrid
 {
-    flux_capacitor::flux_capacitor() : rho_accum(0.0), u_accum(0.0)
-    {}
-
-    void flux_capacitor::update(const arz<float>::riemann_solution &rs, const float dt)
-    {
-        const float delta_rho  = dt*rs.q_0.rho();
-        rho_accum             += delta_rho;
-        u_accum               += delta_rho*rs.speeds[1];
-    }
-
-    bool flux_capacitor::check() const
-    {
-        return rho_accum >= 1.0f-arz<float>::epsilon();
-    }
-
-    car flux_capacitor::emit(simulator &sim)
-    {
-        rho_accum    -= 1.0f;
-        const car res(sim.make_car(0.0f, u_accum, 0.0f));
-        u_accum      *= rho_accum;
-        return res;
-    }
-
     void lane::macro_initialize(const float h_suggest)
     {
         N = static_cast<size_t>(std::ceil(length/h_suggest));
@@ -334,11 +311,23 @@ namespace hybrid
         hwm::lane *downstream = parent->downstream_lane();
         if(downstream)
         {
-            capacitor.update(rs[N], dt);
-            if(capacitor.check())
+            float param;
+            if(macro_find_last(param, sim))
             {
-                lane &sim_downstream = *(downstream->user_data<lane>());
-                sim_downstream.next_cars().push_back(capacitor.emit(sim));
+                car c(0, param, velocity(param, sim.gamma), 0.0f);
+                c.compute_intersection_acceleration(sim, *this);
+                c.integrate(dt, *this);
+
+                const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
+                assert(cell >=0);
+                q[cell] = arz<float>::q(q[cell].rho(), c.velocity, parent->speedlimit, sim.gamma);
+                std::cout << "rho: " << q[cell].rho() << " vel: " << c.velocity << std::endl;
+                if(c.position >= 1.0)
+                {
+                    lane &sim_downstream = *(downstream->user_data<lane>());
+                    c.position = length/sim_downstream.length*(c.position-1.0f);
+                    sim_downstream.next_cars().push_back(sim.make_car(c.position, c.velocity, c.acceleration));
+                }
             }
         }
     }

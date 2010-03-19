@@ -455,10 +455,10 @@ int main(int argc, char *argv[])
     s.macro_initialize(0.5, 2.1*4.5, 0.0f);
 
     {
-        hybrid::lane &l = s.get_lane_by_name("lane0a");
+        hybrid::lane &l = s.get_lane_by_name("lane0b");
         l.sim_type = hybrid::MICRO;
 
-        const int cars_per_lane = 3;
+        const int cars_per_lane = 0;
         double    p             = -s.rear_bumper_offset()*l.inv_length;
 
         for (int i = 0; i < cars_per_lane; i++)
@@ -474,7 +474,7 @@ int main(int argc, char *argv[])
     }
 
     {
-        hybrid::lane &l = s.get_lane_by_name("lane0b");
+        hybrid::lane &l = s.get_lane_by_name("lane0a");
         l.sim_type = hybrid::MACRO;
 
         const int cars_per_lane = 8;

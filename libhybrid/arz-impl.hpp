@@ -43,7 +43,7 @@ template <typename T>
 arz<T>::q::q(const T in_rho, const T in_u,
              const T u_max,
              const T gamma)
-    : base(in_rho, eq::y(in_rho, in_u, u_max, gamma))
+    : base(in_rho, std::min(eq::y(in_rho, in_u, u_max, gamma), 0.0f))
 {}
 
 template <typename T>
