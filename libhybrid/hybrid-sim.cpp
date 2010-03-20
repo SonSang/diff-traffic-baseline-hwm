@@ -80,7 +80,7 @@ namespace hybrid
           q_base(0),
           rs_base(0)
     {
-        generator = new base_generator_type(42u);
+        generator = new base_generator_type(42ul);
         uni_dist  = new boost::uniform_real<>(0,1);
         uni       = new boost::variate_generator<base_generator_type&, boost::uniform_real<> >(*generator, *uni_dist);
 
