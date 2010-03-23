@@ -9,14 +9,14 @@ rho_width = 2
 speed_color = 'black'
 speed_width = 2
 
-def riemann_bounds(speeds, q_l, q_r):
+def riemann_bounds(speeds, q_l_v, q_r_v):
     xlow = min(-1, speeds[0]*1)
     xhigh = max(1, speeds[1]*1)
     s0 = slope(speeds[0], (xlow, xhigh), (0, 1))
     s1 = slope(speeds[1], (xlow, xhigh), (0, 1))
 
-    i0 = speeds[0]*q_l.rho
-    i1 = speeds[1]*q_r.rho
+    i0 = speeds[0]*q_l_v
+    i1 = speeds[1]*q_r_v
 
     return xlow, xhigh, i0, i1, s0, s1
 
@@ -63,6 +63,9 @@ def riemann_plot(ax, q_l, q_r, u_max, gamma):
 
         lambda0_l = q_l.lambda0(u_max, gamma)
         lambda0_m = q_m.lambda0(u_max, gamma)
+        lambda0_r = q_r.lambda0(u_max, gamma)
+
+        print lambda0_l, lambda0_m, lambda0_r
 
         speeds = [lambda0_l,
                   q_r.u]
@@ -87,7 +90,7 @@ def riemann_plot(ax, q_l, q_r, u_max, gamma):
         speeds = [(lambda0_l + lambda0_m)/2,
                   q_r.u]
 
-    xlow, xhigh, i0, i1, s0, s1 = riemann_bounds(speeds, q_l, q_r)
+    xlow, xhigh, i0, i1, s0, s1 = riemann_bounds(speeds, q_l.rho, q_r.rho)
 
     ax.plot([xlow, i0], [q_l.rho, q_l.rho], color=rho_color, lw=rho_width)
     ax.plot([i1,  xhigh], [q_r.rho, q_r.rho], color=rho_color, lw=rho_width)
@@ -107,8 +110,8 @@ if __name__ == '__main__':
     gamma = 0.5
     pylab.clf()
     riemann_plot(pylab.axes(),
-                 arz.full_q(0.2, 7.0, u_max, gamma),
-                 arz.full_q(0.3, 1.0, u_max, gamma),
+                 arz.full_q(0.2, 1.0, u_max, gamma),
+                 arz.full_q(0.4, 4.0, u_max, gamma),
                  u_max,
                  gamma)
     pylab.show()
