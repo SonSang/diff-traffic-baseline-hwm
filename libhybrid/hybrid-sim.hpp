@@ -29,6 +29,7 @@ namespace hybrid
         void compute_acceleration(const car &f, const float distance, const simulator &sim);
         void compute_intersection_acceleration(const simulator &sim, const lane &l);
         void integrate(double timestep, const lane &l);
+        void check_if_valid_acceleration(lane& l, double timestep);
 
         // macro data
     };

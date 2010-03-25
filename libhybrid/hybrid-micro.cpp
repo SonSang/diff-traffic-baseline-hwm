@@ -2,6 +2,42 @@
 
 namespace hybrid
 {
+    void car::check_if_valid_acceleration(lane& l, double timestep)
+    {
+        double tmp_position = position + (velocity * timestep) * l.inv_length;
+
+        lane* curr = &l;
+        lane* destination_lane = &l;
+
+        while(tmp_position >= 1.0)
+        {
+            hwm::lane *hwm_downstream = curr->parent->downstream_lane();
+
+            if (!hwm_downstream)
+            {
+                std::cout << "error" << std::endl;
+                assert(0);
+            }
+
+            if (!hwm_downstream->active)
+            {
+                std::cout << "error" << std::endl;
+                assert(0);
+            }
+
+            lane* downstream = hwm_downstream->user_data<lane>();
+
+            tmp_position = (tmp_position - 1.0f) * curr->length * downstream->inv_length;
+
+            destination_lane = downstream;
+
+            if (tmp_position >= 1.0)
+            {
+                curr = downstream;
+            }
+        }
+    }
+
     void car::compute_acceleration(const car &next, const float distance, const simulator &sim)
     {
         acceleration = sim.acceleration(next.velocity, velocity, distance);
@@ -24,7 +60,7 @@ namespace hybrid
 
     void car::integrate(const double timestep, const lane& l)
     {
-        position += (velocity     * timestep)*l.inv_length;
+        position += (velocity * timestep) * l.inv_length;
         velocity = std::max(0.0, velocity + acceleration * timestep);
     }
 
@@ -62,9 +98,13 @@ namespace hybrid
             return;
 
         for(size_t i = 0; i < current_cars().size()-1; ++i)
+        {
             current_car(i).compute_acceleration(current_car(i+1), (current_car(i+1).position - current_car(i).position)*length, sim);
+            //            current_car(i).check_if_valid_acceleration(*this, timestep);  For debugging only
+        }
 
         current_cars().back().compute_intersection_acceleration(sim, *this);
+        // current_cars().back().check_if_valid_acceleration(*this, timestep); For debugging only
     }
 
     double lane::settle_pass(const double timestep, const double epsilon, const double epsilon_2,
@@ -177,27 +217,32 @@ namespace hybrid
             }
         }
 
+        std::cout << lanes.size() << std::endl;
         BOOST_FOREACH(lane &l, lanes)
         {
             if(l.is_micro() && l.parent->active)
             {
                 BOOST_FOREACH(car &c, l.current_cars())
                 {
-                    if(c.position >= 1.0)
+                    lane* destination_lane = &l;
+                    lane* curr = &l;
+
+                    while(c.position >= 1.0)
                     {
-                        hwm::lane *hwm_downstream = l.parent->downstream_lane();
+                        hwm::lane *hwm_downstream = curr->parent->downstream_lane();
                         assert(hwm_downstream);
                         assert(hwm_downstream->active);
 
-                        lane *downstream = hwm_downstream->user_data<lane>();
+                        lane* downstream = hwm_downstream->user_data<lane>();
 
                         switch(downstream->sim_type)
                         {
                         case MICRO:
-                            c.position = (c.position - 1.0f)*l.length * downstream->inv_length;
-                            downstream->next_cars().push_back(c);
+                            c.position = (c.position - 1.0f) * curr->length * downstream->inv_length;
+                            // downstream->next_cars().push_back(c);
+                            destination_lane = downstream;
                             break;
-                        case MACRO:
+                        case MACRO: //TODO update for correctness
                             downstream->q[0].rho() = std::min(1.0f, downstream->q[0].rho() + car_length/downstream->h);
                             downstream->q[0].y()   = std::min(0.0f, arz<float>::eq::y(downstream->q[0].rho(), c.velocity,
                                                                                       hwm_downstream->speedlimit,
@@ -205,9 +250,16 @@ namespace hybrid
                             assert(downstream->q[0].check());
                             break;
                         }
+
+                        if (c.position >= 1.0)
+                        {
+                            curr = downstream;
+                        }
                     }
-                    else
-                        l.next_cars().push_back(c);
+
+                    assert(c.position < 1.0);
+
+                    destination_lane->next_cars().push_back(c);
                 }
             }
         }
