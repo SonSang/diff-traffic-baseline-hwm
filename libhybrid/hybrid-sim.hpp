@@ -27,9 +27,11 @@ namespace hybrid
 
         // micro data
         void compute_acceleration(const car &f, const float distance, const simulator &sim);
+        void find_free_dist_and_vel(const lane& l, float& next_velocity, float& distance, const simulator& sim);
         void compute_intersection_acceleration(const simulator &sim, const lane &l);
         void integrate(double timestep, const lane &l);
         void check_if_valid_acceleration(lane& l, double timestep);
+        float check_lane(const lane* l, const float param, const double timestep, const simulator& sim);
 
         // macro data
     };
@@ -66,6 +68,7 @@ namespace hybrid
         void   micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         void   compute_lane_accelerations(double timestep, const simulator &sim);
         double settle_pass(const double timestep, const double epsilon, const double epsilon_2, const simulator &sim);
+        void compute_merges(const double timestep, const simulator& sim);
 
         // macro data
         void  macro_initialize(const float h_suggest);

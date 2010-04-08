@@ -174,9 +174,9 @@ namespace hybrid
     void simulator::hybrid_step()
     {
         // fill in micro
-        convert_cars(MICRO);
+        // convert_cars(MICRO);
 
-        // macro step (also emit cars)
+        // // macro step (also emit cars)
         const float dt = macro_step(1.0f);
 
         // micro step
