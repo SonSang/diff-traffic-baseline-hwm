@@ -6,6 +6,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign color-tests])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([libhybrid/arz.hpp])
 AC_CONFIG_HEADERS([config.h])
+PKG_PROG_PKG_CONFIG
 
 AC_LANG([C++])
 

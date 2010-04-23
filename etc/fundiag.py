@@ -94,38 +94,45 @@ class demand(fundamental_diagram):
         else:
             return fundiag(x, self.umax, self.gamma) + x*self.irel
 
+def maxflux(gamma):
+    return gamma*math.pow(1.0/(gamma+1.0), (gamma+1.0)/gamma)
+
 if __name__ == '__main__':
-    gamma = 0.5
+    # gamma = 0.5
 
-    u_max_l = 4.3
-    u_max_r = 2.3
+    # u_max_l = 4.3
+    # u_max_r = 2.3
 
-    rho_l = 0.00158
-    u_l = 2.3
+    # rho_l = 0.00158
+    # u_l = 2.3
 
-    rho_r = 0.0
-    u_r = u_max_r
+    # rho_r = 0.0
+    # u_r = u_max_r
 
-    irel = u_l - ueq(rho_l, u_max_l, gamma)
-    rho_m = inv_ueq(u_r - irel, u_max_r, gamma)
+    # irel = u_l - ueq(rho_l, u_max_l, gamma)
+    # rho_m = inv_ueq(u_r - irel, u_max_r, gamma)
 
-    print irel, rho_m
+    # print irel, rho_m
 
-    d = demand(u_max_l, gamma, irel)
-    s = supply(u_max_r, gamma, irel)
+    # d = demand(u_max_l, gamma, irel)
+    # s = supply(u_max_r, gamma, irel)
 
-    fsize = 20
-    rc('text', usetex=True)
+    # fsize = 20
+    # rc('text', usetex=True)
 
-    x = np.linspace(0, 1, 50)
+    # x = np.linspace(0, 1, 50)
 
-    ax = pylab.axes()
-    ax.add_line(matplotlib.lines.Line2D((rho_l, rho_l), (0, max(0, d[rho_l])), color='orange'))
-    ax.add_line(matplotlib.lines.Line2D((rho_m, rho_m), (0, max(0, s[rho_m])), color='blue'))
+    # ax = pylab.axes()
+    # ax.add_line(matplotlib.lines.Line2D((rho_l, rho_l), (0, max(0, d[rho_l])), color='orange'))
+    # ax.add_line(matplotlib.lines.Line2D((rho_m, rho_m), (0, max(0, s[rho_m])), color='blue'))
 
-    d.plot(ax, 100, color='orange', label="demand (right)")
-    s.plot(ax, 100, color='blue', label="suppy (left)")
-    ax.legend()
+    # d.plot(ax, 100, color='orange', label="demand (right)")
+    # s.plot(ax, 100, color='blue', label="suppy (left)")
+    # ax.legend()
+
+    x = np.linspace(0,1, 1000)
+    y = [fundiag(i,1, 0.01) for i in x]
+    pylab.plot(x, y)
 
     if(len(sys.argv) == 2):
         pylab.savefig(sys.argv[1])

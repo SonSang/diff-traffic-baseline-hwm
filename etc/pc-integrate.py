@@ -1,7 +1,8 @@
 import math
 import numpy
-import pylab
 import matplotlib
+import matplotlib.pyplot as pyplot
+from matplotlib import rc
 import bisect
 import random
 import sys
@@ -57,24 +58,19 @@ class pc_data(object):
     def plot(self, ax, data, integrate, extra):
         assert extra >= self.n*self.dx
         if data:
-            pl = numpy.zeros((2, self.n*2+2))
-            for i in xrange(0, self.n*2):
-                if i % 2 == 0:
-                    xval = i/2 * self.dx
-                else:
-                    xval = (i/2 + 1) * self.dx
-                pl[0][i] = xval
-                pl[1][i] = self[i/2]
+            x = numpy.linspace(0, self.dx*(self.n-1), self.n)
+            pl = numpy.zeros(self.n)
+            for i in xrange(0, self.n):
+                pl[i] = self[i]
 
-            pl[0][-2] = self.n*self.dx
-            pl[1][-2] = self.inf
-            pl[0][-1] = extra
-            pl[1][-1] = self.inf
-
-            ax.plot(pl[0], pl[1])
+            b = ax.bar(x, pl, width=self.dx, color='#dcad2d', ec='none', label=r'$\lambda(x)=\frac{1}{l}\rho(x)$')
         if integrate:
             x = numpy.linspace(0, self.dx*self.n, self.n+1)
-            ax.plot(list(x)+[extra], list(self.integration)+[self.integration[-1] + self.inf*(extra-x[-1])])
+            p = ax.plot(list(x)+[extra], list(self.integration)+[self.integration[-1] + self.inf*(extra-x[-1])], label='$\Lambda(x) = \int_0^x \lambda(t)d\,t$', lw=2, color='#2c6b26')
+            for i in xrange(1, len(x)):
+                ax.add_line(matplotlib.lines.Line2D((x[i], x[i], 0),(0, self.integration[i], self.integration[i]),
+                                                    color='black', ls=':'))
+
         return ax
 
 def pc_string(str):
@@ -149,20 +145,34 @@ def show_poisson_proc(ax, start_end, pc):
     return ax
 
 def plot_events(ax, res, height):
-    for i in res:
-        l0 = matplotlib.lines.Line2D((i, i), (0, height), color='black', linewidth=1.0)
+    l0 = matplotlib.lines.Line2D((res[0], res[0]), (0, height), color='green', linewidth=1.0, label='vehicle location')
+    ax.add_line(l0)
+    for i in res[1:]:
+        l0 = matplotlib.lines.Line2D((i, i), (0, height), color='green', linewidth=1.0)
         ax.add_line(l0)
     return ax
 
 if __name__ == '__main__':
-    i = pc_string(sys.stdin.readline().rstrip())
-    gen = [float(x) for x in sys.stdin.readline().rstrip().split()]
+    rc('text', usetex=True)
+    getn = open("pc.txt")
+    i = pc_string(getn.readline().rstrip())
+    gen = [float(x) for x in getn.readline().rstrip().split()]
 
-    pylab.clf()
-    ax = pylab.axes()
+    pyplot.figure(figsize=(8, 4))
+    ax = pyplot.axes([0.065, 0.1, 0.9, 0.8])
 
-    pylab.hist(gen, [3, 4, 5, 6, 7, 8, 9, 10], normed=False)
-    # ax = i.plot(ax, True, False, i.end())
-    # ax = plot_events(ax, gen, max(i))
+    ax = i.plot(ax, True, False, i.end())
 
-    pylab.show()
+    ax = plot_events(ax, gen, 1.0)
+
+    pyplot.title("Lane density and instantiated cars")
+    pyplot.xlabel("$x$ (m)")
+    pyplot.ylabel("Cars per meter")
+    ax.axis([0, 2000, 0, 1])
+
+    pyplot.legend(loc=0)
+
+    if len(sys.argv) > 1:
+        pyplot.savefig(sys.argv[1])
+    else:
+        pyplot.show()

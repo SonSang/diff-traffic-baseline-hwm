@@ -2,7 +2,7 @@
 #define _PC_POISSON_HPP_
 
 #include "pc-integrate.hpp"
-
+#include <iostream>
 namespace pproc
 {
     struct drand
