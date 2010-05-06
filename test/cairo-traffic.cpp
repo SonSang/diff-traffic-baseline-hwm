@@ -8,6 +8,7 @@
 #include <FL/glut.h>
 #include "libroad/hwm_network.hpp"
 #include "libroad/geometric.hpp"
+#include "libhybrid/hybrid-sim.hpp"
 
 class fltkview : public Fl_Gl_Window
 {
@@ -487,6 +488,24 @@ int main(int argc, char *argv[])
     }
 
     hwm::network_aux neta(net);
+
+    hybrid::simulator s(&net,
+                        4.5,
+                        1.0);
+    s.micro_initialize(0.73,
+                       1.67,
+                       33,
+                       4);
+    s.macro_initialize(0.5, 2.1*4.5, 0.0f);
+    s.settle(0.033);
+
+    BOOST_FOREACH(hybrid::lane &l, s.lanes)
+    {
+        l.sim_type = hybrid::MACRO;
+        l.current_cars().clear();
+    }
+
+    s.convert_cars(hybrid::MACRO);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
     mv.net            = &net;
