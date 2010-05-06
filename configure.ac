@@ -51,6 +51,12 @@ AC_ARG_ENABLE([tests],
   [enable_tests=$enableval],
   [enable_tests=check])
 
+AC_ARG_ENABLE([images],
+  [AS_HELP_STRING([--enable-images],
+    [build components that write images @<:@default=check@:>@])],
+  [enable_images=$enableval],
+  [enable_images=check])
+
 GIT_VERSION=`./GIT-VERSION-GEN`
 AC_SUBST(GIT_VERSION)
 
@@ -135,9 +141,29 @@ AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_glew" = 
 
 AM_CONDITIONAL(DO_VISUAL, test x"$visual_ok" = xyes)
 
+AH_TEMPLATE([HAVE_CAIRO],
+	    [Define to 1 if you have <cairo.h>])
+
+AS_IF([test x"$enable_images" != xno],
+      [AC_CHECK_PROG(have_magickpp, Magick++-config, [yes], [no])
+       AS_IF([test x"$have_magickpp" = xyes],
+             [MAGICKPP_CXXFLAGS=`Magick++-config --cxxflags`
+              MAGICKPP_LDFLAGS=`Magick++-config --ldflags`
+              AC_SUBST([MAGICKPP_CXXFLAGS])
+              AC_SUBST([MAGICKPP_LDFLAGS])
+	      PKG_CHECK_MODULES([CAIRO], [cairo > 1.2],
+      	                        [image_ok=yes
+				 AC_DEFINE([HAVE_CAIRO], [1])]
+                                [AS_IF([test x"$enable_images" != xcheck],
+	 		               AC_MSG_FAILURE([--enable-images given but test for cairo failed!]),
+				       [image_ok=yes])])],
+             [AC_MSG_FAILURE([--enable-images given but test for Magick++ failed!])])],
+      [image_ok=no])
+
+AM_CONDITIONAL(DO_IMAGE, test x"$image_ok" = xyes)
+
 # Checks for libraries.
 BOOST_REQUIRE([1.39])
-BOOST_RANDOM
 
 AS_IF([test x"$boost_optimize" != xno],
       [BOOST_CPPFLAGS+=" -DBOOST_DISABLE_ASSERTS"],
@@ -198,6 +224,17 @@ echo "
 else
 echo "
   Building documentation: no"
+fi
+if test x"$image_ok" = xyes; then
+echo "
+  Building images: yes
+    CAIRO_CFLAGS......: $CAIRO_CFLAGS
+    CAIRO_LIBS........: $CAIRO_LIBS
+    MAGICKPP_CXXFLAGS.: $MAGICKPP_CXXFLAGS
+    MAGICKPP_LDFLAGS..: $MAGICKPP_LDFLAGS"
+else
+echo "
+  Building images: no"
 fi
 echo "
   C++ Compiler...: $CXX $CXXFLAGS $CPPFLAGS
