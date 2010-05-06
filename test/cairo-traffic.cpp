@@ -9,6 +9,81 @@
 #include "libroad/hwm_network.hpp"
 #include "libroad/geometric.hpp"
 #include "libhybrid/hybrid-sim.hpp"
+#include "libroad/hwm_draw.hpp"
+
+struct tex_car_draw
+{
+    tex_car_draw() : car_tex(0)
+    {
+    }
+
+    bool initialized() const
+    {
+        return glIsTexture(car_tex);
+    }
+
+    void initialize(const float        car_width_,
+                    const float        car_length_,
+                    const float        car_height_,
+                    const float        car_rear_axle_,
+                    const std::string &str)
+    {
+        car_width     = car_width_;
+        car_length    = car_length_;
+        car_height    = car_height_;
+        car_rear_axle = car_rear_axle_;
+
+        glGenTextures(1, &car_tex);
+        glBindTexture (GL_TEXTURE_2D, car_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+        Magick::Image im(str);
+        im.flip();
+        const vec2i dim(im.columns(), im.rows());
+        unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
+        im.write(0, 0, dim[0], dim[1], "RGBA", Magick::CharPixel, pix);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, dim[0], dim[1],
+                          GL_RGBA, GL_UNSIGNED_BYTE, pix);
+        delete[] pix;
+    }
+
+    void draw() const
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glBindTexture (GL_TEXTURE_2D, car_tex);
+        glPushMatrix();
+        glTranslatef(-car_rear_axle, 0, 0);
+        glScalef(car_length, car_width/2, 1);
+
+        glBegin(GL_QUADS);
+        glTexCoord2i(0,0);
+        glVertex2i(0,-1);
+        glTexCoord2i(1,0);
+        glVertex2i(1,-1);
+        glTexCoord2i(1,1);
+        glVertex2i(1,1);
+        glTexCoord2i(0,1);
+        glVertex2i(0,1);
+        glEnd();
+
+        glPopMatrix();
+    }
+
+    float  car_width;
+    float  car_length;
+    float  car_height;
+    float  car_rear_axle;
+    GLuint car_tex;
+};
+
+static const float CAR_LENGTH    = 4.5f;
+//* This is the position of the car's axle from the FRONT bumper of the car
+static const float CAR_REAR_AXLE = 3.5f;
 
 class fltkview : public Fl_Gl_Window
 {
@@ -25,9 +100,36 @@ public:
                                                           back_image_scale(1),
                                                           back_image_yscale(1),
                                                           overlay_tex_(0),
-                                                          drawing(false)
+                                                          drawing(false),
+                                                          light_position(50.0, 100.0, 50.0, 1.0),
+                                                          sim(0)
     {
         this->resizable(this);
+    }
+
+    void setup_light()
+    {
+        static const GLfloat amb_light_rgba[] = { 0.1, 0.1, 0.1, 1.0 };
+        static const GLfloat diff_light_rgba[] = { 0.7, 0.7, 0.7, 1.0 };
+        static const GLfloat spec_light_rgba[] = { 1.0, 1.0, 1.0, 1.0 };
+        static const GLfloat spec_material[] = { 1.0, 1.0, 1.0, 1.0 };
+        static const GLfloat material[] = { 1.0, 1.0, 1.0, 1.0 };
+        static const GLfloat shininess = 100.0;
+
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glEnable(GL_COLOR_MATERIAL);
+        glPushMatrix();
+        glLoadIdentity();
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
+        glPopMatrix();
+        glLightfv(GL_LIGHT0, GL_AMBIENT, amb_light_rgba );
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, diff_light_rgba );
+        glLightfv(GL_LIGHT0, GL_SPECULAR, spec_light_rgba );
+        glMaterialfv( GL_FRONT, GL_AMBIENT, material );
+        glMaterialfv( GL_FRONT, GL_DIFFUSE, material );
+        glMaterialfv( GL_FRONT, GL_SPECULAR, spec_material );
+        glMaterialfv( GL_FRONT, GL_SHININESS, &shininess);
     }
 
     void init_glew()
@@ -257,7 +359,15 @@ public:
             if(GLEW_OK != glew_state)
                 init_glew();
 
+            if(!car_drawer.initialized())
+                car_drawer.initialize(0.8*sim->hnet->lane_width,
+                                      CAR_LENGTH,
+                                      1.5f,
+                                      CAR_REAR_AXLE,
+                                      "car-top.png");
+
             init_textures();
+            setup_light();
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
@@ -273,9 +383,12 @@ public:
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        glDisable(GL_LIGHTING);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glEnable(GL_TEXTURE_2D);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        glColor3f(1.0, 1.0, 1.0);
         if(back_image)
         {
             glBindTexture (GL_TEXTURE_2D, background_tex_);
@@ -313,6 +426,28 @@ public:
         glEnd();
         glPopMatrix();
 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_TEXTURE_2D);
+        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+        {
+            if(!l.parent->active)
+                continue;
+
+            glColor3f(1.0, 0.0, 0.0);
+            BOOST_FOREACH(const hybrid::car &c, l.current_cars())
+            {
+                assert(c.position >= 0);
+                assert(c.position < 1.0);
+                mat4x4f trans(l.parent->point_frame(c.position));
+                mat4x4f ttrans(tvmet::trans(trans));
+                glPushMatrix();
+                glMultMatrixf(ttrans.data());
+                car_drawer.draw();
+                glPopMatrix();
+            }
+        }
+        glColor3f(1.0, 1.0, 1.0);
+        glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
         retex_overlay(center, scale, vec2i(w(), h()));
         glPushMatrix();
@@ -458,6 +593,10 @@ public:
     vec2f                                 first_point;
     vec2f                                 second_point;
     std::vector<hwm::road_spatial::entry> query_results;
+
+    tex_car_draw       car_drawer;
+    vec4f              light_position;
+    hybrid::simulator *sim;
 };
 
 int main(int argc, char *argv[])
@@ -497,19 +636,33 @@ int main(int argc, char *argv[])
                        33,
                        4);
     s.macro_initialize(0.5, 2.1*4.5, 0.0f);
-    s.settle(0.033);
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        l.sim_type = hybrid::MACRO;
         l.current_cars().clear();
+        l.sim_type = hybrid::MICRO;
+
+        const int cars_per_lane = 800;
+        double    p             = -s.rear_bumper_offset()*l.inv_length;
+
+        for (int i = 0; i < cars_per_lane; i++)
+        {
+            //TODO Just creating some cars here...
+            l.current_cars().push_back(s.make_car(p, 0, 0));
+
+            //Cars need a minimal distance spacing
+            p += (30.0 * l.inv_length);
+            if(p + s.front_bumper_offset()*l.inv_length >= 1.0)
+                break;
+        }
     }
 
-    s.convert_cars(hybrid::MACRO);
+    //    s.settle(0.033);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
     mv.net            = &net;
     mv.netaux         = &neta;
+    mv.sim            = &s;
     if(argc == 3)
         mv.back_image = argv+2;
 
