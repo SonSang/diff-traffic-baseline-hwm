@@ -57,6 +57,47 @@ namespace hybrid
         }
     }
 
+    void lane::convert(const sim_t dest_type, simulator &sim)
+    {
+        switch(dest_type)
+        {
+        case MICRO:
+            convert_to_micro(sim);
+            break;
+        case MACRO:
+            convert_to_macro(sim);
+            break;
+        default:
+            assert(0);
+            return;
+        }
+    };
+
+    void lane::convert_to_micro(simulator &sim)
+    {
+        if(sim_type == MICRO)
+            return;
+
+        macro_instantiate(sim);
+
+        sim_type = MICRO;
+    }
+
+    void lane::convert_to_macro(simulator &sim)
+    {
+        if(sim_type == MACRO)
+            return;
+
+        clear_macro();
+        convert_cars(sim);
+        fill_y(sim.gamma);
+
+        current_cars().clear();
+        next_cars().clear();
+
+        sim_type = MACRO;
+    }
+
     void lane::distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
         switch(sim_type)

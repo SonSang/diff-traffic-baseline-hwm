@@ -488,7 +488,7 @@ public:
 
                         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
                         {
-                            l.sim_type = hybrid::MACRO;
+                            l.updated_flag = false;
                         }
                         BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, query_results)
                         {
@@ -496,9 +496,22 @@ public:
                             {
                                 hwm::lane    &hwm_l = *(lcv.second.lane);
                                 hybrid::lane &hyb_l = *(hwm_l.user_data<hybrid::lane>());
-                                hyb_l.sim_type          = hybrid::MICRO;
+                                if(!hyb_l.updated_flag)
+                                {
+                                    hyb_l.convert_to_micro(*sim);
+                                    hyb_l.updated_flag = true;
+                                }
                             }
                         }
+                        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+                        {
+                            if(!l.updated_flag)
+                            {
+                                l.convert_to_macro(*sim);
+                                l.updated_flag = true;
+                            }
+                        }
+
                         redraw();
                     }
                 }
@@ -658,7 +671,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    //    s.settle(0.033);
+    //s.settle(0.033);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
     mv.net            = &net;

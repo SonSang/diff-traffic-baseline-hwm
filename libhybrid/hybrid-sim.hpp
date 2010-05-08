@@ -156,12 +156,16 @@ namespace hybrid
         bool                    is_micro() const;
         bool                    is_macro() const;
         bool                    occupied() const;
+        void                    convert(sim_t dest_type, simulator &sim);
+        void                    convert_to_micro(simulator &sim);
+        void                    convert_to_macro(simulator &sim);
 
         hwm::lane        *parent;
         float             length;
         float             inv_length;
         std::vector<car>  cars[2];
         sim_t             sim_type;
+        bool              updated_flag;
 
         void distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
 
