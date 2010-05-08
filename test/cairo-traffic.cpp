@@ -320,18 +320,6 @@ public:
             cairo_stroke(cr);
         }
 
-        BOOST_FOREACH(const hwm::network_aux::road_spatial::entry &e, query_results)
-        {
-            cairo_set_matrix(cr, &cmat);
-            cairo_rectangle(cr, e.rect.bounds[0][0], e.rect.bounds[0][1], e.rect.bounds[1][0]-e.rect.bounds[0][0], e.rect.bounds[1][1]-e.\rect.bounds[0][1]);
-            cairo_set_source_rgba(cr, 195/255.0, 127/255.0, 67/255.0, 0.5);
-            cairo_fill_preserve(cr);
-            cairo_set_source_rgba(cr, 255/255.0, 129/255.0, 217/255.0, 0.7);
-            cairo_identity_matrix(cr);
-            cairo_set_line_width(cr, 2.0);
-            cairo_stroke(cr);
-        }
-
         cairo_destroy(cr);
 
         glBindTexture(GL_TEXTURE_2D, overlay_tex_);
@@ -429,7 +417,7 @@ public:
         glDisable(GL_TEXTURE_2D);
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
         {
-            if(!l.parent->active)
+            if(!l.parent->active || !l.is_micro())
                 continue;
 
             glColor3f(1.0, 0.0, 0.0);
@@ -497,6 +485,20 @@ public:
                         rectangles.back().enclose_point(second_point[0], second_point[1]);
                         drawing = false;
                         query_results = netaux->road_space.query(rectangles.back());
+
+                        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+                        {
+                            l.sim_type = hybrid::MACRO;
+                        }
+                        BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, query_results)
+                        {
+                            BOOST_FOREACH(hwm::network_aux::road_rev_map::lane_cont::value_type &lcv, *e.lc)
+                            {
+                                hwm::lane    &hwm_l = *(lcv.second.lane);
+                                hybrid::lane &hyb_l = *(hwm_l.user_data<hybrid::lane>());
+                                hyb_l.sim_type          = hybrid::MICRO;
+                            }
+                        }
                         redraw();
                     }
                 }
