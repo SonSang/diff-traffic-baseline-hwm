@@ -501,7 +501,7 @@ public:
             {
                 assert(c.position >= 0);
                 assert(c.position < 1.0);
-                mat4x4f trans(l.parent->point_frame(c.position));
+                mat4x4f trans(c.point_frame(&l));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
@@ -677,7 +677,6 @@ public:
     float    back_image_yscale;
 
     GLuint   overlay_tex_;
-
     GLuint   continuum_tex_;
 
     std::vector<aabb2d>                                rectangles;
