@@ -8,7 +8,6 @@ namespace hybrid
 
     lane::serial_state::serial_state(const lane &l) : cars(l.current_cars()),
                                                       sim_type(l.sim_type)
-
     {
         assert(l.next_cars().empty());
     }

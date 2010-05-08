@@ -4,6 +4,86 @@
 
 namespace hybrid
 {
+    struct turn_curve
+    {
+        turn_curve(float in_x) : x_(in_x) {}
+
+        float operator()(float t) const
+        {
+            return x(t) - x_;
+        }
+
+        float x_;
+
+        static float x(float t)
+        {
+            return (((0.952735372896*t+
+                      -0.999804060107*t) +
+                     -1.72981115096*t) +
+                    2.77923310042*t) +
+            0.000979602079628;
+        }
+
+        static float y(float t)
+        {
+            return ((((4.95688785514*t+
+                       -12.4993312165*t) +
+                      9.28482561644*t) +
+                     -0.8082796784*t) +
+                    0.0691053639752*t) +
+            -0.00106975213459;
+        }
+
+        static float theta(float t)
+        {
+            const float orientation = M_PI/2.0f;
+            const float kmax = 1.1172f;
+            const float m = 2.0f*orientation/kmax;
+            const float inv_m = 1.0f/m;
+
+
+            t *= m;
+
+            if(t <= m/2)
+                return kmax*t*t*inv_m;
+            else if(t <= m)
+                return -kmax*(t*t*inv_m - 2*t + m/2);
+            else
+                return kmax*m/2;
+        }
+
+        static float rotate(float t)
+        {
+            float max_rotation = M_PI/12.0;
+            float factor = 1.5;
+
+            if (t < 0.5)
+            {
+                return pow((t/0.5f), factor)*max_rotation;
+            }
+            else if (t == 0.5) //really just for illustrartion.
+            {
+                return max_rotation;
+            }
+            else  // (t > 0.5)
+            {
+                return pow(1 - t,factor)*max_rotation;
+            }
+        }
+
+        static float x_end(float speed)
+        {
+            return  0.843112757647*speed+
+            2.45445917647;
+        }
+
+        static float y_end(float speed)
+        {
+            return 0.244331745882*speed+
+            4.11774005882;
+        }
+    };
+
     mat4x4f car::point_frame(const lane* l) const
     {
         mat4x4f trans;
