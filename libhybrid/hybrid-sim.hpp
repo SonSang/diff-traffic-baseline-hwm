@@ -66,7 +66,7 @@ namespace hybrid
             {
                 return max_rotation;
             }
-            else if (t > 0.5)
+            else  // (t > 0.5)
             {
                 return pow(1 - t,factor)*max_rotation;
             }
@@ -84,9 +84,6 @@ namespace hybrid
             4.11774005882;
         }
     };
-
-
-
 
     typedef enum {MACRO=1, MICRO=2} sim_t;
 
@@ -114,12 +111,12 @@ namespace hybrid
         // micro data
         struct Other_lane_membership
         {
-            bool is_left;
-            lane* other_lane;
-            float merge_param;
-            float position;
-            float theta;
-            float phi_max;
+            bool   is_left;
+            lane  *other_lane;
+            float  merge_param;
+            float  position;
+            float  theta;
+            float  phi_max;
         } other_lane_membership;
 
         void compute_acceleration(const car &f, const float distance, const simulator &sim);
@@ -128,14 +125,24 @@ namespace hybrid
         void integrate(double timestep, const lane &l);
         void check_if_valid_acceleration(lane& l, double timestep);
         float check_lane(const lane* l, const float param, const double timestep, const simulator& sim);
-        mat4x4f point_frame(const lane* l);
-
+        mat4x4f point_frame(const lane* l) const;
 
         // macro data
     };
 
     struct lane
     {
+        struct serial_state
+        {
+            serial_state();
+            serial_state(const lane &l);
+
+            void apply(lane &l) const;
+
+            std::vector<car> cars;
+            sim_t            sim_type;
+        };
+
         lane();
 
         // common data
@@ -151,7 +158,6 @@ namespace hybrid
         const car               &next_car(size_t i) const { return cars[1][i]; }
         car                     &next_car(size_t i)       { return cars[1][i]; };
 
-
         void                    car_swap();
         bool                    is_micro() const;
         bool                    is_macro() const;
@@ -159,6 +165,8 @@ namespace hybrid
         void                    convert(sim_t dest_type, simulator &sim);
         void                    convert_to_micro(simulator &sim);
         void                    convert_to_macro(simulator &sim);
+
+        serial_state serial() const;
 
         hwm::lane        *parent;
         float             length;
@@ -200,6 +208,23 @@ namespace hybrid
 
     struct simulator
     {
+        typedef boost::rand48  base_generator_type;
+
+        struct serial_state
+        {
+            serial_state();
+            serial_state(const simulator &s);
+
+            void apply(simulator &s) const;
+
+            size_t               car_id_counter;
+            arz<float>::q       *q_base;
+            base_generator_type  generator;
+
+            hwm::network::serial_state      network_state;
+            std::vector<lane::serial_state> lane_states;
+        };
+
         // common
         simulator(hwm::network *net, float length, float rear_axle);
 
@@ -215,22 +240,21 @@ namespace hybrid
         const lane &get_lane_by_name(const str &s) const;
 
         void hybrid_step();
-
         void advance_intersections(float dt);
+
+        serial_state serial() const;
 
         hwm::network          *hnet;
         std::vector<lane>      lanes;
         float                  car_length;
         float                  rear_bumper_rear_axle;
         float                  time;
-        typedef boost::rand48  base_generator_type;
         base_generator_type   *generator;
         boost::uniform_real<> *uni_dist;
         typedef boost::variate_generator<base_generator_type&,
             boost::uniform_real<> > rand_gen_t;
         rand_gen_t            *uni;
         size_t                 car_id_counter;
-
 
         // micro
         void   micro_initialize(const double a_max, const double a_pref, const double v_pref,

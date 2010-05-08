@@ -4,7 +4,7 @@
 
 namespace hybrid
 {
-    mat4x4f car::point_frame(const lane* l)
+    mat4x4f car::point_frame(const lane* l) const
     {
         mat4x4f trans;
         float pos[4];
@@ -413,6 +413,8 @@ namespace hybrid
                 return current_car(i);
             }
         }
+        assert(0);
+        return current_cars()[0];
     }
 
     void lane::compute_lane_accelerations(const double timestep, const simulator &sim)

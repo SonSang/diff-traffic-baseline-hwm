@@ -2,8 +2,26 @@
 
 namespace hybrid
 {
+    lane::serial_state::serial_state()
+    {
+    }
+
+    lane::serial_state::serial_state(const lane &l) : cars(l.current_cars()),
+                                                      sim_type(l.sim_type)
+
+    {
+        assert(l.next_cars().empty());
+    }
+
+    void lane::serial_state::apply(lane &l) const
+    {
+        l.sim_type       = sim_type;
+        l.current_cars() = cars;
+    }
+
     lane::lane() : parent(0), N(0), q(0), rs(0)
-    {}
+    {
+    }
 
     void lane::initialize(hwm::lane *in_parent)
     {
@@ -98,6 +116,11 @@ namespace hybrid
         sim_type = MACRO;
     }
 
+    lane::serial_state lane::serial() const
+    {
+        return serial_state(*this);
+    }
+
     void lane::distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
         switch(sim_type)
@@ -110,6 +133,28 @@ namespace hybrid
             assert(0);
             return;
         }
+    }
+
+    simulator::serial_state::serial_state()
+    {
+    }
+
+    simulator::serial_state::serial_state(const simulator &s) : car_id_counter(s.car_id_counter),
+                                                                generator(*s.generator),
+                                                                network_state(s.hnet->serial())
+    {
+        lane_states.reserve(s.lanes.size());
+        BOOST_FOREACH(const lane &l, s.lanes)
+        {
+            lane_states.push_back(l.serial());
+        }
+    }
+
+    void simulator::serial_state::apply(simulator &s) const
+    {
+        s.car_id_counter = car_id_counter;
+        *s.generator     = generator;
+        network_state.apply(*s.hnet);
     }
 
     simulator::simulator(hwm::network *net, float length, float rear_axle)
@@ -254,5 +299,10 @@ namespace hybrid
                     i.lock();
             }
         }
+    }
+
+    simulator::serial_state simulator::serial() const
+    {
+        return serial_state(*this);
     }
 }
