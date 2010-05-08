@@ -5,6 +5,89 @@
 
 namespace hybrid
 {
+    struct turn_curve
+    {
+        turn_curve(float in_x) : x_(in_x) {}
+
+        float operator()(float t)
+        {
+            return x(t) - x_;
+        }
+
+        float x_;
+
+        static float x(float t)
+        {
+            return (((0.952735372896*t+
+                      -0.999804060107*t) +
+                     -1.72981115096*t) +
+                    2.77923310042*t) +
+            0.000979602079628;
+        }
+
+        static float y(float t)
+        {
+            return ((((4.95688785514*t+
+                       -12.4993312165*t) +
+                      9.28482561644*t) +
+                     -0.8082796784*t) +
+                    0.0691053639752*t) +
+            -0.00106975213459;
+        }
+
+        static float theta(float t)
+        {
+            const float orientation = M_PI/2.0f;
+            const float kmax = 1.1172f;
+            const float m = 2.0f*orientation/kmax;
+            const float inv_m = 1.0f/m;
+
+
+            t *= m;
+
+            if(t <= m/2)
+                return kmax*t*t*inv_m;
+            else if(t <= m)
+                return -kmax*(t*t*inv_m - 2*t + m/2);
+            else
+                return kmax*m/2;
+        }
+
+        static float rotate(float t)
+        {
+            float max_rotation = M_PI/12.0;
+            float factor = 1.5;
+
+            if (t < 0.5)
+            {
+                return pow((t/0.5f), factor)*max_rotation;
+            }
+            else if (t == 0.5) //really just for illustrartion.
+            {
+                return max_rotation;
+            }
+            else if (t > 0.5)
+            {
+                return pow(1 - t,factor)*max_rotation;
+            }
+        }
+
+        static float x_end(float speed)
+        {
+            return  0.843112757647*speed+
+            2.45445917647;
+        }
+
+        static float y_end(float speed)
+        {
+            return 0.244331745882*speed+
+            4.11774005882;
+        }
+    };
+
+
+
+
     typedef enum {MACRO=1, MICRO=2} sim_t;
 
     struct simulator;
@@ -17,7 +100,10 @@ namespace hybrid
             const double in_velocity, const double in_acceleration)
             : id(in_id), position(in_position),
               velocity(in_velocity), acceleration(in_acceleration)
-        {}
+        {
+            other_lane_membership.other_lane = 0;
+            other_lane_membership.merge_param = 0;
+        }
 
         //common data
         size_t id;
@@ -26,12 +112,24 @@ namespace hybrid
         double acceleration;
 
         // micro data
+        struct Other_lane_membership
+        {
+            bool is_left;
+            lane* other_lane;
+            float merge_param;
+            float position;
+            float theta;
+            float phi_max;
+        } other_lane_membership;
+
         void compute_acceleration(const car &f, const float distance, const simulator &sim);
         void find_free_dist_and_vel(const lane& l, float& next_velocity, float& distance, const simulator& sim);
         void compute_intersection_acceleration(const simulator &sim, const lane &l);
         void integrate(double timestep, const lane &l);
         void check_if_valid_acceleration(lane& l, double timestep);
         float check_lane(const lane* l, const float param, const double timestep, const simulator& sim);
+        mat4x4f point_frame(const lane* l);
+
 
         // macro data
     };
@@ -50,6 +148,9 @@ namespace hybrid
 
         const std::vector<car>  &next_cars() const { return cars[1]; };
         std::vector<car>        &next_cars()       { return cars[1]; };
+        const car               &next_car(size_t i) const { return cars[1][i]; }
+        car                     &next_car(size_t i)       { return cars[1][i]; };
+
 
         void                    car_swap();
         bool                    is_micro() const;
@@ -65,10 +166,12 @@ namespace hybrid
         void distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
 
         // micro data
-        void   micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
-        void   compute_lane_accelerations(double timestep, const simulator &sim);
-        double settle_pass(const double timestep, const double epsilon, const double epsilon_2, const simulator &sim);
-        void compute_merges(const double timestep, const simulator& sim);
+        void  micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
+        void  compute_lane_accelerations(double timestep, const simulator &sim);
+        float settle_pass(const double timestep, const double epsilon, const double epsilon_2, const simulator &sim);
+        void  compute_merges(const double timestep, const simulator& sim);
+        car&  find_next_car(float param);
+        car   get_merging_leader(float param, const lane* other_lane);
 
         // macro data
         void  macro_initialize(const float h_suggest);

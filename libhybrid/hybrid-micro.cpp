@@ -4,51 +4,146 @@
 
 namespace hybrid
 {
+    mat4x4f car::point_frame(const lane* l)
+    {
+        mat4x4f trans;
+        float pos[4];
+        if (other_lane_membership.other_lane != 0)
+        {
+            float offset = std::min(hybrid::turn_curve::y(other_lane_membership.merge_param), (float)1.0);
+            offset *= 2.5;
+            float theta = hybrid::turn_curve::rotate(other_lane_membership.merge_param);
+            if (!other_lane_membership.is_left)
+            {
+                offset *= -1;
+                theta *= -1;
+            }
+
+            mat4x4f rotation;
+            rotation(0, 0) = cos(theta);  rotation(0, 1) = -1*sin(theta);  rotation(0, 2) = 0;    rotation(0, 3) = 0;
+            rotation(1, 0) = sin(theta);  rotation(1, 1) = cos(theta);     rotation(1, 2) = 0;    rotation(1, 3) = 0;
+            rotation(2, 0) = 0;           rotation(2, 1) = 0;              rotation(2, 2) = 1.0f; rotation(2, 3) = 0;
+            rotation(3, 0) = 0.0f;        rotation(3, 1) = 0.0f;           rotation(3, 2) = 0.0f; rotation(3, 3) = 1.0f;
+
+            trans = mat4x4f(other_lane_membership.other_lane->parent->point_frame(other_lane_membership.position, offset));
+            pos[0] = trans(0,3); pos[1] = trans(1,3); pos[2] = trans(2,3); pos[3] = trans(3,3);
+
+            trans = rotation*trans;
+            trans(0,3) = pos[0]; trans(1,3) = pos[1]; trans(2,3) = pos[2]; trans(3,3) = pos[3];
+
+        }
+        else
+            trans = mat4x4f(l->parent->point_frame(position));
+
+        return trans;
+    }
+
     float car::check_lane(const lane* l, const float param, const double timestep, const simulator &sim)
     {
-        float polite = 1;
+        float polite = 0;
         car potential_follower(0, 0, 0, 0);
         car potential_leader(0, 0, 0, 0);
         bool found_a_leader = false;
         bool found_a_follower = false;
 
-
-        //tmp should do a binary search for positon
-        for (int i = 0; i < (int)l->cars[0].size(); i++)
+        //Find the cars ahead and behind of where the car will merge
+        ///TODO should do a binary search for positon
+        for (int i = 0; i < (int)l->current_cars().size(); i++)
         {
-
             potential_leader   = l->current_car(i);
-
-            std::cout << "other " << potential_leader.position << " , curr " << param << std::endl;
 
             if (potential_leader.position > param)
             {
-                std::cout << "found leader" << std::endl;
                 found_a_leader = true;
                 break;
             }
 
             potential_follower = l->current_car(i);
 
-
             if (potential_follower.position <= param)
             {
-                std::cout << "found follower" << std::endl;
                 found_a_follower = true;
             }
         }
+
 
         if (found_a_leader == false)
         {
             potential_follower = l->cars[0].back();
             float vel, pos;
             find_free_dist_and_vel(*l, vel, pos, sim);
-            potential_leader = car(0, pos, vel, 0);
+            potential_leader = car(0, (pos / l->length), vel, 0);
         }
 
         //Calc what the acceleration would be for this car were the lane change made.
-        std::cout << potential_leader.velocity << " " << velocity << " " << std::abs(potential_leader.position - param) << std::endl;
         float a_hat = sim.acceleration(potential_leader.velocity, velocity, std::abs(potential_leader.position*l->length - param*l->length));
+
+        bool found_a_next_leader = false;
+        bool found_a_next_follower = false;
+        car potential_next_follower(0, 0, 0, 0);
+        car potential_next_leader(0, 0, 0, 0);
+
+        //Check for next cars too
+        for (int i = 0; i < (int)l->next_cars().size(); i++)
+        {
+            potential_next_leader   = l->next_car(i);
+
+            if (potential_next_leader.position > param)
+            {
+                found_a_next_leader = true;
+                break;
+            }
+
+        }
+
+        if (found_a_next_leader)
+        {
+            float a_hat_foo = sim.acceleration(potential_next_leader.velocity, velocity, std::abs(potential_next_leader.position*l->length - param*l->length));
+
+            a_hat = std::min(a_hat, a_hat_foo);
+        }
+
+        //Check for cars that are still merging out of this lane
+        float a_hat_bar = std::numeric_limits<float>::max();
+        ///Check left lane if it's there
+        float left_param = param;
+        hwm::lane* potential_left = l->parent->left_adjacency(left_param);
+        double left_accel = 0;
+        lane* left_lane = 0;
+        float a_hat_bar_l;
+        if (potential_left)
+        {
+            left_lane = potential_left->user_data<lane>();
+            car c = left_lane->get_merging_leader(left_param, l);
+            if (c.position > -1)
+            {
+                a_hat_bar_l = sim.acceleration(c.velocity,
+                                               velocity,
+                                               std::abs(c.position*l->length - param*l->length));
+                a_hat_bar = std::min(a_hat_bar, a_hat_bar_l);
+            }
+        }
+
+        ///Check right lane if it's there
+        float right_param = param;
+        hwm::lane* potential_right = l->parent->right_adjacency(right_param);
+        double right_accel = 0;
+        lane* right_lane = 0;
+        float a_hat_bar_r;
+        if (potential_right)
+        {
+            right_lane = potential_right->user_data<lane>();
+            car c = right_lane->get_merging_leader(right_param, l);
+            if (c.position > -1)
+            {
+                a_hat_bar_r = sim.acceleration(c.velocity,
+                                               velocity,
+                                               std::abs(c.position*l->length - param*l->length));
+                a_hat_bar = std::min(a_hat_bar, a_hat_bar_r);
+            }
+        }
+
+        a_hat = std::min(a_hat, a_hat_bar);
 
         //TODO need to search backward for follower if not found.
 
@@ -59,13 +154,12 @@ namespace hybrid
         else
             potential_follower = car(0, 0, 0, 0);
 
-        std::cout << "found follower " << found_a_follower << std::endl;
-        std::cout << a_hat << " pot new accel " << std::endl;
-        std::cout << acceleration << " cur accel " << std::endl;
-        std::cout << potential_follower.acceleration << " is pot follower curr accel " << std::endl;
-        std::cout << f_hat << " is potential accel for new follower" << std::endl;
 
-        return (a_hat - acceleration) + polite*(f_hat - potential_follower.acceleration);
+        //Limit on how much deceleration is possible.
+        if (f_hat < -0.5*sim.a_max)
+            return std::numeric_limits<int>::min();
+        else
+            return (a_hat - acceleration) + polite*(f_hat - potential_follower.acceleration);
     }
 
     void car::check_if_valid_acceleration(lane& l, double timestep)
@@ -132,9 +226,86 @@ namespace hybrid
 
     void car::integrate(const double timestep, const lane& l)
     {
+        //Update position and velocity
         position += (velocity * timestep) * l.inv_length;
+
+        //Move car that is also a member of the other lane
+        float seconds_for_merge = 5.0f;
+        if (other_lane_membership.other_lane != 0)
+        {
+            // TODO USE LANE LENGTH -- 0.2 = 1/5
+            if (velocity > (2.5*0.2f))
+            {
+                other_lane_membership.merge_param += timestep / seconds_for_merge;
+            }
+            else
+            {
+                other_lane_membership.merge_param += (velocity*timestep*(1.0/2.5));
+            }
+
+            other_lane_membership.position += (velocity * timestep) * other_lane_membership.other_lane->inv_length;
+
+            //TODO L is wheelbase -- length to rear axel
+            // float L = 4.5;
+            // float u_s = 1.0f/sin(other_lane_membership.theta)*velocity;
+            // float d_x = u_s*cos(theta);
+            // float d_theta = (u_s/L)*tan(other_lane_membership.merge_param*other_lane_membership.phi_max)*timestep;
+
+
+
+            if (other_lane_membership.merge_param > 1)
+            {
+                other_lane_membership.merge_param = 0;
+                other_lane_membership.other_lane = 0;
+                other_lane_membership.position = 0;
+            }
+        }
+
         velocity = std::max(0.0, velocity + acceleration * timestep);
     }
+
+    car lane::get_merging_leader(float param, const lane* other_lane)
+    {
+        car cur_car(-1, -1, -1, -1);
+        for (int i = 0; i < current_cars().size(); i++)
+        {
+            if (current_car(i).other_lane_membership.other_lane != 0)
+            {
+                if (current_car(i).other_lane_membership.other_lane == other_lane)
+                {
+                    if (current_car(i).position >= param)
+                    {
+                        cur_car = current_car(i);
+                        cur_car.position = current_car(i).other_lane_membership.position;
+                    }
+                }
+            }
+        }
+
+        bool nxt_car_found = false;
+        car nxt_car(-1, -1, -1, -1);
+        for (int i = 0; i < next_cars().size(); i++)
+        {
+            if (next_car(i).other_lane_membership.other_lane != 0)
+            {
+                if (next_car(i).other_lane_membership.other_lane == other_lane)
+                {
+                    if (next_car(i).position >= param)
+                    {
+                        nxt_car = next_car(i);
+                        nxt_car.position = next_car(i).other_lane_membership.position;
+                        nxt_car_found =true;
+                    }
+                }
+            }
+        }
+
+        if (nxt_car_found and (nxt_car.position < cur_car.position))
+            return nxt_car;
+        else
+            return cur_car;
+    }
+
 
     void lane::micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
@@ -164,51 +335,65 @@ namespace hybrid
         return;
     }
 
+
+
     void lane::compute_merges(const double timestep, const simulator& sim)
     {
-        float threshold = 0.5;
-        for(int i = 0; i < ((int)current_cars().size()); ++i)
+        float threshold = 0.2;
+        for(int i = (int)current_cars().size() - 1; i >= 0; --i)
         {
-            //Check if car decides to merge
-            float right_param = current_car(i).position;
-            std::cout << "r pos " << right_param << std::endl;
-            hwm::lane* potential_right = parent->right_adjacency(right_param);
-            std::cout << "r param " << right_param << std::endl;
-            double right_accel = 0;
-            lane* right_lane = 0;
-            if (potential_right)
+            //Don't consider merging again if still merging.
+            if (current_car(i).other_lane_membership.other_lane == 0)
             {
-                std::cout << "checking right" << std::endl;
-                right_lane = potential_right->user_data<lane>();
-                right_accel = current_car(i).check_lane(right_lane, right_param, timestep, sim);
-            }
+                //Check if car decides to merge
+                float right_param = current_car(i).position;
 
-            float left_param = current_car(i).position;
-            std::cout << "l pos " << left_param << std::endl;
-            hwm::lane* potential_left = parent->left_adjacency(left_param);
-            std::cout << "l param " << left_param << std::endl;
-            double left_accel = 0;
-            lane* left_lane = 0;
-            if (potential_left)
-            {
-                std::cout << "checking left" << std::endl;
-                left_lane = potential_left->user_data<lane>();
-                left_accel = current_car(i).check_lane(left_lane, left_param, timestep, sim);
-            }
-
-            if (right_accel > threshold or left_accel > threshold)
-            {
-                if (right_accel > left_accel)
+                hwm::lane* potential_right = parent->right_adjacency(right_param);
+                double right_accel = std::numeric_limits<int>::min();
+                lane* right_lane = 0;
+                if (potential_right)
                 {
-                    std::cout << "Merge right" << std::endl;
-                    current_car(i).position = right_param;
-                    right_lane->next_cars().push_back(current_car(i));
+                    right_lane = potential_right->user_data<lane>();
+                    right_accel = current_car(i).check_lane(right_lane, right_param, timestep, sim);
+                }
+
+                float left_param = current_car(i).position;
+                hwm::lane* potential_left = parent->left_adjacency(left_param);
+                double left_accel = std::numeric_limits<int>::min();
+                lane* left_lane = 0;
+                if (potential_left)
+                {
+                    left_lane = potential_left->user_data<lane>();
+                    left_accel = current_car(i).check_lane(left_lane, left_param, timestep, sim);
+                }
+
+                //Merge the cars
+                if (right_accel  > threshold
+                    or left_accel > threshold)
+                {
+                    if (right_accel > left_accel)
+                    {
+                        current_car(i).other_lane_membership.other_lane = this;
+                        current_car(i).other_lane_membership.merge_param = 0;
+                        current_car(i).other_lane_membership.position = current_car(i).position;
+                        current_car(i).other_lane_membership.is_left = false;
+                        current_car(i).position = right_param;
+
+                        right_lane->next_cars().push_back(current_car(i));
+                    }
+                    else
+                    {
+                        current_car(i).other_lane_membership.other_lane = this;
+                        current_car(i).other_lane_membership.merge_param = 0;
+                        current_car(i).other_lane_membership.position = current_car(i).position;
+                        current_car(i).other_lane_membership.is_left = true;
+                        current_car(i).position = left_param;
+                        left_lane->next_cars().push_back(current_car(i));
+                    }
                 }
                 else
                 {
-                    std::cout << "Merge left" << std::endl;
-                    current_car(i).position = left_param;
-                    left_lane->next_cars().push_back(current_car(i));
+                    next_cars().push_back(current_car(i));
                 }
             }
             else
@@ -218,24 +403,73 @@ namespace hybrid
         }
     }
 
+    car& lane::find_next_car(float param)
+    {
+        //TODO bisect search
+        for (size_t i = 0; i < current_cars().size(); i++)
+        {
+            if (current_car(i).position >= param)
+            {
+                return current_car(i);
+            }
+        }
+    }
 
     void lane::compute_lane_accelerations(const double timestep, const simulator &sim)
     {
          if(current_cars().empty())
              return;
 
-         for(size_t i = 0; i < current_cars().size()-1; ++i)
+         for(size_t i = 0; i < current_cars().size(); ++i)
          {
-             current_car(i).compute_acceleration(current_car(i+1), (current_car(i+1).position - current_car(i).position)*length, sim);
+             if (i < current_cars().size() - 1)
+                 current_car(i).compute_acceleration(current_car(i+1), (current_car(i+1).position - current_car(i).position)*length, sim);
+             else
+                 current_cars().back().compute_intersection_acceleration(sim, *this);
+
+             // //Check if there are cars still merging out of this lane.
+             float right_param = current_car(i).position;
+             hwm::lane* potential_right = parent->right_adjacency(right_param);
+             lane* right_lane;
+             float right_accel = 0;
+             car next_r;
+             if (potential_right)
+             {
+                right_lane = potential_right->user_data<lane>();
+
+                next_r  = right_lane->get_merging_leader(right_param, this);
+
+                if (next_r.position > -1)
+                    right_accel = sim.acceleration(next_r.velocity, current_car(i).velocity, std::abs(next_r.position - right_param)*right_lane->length);
+             }
+
+             float left_param = current_car(i).position;
+             hwm::lane* potential_left = parent->left_adjacency(left_param);
+             lane* left_lane;
+             float left_accel = 0;
+             car next_l;
+             if (potential_left)
+             {
+                left_lane = potential_left->user_data<lane>();
+
+                next_l  = left_lane->get_merging_leader(left_param, this);
+                if (next_l.position > -1)
+                {
+                    left_accel = sim.acceleration(next_l.velocity, current_car(i).velocity, std::abs(next_l.position - left_param)*left_lane->length);
+                }
+             }
+
+             if (potential_right and next_r.position > -1)
+                 current_car(i).acceleration = std::min(current_car(i).acceleration, (double)right_accel);
+
+             if (potential_left and next_l.position > -1)
+                 current_car(i).acceleration = std::min(current_car(i).acceleration, (double)left_accel);
+
              //            current_car(i).check_if_valid_acceleration(*this, timestep);  For debugging only
          }
-
-
-         current_cars().back().compute_intersection_acceleration(sim, *this);
-         // current_cars().back().check_if_valid_acceleration(*this, timestep); For debugging only
      }
 
-     double lane::settle_pass(const double timestep, const double epsilon, const double epsilon_2,
+     float lane::settle_pass(const double timestep, const double epsilon, const double epsilon_2,
                               const simulator &sim)
      {
          double max_acceleration = epsilon;
@@ -297,7 +531,7 @@ namespace hybrid
              {
                  if(l.is_micro() && l.parent->active)
                      max_acceleration = std::max(l.settle_pass(timestep, EPSILON, EPSILON_2, *this),
-                                                 max_acceleration);
+                                                 (float) max_acceleration);
              }
 
              std::cout << "Max acceleration in settle: " << max_acceleration << std::endl;
@@ -309,7 +543,7 @@ namespace hybrid
      {
          static const double s1 = 2;
          static const double T  = 1.6;
-         const float EPSILON = std::numeric_limits<float>::min();
+         const float EPSILON = 10e-7;
 
          //if (f.vel < 0) f.vel = 0; //TODO Should this be taken into account?
 
@@ -320,6 +554,8 @@ namespace hybrid
          if (distance == 0)
              distance = EPSILON;
 
+
+         //         std::cout << "leader vel " << leader_velocity << " dist " << distance << std::endl;
          const double t               = a_max*(1 - std::pow((follower_velocity / v_pref), delta) - std::pow((optimal_spacing/(distance)), 2));
 
          //assert(l.dist - f.dist > 0); //A leader needs to lead.
@@ -337,7 +573,6 @@ namespace hybrid
          BOOST_FOREACH(lane& l, lanes)
          {
              if (l.is_micro() and l.parent->active)
-                 std::cout << "lane" << std::endl;
                  l.compute_merges(timestep, *this);
          }
 
@@ -362,7 +597,6 @@ namespace hybrid
              }
          }
 
-         std::cout << lanes.size() << std::endl;
          BOOST_FOREACH(lane &l, lanes)
          {
              if(l.is_micro() && l.parent->active)
