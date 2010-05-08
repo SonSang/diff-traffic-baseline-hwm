@@ -11,6 +11,33 @@
 #include "libhybrid/hybrid-sim.hpp"
 #include "libroad/hwm_draw.hpp"
 
+static inline void blackbody(float *rgb, const float val)
+{
+   if(val <= 0.0) // clamp low to black
+       rgb[0] = rgb[1] = rgb[2] = 0.0f;
+   else if(val >= 1.0f) // and high to white
+       rgb[0] = rgb[1] = rgb[2] = 1.0f;
+   else if(val < 1.0f/3.0f) // go to [1, 0, 0] over [0, 1/3)
+   {
+       rgb[0] = val*3.0f;
+       rgb[1] = 0.0f;
+       rgb[2] = 0.0f;
+   }
+   else if(val < 2.0f/3.0f)  // go to [1, 1, 0] over [1/3, 2/3)
+   {
+       rgb[0] = 1.0f;
+       rgb[1] = (val-1.0f/3.0f)*3.0f;
+       rgb[2] = 0.0f;
+   }
+   else // go to [1, 1, 1] over [2/3, 1.0)
+   {
+       rgb[0] = 1.0f;
+       rgb[1] = 1.0f;
+       rgb[2] = (val-2.0f/3.0f)*3.0f;
+   }
+   return;
+}
+
 struct tex_car_draw
 {
     tex_car_draw() : car_tex(0)
@@ -35,13 +62,11 @@ struct tex_car_draw
 
         glGenTextures(1, &car_tex);
         glBindTexture (GL_TEXTURE_2D, car_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
         Magick::Image im(str);
-        im.flip();
         const vec2i dim(im.columns(), im.rows());
         unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
         im.write(0, 0, dim[0], dim[1], "RGBA", Magick::CharPixel, pix);
@@ -100,6 +125,7 @@ public:
                                                           back_image_scale(1),
                                                           back_image_yscale(1),
                                                           overlay_tex_(0),
+                                                          continuum_tex_(0),
                                                           drawing(false),
                                                           light_position(50.0, 100.0, 50.0, 1.0),
                                                           sim(0)
@@ -195,6 +221,17 @@ public:
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
             retex_overlay(center, scale, vec2i(w(), h()));
+        }
+        if(!glIsTexture(continuum_tex_))
+        {
+            glGenTextures(1, &continuum_tex_);
+            glBindTexture (GL_TEXTURE_2D, continuum_tex_);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         }
     }
 
@@ -345,13 +382,15 @@ public:
 
             if(GLEW_OK != glew_state)
                 init_glew();
-
             if(!car_drawer.initialized())
                 car_drawer.initialize(0.8*sim->hnet->lane_width,
                                       CAR_LENGTH,
                                       1.5f,
                                       CAR_REAR_AXLE,
                                       "car-top.png");
+
+            if(!network_drawer.initialized())
+                network_drawer.initialize(sim->hnet, 0.05f);
 
             init_textures();
             setup_light();
@@ -414,6 +453,43 @@ public:
         glPopMatrix();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture (GL_TEXTURE_2D, continuum_tex_);
+        std::vector<vec4f> colors;
+        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+        {
+            if(!l.parent->active || !l.is_macro())
+                continue;
+
+            colors.resize(l.N);
+            for(size_t i = 0; i < l.N; ++i)
+            {
+                float val;
+                //                if(drawfield == RHO)
+                    val = l.q[i].rho();
+                // else
+                //     val = arz<float>::eq::u(l.q[i].rho(),
+                //                             l.q[i].y(),
+                //                             l.parent->speedlimit,
+                //                             sim->gamma)/l.parent->speedlimit;
+
+                blackbody(colors[i].data(), val);
+                colors[i][3] = 1.0f;
+            }
+
+            glTexImage2D (GL_TEXTURE_2D,
+                          0,
+                          GL_RGBA,
+                          l.N,
+                          1,
+                          0,
+                          GL_RGBA,
+                          GL_FLOAT,
+                          colors[0].data());
+
+            network_drawer.draw_lane_solid(l.parent->id);
+        }
+
         glDisable(GL_TEXTURE_2D);
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
         {
@@ -600,7 +676,9 @@ public:
     float    back_image_scale;
     float    back_image_yscale;
 
-    GLuint                 overlay_tex_;
+    GLuint   overlay_tex_;
+
+    GLuint   continuum_tex_;
 
     std::vector<aabb2d>                                rectangles;
     bool                                               drawing;
@@ -609,6 +687,8 @@ public:
     std::vector<hwm::network_aux::road_spatial::entry> query_results;
 
     tex_car_draw       car_drawer;
+    hwm::network_draw  network_drawer;
+
     vec4f              light_position;
     hybrid::simulator *sim;
 };
