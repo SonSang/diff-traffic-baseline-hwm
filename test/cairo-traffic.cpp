@@ -549,15 +549,7 @@ public:
             colors.resize(l.N);
             for(size_t i = 0; i < l.N; ++i)
             {
-                float val;
-                //                if(drawfield == RHO)
-                val = l.q[i].rho();
-                // else
-                //     val = arz<float>::eq::u(l.q[i].rho(),
-                //                             l.q[i].y(),
-                //                             l.parent->speedlimit,
-                //                             sim->gamma)/l.parent->speedlimit;
-
+                float val    = l.q[i].rho();
                 blackbody(colors[i].data(), val);
                 colors[i][3] = 1.0f;
             }
