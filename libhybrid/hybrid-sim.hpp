@@ -134,6 +134,7 @@ namespace hybrid
         {
             serial_state();
             serial_state(const simulator &s);
+            ~serial_state();
 
             void apply(simulator &s) const;
 
@@ -197,6 +198,7 @@ namespace hybrid
         float macro_step(const float cfl=1.0f);
 
         arz<float>::q                *q_base;
+        size_t                        N;
         arz<float>::riemann_solution *rs_base;
         float                         gamma;
         float                         h_suggest;

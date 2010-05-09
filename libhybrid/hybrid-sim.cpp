@@ -134,8 +134,14 @@ namespace hybrid
         }
     }
 
-    simulator::serial_state::serial_state()
+    simulator::serial_state::serial_state() : q_base(0)
     {
+    }
+
+    simulator::serial_state::~serial_state()
+    {
+        if(q_base)
+            delete[] q_base;
     }
 
     simulator::serial_state::serial_state(const simulator &s) : car_id_counter(s.car_id_counter),
@@ -147,6 +153,9 @@ namespace hybrid
         {
             lane_states.push_back(l.serial());
         }
+
+        q_base = new arz<float>::q[s.N];
+        std::memcpy(q_base, s.q_base, s.N*sizeof(sizeof(arz<float>::q)));
     }
 
     void simulator::serial_state::apply(simulator &s) const
@@ -154,6 +163,8 @@ namespace hybrid
         s.car_id_counter = car_id_counter;
         *s.generator     = generator;
         network_state.apply(*s.hnet);
+        assert(q_base);
+        std::memcpy(s.q_base, q_base, s.N*sizeof(sizeof(arz<float>::q)));
     }
 
     simulator::simulator(hwm::network *net, float length, float rear_axle)

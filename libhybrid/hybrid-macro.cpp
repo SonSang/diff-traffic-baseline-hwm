@@ -398,29 +398,29 @@ namespace hybrid
         relaxation_factor = rf;
         min_h             = std::numeric_limits<float>::max();
 
+        N = 0;
         // initialize new lanes, compute how many cells to allocate
-        size_t cell_count = 0;
         BOOST_FOREACH(lane &l, lanes)
         {
             l.macro_initialize(h_suggest);
-            cell_count += l.N;
+            N += l.N;
             min_h = std::min(min_h, l.h);
         }
 
-        std::cout << "Allocating " << sizeof(arz<float>::q)*cell_count <<  " bytes for " << cell_count << " cells...";
-        q_base = (arz<float>::q *) malloc(sizeof(arz<float>::q)*cell_count);
+        std::cout << "Allocating " << sizeof(arz<float>::q)*N <<  " bytes for " << N << " cells...";
+        q_base = (arz<float>::q *) malloc(sizeof(arz<float>::q)*N);
         if(!q_base)
             throw std::exception();
         std::cout << "Done." << std::endl;
 
-        std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(cell_count+lanes.size()) <<  " bytes for " << cell_count+lanes.size() << " riemann solutions...";
-        rs_base = (arz<float>::riemann_solution *) malloc(sizeof(arz<float>::riemann_solution)*(cell_count+lanes.size()));
+        std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(N+lanes.size()) <<  " bytes for " << N+lanes.size() << " riemann solutions...";
+        rs_base = (arz<float>::riemann_solution *) malloc(sizeof(arz<float>::riemann_solution)*(N+lanes.size()));
         if(!rs_base)
             throw std::exception();
         std::cout << "Done." << std::endl;
 
-        memset(q_base, 0, sizeof(arz<float>::q)*cell_count);
-        memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(cell_count+lanes.size()));
+        memset(q_base, 0, sizeof(arz<float>::q)*N);
+        memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(N+lanes.size()));
 
         size_t q_count  = 0;
         size_t rs_count = 0;
