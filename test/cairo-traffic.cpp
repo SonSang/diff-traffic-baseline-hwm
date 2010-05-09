@@ -449,10 +449,13 @@ public:
         frame_timer.reset();
         frame_timer.start();
 
-        if(sim && hci && t > hci->times[1])
+        if(sim && hci)
         {
-            hci->capture(*sim);
-            sim->hybrid_step();
+            while(t > hci->times[1])
+            {
+                hci->capture(*sim);
+                sim->hybrid_step();
+            }
         }
 
         if (!valid())
