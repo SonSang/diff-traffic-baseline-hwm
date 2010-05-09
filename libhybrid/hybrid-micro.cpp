@@ -149,10 +149,9 @@ namespace hybrid
 
         if (found_a_leader == false)
         {
-            potential_follower = l->cars[0].back();
             float vel, pos;
             find_free_dist_and_vel(*l, vel, pos, sim);
-            potential_leader = car(0, (pos / l->length), vel, 0);
+            potential_leader = car(0, (pos / l->length)+position, vel, 0);
         }
 
         //Calc what the acceleration would be for this car were the lane change made.
