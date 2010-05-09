@@ -41,7 +41,6 @@ namespace hybrid
             const float m = 2.0f*orientation/kmax;
             const float inv_m = 1.0f/m;
 
-
             t *= m;
 
             if(t <= m/2)
@@ -67,7 +66,7 @@ namespace hybrid
             }
             else  // (t > 0.5)
             {
-                return pow(1 - t,factor)*max_rotation;
+                return pow((1 - t)/0.5f,factor)*max_rotation;
             }
         }
 
