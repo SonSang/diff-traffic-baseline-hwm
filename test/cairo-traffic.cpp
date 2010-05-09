@@ -695,6 +695,7 @@ public:
                 {
                     dvec = vec2f(world - lastpick);
                     back_image_center -= dvec;
+                    dvec = 0;
                 }
                 lastpick = world-dvec;
             }
