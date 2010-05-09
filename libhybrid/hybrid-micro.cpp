@@ -90,20 +90,20 @@ namespace hybrid
         float pos[4];
         if (other_lane_membership.other_lane != 0)
         {
-            float offset = std::min(hybrid::turn_curve::y(other_lane_membership.merge_param), (float)1.0);
-            offset *= 2.5;
-            float theta = hybrid::turn_curve::rotate(other_lane_membership.merge_param);
+            float offset  = std::min(hybrid::turn_curve::y(other_lane_membership.merge_param), (float)1.0);
+            offset       *= 2.5;
+            float theta   = hybrid::turn_curve::rotate(other_lane_membership.merge_param);
             if (!other_lane_membership.is_left)
             {
                 offset *= -1;
-                theta *= -1;
+                theta  *= -1;
             }
 
             mat4x4f rotation;
-            rotation(0, 0) = cos(theta);  rotation(0, 1) = -1*sin(theta);  rotation(0, 2) = 0;    rotation(0, 3) = 0;
-            rotation(1, 0) = sin(theta);  rotation(1, 1) = cos(theta);     rotation(1, 2) = 0;    rotation(1, 3) = 0;
-            rotation(2, 0) = 0;           rotation(2, 1) = 0;              rotation(2, 2) = 1.0f; rotation(2, 3) = 0;
-            rotation(3, 0) = 0.0f;        rotation(3, 1) = 0.0f;           rotation(3, 2) = 0.0f; rotation(3, 3) = 1.0f;
+            rotation(0, 0) = std::cos(theta);  rotation(0, 1) = -1*std::sin(theta);  rotation(0, 2) = 0;    rotation(0, 3) = 0;
+            rotation(1, 0) = std::sin(theta);  rotation(1, 1) = std::cos(theta);     rotation(1, 2) = 0;    rotation(1, 3) = 0;
+            rotation(2, 0) = 0;                rotation(2, 1) = 0;                   rotation(2, 2) = 1.0f; rotation(2, 3) = 0;
+            rotation(3, 0) = 0.0f;             rotation(3, 1) = 0.0f;                rotation(3, 2) = 0.0f; rotation(3, 3) = 1.0f;
 
             trans = mat4x4f(other_lane_membership.other_lane->parent->point_frame(other_lane_membership.position, offset));
             pos[0] = trans(0,3); pos[1] = trans(1,3); pos[2] = trans(2,3); pos[3] = trans(3,3);
@@ -120,11 +120,11 @@ namespace hybrid
 
     float car::check_lane(const lane* l, const float param, const double timestep, const simulator &sim)
     {
-        float polite = 0;
-        car potential_follower(0, 0, 0, 0);
-        car potential_leader(0, 0, 0, 0);
-        bool found_a_leader = false;
-        bool found_a_follower = false;
+        float polite           = 0;
+        car   potential_follower(0, 0, 0, 0);
+        car   potential_leader(0, 0, 0, 0);
+        bool  found_a_leader   = false;
+        bool  found_a_follower = false;
 
         //Find the cars ahead and behind of where the car will merge
         ///TODO should do a binary search for positon
@@ -146,7 +146,6 @@ namespace hybrid
             }
         }
 
-
         if (found_a_leader == false)
         {
             float vel, pos;
@@ -158,9 +157,8 @@ namespace hybrid
         float a_hat = sim.acceleration(potential_leader.velocity, velocity, std::abs(potential_leader.position*l->length - param*l->length));
 
         bool found_a_next_leader = false;
-        bool found_a_next_follower = false;
-        car potential_next_follower(0, 0, 0, 0);
-        car potential_next_leader(0, 0, 0, 0);
+        car  potential_next_follower(0, 0, 0, 0);
+        car  potential_next_leader(0, 0, 0, 0);
 
         //Check for next cars too
         for (int i = 0; i < (int)l->next_cars().size(); i++)
@@ -183,13 +181,12 @@ namespace hybrid
         }
 
         //Check for cars that are still merging out of this lane
-        float a_hat_bar = std::numeric_limits<float>::max();
+        float      a_hat_bar      = std::numeric_limits<float>::max();
         ///Check left lane if it's there
-        float left_param = param;
+        float      left_param     = param;
         hwm::lane* potential_left = l->parent->left_adjacency(left_param);
-        double left_accel = 0;
-        lane* left_lane = 0;
-        float a_hat_bar_l;
+        lane*      left_lane      = 0;
+        float      a_hat_bar_l;
         if (potential_left)
         {
             left_lane = potential_left->user_data<lane>();
@@ -204,11 +201,10 @@ namespace hybrid
         }
 
         ///Check right lane if it's there
-        float right_param = param;
+        float      right_param     = param;
         hwm::lane* potential_right = l->parent->right_adjacency(right_param);
-        double right_accel = 0;
-        lane* right_lane = 0;
-        float a_hat_bar_r;
+        lane*      right_lane      = 0;
+        float      a_hat_bar_r;
         if (potential_right)
         {
             right_lane = potential_right->user_data<lane>();
@@ -218,7 +214,7 @@ namespace hybrid
                 a_hat_bar_r = sim.acceleration(c.velocity,
                                                velocity,
                                                std::abs(c.position*l->length - param*l->length));
-                a_hat_bar = std::min(a_hat_bar, a_hat_bar_r);
+                a_hat_bar   = std::min(a_hat_bar, a_hat_bar_r);
             }
         }
 
@@ -227,9 +223,9 @@ namespace hybrid
         //TODO need to search backward for follower if not found.
 
         //Calc what the deceleration would be for the new follower car.
-        float f_hat = 0;
+        float f_hat            = 0;
         if (found_a_follower)
-            f_hat = sim.acceleration(velocity, potential_follower.velocity, std::abs(param*l->length - potential_follower.position*l->length));
+            f_hat              = sim.acceleration(velocity, potential_follower.velocity, std::abs(param*l->length - potential_follower.position*l->length));
         else
             potential_follower = car(0, 0, 0, 0);
 
@@ -346,7 +342,7 @@ namespace hybrid
     car lane::get_merging_leader(float param, const lane* other_lane)
     {
         car cur_car(-1, -1, -1, -1);
-        for (int i = 0; i < current_cars().size(); i++)
+        for (size_t i = 0; i < current_cars().size(); i++)
         {
             if (current_car(i).other_lane_membership.other_lane != 0)
             {
@@ -363,7 +359,7 @@ namespace hybrid
 
         bool nxt_car_found = false;
         car nxt_car(-1, -1, -1, -1);
-        for (int i = 0; i < next_cars().size(); i++)
+        for (size_t i = 0; i < next_cars().size(); i++)
         {
             if (next_car(i).other_lane_membership.other_lane != 0)
             {
@@ -384,7 +380,6 @@ namespace hybrid
         else
             return cur_car;
     }
-
 
     void lane::micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const
     {
@@ -414,8 +409,6 @@ namespace hybrid
         return;
     }
 
-
-
     void lane::compute_merges(const double timestep, const simulator& sim)
     {
         float threshold = 0.2;
@@ -436,10 +429,10 @@ namespace hybrid
                     right_accel = current_car(i).check_lane(right_lane, right_param, timestep, sim);
                 }
 
-                float left_param = current_car(i).position;
+                float      left_param     = current_car(i).position;
                 hwm::lane* potential_left = parent->left_adjacency(left_param);
-                double left_accel = std::numeric_limits<int>::min();
-                lane* left_lane = 0;
+                double     left_accel     = std::numeric_limits<int>::min();
+                lane*      left_lane      = 0;
                 if (potential_left)
                 {
                     left_lane = potential_left->user_data<lane>();
@@ -452,21 +445,21 @@ namespace hybrid
                 {
                     if (right_accel > left_accel)
                     {
-                        current_car(i).other_lane_membership.other_lane = this;
+                        current_car(i).other_lane_membership.other_lane  = this;
                         current_car(i).other_lane_membership.merge_param = 0;
-                        current_car(i).other_lane_membership.position = current_car(i).position;
-                        current_car(i).other_lane_membership.is_left = false;
-                        current_car(i).position = right_param;
+                        current_car(i).other_lane_membership.position    = current_car(i).position;
+                        current_car(i).other_lane_membership.is_left     = false;
+                        current_car(i).position                          = right_param;
 
                         right_lane->next_cars().push_back(current_car(i));
                     }
                     else
                     {
-                        current_car(i).other_lane_membership.other_lane = this;
+                        current_car(i).other_lane_membership.other_lane  = this;
                         current_car(i).other_lane_membership.merge_param = 0;
-                        current_car(i).other_lane_membership.position = current_car(i).position;
-                        current_car(i).other_lane_membership.is_left = true;
-                        current_car(i).position = left_param;
+                        current_car(i).other_lane_membership.position    = current_car(i).position;
+                        current_car(i).other_lane_membership.is_left     = true;
+                        current_car(i).position                          = left_param;
                         left_lane->next_cars().push_back(current_car(i));
                     }
                 }

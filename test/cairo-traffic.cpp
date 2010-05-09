@@ -466,7 +466,7 @@ public:
             {
                 float val;
                 //                if(drawfield == RHO)
-                    val = l.q[i].rho();
+                val = l.q[i].rho();
                 // else
                 //     val = arz<float>::eq::u(l.q[i].rho(),
                 //                             l.q[i].y(),
@@ -496,9 +496,12 @@ public:
             if(!l.parent->active || !l.is_micro())
                 continue;
 
-            glColor3f(1.0, 0.0, 0.0);
             BOOST_FOREACH(const hybrid::car &c, l.current_cars())
             {
+                if(c.id == 2)
+                    glColor3f(0.0, 0.0, 1.0);
+                else
+                    glColor3f(1.0, 0.0, 0.0);
                 assert(c.position >= 0);
                 assert(c.position < 1.0);
                 mat4x4f trans(c.point_frame(&l));
@@ -609,6 +612,7 @@ public:
                 {
                     dvec = vec2f(world - lastpick);
                     center -= dvec;
+                    retex_roads(center, scale, vec2i(w(), h()));
                     redraw();
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
@@ -625,7 +629,10 @@ public:
             switch(Fl::event_key())
             {
             case ' ':
-                retex_roads(center, scale, vec2i(w(), h()));
+                if(sim)
+                {
+                    sim->hybrid_step();
+                }
                 redraw();
                 break;
             }
@@ -646,8 +653,10 @@ public:
                         back_image_scale  *= std::pow(2.0, 0.5*fy);
                 }
                 else
+                {
                     scale *= std::pow(2.0, fy);
-
+                    retex_roads(center, scale, vec2i(w(), h()));
+                }
                 redraw();
             }
             take_focus();
@@ -735,7 +744,7 @@ int main(int argc, char *argv[])
         l.current_cars().clear();
         l.sim_type = hybrid::MICRO;
 
-        const int cars_per_lane = 800;
+        const int cars_per_lane = 2;
         double    p             = -s.rear_bumper_offset()*l.inv_length;
 
         for (int i = 0; i < cars_per_lane; i++)
@@ -750,7 +759,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    //s.settle(0.033);
+    s.settle(0.033);
 
     fltkview mv(0, 0, 500, 500, "fltk View");
     mv.net            = &net;
