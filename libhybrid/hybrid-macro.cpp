@@ -155,7 +155,6 @@ namespace hybrid
         float param;
         if(macro_find_first(param, sim))
         {
-            std::cout << "param: " << param << std::endl;
             distance += param*length;
             vel       = velocity(param, sim.gamma);
         }
@@ -321,7 +320,6 @@ namespace hybrid
                 const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
                 assert(cell >=0);
                 q[cell] = arz<float>::q(q[cell].rho(), c.velocity, parent->speedlimit, sim.gamma);
-                std::cout << "rho: " << q[cell].rho() << " vel: " << c.velocity << std::endl;
                 if(c.position >= 1.0)
                 {
                     lane &sim_downstream = *(downstream->user_data<lane>());
