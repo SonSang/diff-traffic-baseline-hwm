@@ -179,7 +179,8 @@ public:
                                                           drawing(false),
                                                           light_position(50.0, 100.0, 50.0, 1.0),
                                                           sim(0),
-                                                          t(0)
+                                                          t(0),
+                                                          go(false)
     {
         this->resizable(this);
         frame_timer.reset();
@@ -445,7 +446,8 @@ public:
     void draw()
     {
         frame_timer.stop();
-        t += frame_timer.interval_S();
+        if(go)
+            t += frame_timer.interval_S();
         frame_timer.reset();
         frame_timer.start();
 
@@ -702,6 +704,7 @@ public:
             switch(Fl::event_key())
             {
             case ' ':
+                go = !go;
                 break;
             }
             return 1;
@@ -769,6 +772,7 @@ public:
     hybrid::car_interp *hci;
     float               t;
     timer               frame_timer;
+    bool                go;
 };
 
 void draw_callback(void *v)
