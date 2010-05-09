@@ -84,7 +84,7 @@ namespace hybrid
         }
     };
 
-    mat4x4f car::point_frame(const lane* l) const
+    mat4x4f car::point_frame(const hwm::lane* l) const
     {
         mat4x4f trans;
         float pos[4];
@@ -113,7 +113,7 @@ namespace hybrid
 
         }
         else
-            trans = mat4x4f(l->parent->point_frame(position));
+            trans = mat4x4f(l->point_frame(position));
 
         return trans;
     }

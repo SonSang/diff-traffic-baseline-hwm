@@ -24,9 +24,9 @@ namespace hybrid
 
         //common data
         size_t id;
-        float position;
-        float velocity;
-        float acceleration;
+        float  position;
+        float  velocity;
+        float  acceleration;
 
         // micro data
         struct Other_lane_membership
@@ -45,9 +45,33 @@ namespace hybrid
         void integrate(float timestep, const lane &l);
         void check_if_valid_acceleration(lane& l, float timestep);
         float check_lane(const lane* l, const float param, const float timestep, const simulator& sim);
-        mat4x4f point_frame(const lane* l) const;
+        mat4x4f point_frame(const hwm::lane *l) const;
 
         // macro data
+    };
+
+    struct car_interp
+    {
+        struct car_spatial
+        {
+            car_spatial();
+            car_spatial(const car &in_c, const hwm::lane *l);
+
+            car              c;
+            const hwm::lane *la;
+        };
+
+        typedef std::tr1::unordered_map<size_t, car_spatial> car_hash;
+
+        car_interp(simulator &s);
+        void capture(simulator &s);
+
+        bool in_second(size_t id) const;
+        mat4x4f point_frame(size_t id, float time) const;
+
+        vec2f    times;
+        float    inv_dt;
+        car_hash car_data[2];
     };
 
     struct lane
@@ -164,6 +188,7 @@ namespace hybrid
         void advance_intersections(float dt);
 
         serial_state serial() const;
+        car_interp::car_hash get_car_hash() const;
 
         hwm::network          *hnet;
         std::vector<lane>      lanes;

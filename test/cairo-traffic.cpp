@@ -10,6 +10,7 @@
 #include "libroad/geometric.hpp"
 #include "libhybrid/hybrid-sim.hpp"
 #include "libroad/hwm_draw.hpp"
+#include "libhybrid/timer.hpp"
 
 static inline void blackbody(float *rgb, const float val)
 {
@@ -128,9 +129,12 @@ public:
                                                           continuum_tex_(0),
                                                           drawing(false),
                                                           light_position(50.0, 100.0, 50.0, 1.0),
-                                                          sim(0)
+                                                          sim(0),
+                                                          t(0)
     {
         this->resizable(this);
+        frame_timer.reset();
+        frame_timer.start();
     }
 
     void setup_light()
@@ -324,7 +328,6 @@ public:
         cairo_translate(cr,
                         -my_center[0],
                         -my_center[1]);
-
         cairo_matrix_t cmat;
         cairo_get_matrix(cr, &cmat);
 
@@ -375,6 +378,14 @@ public:
 
     void draw()
     {
+        frame_timer.stop();
+        t += frame_timer.interval_S();
+        if(sim && hci && t > hci->times[1])
+        {
+            hci->capture(*sim);
+            sim->hybrid_step();
+        }
+
         if (!valid())
         {
             glViewport(0, 0, w(), h());
@@ -490,21 +501,15 @@ public:
             network_drawer.draw_lane_solid(l.parent->id);
         }
 
-        glDisable(GL_TEXTURE_2D);
-        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+        if(hci)
         {
-            if(!l.parent->active || !l.is_micro())
-                continue;
-
-            BOOST_FOREACH(const hybrid::car &c, l.current_cars())
+            glColor3f(1.0, 0.0, 0.0);
+            BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
             {
-                if(c.id == 2)
-                    glColor3f(0.0, 0.0, 1.0);
-                else
-                    glColor3f(1.0, 0.0, 0.0);
-                assert(c.position >= 0);
-                assert(c.position < 1.0);
-                mat4x4f trans(c.point_frame(&l));
+                if(!hci->in_second(cs.first))
+                    continue;
+
+                mat4x4f trans(hci->point_frame(cs.first, t));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
@@ -512,6 +517,7 @@ public:
                 glPopMatrix();
             }
         }
+
         glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
@@ -533,6 +539,9 @@ public:
 
         glFlush();
         glFinish();
+
+        frame_timer.reset();
+        frame_timer.start();
     }
 
     int handle(int event)
@@ -590,8 +599,6 @@ public:
                                 l.updated_flag = true;
                             }
                         }
-
-                        redraw();
                     }
                 }
             }
@@ -606,20 +613,17 @@ public:
                 {
                     drawing      = true;
                     second_point = world;
-                    redraw();
                 }
                 else if(Fl::event_button() == FL_MIDDLE_MOUSE)
                 {
                     dvec = vec2f(world - lastpick);
                     center -= dvec;
                     retex_roads(center, scale, vec2i(w(), h()));
-                    redraw();
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
                     dvec = vec2f(world - lastpick);
                     back_image_center -= dvec;
-                    redraw();
                 }
                 lastpick = world-dvec;
             }
@@ -629,11 +633,6 @@ public:
             switch(Fl::event_key())
             {
             case ' ':
-                if(sim)
-                {
-                    sim->hybrid_step();
-                }
-                redraw();
                 break;
             }
             return 1;
@@ -657,7 +656,6 @@ public:
                     scale *= std::pow(2.0, fy);
                     retex_roads(center, scale, vec2i(w(), h()));
                 }
-                redraw();
             }
             take_focus();
             return 1;
@@ -697,9 +695,18 @@ public:
     tex_car_draw       car_drawer;
     hwm::network_draw  network_drawer;
 
-    vec4f              light_position;
-    hybrid::simulator *sim;
+    vec4f               light_position;
+    hybrid::simulator  *sim;
+    hybrid::car_interp *hci;
+    float               t;
+    timer               frame_timer;
 };
+
+void draw_callback(void *v)
+{
+    reinterpret_cast<fltkview*>(v)->redraw();
+    Fl::repeat_timeout(1.0/30.0, draw_callback, v);
+}
 
 int main(int argc, char *argv[])
 {
@@ -761,12 +768,22 @@ int main(int argc, char *argv[])
 
     s.settle(0.033);
 
+    hybrid::car_interp hci(s);
+    s.hybrid_step();
+    hci.capture(s);
+    s.hybrid_step();
+
     fltkview mv(0, 0, 500, 500, "fltk View");
     mv.net            = &net;
     mv.netaux         = &neta;
     mv.sim            = &s;
+    mv.hci            = &hci;
+    mv.t              = hci.times[0];
+
     if(argc == 3)
         mv.back_image = argv+2;
+
+    Fl::add_timeout(1.0/30.0, draw_callback, &mv);
 
     vec3f low(FLT_MAX);
     vec3f high(-FLT_MAX);

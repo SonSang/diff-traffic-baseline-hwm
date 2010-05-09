@@ -158,6 +158,22 @@ namespace hybrid
         std::memcpy(q_base, s.q_base, s.N*sizeof(sizeof(arz<float>::q)));
     }
 
+    car_interp::car_hash simulator::get_car_hash() const
+    {
+        car_interp::car_hash res;
+        BOOST_FOREACH(const lane &l, lanes)
+        {
+            if(!l.parent->active || !l.is_micro())
+                continue;
+
+            BOOST_FOREACH(const car &c, l.current_cars())
+            {
+                res[c.id] = car_interp::car_spatial(c, l.parent);
+            }
+        }
+        return res;
+    }
+
     void simulator::serial_state::apply(simulator &s) const
     {
         s.car_id_counter = car_id_counter;
@@ -279,6 +295,8 @@ namespace hybrid
         update(dt);
 
         car_swap();
+
+        time += dt;
     }
 
     void simulator::advance_intersections(float dt)
