@@ -106,9 +106,14 @@ namespace hybrid
         bool                    is_micro() const;
         bool                    is_macro() const;
         bool                    occupied() const;
+        bool                    active() const;
         void                    convert(sim_t dest_type, simulator &sim);
         void                    convert_to_micro(simulator &sim);
         void                    convert_to_macro(simulator &sim);
+        lane                   *left_adjacency(float &param);
+        lane                   *right_adjacency(float &param);
+        lane                   *upstream_lane();
+        lane                   *downstream_lane();
 
         serial_state serial() const;
 

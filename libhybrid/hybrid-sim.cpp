@@ -74,6 +74,11 @@ namespace hybrid
         }
     }
 
+    bool lane::active() const
+    {
+        return parent->active;
+    }
+
     void lane::convert(const sim_t dest_type, simulator &sim)
     {
         switch(dest_type)
@@ -113,6 +118,30 @@ namespace hybrid
         next_cars().clear();
 
         sim_type = MACRO;
+    }
+
+    lane *lane::left_adjacency(float &param)
+    {
+        hwm::lane *l(parent->left_adjacency(param));
+        return l ? l->user_data<lane>() : 0;
+    }
+
+    lane *lane::right_adjacency(float &param)
+    {
+        hwm::lane *l(parent->right_adjacency(param));
+        return l ? l->user_data<lane>() : 0;
+    }
+
+    lane *lane::upstream_lane()
+    {
+        hwm::lane *l(parent->upstream_lane());
+        return l ? l->user_data<lane>() : 0;
+    }
+
+    lane *lane::downstream_lane()
+    {
+        hwm::lane *l(parent->downstream_lane());
+        return l ? l->user_data<lane>() : 0;
     }
 
     lane::serial_state lane::serial() const
