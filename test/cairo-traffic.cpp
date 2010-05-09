@@ -655,16 +655,38 @@ public:
                             {
                                 hwm::lane    &hwm_l = *(lcv.second.lane);
                                 hybrid::lane &hyb_l = *(hwm_l.user_data<hybrid::lane>());
-                                if(!hyb_l.updated_flag)
+                                if(!hyb_l.updated_flag && hyb_l.active())
                                 {
                                     hyb_l.convert_to_micro(*sim);
                                     hyb_l.updated_flag = true;
                                 }
                             }
                         }
+                        BOOST_FOREACH(hwm::intersection_pair &ip, sim->hnet->intersections)
+                        {
+                            BOOST_FOREACH(hwm::intersection::state &s, ip.second.states)
+                            {
+                                BOOST_FOREACH(hwm::lane_pair &lp, s.fict_lanes)
+                                {
+                                    hybrid::lane &hyb_l = *(lp.second.user_data<hybrid::lane>());
+                                    if(!hyb_l.updated_flag && hyb_l.active())
+                                    {
+                                        hybrid::lane *up_l(hyb_l.upstream_lane());
+                                        hybrid::lane *dn_l(hyb_l.downstream_lane());
+                                        if((up_l && up_l->updated_flag && up_l->is_micro()) ||
+                                           (dn_l && dn_l->updated_flag && dn_l->is_micro()))
+                                        {
+                                            hyb_l.convert_to_micro(*sim);
+                                            hyb_l.updated_flag = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
                         {
-                            if(!l.updated_flag)
+                            if(!l.updated_flag && l.active())
                             {
                                 l.convert_to_macro(*sim);
                                 l.updated_flag = true;
