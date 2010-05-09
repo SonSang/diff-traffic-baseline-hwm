@@ -736,7 +736,7 @@ public:
                     if(Fl::event_state() & FL_CTRL)
                         back_image_yscale *= std::pow(2.0, 0.1*fy);
                     else
-                        back_image_scale  *= std::pow(2.0, 0.5*fy);
+                        back_image_scale  *= std::pow(2.0, 0.1*fy);
                 }
                 else
                 {
