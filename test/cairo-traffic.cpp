@@ -721,6 +721,16 @@ public:
             case ' ':
                 go = !go;
                 break;
+            case 'i':
+                if(back_image)
+                {
+                    std::cout << "Image: "   << *back_image       << std::endl
+                              << " scale: "  << back_image_scale  << std::endl
+                              << " center: " << back_image_center << std::endl;
+                }
+                else
+                    std::cout << "No image" << std::endl;
+                break;
             }
             return 1;
         case FL_MOUSEWHEEL:
