@@ -133,9 +133,8 @@ struct tex_car_draw
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glBindTexture (GL_TEXTURE_2D, car_tex);
         glPushMatrix();
-        glTranslatef(-car_rear_axle, 0, 0);
+        glTranslatef(-car_length+car_rear_axle, 0, 0);
         glScalef(car_length, car_width/2, 1);
-
         glBegin(GL_QUADS);
         glTexCoord2i(0,0);
         glVertex2i(0,-1);
@@ -189,12 +188,12 @@ public:
 
     void setup_light()
     {
-        static const GLfloat amb_light_rgba[] = { 0.1, 0.1, 0.1, 1.0 };
+        static const GLfloat amb_light_rgba[]  = { 0.1, 0.1, 0.1, 1.0 };
         static const GLfloat diff_light_rgba[] = { 0.7, 0.7, 0.7, 1.0 };
         static const GLfloat spec_light_rgba[] = { 1.0, 1.0, 1.0, 1.0 };
-        static const GLfloat spec_material[] = { 1.0, 1.0, 1.0, 1.0 };
-        static const GLfloat material[] = { 1.0, 1.0, 1.0, 1.0 };
-        static const GLfloat shininess = 100.0;
+        static const GLfloat spec_material[]   = { 1.0, 1.0, 1.0, 1.0 };
+        static const GLfloat material[]        = { 1.0, 1.0, 1.0, 1.0 };
+        static const GLfloat shininess         = 100.0;
 
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
@@ -366,7 +365,8 @@ public:
         cairo_translate(cr,
                         -im_res[0]/2,
                         -im_res[1]/2);
-        put_text(cr, boost::str(boost::format("t = %8.3fs") % t), 10, 5, LEFT, TOP);
+        put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
+        put_text(cr, boost::str(boost::format("stored range: (%8.3fs, %8.3fs)") % hci->times[0] % hci->times[1]), 10, 30, LEFT, TOP);
 
         cairo_identity_matrix(cr);
 
@@ -832,7 +832,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    s.settle(0.033);
+    //    s.settle(0.033);
 
     hybrid::car_interp hci(s);
     s.hybrid_step();
@@ -840,11 +840,11 @@ int main(int argc, char *argv[])
     s.hybrid_step();
 
     fltkview mv(0, 0, 500, 500, "fltk View");
-    mv.net            = &net;
-    mv.netaux         = &neta;
-    mv.sim            = &s;
-    mv.hci            = &hci;
-    mv.t              = hci.times[0];
+    mv.net    = &net;
+    mv.netaux = &neta;
+    mv.sim    = &s;
+    mv.hci    = &hci;
+    mv.t      = hci.times[0];
 
     if(argc == 3)
         mv.back_image = argv+2;
