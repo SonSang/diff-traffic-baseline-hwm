@@ -35,8 +35,6 @@ namespace hybrid
             lane  *other_lane;
             float  merge_param;
             float  position;
-            float  theta;
-            float  phi_max;
         } other_lane_membership;
 
         void compute_acceleration(const car &f, const float distance, const simulator &sim);

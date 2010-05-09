@@ -93,14 +93,12 @@ namespace hybrid
         {
             car fake_car;
             fake_car.position                          = low->second.c.position*w0 + high->second.c.position*w1;
-            fake_car.other_lane_membership.other_lane  = 0;//low->second.c.other_lane_membership.other_lane;
-            // fake_car.other_lane_membership.is_left     = low->second.c.other_lane_membership.is_left;
-            // fake_car.other_lane_membership.merge_param = low->second.c.other_lane_membership.merge_param*w0 +
-            //                                              high->second.c.other_lane_membership.merge_param*w1;
-            // fake_car.other_lane_membership.theta       = low->second.c.other_lane_membership.theta*w0 +
-            //                                              high->second.c.other_lane_membership.theta*w1;
-            // fake_car.other_lane_membership.position    = low->second.c.other_lane_membership.position*w0 +
-            //                                              high->second.c.other_lane_membership.position*w1;
+            fake_car.other_lane_membership.other_lane  = (low->second.c.other_lane_membership.other_lane == high->second.c.other_lane_membership.other_lane) ? low->second.c.other_lane_membership.other_lane : 0;
+            fake_car.other_lane_membership.is_left     = low->second.c.other_lane_membership.is_left;
+            fake_car.other_lane_membership.merge_param = low->second.c.other_lane_membership.merge_param*w0 +
+                                                         high->second.c.other_lane_membership.merge_param*w1;
+            fake_car.other_lane_membership.position    = low->second.c.other_lane_membership.position*w0 +
+                                                         high->second.c.other_lane_membership.position*w1;
             return fake_car.point_frame(low->second.la);
         }
         else
