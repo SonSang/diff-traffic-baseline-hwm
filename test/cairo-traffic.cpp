@@ -39,6 +39,56 @@ static inline void blackbody(float *rgb, const float val)
    return;
 }
 
+typedef enum { LEFT, CENTER_X, RIGHT }  text_alignment_x;
+typedef enum { TOP, CENTER_Y, BOTTOM }  text_alignment_y;
+
+static void put_text(cairo_t * cr, const std::string &str, float x, float y, const text_alignment_x align_x, const text_alignment_y align_y)
+{
+    cairo_save (cr);
+
+    cairo_font_extents_t fe;
+    cairo_text_extents_t te;
+
+    cairo_font_extents (cr, &fe);
+    cairo_text_extents (cr, str.c_str(), &te);
+
+    switch(align_x)
+    {
+    case LEFT:
+        x += -te.x_bearing;
+        break;
+    case CENTER_X:
+        x += -te.width/2-te.x_bearing;
+        break;
+    case RIGHT:
+        x += - (te.x_bearing + te.width);
+        break;
+    default:
+        assert(0);
+    };
+
+    switch(align_y)
+    {
+    case TOP:
+        y +=  - te.y_bearing;
+        break;
+    case CENTER_Y:
+        y += te.height/2;
+        break;
+    case BOTTOM:
+        y +=  0.0;
+        break;
+    default:
+        assert(0);
+    };
+
+    cairo_move_to(cr, x, y);
+
+    cairo_show_text(cr, str.c_str());
+
+    cairo_restore(cr);
+}
+
 struct tex_car_draw
 {
     tex_car_draw() : car_tex(0)
@@ -304,6 +354,22 @@ public:
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
         cairo_paint(cr);
 
+        cairo_set_font_size (cr, 20);
+        cairo_select_font_face (cr, "SANS",
+                                CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+        cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+
+        cairo_translate(cr,
+                        im_res[0]/2,
+                        im_res[1]/2);
+        cairo_scale(cr, 1, -1);
+        cairo_translate(cr,
+                        -im_res[0]/2,
+                        -im_res[1]/2);
+        put_text(cr, boost::str(boost::format("t = %8.3fs") % t), 10, 5, LEFT, TOP);
+
+        cairo_identity_matrix(cr);
+
         cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 
@@ -380,6 +446,9 @@ public:
     {
         frame_timer.stop();
         t += frame_timer.interval_S();
+        frame_timer.reset();
+        frame_timer.start();
+
         if(sim && hci && t > hci->times[1])
         {
             hci->capture(*sim);
@@ -539,9 +608,6 @@ public:
 
         glFlush();
         glFinish();
-
-        frame_timer.reset();
-        frame_timer.start();
     }
 
     int handle(int event)
