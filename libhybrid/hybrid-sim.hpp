@@ -18,8 +18,9 @@ namespace hybrid
             : id(in_id), position(in_position),
               velocity(in_velocity), acceleration(in_acceleration)
         {
-            other_lane_membership.other_lane = 0;
+            other_lane_membership.other_lane  = 0;
             other_lane_membership.merge_param = 0;
+            other_lane_membership.theta       = 0;
         }
 
         //common data
@@ -35,6 +36,7 @@ namespace hybrid
             lane  *other_lane;
             float  merge_param;
             float  position;
+            float  theta;
         } other_lane_membership;
 
         void compute_acceleration(const car &f, const float distance, const simulator &sim);

@@ -99,6 +99,8 @@ namespace hybrid
                                                          high->second.c.other_lane_membership.merge_param*w1;
             fake_car.other_lane_membership.position    = low->second.c.other_lane_membership.position*w0 +
                                                          high->second.c.other_lane_membership.position*w1;
+            fake_car.other_lane_membership.theta       = low->second.c.other_lane_membership.theta*w0 +
+                                                         high->second.c.other_lane_membership.theta*w1;
             return fake_car.point_frame(low->second.la);
         }
         else

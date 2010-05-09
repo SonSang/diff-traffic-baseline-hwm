@@ -4,83 +4,31 @@
 
 namespace hybrid
 {
-    struct turn_curve
+    struct lc_curve
     {
-        turn_curve(float in_x) : x_(in_x) {}
+        lc_curve(float target_y) : y_(target_y) {}
 
-        float operator()(float t) const
+        inline float operator()(float t) const
         {
-            return x(t) - x_;
+            return y(t) - y_;
         }
 
-        float x_;
-
-        static float x(float t)
+        static inline float y(float t)
         {
-            return (((0.952735372896*t+
-                      -0.999804060107*t) +
-                     -1.72981115096*t) +
-                    2.77923310042*t) +
-            0.000979602079628;
+            return ((((8.7025182813*t+
+                       -21.7562980512)*t +
+                      15.5458393998)*t +
+                     -1.56245957436)*t +
+                    0.0709664576132)*t +
+            -0.000283090356282;
         }
 
-        static float y(float t)
+        static inline float end(float speed)
         {
-            return ((((4.95688785514*t+
-                       -12.4993312165*t) +
-                      9.28482561644*t) +
-                     -0.8082796784*t) +
-                    0.0691053639752*t) +
-            -0.00106975213459;
+            return 11.50731f*std::pow(speed, -0.5f);
         }
 
-        static float theta(float t)
-        {
-            const float orientation = M_PI/2.0f;
-            const float kmax = 1.1172f;
-            const float m = 2.0f*orientation/kmax;
-            const float inv_m = 1.0f/m;
-
-            t *= m;
-
-            if(t <= m/2)
-                return kmax*t*t*inv_m;
-            else if(t <= m)
-                return -kmax*(t*t*inv_m - 2*t + m/2);
-            else
-                return kmax*m/2;
-        }
-
-        static float rotate(float t)
-        {
-            float max_rotation = M_PI/12.0;
-            float factor = 1.5;
-
-            if (t < 0.5)
-            {
-                return pow((t/0.5f), factor)*max_rotation;
-            }
-            else if (t == 0.5) //really just for illustrartion.
-            {
-                return max_rotation;
-            }
-            else  // (t > 0.5)
-            {
-                return pow((1 - t)/0.5f,factor)*max_rotation;
-            }
-        }
-
-        static float x_end(float speed)
-        {
-            return  0.843112757647*speed+
-            2.45445917647;
-        }
-
-        static float y_end(float speed)
-        {
-            return 0.244331745882*speed+
-            4.11774005882;
-        }
+        float y_;
     };
 
     mat4x4f car::point_frame(const hwm::lane* l) const
@@ -89,18 +37,16 @@ namespace hybrid
         float pos[4];
         if (other_lane_membership.other_lane != 0)
         {
-            float offset  = std::min(hybrid::turn_curve::y(other_lane_membership.merge_param), (float)1.0);
+            float offset  = std::min(lc_curve::y(other_lane_membership.merge_param), (float)1.0);
             offset       *= 2.5;
-            float theta   = hybrid::turn_curve::rotate(other_lane_membership.merge_param);
             if (!other_lane_membership.is_left)
             {
                 offset *= -1;
-                theta  *= -1;
             }
 
             mat4x4f rotation;
-            rotation(0, 0) = std::cos(theta);  rotation(0, 1) = -1*std::sin(theta);  rotation(0, 2) = 0;    rotation(0, 3) = 0;
-            rotation(1, 0) = std::sin(theta);  rotation(1, 1) = std::cos(theta);     rotation(1, 2) = 0;    rotation(1, 3) = 0;
+            rotation(0, 0) = std::cos(other_lane_membership.theta);  rotation(0, 1) = -1*std::sin(other_lane_membership.theta);  rotation(0, 2) = 0;    rotation(0, 3) = 0;
+            rotation(1, 0) = std::sin(other_lane_membership.theta);  rotation(1, 1) = std::cos(other_lane_membership.theta);     rotation(1, 2) = 0;    rotation(1, 3) = 0;
             rotation(2, 0) = 0;                rotation(2, 1) = 0;                   rotation(2, 2) = 1.0f; rotation(2, 3) = 0;
             rotation(3, 0) = 0.0f;             rotation(3, 1) = 0.0f;                rotation(3, 2) = 0.0f; rotation(3, 3) = 1.0f;
 
@@ -307,6 +253,7 @@ namespace hybrid
         float seconds_for_merge = 5.0f;
         if (other_lane_membership.other_lane != 0)
         {
+            const float old_y = lc_curve::y(other_lane_membership.merge_param);
             // TODO USE LANE LENGTH -- 0.2 = 1/5
             if (velocity > (2.5*0.2f))
             {
@@ -317,6 +264,13 @@ namespace hybrid
                 other_lane_membership.merge_param += (velocity*timestep*(1.0/2.5));
             }
 
+            const float new_y = lc_curve::y(other_lane_membership.merge_param);
+
+            float del_y = 2.5*(old_y-new_y);
+            if(other_lane_membership.is_left)
+                del_y *= -1;
+
+            other_lane_membership.theta     = std::atan2(del_y, (velocity * timestep));
             other_lane_membership.position += (velocity * timestep) * other_lane_membership.other_lane->inv_length;
 
             //TODO L is wheelbase -- length to rear axel
@@ -330,8 +284,9 @@ namespace hybrid
             if (other_lane_membership.merge_param > 1)
             {
                 other_lane_membership.merge_param = 0;
-                other_lane_membership.other_lane = 0;
-                other_lane_membership.position = 0;
+                other_lane_membership.other_lane  = 0;
+                other_lane_membership.position    = 0;
+                other_lane_membership.theta       = 0;
             }
         }
 

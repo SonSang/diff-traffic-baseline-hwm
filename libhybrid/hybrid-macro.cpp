@@ -477,7 +477,7 @@ namespace hybrid
         if(maxspeed < arz<float>::epsilon())
             maxspeed = min_h;
 
-        const float dt = cfl*min_h/maxspeed;
+        const float dt = std::min(cfl*min_h/maxspeed, 0.5f);
 
         BOOST_FOREACH(lane &l, lanes)
         {
