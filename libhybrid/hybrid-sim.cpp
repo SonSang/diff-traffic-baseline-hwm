@@ -234,8 +234,8 @@ namespace hybrid
         }
     }
 
-    car simulator::make_car(const double position, const double velocity,
-                            const double acceleration)
+    car simulator::make_car(const float position, const float velocity,
+                            const float acceleration)
     {
         return car(car_id_counter++, position, velocity, acceleration);
     }

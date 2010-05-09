@@ -13,8 +13,8 @@ namespace hybrid
     struct car
     {
         car() : id(0) {}
-        car(const size_t in_id, const double in_position,
-            const double in_velocity, const double in_acceleration)
+        car(const size_t in_id, const float in_position,
+            const float in_velocity, const float in_acceleration)
             : id(in_id), position(in_position),
               velocity(in_velocity), acceleration(in_acceleration)
         {
@@ -24,9 +24,9 @@ namespace hybrid
 
         //common data
         size_t id;
-        double position;
-        double velocity;
-        double acceleration;
+        float position;
+        float velocity;
+        float acceleration;
 
         // micro data
         struct Other_lane_membership
@@ -42,9 +42,9 @@ namespace hybrid
         void compute_acceleration(const car &f, const float distance, const simulator &sim);
         void find_free_dist_and_vel(const lane& l, float& next_velocity, float& distance, const simulator& sim);
         void compute_intersection_acceleration(const simulator &sim, const lane &l);
-        void integrate(double timestep, const lane &l);
-        void check_if_valid_acceleration(lane& l, double timestep);
-        float check_lane(const lane* l, const float param, const double timestep, const simulator& sim);
+        void integrate(float timestep, const lane &l);
+        void check_if_valid_acceleration(lane& l, float timestep);
+        float check_lane(const lane* l, const float param, const float timestep, const simulator& sim);
         mat4x4f point_frame(const lane* l) const;
 
         // macro data
@@ -99,9 +99,9 @@ namespace hybrid
 
         // micro data
         void  micro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
-        void  compute_lane_accelerations(double timestep, const simulator &sim);
-        float settle_pass(const double timestep, const double epsilon, const double epsilon_2, const simulator &sim);
-        void  compute_merges(const double timestep, const simulator& sim);
+        void  compute_lane_accelerations(float timestep, const simulator &sim);
+        float settle_pass(const float timestep, const float epsilon, const float epsilon_2, const simulator &sim);
+        void  compute_merges(const float timestep, const simulator& sim);
         car&  find_next_car(float param);
         car   get_merging_leader(float param, const lane* other_lane);
 
@@ -154,7 +154,7 @@ namespace hybrid
         float front_bumper_offset() const;
         void  car_swap();
 
-        car   make_car(const double position, const double velocity, const double acceleration);
+        car   make_car(const float position, const float velocity, const float acceleration);
 
         lane       &get_lane_by_name(const str &s);
         const lane &get_lane_by_name(const str &s) const;
@@ -177,18 +177,18 @@ namespace hybrid
         size_t                 car_id_counter;
 
         // micro
-        void   micro_initialize(const double a_max, const double a_pref, const double v_pref,
-                                const double delta);
+        void   micro_initialize(const float a_max, const float a_pref, const float v_pref,
+                                const float delta);
         void   micro_cleanup();
-        void   settle(const double timestep);
-        double acceleration(const double leader_velocity, const double follower_velocity, const double distance) const;
-        void   compute_accelerations(double timestep);
-        void   update(double timestep);
+        void   settle(const float timestep);
+        float acceleration(const float leader_velocity, const float follower_velocity, const float distance) const;
+        void   compute_accelerations(float timestep);
+        void   update(float timestep);
 
-        double a_max;
-        double a_pref;
-        double v_pref;
-        double delta;
+        float a_max;
+        float a_pref;
+        float v_pref;
+        float delta;
 
         // macro
         void  macro_initialize(float gamma, float h_suggest, float relaxation);

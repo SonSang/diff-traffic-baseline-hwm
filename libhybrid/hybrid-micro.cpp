@@ -118,7 +118,7 @@ namespace hybrid
         return trans;
     }
 
-    float car::check_lane(const lane* l, const float param, const double timestep, const simulator &sim)
+    float car::check_lane(const lane* l, const float param, const float timestep, const simulator &sim)
     {
         float polite           = 0;
         car   potential_follower(0, 0, 0, 0);
@@ -237,9 +237,9 @@ namespace hybrid
             return (a_hat - acceleration) + polite*(f_hat - potential_follower.acceleration);
     }
 
-    void car::check_if_valid_acceleration(lane& l, double timestep)
+    void car::check_if_valid_acceleration(lane& l, float timestep)
     {
-        double tmp_position = position + (velocity * timestep) * l.inv_length;
+        float tmp_position = position + (velocity * timestep) * l.inv_length;
 
         lane* curr = &l;
         lane* destination_lane = &l;
@@ -280,7 +280,7 @@ namespace hybrid
 
     void car::find_free_dist_and_vel(const lane &l, float& next_velocity, float& distance, const simulator& sim)
     {
-        const double min_for_free_movement = 1000;
+        const float min_for_free_movement = 1000;
 
         hwm::lane *hwm_downstream = l.parent->downstream_lane();
 
@@ -299,7 +299,7 @@ namespace hybrid
         acceleration = sim.acceleration(next_velocity, velocity, distance);
     }
 
-    void car::integrate(const double timestep, const lane& l)
+    void car::integrate(const float timestep, const lane& l)
     {
         //Update position and velocity
         position += (velocity * timestep) * l.inv_length;
@@ -336,7 +336,7 @@ namespace hybrid
             }
         }
 
-        velocity = std::max(0.0, velocity + acceleration * timestep);
+        velocity = std::max(0.0f, velocity + acceleration * timestep);
     }
 
     car lane::get_merging_leader(float param, const lane* other_lane)
@@ -409,7 +409,7 @@ namespace hybrid
         return;
     }
 
-    void lane::compute_merges(const double timestep, const simulator& sim)
+    void lane::compute_merges(const float timestep, const simulator& sim)
     {
         float threshold = 0.2;
         for(int i = (int)current_cars().size() - 1; i >= 0; --i)
@@ -421,7 +421,7 @@ namespace hybrid
                 float right_param = current_car(i).position;
 
                 hwm::lane* potential_right = parent->right_adjacency(right_param);
-                double right_accel = std::numeric_limits<int>::min();
+                float right_accel = std::numeric_limits<int>::min();
                 lane* right_lane = 0;
                 if (potential_right)
                 {
@@ -431,7 +431,7 @@ namespace hybrid
 
                 float      left_param     = current_car(i).position;
                 hwm::lane* potential_left = parent->left_adjacency(left_param);
-                double     left_accel     = std::numeric_limits<int>::min();
+                float     left_accel     = std::numeric_limits<int>::min();
                 lane*      left_lane      = 0;
                 if (potential_left)
                 {
@@ -489,7 +489,7 @@ namespace hybrid
         return current_cars()[0];
     }
 
-    void lane::compute_lane_accelerations(const double timestep, const simulator &sim)
+    void lane::compute_lane_accelerations(const float timestep, const simulator &sim)
     {
          if(current_cars().empty())
              return;
@@ -534,31 +534,31 @@ namespace hybrid
              }
 
              if (potential_right and next_r.position > -1)
-                 current_car(i).acceleration = std::min(current_car(i).acceleration, (double)right_accel);
+                 current_car(i).acceleration = std::min(current_car(i).acceleration, (float)right_accel);
 
              if (potential_left and next_l.position > -1)
-                 current_car(i).acceleration = std::min(current_car(i).acceleration, (double)left_accel);
+                 current_car(i).acceleration = std::min(current_car(i).acceleration, (float)left_accel);
 
              //            current_car(i).check_if_valid_acceleration(*this, timestep);  For debugging only
          }
      }
 
-     float lane::settle_pass(const double timestep, const double epsilon, const double epsilon_2,
+     float lane::settle_pass(const float timestep, const float epsilon, const float epsilon_2,
                               const simulator &sim)
      {
-         double max_acceleration = epsilon;
+         float max_acceleration = epsilon;
          int i = static_cast<int>(current_cars().size())-1;
          while(!current_cars().empty() && i >= 0)
          {
              car &c = current_car(i);
 
-             double last_acceleration = std::numeric_limits<double>::max();
+             float last_acceleration = std::numeric_limits<float>::max();
              while(true)
              {
                  compute_lane_accelerations(timestep, sim);
 
                  c.velocity = std::max(c.velocity + c.acceleration * timestep,
-                                        0.0);
+                                        0.0f);
 
                  max_acceleration = std::max(std::abs(c.acceleration), max_acceleration);
 
@@ -583,8 +583,8 @@ namespace hybrid
          return max_acceleration;
      }
 
-     void simulator::micro_initialize(const double in_a_max, const double in_a_pref, const double in_v_pref,
-                                      const double in_delta)
+     void simulator::micro_initialize(const float in_a_max, const float in_a_pref, const float in_v_pref,
+                                      const float in_delta)
      {
          a_max                 = in_a_max;
          a_pref                = in_a_pref;
@@ -592,12 +592,12 @@ namespace hybrid
          delta                 = in_delta;
      }
 
-     void simulator::settle(const double timestep)
+     void simulator::settle(const float timestep)
      {
-         static const double EPSILON   = 1;
-         static const double EPSILON_2 = 0.01;
+         static const float EPSILON   = 1;
+         static const float EPSILON_2 = 0.01;
 
-         double max_acceleration;
+         float max_acceleration;
          do
          {
              max_acceleration = EPSILON;
@@ -613,15 +613,15 @@ namespace hybrid
          while(max_acceleration > EPSILON);
      }
 
-     double simulator::acceleration(const double leader_velocity, const double follower_velocity, double distance) const
+     float simulator::acceleration(const float leader_velocity, const float follower_velocity, float distance) const
      {
-         static const double s1 = 2;
-         static const double T  = 1.6;
+         static const float s1 = 2;
+         static const float T  = 1.6;
          const float EPSILON = 10e-7;
 
          //if (f.vel < 0) f.vel = 0; //TODO Should this be taken into account?
 
-         const double optimal_spacing = s1 + T*follower_velocity + (follower_velocity*(follower_velocity - leader_velocity))/2*(std::sqrt(a_max*a_pref));
+         const float optimal_spacing = s1 + T*follower_velocity + (follower_velocity*(follower_velocity - leader_velocity))/2*(std::sqrt(a_max*a_pref));
 
          if (distance > car_length)
              distance -= car_length;
@@ -630,13 +630,13 @@ namespace hybrid
 
 
          //         std::cout << "leader vel " << leader_velocity << " dist " << distance << std::endl;
-         const double t               = a_max*(1 - std::pow((follower_velocity / v_pref), delta) - std::pow((optimal_spacing/(distance)), 2));
+         const float t               = a_max*(1 - std::pow((follower_velocity / v_pref), delta) - std::pow((optimal_spacing/(distance)), 2));
 
          //assert(l.dist - f.dist > 0); //A leader needs to lead.
          return t;
      }
 
-     void simulator::compute_accelerations(const double timestep)
+     void simulator::compute_accelerations(const float timestep)
      {
          BOOST_FOREACH(lane &l, lanes)
          {
@@ -656,7 +656,7 @@ namespace hybrid
          }
      }
 
-     void simulator::update(const double timestep)
+     void simulator::update(const float timestep)
      {
          compute_accelerations(timestep);
 
