@@ -78,7 +78,7 @@ namespace hybrid
         return true;
     }
 
-    mat4x4f car_interp::point_frame(size_t id, float time) const
+    mat4x4f car_interp::point_frame(size_t id, float time, float lane_width) const
     {
         const car_hash::const_iterator low (car_data[0].find(id));
         const car_hash::const_iterator high(car_data[1].find(id));
@@ -101,7 +101,7 @@ namespace hybrid
                                                          high->second.c.other_lane_membership.position*w1;
             fake_car.other_lane_membership.theta       = low->second.c.other_lane_membership.theta*w0 +
                                                          high->second.c.other_lane_membership.theta*w1;
-            return fake_car.point_frame(low->second.la);
+            return fake_car.point_frame(low->second.la, lane_width);
         }
         else
         {
@@ -111,8 +111,8 @@ namespace hybrid
                 return l->point_frame(param);
             else
             {
-                mat4x4f res0(low->second.c.point_frame(low->second.la));
-                mat4x4f res1(high->second.c.point_frame(high->second.la));
+                mat4x4f res0(low->second.c.point_frame(low->second.la, lane_width));
+                mat4x4f res1(high->second.c.point_frame(high->second.la, lane_width));
                 return mat4x4f(res0*w0+res1*w1);
             }
         }

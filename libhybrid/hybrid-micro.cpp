@@ -31,14 +31,14 @@ namespace hybrid
         float y_;
     };
 
-    mat4x4f car::point_frame(const hwm::lane* l) const
+    mat4x4f car::point_frame(const hwm::lane* l, const float lane_width) const
     {
         mat4x4f trans;
         float pos[4];
         if (other_lane_membership.other_lane != 0)
         {
             float offset  = std::min(lc_curve::y(other_lane_membership.merge_param), (float)1.0);
-            offset       *= 2.5;
+            offset       *= lane_width;
             if (!other_lane_membership.is_left)
             {
                 offset *= -1;
@@ -244,7 +244,7 @@ namespace hybrid
         acceleration = sim.acceleration(next_velocity, velocity, distance);
     }
 
-    void car::integrate(const float timestep, const lane& l)
+    void car::integrate(const float timestep, const lane& l, const float lane_width)
     {
         //Update position and velocity
         position += (velocity * timestep) * l.inv_length;
@@ -255,18 +255,18 @@ namespace hybrid
         {
             const float old_y = lc_curve::y(other_lane_membership.merge_param);
             // TODO USE LANE LENGTH -- 0.2 = 1/5
-            if (velocity > (2.5*0.2f))
+            if (velocity > (lane_width*0.2f))
             {
                 other_lane_membership.merge_param += timestep / seconds_for_merge;
             }
             else
             {
-                other_lane_membership.merge_param += (velocity*timestep*(1.0/2.5));
+                other_lane_membership.merge_param += (velocity*timestep*(1.0/lane_width));
             }
 
             const float new_y = lc_curve::y(other_lane_membership.merge_param);
 
-            float del_y = 2.5*(old_y-new_y);
+            float del_y = lane_width*(old_y-new_y);
             if(other_lane_membership.is_left)
                 del_y *= -1;
 
@@ -620,7 +620,7 @@ namespace hybrid
              {
                  BOOST_FOREACH(car &c, l.current_cars())
                  {
-                     c.integrate(timestep, l);
+                     c.integrate(timestep, l, hnet->lane_width);
                  }
              }
          }

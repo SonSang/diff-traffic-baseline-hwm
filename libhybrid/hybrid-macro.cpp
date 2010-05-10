@@ -315,7 +315,7 @@ namespace hybrid
             {
                 car c(0, param, velocity(param, sim.gamma), 0.0f);
                 c.compute_intersection_acceleration(sim, *this);
-                c.integrate(dt, *this);
+                c.integrate(dt, *this, sim.hnet->lane_width);
 
                 const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
                 assert(cell >=0);

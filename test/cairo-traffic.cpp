@@ -468,7 +468,7 @@ public:
             if(GLEW_OK != glew_state)
                 init_glew();
             if(!car_drawer.initialized())
-                car_drawer.initialize(0.8*sim->hnet->lane_width,
+                car_drawer.initialize(2,
                                       CAR_LENGTH,
                                       1.5f,
                                       CAR_REAR_AXLE,
@@ -575,7 +575,7 @@ public:
                 if(!hci->in_second(cs.first))
                     continue;
 
-                mat4x4f trans(hci->point_frame(cs.first, t));
+                mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());

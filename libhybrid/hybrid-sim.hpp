@@ -42,10 +42,10 @@ namespace hybrid
         void compute_acceleration(const car &f, const float distance, const simulator &sim);
         void find_free_dist_and_vel(const lane& l, float& next_velocity, float& distance, const simulator& sim);
         void compute_intersection_acceleration(const simulator &sim, const lane &l);
-        void integrate(float timestep, const lane &l);
+        void integrate(float timestep, const lane &l, float lane_width);
         void check_if_valid_acceleration(lane& l, float timestep);
         float check_lane(const lane* l, const float param, const float timestep, const simulator& sim);
-        mat4x4f point_frame(const hwm::lane *l) const;
+        mat4x4f point_frame(const hwm::lane *l, float lane_width) const;
 
         // macro data
     };
@@ -67,7 +67,7 @@ namespace hybrid
         void capture(simulator &s);
 
         bool in_second(size_t id) const;
-        mat4x4f point_frame(size_t id, float time) const;
+        mat4x4f point_frame(size_t id, float time, float lane_width) const;
 
         vec2f    times;
         float    inv_dt;
