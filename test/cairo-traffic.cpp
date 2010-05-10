@@ -6,6 +6,7 @@
 #include <FL/gl.h>
 #include <FL/glu.h>
 #include <FL/glut.h>
+#include <boost/regex.hpp>
 #include "libroad/hwm_network.hpp"
 #include "libroad/geometric.hpp"
 #include "libhybrid/hybrid-sim.hpp"
@@ -95,6 +96,16 @@ struct tex_car_draw
     {
     }
 
+    tex_car_draw(const float        car_width_,
+                 const float        car_length_,
+                 const float        car_height_,
+                 const float        car_rear_axle_,
+                 const std::string &str)
+    {
+        initialize(car_width_, car_length_, car_height_, car_rear_axle_, str);
+    }
+
+
     bool initialized() const
     {
         return glIsTexture(car_tex);
@@ -118,7 +129,13 @@ struct tex_car_draw
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         Magick::Image im(str);
-        const vec2i dim(im.columns(), im.rows());
+        vec2i dim(im.columns(), im.rows());
+        if(dim[0] > dim[1])
+            extents = vec2f(1.0, static_cast<float>(dim[1])/dim[0]);
+        else
+            extents = vec2f(static_cast<float>(dim[0])/dim[1], 1.0);
+        std::cout <<extents<<std::endl;
+
         unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
         im.write(0, 0, dim[0], dim[1], "RGBA", Magick::CharPixel, pix);
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, dim[0], dim[1],
@@ -134,16 +151,16 @@ struct tex_car_draw
         glBindTexture (GL_TEXTURE_2D, car_tex);
         glPushMatrix();
         glTranslatef(-car_length+car_rear_axle, 0, 0);
-        glScalef(car_length, car_width/2, 1);
+        glScalef(car_length, car_length/2, 1);
         glBegin(GL_QUADS);
-        glTexCoord2i(0,0);
-        glVertex2i(0,-1);
-        glTexCoord2i(1,0);
-        glVertex2i(1,-1);
-        glTexCoord2i(1,1);
-        glVertex2i(1,1);
-        glTexCoord2i(0,1);
-        glVertex2i(0,1);
+        glTexCoord2f(0, 0);
+        glVertex2f  (0,-extents[1]);
+        glTexCoord2f(1 ,0);
+        glVertex2f  (1,-extents[1]);
+        glTexCoord2f(1 ,1);
+        glVertex2f  (1, extents[1]);
+        glTexCoord2f(0, 1);
+        glVertex2f  (0, extents[1]);
         glEnd();
 
         glPopMatrix();
@@ -153,6 +170,7 @@ struct tex_car_draw
     float  car_length;
     float  car_height;
     float  car_rear_axle;
+    vec2f  extents;
     GLuint car_tex;
 };
 
@@ -185,6 +203,14 @@ public:
         this->resizable(this);
         frame_timer.reset();
         frame_timer.start();
+    }
+
+    ~fltkview()
+    {
+        BOOST_FOREACH(tex_car_draw *tcd, car_drawers)
+        {
+            delete tcd;
+        }
     }
 
     void setup_light()
@@ -221,6 +247,26 @@ public:
             std::cerr << "Error: " << glewGetErrorString(glew_state)  << std::endl;
         }
         std::cerr << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
+    }
+
+    void init_car_drawers(const std::string &dir)
+    {
+        assert(bf::is_directory(dir));
+        const boost::regex     re(".*\\.png");
+        bf::directory_iterator end_itr;
+        for( bf::directory_iterator itr(dir);
+             itr != end_itr;
+             ++itr)
+        {
+            if(itr->path().has_filename() && boost::regex_match(itr->path().filename(), re))
+            {
+                car_drawers.push_back(new tex_car_draw(2,
+                                                       CAR_LENGTH,
+                                                       1.5f,
+                                                       CAR_REAR_AXLE,
+                                                       itr->path().string()));
+            }
+        }
     }
 
     void init_textures()
@@ -467,17 +513,14 @@ public:
 
             if(GLEW_OK != glew_state)
                 init_glew();
-            if(!car_drawer.initialized())
-                car_drawer.initialize(2,
-                                      CAR_LENGTH,
-                                      1.5f,
-                                      CAR_REAR_AXLE,
-                                      "car-top.png");
 
             if(!network_drawer.initialized())
                 network_drawer.initialize(sim->hnet, 0.05f);
 
             init_textures();
+            if(car_drawers.empty())
+                init_car_drawers("/home/sewall/Desktop/siga10/");
+
             setup_light();
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -575,11 +618,18 @@ public:
                 if(!hci->in_second(cs.first))
                     continue;
 
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.first));
+                if(drawer == car_map.end())
+                {
+                    const size_t pick = rand() % car_drawers.size();
+                    drawer            = car_map.insert(drawer, std::make_pair(cs.first, car_drawers[pick]));
+                }
+
                 mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
-                car_drawer.draw();
+                drawer->second->draw();
                 glPopMatrix();
             }
         }
@@ -789,8 +839,8 @@ public:
     vec2f                                              second_point;
     std::vector<hwm::network_aux::road_spatial::entry> query_results;
 
-    tex_car_draw       car_drawer;
-    hwm::network_draw  network_drawer;
+    std::vector<tex_car_draw*> car_drawers;
+    hwm::network_draw          network_drawer;
 
     vec4f               light_position;
     hybrid::simulator  *sim;
@@ -798,6 +848,7 @@ public:
     float               t;
     timer               frame_timer;
     bool                go;
+    std::tr1::unordered_map<size_t, tex_car_draw*> car_map;
 };
 
 void draw_callback(void *v)
