@@ -1,6 +1,6 @@
 noinst_PROGRAMS = hybrid ih-riemann-test pc-int-test
 
-EXTRA_DIST = arcball.hpp
+EXTRA_DIST = arcball.hpp big-image-tile.hpp
 
 hybrid_SOURCES  = hybrid.cpp
 hybrid_CPPFLAGS = $(LIBROAD_CFLAGS) $(CAIRO_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS) -I$(top_srcdir)

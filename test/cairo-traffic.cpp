@@ -12,6 +12,7 @@
 #include "libhybrid/hybrid-sim.hpp"
 #include "libroad/hwm_draw.hpp"
 #include "libhybrid/timer.hpp"
+#include "big-image-tile.hpp"
 
 static inline void blackbody(float *rgb, const float val)
 {
@@ -247,7 +248,6 @@ public:
                                                           netaux(0),
                                                           glew_state(GLEW_OK+1),
                                                           road_tex_(0),
-                                                          background_tex_(0),
                                                           back_image(0),
                                                           back_image_center(0),
                                                           back_image_scale(1),
@@ -345,32 +345,9 @@ public:
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
             retex_roads(center, scale, vec2i(w(), h()));
         }
-        if(back_image && !glIsTexture(background_tex_))
+        if(back_image && back_image->tiles.empty())
         {
-            glGenTextures(1, &background_tex_);
-            glBindTexture (GL_TEXTURE_2D, background_tex_);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-            Magick::Image im(*back_image);
-            im.flip();
-            back_image_dim = vec2i(im.columns(), im.rows());
-            unsigned char *pix = new unsigned char[back_image_dim[0]*back_image_dim[1]*4];
-            im.write(0, 0, back_image_dim[0], back_image_dim[1], "RGBA", Magick::CharPixel, pix);
-            glTexImage2D (GL_TEXTURE_2D,
-                          0,
-                          GL_RGBA,
-                          back_image_dim[0],
-                          back_image_dim[1],
-                          0,
-                          GL_RGBA,
-                          GL_UNSIGNED_BYTE,
-                          pix);
-            delete[] pix;
+            back_image->make_tiles(biggest_width/2);
         }
         if(!glIsTexture(overlay_tex_))
         {
@@ -605,25 +582,15 @@ public:
         glEnable(GL_TEXTURE_2D);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glColor3f(1.0, 1.0, 1.0);
-        if(back_image)
+        if(back_image && !back_image->tiles.empty())
         {
-            glBindTexture (GL_TEXTURE_2D, background_tex_);
-
             glPushMatrix();
             glTranslatef(-back_image_center[0], -back_image_center[1], 0);
             glScalef    (back_image_scale, back_image_yscale*back_image_scale,   1);
 
-            glTranslatef(-back_image_dim[0]/2, -back_image_dim[1]/2, 0);
-            glBegin(GL_QUADS);
-            glTexCoord2f(0.0, 0.0);
-            glVertex2i(0, 0);
-            glTexCoord2f(1.0, 0.0);
-            glVertex2i(back_image_dim[0], 0);
-            glTexCoord2f(1.0, 1.0);
-            glVertex2iv(back_image_dim.data());
-            glTexCoord2f(0.0, 1.0);
-            glVertex2i(0, back_image_dim[1]);
-            glEnd();
+            vec2i dim(back_image->dim());
+            glTranslatef(-dim[0]/2, dim[1]/2, 0);
+            back_image->draw();
             glPopMatrix();
         }
 
@@ -851,10 +818,9 @@ public:
                 go = !go;
                 break;
             case 'i':
-                if(back_image)
+                if(back_image && !back_image->tiles.empty())
                 {
-                    std::cout << "Image: "   << *back_image       << std::endl
-                              << " scale: "  << back_image_scale  << std::endl
+                    std::cout << " scale: "  << back_image_scale  << std::endl
                               << " center: " << back_image_center << std::endl;
                 }
                 else
@@ -900,14 +866,14 @@ public:
     vec2f             center;
     float             scale;
 
-    GLuint   glew_state;
-    GLuint   road_tex_;
-    GLuint   background_tex_;
-    char   **back_image;
-    vec2i    back_image_dim;
-    vec2f    back_image_center;
-    float    back_image_scale;
-    float    back_image_yscale;
+    GLuint     glew_state;
+    GLuint     road_tex_;
+    GLuint     background_tex_;
+    big_image *back_image;
+    vec2i      back_image_dim;
+    vec2f      back_image_center;
+    float      back_image_scale;
+    float      back_image_yscale;
 
     GLuint   overlay_tex_;
     GLuint   continuum_tex_;
@@ -1010,7 +976,7 @@ int main(int argc, char *argv[])
     mv.t      = hci.times[0];
 
     if(argc == 3)
-        mv.back_image = argv+2;
+        mv.back_image = new big_image(argv[2]);
 
     Fl::add_timeout(1.0/30.0, draw_callback, &mv);
 
