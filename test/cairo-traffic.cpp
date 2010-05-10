@@ -71,6 +71,31 @@ static const float car_colors [][4] = {{0.843137254902,0.0745098039216,0.0745098
 
 static size_t n_car_colors = sizeof(car_colors)/sizeof(car_colors[0]);
 
+static GLint biggest_texture()
+{
+    GLint biggest_width = 64;
+    GLint width = 1;
+    while ( width ) /* use a better condition to prevent possible endless loop */
+    {
+        glTexImage2D(GL_PROXY_TEXTURE_2D,
+                     0,                /* mip map level */
+                     GL_RGBA,          /* internal format */
+                     biggest_width,     /* width of image */
+                     biggest_width,    /* height of image */
+                     0,                /* texture border */
+                     GL_RGBA,          /* pixel data format, */
+                     GL_UNSIGNED_BYTE, /* pixel data type */
+                     NULL              /* null pointer because this a proxy texture */
+                     );
+
+        /* the queried width will NOT be 0, if the texture format is supported */
+        glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+
+        ++biggest_width;
+    }
+    return biggest_width;
+}
+
 typedef enum { LEFT, CENTER_X, RIGHT }  text_alignment_x;
 typedef enum { TOP, CENTER_Y, BOTTOM }  text_alignment_y;
 
@@ -306,6 +331,8 @@ public:
 
     void init_textures()
     {
+        GLint biggest_width = biggest_texture();
+        std::cout << "Largest texture I support: " << biggest_width << std::endl;
         if(!glIsTexture(road_tex_))
         {
             glGenTextures(1, &road_tex_);
