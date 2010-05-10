@@ -694,6 +694,18 @@ public:
         glFinish();
     }
 
+    void screenshot()
+    {
+        unsigned char *pix = new unsigned char[w()*h()*3];
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadBuffer(GL_BACK);
+        glReadPixels(0, 0, w(), h(), GL_RGB, GL_UNSIGNED_BYTE,  pix);
+        Magick::Image  res(w(), h(), "RGB", Magick::CharPixel, pix);
+        res.flip();
+        res.write("test.png");
+        delete[] pix;
+    }
+
     int handle(int event)
     {
         switch(event)
@@ -805,6 +817,9 @@ public:
         case FL_KEYBOARD:
             switch(Fl::event_key())
             {
+            case 's':
+                screenshot();
+                break;
             case ' ':
                 go = !go;
                 break;
