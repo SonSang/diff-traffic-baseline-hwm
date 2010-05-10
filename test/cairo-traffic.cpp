@@ -483,7 +483,7 @@ public:
         {
             cairo_set_matrix(cr, &cmat);
             cairo_rectangle(cr, r.bounds[0][0], r.bounds[0][1], r.bounds[1][0]-r.bounds[0][0], r.bounds[1][1]-r.bounds[0][1]);
-            cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.5);
+            cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
             cairo_fill_preserve(cr);
             cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
             cairo_identity_matrix(cr);
@@ -500,7 +500,7 @@ public:
 
             cairo_set_matrix(cr, &cmat);
             cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
-            cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.5);
+            cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
             cairo_fill_preserve(cr);
             cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
             cairo_identity_matrix(cr);
