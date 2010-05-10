@@ -40,6 +40,37 @@ static inline void blackbody(float *rgb, const float val)
    return;
 }
 
+
+static const float car_colors [][4] = {{0.843137254902,0.0745098039216,0.0745098039216},
+                                       {0.450980392157,0.788235294118,1.0},
+                                       {0.0,0.447058823529,0.0941176470588},
+                                       {1.0,0.945098039216,0.0941176470588},
+                                       {0.98431372549,0.901960784314,0.450980392157},
+                                       {0.0,0.239215686275,0.533333333333},
+                                       {0.811764705882,0.811764705882,0.811764705882},
+                                       {0.18431372549,0.18431372549,0.18431372549},
+                                       {0.992156862745,0.992156862745,0.992156862745},
+                                       {0.286274509804,0.376470588235,0.76862745098},
+                                       {0.858823529412,0.792156862745,0.41568627451},
+                                       {0.474509803922,0.407843137255,0.243137254902},
+                                       {0.345098039216,0.345098039216,0.345098039216},
+                                       {0.450980392157,0.0705882352941,0.607843137255},
+                                       {0.117647058824,0.388235294118,0.16862745098},
+                                       {0.698039215686,0.0,0.0823529411765},
+                                       {0.980392156863,0.952941176471,0.921568627451},
+                                       {0.0,0.376470588235,0.101960784314},
+                                       {0.121568627451,0.16862745098,0.819607843137},
+                                       {0.18431372549,0.18431372549,0.18431372549},
+                                       {0.498039215686,0.435294117647,0.254901960784},
+                                       {0.929411764706,0.929411764706,0.929411764706},
+                                       {0.827450980392,0.737254901961,0.658823529412},
+                                       {0.0745098039216,0.247058823529,0.866666666667},
+                                       {0.0,0.396078431373,0.145098039216},
+                                       {0.486274509804,0.21568627451,0.725490196078},
+                                       {0.364705882353,0.639215686275,1.0},};
+
+static size_t n_car_colors = sizeof(car_colors)/sizeof(car_colors[0]);
+
 typedef enum { LEFT, CENTER_X, RIGHT }  text_alignment_x;
 typedef enum { TOP, CENTER_Y, BOTTOM }  text_alignment_y;
 
@@ -134,8 +165,6 @@ struct tex_car_draw
             extents = vec2f(1.0, static_cast<float>(dim[1])/dim[0]);
         else
             extents = vec2f(static_cast<float>(dim[0])/dim[1], 1.0);
-        std::cout <<extents<<std::endl;
-
         unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
         im.write(0, 0, dim[0], dim[1], "RGBA", Magick::CharPixel, pix);
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, dim[0], dim[1],
@@ -172,6 +201,12 @@ struct tex_car_draw
     float  car_rear_axle;
     vec2f  extents;
     GLuint car_tex;
+};
+
+struct car_draw_desc
+{
+    int           color_idx;
+    tex_car_draw *drawer;
 };
 
 static const float CAR_LENGTH    = 4.5f;
@@ -612,24 +647,26 @@ public:
 
         if(hci)
         {
-            glColor3f(1.0, 0.0, 0.0);
             BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
             {
                 if(!hci->in_second(cs.first))
                     continue;
 
-                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.first));
+                std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.first));
                 if(drawer == car_map.end())
                 {
-                    const size_t pick = rand() % car_drawers.size();
-                    drawer            = car_map.insert(drawer, std::make_pair(cs.first, car_drawers[pick]));
+                    car_draw_desc cdd;
+                    cdd.color_idx = rand() % n_car_colors;
+                    cdd.drawer = car_drawers[rand() % car_drawers.size()];
+                    drawer            = car_map.insert(drawer, std::make_pair(cs.first, cdd));
                 }
 
+                glColor3fv(car_colors[drawer->second.color_idx]);
                 mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
-                drawer->second->draw();
+                drawer->second.drawer->draw();
                 glPopMatrix();
             }
         }
@@ -848,7 +885,8 @@ public:
     float               t;
     timer               frame_timer;
     bool                go;
-    std::tr1::unordered_map<size_t, tex_car_draw*> car_map;
+
+    std::tr1::unordered_map<size_t, car_draw_desc> car_map;
 };
 
 void draw_callback(void *v)
