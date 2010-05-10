@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<network version="1.3" name="intersection-test" lane_width="2.5" xmlns:xi="http://www.w3.org/2001/XInclude" gamma="0.5">
+<network version="1.3" name="intersection-test" lane_width="3.66" xmlns:xi="http://www.w3.org/2001/XInclude" gamma="0.5">
   <roads>
     <road id="road0" name="S Columbia Street">
       <line_rep>
 	<points>
 	  -75.0 0.0 0.0 0.0
 	  -50.0 0.0 0.0 0.0
-	  -7.5  0.0 0.0 0.0
+	  -8.66  0.0 0.0 0.0
 	</points>
       </line_rep>
     </road>
     <road id="road1" name="E Franklin Street">
       <line_rep>
 	<points>
-	  -2.5 -26.25 0.0 0.0
-	  -2.5 -5.0   0.0 0.0
+	  -1.34 -26.88 0.0 0.0
+	  -1.34 -8.16   0.0 0.0
 	</points>
       </line_rep>
     </road>
     <road id="road2" name="N Columbia Street">
       <line_rep>
 	<points>
-	  2.5  0.0 0.0 0.0
+	  7  0.0 0.0 0.0
 	  23.75 0.0 0.0 0.0
 	</points>
       </line_rep>
@@ -29,30 +29,25 @@
     <road id="road3" name="W Franklin Street">
       <line_rep>
 	<points>
-	  -2.5 5 0.0 0.0
-	  -2.5 26.25 0.0 0.0
+	  -1.34 8.16 0.0 0.0
+	  -1.34 26.88 0.0 0.0
 	</points>
       </line_rep>
     </road>
     <road id="road4" name="S Columbia Ramp">
       <line_rep>
 	<points>
-	  -100.0 -52.5 0.0 0.0
-	  -98.7463956091 -41.3739533022 0.0 0.0
-	  -95.0484433951 -30.8058130441	0.0 0.0
-	  -89.0915741234 -21.3255099071	0.0 0.0
-	  -81.1744900929 -13.4084258766	0.0 0.0
-	  -71.6941869559 -7.45155660488	0.0 0.0
-	  -61.1260466978 -2.5360439091 0.0 0.0
-	  -50.0 -2.5 0.0 0.0
+	  -100.0 -53.66 0.0 0.0
+	  -100.0 -3.66 0.0 0.0
+	  -50.0 -3.66 0.0 0.0
 	</points>
       </line_rep>
     </road>
     <road id="road5" name="Some other road">
       <line_rep>
 	<points>
-	  -102.5 -100.0 0.0 0.0
-	  -102.5  50.0  0.0 0.0
+	  -103.66 -100.0 0.0 0.0
+	  -103.66  50.0  0.0 0.0
 	</points>
       </line_rep>
     </road>
@@ -102,13 +97,13 @@
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road5" interval_start="0.0" interval_end="0.3167" lane_position="-2.5"/>
+	    <road_membership parent_road_ref="road5" interval_start="0.0" interval_end="0.3167" lane_position="-3.66"/>
 	  </base>
 	  <divider value="0.2818">
 	    <road_membership parent_road_ref="road4" interval_start="0.0" interval_end="1.0" lane_position="0.0"/>
 	  </divider>
 	  <divider value="0.7478">
-	    <road_membership parent_road_ref="road0" interval_start="0.3704" interval_end="1.0" lane_position="-2.5"/>
+	    <road_membership parent_road_ref="road0" interval_start="0.3704" interval_end="1.0" lane_position="-3.66"/>
 	  </divider>
 	</interval>
       </road_intervals>
@@ -149,7 +144,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road0" interval_start="1.0" interval_end="0.0" lane_position="2.5"/>
+	      <road_membership parent_road_ref="road0" interval_start="1.0" interval_end="0.0" lane_position="3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
@@ -211,7 +206,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road1" interval_start="0.0" interval_end="1.0" lane_position="-2.5"/>
+	      <road_membership parent_road_ref="road1" interval_start="0.0" interval_end="1.0" lane_position="-3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
@@ -242,7 +237,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road1" interval_start="1.0" interval_end="0.0" lane_position="2.5"/>
+	      <road_membership parent_road_ref="road1" interval_start="1.0" interval_end="0.0" lane_position="3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
@@ -273,7 +268,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road2" interval_start="0.0" interval_end="1.0" lane_position="-2.5"/>
+	      <road_membership parent_road_ref="road2" interval_start="0.0" interval_end="1.0" lane_position="-3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
@@ -304,7 +299,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road2" interval_start="1.0" interval_end="0.0" lane_position="2.5"/>
+	      <road_membership parent_road_ref="road2" interval_start="1.0" interval_end="0.0" lane_position="3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
@@ -366,7 +361,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road3" interval_start="0.0" interval_end="1.0" lane_position="-2.5"/>
+	      <road_membership parent_road_ref="road3" interval_start="0.0" interval_end="1.0" lane_position="-3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
@@ -397,7 +392,7 @@
 	<road_intervals>
 	  <interval>
 	    <base>
-	      <road_membership parent_road_ref="road3" interval_start="1.0" interval_end="0.0" lane_position="2.5"/>
+	      <road_membership parent_road_ref="road3" interval_start="1.0" interval_end="0.0" lane_position="3.66"/>
 	    </base>
 	  </interval>
 	</road_intervals>
