@@ -176,10 +176,12 @@ namespace hybrid
 
 
         //Limit on how much deceleration is possible.
-        if (f_hat < -0.5*sim.a_max)
+        float politeness = 0.6f;
+        float max_deceleration = 10.0f;
+        if (f_hat < -politeness*max_deceleration)//sim.a_max)
             return std::numeric_limits<int>::min();
         else
-            return (a_hat - acceleration) + polite*(f_hat - potential_follower.acceleration);
+            return (a_hat - acceleration);
     }
 
     void car::check_if_valid_acceleration(lane& l, float timestep)
@@ -250,19 +252,13 @@ namespace hybrid
         position += (velocity * timestep) * l.inv_length;
 
         //Move car that is also a member of the other lane
-        float seconds_for_merge = 5.0f;
         if (other_lane_membership.other_lane != 0)
         {
             const float old_y = lc_curve::y(other_lane_membership.merge_param);
-            // TODO USE LANE LENGTH -- 0.2 = 1/5
-            if (velocity > (lane_width*0.2f))
-            {
-                other_lane_membership.merge_param += timestep / seconds_for_merge;
-            }
-            else
-            {
-                other_lane_membership.merge_param += (velocity*timestep*(1.0/lane_width));
-            }
+
+            float needed_duration = lc_curve::end(velocity);
+
+            other_lane_membership.merge_param += timestep / needed_duration;
 
             const float new_y = lc_curve::y(other_lane_membership.merge_param);
 
