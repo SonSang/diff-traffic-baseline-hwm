@@ -277,6 +277,7 @@ public:
                                                           sim(0),
                                                           t(0),
                                                           go(false),
+                                                          screenshot_mode(0),
                                                           screenshot_buffer(0),
                                                           screenshot_count(0)
     {
@@ -381,7 +382,7 @@ public:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-            retex_overlay(center, scale, vec2i(w(), h()));
+            retex_overlay(center, scale, vec2i(w(), h()), screenshot_mode);
         }
         if(!glIsTexture(continuum_tex_))
         {
@@ -451,7 +452,7 @@ public:
         cscale_to_box(tex_low, tex_high, my_center, my_scale, im_res);
     }
 
-    void retex_overlay(const vec2f &my_center, const float my_scale, const vec2i &im_res)
+    void retex_overlay(const vec2f &my_center, const float my_scale, const vec2i &im_res, bool text)
     {
         cairo_surface_t *cs = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
                                                          im_res[0],
@@ -473,8 +474,8 @@ public:
         cairo_translate(cr,
                         -im_res[0]/2,
                         -im_res[1]/2);
-        put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
-        put_text(cr, boost::str(boost::format("stored range: (%8.3fs, %8.3fs)") % hci->times[0] % hci->times[1]), 10, 30, LEFT, TOP);
+        if(text)
+            put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
 
         cairo_identity_matrix(cr);
 
@@ -554,9 +555,15 @@ public:
     {
         frame_timer.stop();
         if(go)
-            t += frame_timer.interval_S();
+        {
+            if(screenshot_mode)
+                t += 1.0/24.0;
+            else
+                t += frame_timer.interval_S();
+        }
         frame_timer.reset();
         frame_timer.start();
+
 
         if(sim && hci)
         {
@@ -569,6 +576,7 @@ public:
 
         if (!valid())
         {
+            std::cout << "Window size is " << w() << " " << h() << std::endl;
             glViewport(0, 0, w(), h());
             glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -694,7 +702,7 @@ public:
         glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
-        retex_overlay(center, scale, vec2i(w(), h()));
+        retex_overlay(center, scale, vec2i(w(), h()), !screenshot_mode);
         glPushMatrix();
         glBegin(GL_QUADS);
         glTexCoord2f(0.0, 0.0);
@@ -712,7 +720,9 @@ public:
 
         glFlush();
         glFinish();
-        screenshot();
+
+        if(screenshot_mode)
+            screenshot();
     }
 
     void screenshot()
@@ -820,7 +830,7 @@ public:
                 {
                     dvec = vec2f(world - lastpick);
                     center -= dvec;
-                    //retex_roads(center, scale, vec2i(w(), h()));
+                    retex_roads(center, scale, vec2i(w(), h()));
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
@@ -836,10 +846,14 @@ public:
             switch(Fl::event_key())
             {
             case 's':
-                screenshot();
+                screenshot_mode = !screenshot_mode;
                 break;
             case ' ':
                 go = !go;
+                if(go)
+                    std::cout << "Simulating" << std::endl;
+                else
+                    std::cout << "Simulating stopped" << std::endl;
                 break;
             case 'i':
                 if(back_image && !back_image->tiles.empty())
@@ -918,6 +932,8 @@ public:
     timer               frame_timer;
     bool                go;
 
+
+    bool                                            screenshot_mode;
     unsigned char                                  *screenshot_buffer;
     int                                             screenshot_count;
     std::tr1::unordered_map<size_t, car_draw_desc>  car_map;
@@ -994,7 +1010,7 @@ int main(int argc, char *argv[])
     hci.capture(s);
     s.hybrid_step();
 
-    fltkview mv(0, 0, 500, 500, "fltk View");
+    fltkview mv(0, 0, 1280, 720, "fltk View");
     mv.net    = &net;
     mv.netaux = &neta;
     mv.sim    = &s;
