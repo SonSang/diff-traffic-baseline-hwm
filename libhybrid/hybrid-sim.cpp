@@ -312,7 +312,7 @@ namespace hybrid
         return *(res->second.user_data<const lane>());
     }
 
-    void simulator::hybrid_step()
+    float simulator::hybrid_step()
     {
         // fill in micro
         convert_cars(MICRO);
@@ -326,6 +326,8 @@ namespace hybrid
         car_swap();
 
         time += dt;
+	
+	return dt;
     }
 
     void simulator::advance_intersections(float dt)

@@ -249,6 +249,7 @@ namespace hybrid
     void car::integrate(const float timestep, const lane& l, const float lane_width)
     {
         //Update position and velocity
+        velocity = std::max(0.0f, velocity + acceleration * timestep);
         position += (velocity * timestep) * l.inv_length;
 
         //Move car that is also a member of the other lane
@@ -286,7 +287,7 @@ namespace hybrid
             }
         }
 
-        velocity = std::max(0.0f, velocity + acceleration * timestep);
+
     }
 
     car lane::get_merging_leader(float param, const lane* other_lane)
@@ -651,6 +652,7 @@ namespace hybrid
                                                                                       hwm_downstream->speedlimit,
                                                                                       gamma));
                             assert(downstream->q[0].check());
+			    goto next_car;
                             break;
                         }
 
@@ -663,6 +665,8 @@ namespace hybrid
                     assert(c.position < 1.0);
 
                     destination_lane->next_cars().push_back(c);
+
+		 next_car:;
                 }
             }
         }

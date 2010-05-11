@@ -189,7 +189,7 @@ namespace hybrid
         lane       &get_lane_by_name(const str &s);
         const lane &get_lane_by_name(const str &s) const;
 
-        void hybrid_step();
+        float hybrid_step();
         void advance_intersections(float dt);
 
         serial_state serial() const;

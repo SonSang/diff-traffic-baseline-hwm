@@ -854,6 +854,7 @@ public:
 
     void draw()
     {
+        float dt = 0;
         frame_timer.stop();
         if(go)
         {
@@ -871,7 +872,8 @@ public:
             while(t > hci->times[1])
             {
                 hci->capture(*sim);
-                sim->hybrid_step();
+                dt = sim->hybrid_step();
+		sim->advance_intersections(dt);
             }
         }
 
@@ -1206,7 +1208,8 @@ public:
                 if(back_image && !back_image->tiles.empty())
                 {
                     std::cout << " scale: "  << back_image_scale  << std::endl
-                              << " center: " << back_image_center << std::endl;
+                              << " center: " << back_image_center << std::endl
+			      << " y offset: " << back_image_yscale << std::endl;
                 }
                 else
                     std::cout << "No image" << std::endl;
@@ -1364,10 +1367,17 @@ int main(int argc, char *argv[])
     mv.sim    = &s;
     mv.hci    = &hci;
     mv.t      = hci.times[0];
-
+    
     if(argc == 3)
+      {
         mv.back_image = new big_image(argv[2]);
+	mv.back_image_center = vec2f(-12.7838, -971.966);
+	mv.back_image_scale = 0.420448;
+	mv.back_image_yscale = 0.812253;
+      }
 
+
+    
     Fl::add_timeout(1.0/30.0, draw_callback, &mv);
 
     vec3f low(FLT_MAX);
