@@ -15,6 +15,31 @@
 #include "libhybrid/timer.hpp"
 #include "big-image-tile.hpp"
 
+inline bool checkFramebufferStatus() {
+    GLenum status;
+    status = (GLenum) glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    switch(status) {
+		case GL_FRAMEBUFFER_COMPLETE:
+		return true;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+		printf("Framebuffer incomplete, incomplete attachment\n");
+		return false;
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+		printf("Framebuffer incomplete, missing attachment\n");
+		return false;
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+		printf("Framebuffer incomplete, missing draw buffer\n");
+		return false;
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+		printf("Framebuffer incomplete, missing read buffer\n");
+		return false;
+		case GL_FRAMEBUFFER_UNSUPPORTED:
+		printf("Unsupported framebuffer format\n");
+		return false;
+	}
+    return false;
+}
+
 static void printShaderInfoLog(GLuint obj)
 {
     int infologLength = 0;
@@ -197,6 +222,193 @@ struct write_image
 
     std::string  fname;
     Magick::Image res;
+};
+
+static const char *lshader =
+"uniform sampler2D lum_tex, to_light_tex;       \
+                                                \
+void main()                                     \
+{                                               \
+vec4               lum  = texture2D(lum_tex, gl_TexCoord[0].st); \
+vec4               back = texture2D(to_light_tex, gl_TexCoord[0].st); \
+gl_FragColor            = lum*back+0.3*back;\
+}";
+
+#define HEADLIGHT_TEX "/home/sewall/Desktop/siga10/small-headlight.png"
+
+struct night_render
+{
+    night_render() : lum_fb(0),
+                     lum_tex(0),
+                     to_light_fb(0),
+                     to_light_tex(0),
+                     headlight_tex(0)
+                     {}
+
+    void initialize(const vec2i &dim)
+    {
+        if(glIsTexture(headlight_tex))
+            glDeleteTextures(1, &headlight_tex);
+        glGenTextures(1, &headlight_tex);
+        glBindTexture(GL_TEXTURE_2D, headlight_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        Magick::Image im(HEADLIGHT_TEX);
+        unsigned char *pix = new unsigned char[im.columns()*im.rows()*4];
+        im.write(0, 0, im.columns(), im.rows(), "RGBA", Magick::CharPixel, pix);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, im.columns(), im.rows(),
+                          GL_RGBA, GL_UNSIGNED_BYTE, pix);
+        delete[] pix;
+        headlight_aspect = im.columns()/static_cast<float>(im.rows());
+
+        if(glIsFramebuffer(lum_fb))
+            glDeleteFramebuffers(1, &lum_fb);
+        glGenFramebuffers(1, &lum_fb);
+
+        if(glIsTexture(lum_tex))
+            glDeleteTextures(1, &lum_tex);
+        glGenTextures(1, &lum_tex);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, lum_fb);
+        glBindTexture(GL_TEXTURE_2D, lum_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, dim[0], dim[1], 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE,NULL);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lum_tex, 0);
+        checkFramebufferStatus();
+
+        if(glIsFramebuffer(to_light_fb))
+            glDeleteFramebuffers(1, &to_light_fb);
+        glGenFramebuffers(1, &to_light_fb);
+
+        if(glIsTexture(to_light_tex))
+            glDeleteTextures(1, &to_light_tex);
+        glGenTextures(1, &to_light_tex);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, to_light_fb);
+        glBindTexture(GL_TEXTURE_2D, to_light_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dim[0], dim[1], 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE,NULL);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                  GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, to_light_tex, 0);
+        checkFramebufferStatus();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glError();
+
+        GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(shader, 1, &lshader, 0);
+        glCompileShader(shader);
+
+        printShaderInfoLog(shader);
+
+        lprogram = glCreateProgram();
+        glAttachShader(lprogram, shader);
+        glLinkProgram(lprogram);
+        glError();
+    }
+
+    void draw_headlight()
+    {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture (GL_TEXTURE_2D, headlight_tex);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glPushMatrix();
+        glScalef(14.0/headlight_aspect, 14.0/headlight_aspect, 1);
+        glTranslatef(0, -0.5, 0);
+        glEnable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 0.0);
+        glVertex2f(0, 0);
+        glTexCoord2f(1.0, 0.0);
+        glVertex2f(headlight_aspect, 0);
+        glTexCoord2f(1.0, 1.0);
+        glVertex2f(headlight_aspect, 1);
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f(0, 1);
+        glEnd();
+        glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    void start_to_light()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, to_light_fb);
+    }
+
+    void finish_to_light()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void start_lum()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, lum_fb);
+    }
+
+    void finish_lum()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void compose(const vec2f &lo, const vec2f &hi)
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glEnable(GL_TEXTURE_2D);
+
+        glUseProgram(lprogram);
+        int lum_uniform_location = glGetUniformLocationARB(lprogram, "lum_tex");
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, lum_tex);
+        glUniform1iARB(lum_uniform_location, 0);
+
+        int to_light_uniform_location = glGetUniformLocationARB(lprogram, "to_light_tex");
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, to_light_tex);
+        glUniform1iARB(to_light_uniform_location, 1);
+
+        glBindTexture(GL_TEXTURE_2D, to_light_tex);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 0.0);
+        glVertex2fv(lo.data());
+        glTexCoord2f(1.0, 0.0);
+        glVertex2f(hi[0], lo[1]);
+        glTexCoord2f(1.0, 1.0);
+        glVertex2fv(hi.data());
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f(lo[0], hi[1]);
+        glEnd();
+
+        glUseProgram(0);
+        glActiveTexture(GL_TEXTURE0);
+
+        glError();
+
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    GLuint lum_fb;
+    GLuint lum_tex;
+    GLuint to_light_fb;
+    GLuint to_light_tex;
+    GLuint lprogram;
+    GLuint headlight_tex;
+    float  headlight_aspect;
 };
 
 static const char *fshader =
@@ -685,10 +897,9 @@ public:
 
             setup_light();
             glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
 
-        glClear(GL_COLOR_BUFFER_BIT);
+            night_setup.initialize(vec2i(w(), h()));
+        }
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -701,6 +912,9 @@ public:
         glLoadIdentity();
         glDisable(GL_LIGHTING);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        night_setup.start_to_light();
+        glClear(GL_COLOR_BUFFER_BIT);
 
         glEnable(GL_TEXTURE_2D);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -788,9 +1002,53 @@ public:
             }
         }
 
+        glDisable(GL_TEXTURE_2D);
+        glFlush();
+        night_setup.finish_to_light();
+        glError();
+
+        night_setup.start_lum();
+        glClear(GL_COLOR_BUFFER_BIT);
+        glColor3f(0.2*255/255.0, 0.2*254/255.0, 0.2*149/255.0);
+        glBlendFunc(GL_ONE, GL_ONE);
+        if(hci)
+        {
+            BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
+            {
+                if(!hci->in_second(cs.first))
+                    continue;
+
+                std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.first));
+                assert(drawer != car_map.end());
+
+                mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
+                mat4x4f ttrans(tvmet::trans(trans));
+                glPushMatrix();
+                glMultMatrixf(ttrans.data());
+                glTranslatef(sim->front_bumper_offset()-0.1, 0, 0);
+                glPushMatrix();
+                glTranslatef(0,sim->hnet->lane_width*0.2, 0);
+                glRotatef(3.0, 0.0, 0.0, 1.0);
+                night_setup.draw_headlight();
+                glPopMatrix();
+                glPushMatrix();
+                glTranslatef(0,-sim->hnet->lane_width*0.2, 0);
+                glRotatef(-3.0, 0.0, 0.0, 1.0);
+                night_setup.draw_headlight();
+                glPopMatrix();
+                glPopMatrix();
+            }
+        }
+        glFlush();
+        night_setup.finish_lum();
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        night_setup.compose(lo, hi);
+
         glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         retex_overlay(center, scale, vec2i(w(), h()), !screenshot_mode);
         glPushMatrix();
         glBegin(GL_QUADS);
@@ -805,10 +1063,10 @@ public:
         glEnd();
         glPopMatrix();
 
-        glDisable(GL_TEXTURE_2D);
-
         glFlush();
         glFinish();
+
+        glError();
 
         if(screenshot_mode)
             screenshot();
@@ -1021,11 +1279,12 @@ public:
     timer               frame_timer;
     bool                go;
 
-
     bool                                            screenshot_mode;
     unsigned char                                  *screenshot_buffer;
     int                                             screenshot_count;
     std::tr1::unordered_map<size_t, car_draw_desc>  car_map;
+
+    night_render night_setup;
 };
 
 void draw_callback(void *v)
