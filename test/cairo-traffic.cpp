@@ -720,8 +720,8 @@ public:
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadBuffer(GL_BACK);
         glReadPixels(0, 0, w(), h(), GL_BGRA, GL_UNSIGNED_BYTE, screenshot_buffer);
-        write_image wi(boost::str(boost::format("screenshot%05d.png")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
-        boost::thread thr(wi);
+        write_image wi(boost::str(boost::format("screenshot%05d.bmp")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
+        wi();
     }
 
     int handle(int event)
