@@ -7,6 +7,7 @@
 #include <FL/glu.h>
 #include <FL/glut.h>
 #include <boost/regex.hpp>
+#include <boost/thread.hpp>
 #include "libroad/hwm_network.hpp"
 #include "libroad/geometric.hpp"
 #include "libhybrid/hybrid-sim.hpp"
@@ -147,6 +148,23 @@ static void put_text(cairo_t * cr, const std::string &str, float x, float y, con
     cairo_restore(cr);
 }
 
+struct write_image
+{
+    write_image(const std::string &fname_, const vec2i &dim, unsigned char *pix) :
+        fname(fname_), res(dim[0], dim[1], "BGRA", Magick::CharPixel, pix)
+    {
+    }
+
+    void operator()()
+    {
+        res.write(fname);
+        std::cout << "Wrote " << fname << std::endl;
+    }
+
+    std::string  fname;
+    Magick::Image res;
+};
+
 struct tex_car_draw
 {
     tex_car_draw() : car_tex(0)
@@ -258,7 +276,9 @@ public:
                                                           light_position(50.0, 100.0, 50.0, 1.0),
                                                           sim(0),
                                                           t(0),
-                                                          go(false)
+                                                          go(false),
+                                                          screenshot_buffer(0),
+                                                          screenshot_count(0)
     {
         this->resizable(this);
         frame_timer.reset();
@@ -271,6 +291,8 @@ public:
         {
             delete tcd;
         }
+        if(screenshot_buffer)
+            delete[] screenshot_buffer;
     }
 
     void setup_light()
@@ -550,6 +572,10 @@ public:
             glViewport(0, 0, w(), h());
             glClearColor(0.0, 0.0, 0.0, 0.0);
 
+            if(screenshot_buffer)
+                delete[] screenshot_buffer;
+            screenshot_buffer = new unsigned char[w()*h()*4];
+
             if(GLEW_OK != glew_state)
                 init_glew();
 
@@ -558,7 +584,7 @@ public:
 
             init_textures();
             if(car_drawers.empty())
-                init_car_drawers("/home/sewall/Desktop/siga10/");
+                init_car_drawers("/home/sewall/unc/traffic/hwm-libroad/etc/car-images/");
 
             setup_light();
             glEnable(GL_BLEND);
@@ -686,18 +712,16 @@ public:
 
         glFlush();
         glFinish();
+        screenshot();
     }
 
     void screenshot()
     {
-        unsigned char *pix = new unsigned char[w()*h()*3];
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadBuffer(GL_BACK);
-        glReadPixels(0, 0, w(), h(), GL_RGB, GL_UNSIGNED_BYTE,  pix);
-        Magick::Image  res(w(), h(), "RGB", Magick::CharPixel, pix);
-        res.flip();
-        res.write("test.png");
-        delete[] pix;
+        glReadPixels(0, 0, w(), h(), GL_BGRA, GL_UNSIGNED_BYTE, screenshot_buffer);
+        write_image wi(boost::str(boost::format("screenshot%05d.png")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
+        boost::thread thr(wi);
     }
 
     int handle(int event)
@@ -796,7 +820,7 @@ public:
                 {
                     dvec = vec2f(world - lastpick);
                     center -= dvec;
-                    retex_roads(center, scale, vec2i(w(), h()));
+                    //retex_roads(center, scale, vec2i(w(), h()));
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
@@ -894,7 +918,9 @@ public:
     timer               frame_timer;
     bool                go;
 
-    std::tr1::unordered_map<size_t, car_draw_desc> car_map;
+    unsigned char                                  *screenshot_buffer;
+    int                                             screenshot_count;
+    std::tr1::unordered_map<size_t, car_draw_desc>  car_map;
 };
 
 void draw_callback(void *v)
