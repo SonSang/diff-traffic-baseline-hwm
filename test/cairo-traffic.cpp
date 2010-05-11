@@ -15,6 +15,40 @@
 #include "libhybrid/timer.hpp"
 #include "big-image-tile.hpp"
 
+static void printShaderInfoLog(GLuint obj)
+{
+    int infologLength = 0;
+    int charsWritten  = 0;
+    char *infoLog;
+
+    glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+    if (infologLength > 0)
+    {
+        infoLog = (char *)malloc(infologLength);
+        glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+        printf("%s\n",infoLog);
+        free(infoLog);
+    }
+}
+
+static void printProgramInfoLog(GLuint obj)
+{
+    int infologLength = 0;
+    int charsWritten  = 0;
+    char *infoLog;
+
+    glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+    if (infologLength > 0)
+    {
+        infoLog = (char *)malloc(infologLength);
+        glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
+        printf("%s\n",infoLog);
+        free(infoLog);
+    }
+}
+
 static inline void blackbody(float *rgb, const float val)
 {
    if(val <= 0.0) // clamp low to black
@@ -165,9 +199,19 @@ struct write_image
     Magick::Image res;
 };
 
+static const char *fshader =
+"uniform sampler2D full_tex, body_tex;          \
+                                                \
+void main()                                     \
+{                                               \
+vec4               color   = texture2D(full_tex, gl_TexCoord[0].st); \
+vec4               mask    = texture2D(body_tex, gl_TexCoord[0].st); \
+gl_FragColor               = gl_Color*mask.r*color + (1.0-mask.r)*color; \
+}";
+
 struct tex_car_draw
 {
-    tex_car_draw() : car_tex(0)
+    tex_car_draw() : full_tex(0), body_tex(0)
     {
     }
 
@@ -183,7 +227,7 @@ struct tex_car_draw
 
     bool initialized() const
     {
-        return glIsTexture(car_tex);
+        return glIsTexture(full_tex) && glIsTexture(body_tex);
     }
 
     void initialize(const float        car_width_,
@@ -192,36 +236,78 @@ struct tex_car_draw
                     const float        car_rear_axle_,
                     const std::string &str)
     {
+        assert(bf::is_directory(str));
+
+        bf::path full(bf::path(str) / "full.png");
+        bf::path body(bf::path(str) / "body-stencil.png");
+
         car_width     = car_width_;
         car_length    = car_length_;
         car_height    = car_height_;
         car_rear_axle = car_rear_axle_;
 
-        glGenTextures(1, &car_tex);
-        glBindTexture (GL_TEXTURE_2D, car_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        Magick::Image im(str);
-        vec2i dim(im.columns(), im.rows());
+        Magick::Image full_im(full.string());
+        const vec2i dim(full_im.columns(), full_im.rows());
         if(dim[0] > dim[1])
             extents = vec2f(1.0, static_cast<float>(dim[1])/dim[0]);
         else
             extents = vec2f(static_cast<float>(dim[0])/dim[1], 1.0);
+
         unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
-        im.write(0, 0, dim[0], dim[1], "RGBA", Magick::CharPixel, pix);
+
+        glGenTextures(1, &full_tex);
+        glBindTexture (GL_TEXTURE_2D, full_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+        full_im.write(0, 0, dim[0], dim[1], "RGBA", Magick::CharPixel, pix);
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, dim[0], dim[1],
                           GL_RGBA, GL_UNSIGNED_BYTE, pix);
+
+        Magick::Image body_im(body.string());
+        glGenTextures(1, &body_tex);
+        glBindTexture (GL_TEXTURE_2D, body_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+        body_im.write(0, 0, dim[0], dim[1], "R", Magick::CharPixel, pix);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_LUMINANCE4, dim[0], dim[1],
+                          GL_LUMINANCE, GL_UNSIGNED_BYTE, pix);
+
         delete[] pix;
+
+        GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(shader, 1, &fshader, 0);
+        glCompileShader(shader);
+
+        printShaderInfoLog(shader);
+
+        fprogram = glCreateProgram();
+        glAttachShader(fprogram, shader);
+        glLinkProgram(fprogram);
+        glError();
     }
 
     void draw() const
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_TEXTURE_2D);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        glBindTexture (GL_TEXTURE_2D, car_tex);
+
+        glUseProgram(fprogram);
+        int full_uniform_location = glGetUniformLocationARB(fprogram, "full_tex");
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, full_tex);
+        glUniform1iARB(full_uniform_location, 0);
+
+        int body_uniform_location = glGetUniformLocationARB(fprogram, "body_tex");
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, body_tex);
+        glUniform1iARB(body_uniform_location, 1);
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glPushMatrix();
         glTranslatef(-car_length+car_rear_axle, 0, 0);
         glScalef(car_length, car_length/2, 1);
@@ -235,8 +321,9 @@ struct tex_car_draw
         glTexCoord2f(0, 1);
         glVertex2f  (0, extents[1]);
         glEnd();
-
         glPopMatrix();
+        glUseProgram(0);
+        glActiveTexture(GL_TEXTURE0);
     }
 
     float  car_width;
@@ -244,7 +331,9 @@ struct tex_car_draw
     float  car_height;
     float  car_rear_axle;
     vec2f  extents;
-    GLuint car_tex;
+    GLuint full_tex;
+    GLuint body_tex;
+    GLuint fprogram;
 };
 
 struct car_draw_desc
@@ -335,13 +424,13 @@ public:
     void init_car_drawers(const std::string &dir)
     {
         assert(bf::is_directory(dir));
-        const boost::regex     re(".*\\.png");
         bf::directory_iterator end_itr;
         for( bf::directory_iterator itr(dir);
              itr != end_itr;
              ++itr)
         {
-            if(itr->path().has_filename() && boost::regex_match(itr->path().filename(), re))
+            if(itr->path().has_filename() && bf::is_directory(itr->path())
+               && bf::exists(itr->path() / "full.png"))
             {
                 car_drawers.push_back(new tex_car_draw(2,
                                                        CAR_LENGTH,
@@ -592,7 +681,7 @@ public:
 
             init_textures();
             if(car_drawers.empty())
-                init_car_drawers("/home/sewall/unc/traffic/hwm-libroad/etc/car-images/");
+                init_car_drawers("/home/sewall/Desktop/siga10/");
 
             setup_light();
             glEnable(GL_BLEND);
