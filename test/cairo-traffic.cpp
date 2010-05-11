@@ -235,6 +235,7 @@ gl_FragColor            = lum*back+0.3*back;\
 }";
 
 #define HEADLIGHT_TEX "/home/sewall/Desktop/siga10/small-headlight.png"
+#define TAILLIGHT_TEX "/home/sewall/Desktop/siga10/taillight.png"
 
 struct night_render
 {
@@ -242,7 +243,8 @@ struct night_render
                      lum_tex(0),
                      to_light_fb(0),
                      to_light_tex(0),
-                     headlight_tex(0)
+                     headlight_tex(0),
+                     taillight_tex(0)
                      {}
 
     void initialize(const vec2i &dim)
@@ -263,6 +265,24 @@ struct night_render
                           GL_RGBA, GL_UNSIGNED_BYTE, pix);
         delete[] pix;
         headlight_aspect = im.columns()/static_cast<float>(im.rows());
+
+        if(glIsTexture(taillight_tex))
+            glDeleteTextures(1, &taillight_tex);
+        glGenTextures(1, &taillight_tex);
+        glBindTexture(GL_TEXTURE_2D, taillight_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        Magick::Image tim(TAILLIGHT_TEX);
+        pix = new unsigned char[tim.columns()*tim.rows()*4];
+        tim.write(0, 0, tim.columns(), tim.rows(), "RGBA", Magick::CharPixel, pix);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, tim.columns(), tim.rows(),
+                          GL_RGBA, GL_UNSIGNED_BYTE, pix);
+        delete[] pix;
+        taillight_aspect = tim.columns()/static_cast<float>(tim.rows());
+
 
         if(glIsFramebuffer(lum_fb))
             glDeleteFramebuffers(1, &lum_fb);
@@ -343,6 +363,29 @@ struct night_render
         glDisable(GL_TEXTURE_2D);
     }
 
+    void draw_taillight()
+    {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture (GL_TEXTURE_2D, taillight_tex);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glPushMatrix();
+        glScalef(5.0/taillight_aspect, 3.0/taillight_aspect, 1);
+        glTranslatef(-taillight_aspect+0.05, -0.5, 0);
+        glEnable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 0.0);
+        glVertex2f(0, 0);
+        glTexCoord2f(1.0, 0.0);
+        glVertex2f(taillight_aspect, 0);
+        glTexCoord2f(1.0, 1.0);
+        glVertex2f(taillight_aspect, 1);
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f(0, 1);
+        glEnd();
+        glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
+    }
+
     void start_to_light()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, to_light_fb);
@@ -409,6 +452,8 @@ struct night_render
     GLuint lprogram;
     GLuint headlight_tex;
     float  headlight_aspect;
+    GLuint taillight_tex;
+    float  taillight_aspect;
 };
 
 static const char *fshader =
@@ -1027,17 +1072,32 @@ public:
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
-                glTranslatef(sim->front_bumper_offset()-0.1, 0, 0);
+
                 glPushMatrix();
-                glTranslatef(0,sim->hnet->lane_width*0.2, 0);
-                glRotatef(3.0, 0.0, 0.0, 1.0);
-                night_setup.draw_headlight();
+                {
+                    glTranslatef(sim->front_bumper_offset()-0.1, 0, 0);
+                    glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
+                    glPushMatrix();
+                    {
+                        glTranslatef(0,sim->hnet->lane_width*0.2, 0);
+                        glRotatef(3.0, 0.0, 0.0, 1.0);
+                        night_setup.draw_headlight();
+                    }
+                    glPopMatrix();
+                    glPushMatrix();
+                    {
+                        glTranslatef(0,-sim->hnet->lane_width*0.2, 0);
+                        glRotatef(-3.0, 0.0, 0.0, 1.0);
+                        night_setup.draw_headlight();
+                    }
+                    glPopMatrix();
+                }
                 glPopMatrix();
-                glPushMatrix();
-                glTranslatef(0,-sim->hnet->lane_width*0.2, 0);
-                glRotatef(-3.0, 0.0, 0.0, 1.0);
-                night_setup.draw_headlight();
-                glPopMatrix();
+
+                glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
+                glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
+                night_setup.draw_taillight();
+
                 glPopMatrix();
             }
         }
@@ -1367,7 +1427,7 @@ int main(int argc, char *argv[])
     mv.sim    = &s;
     mv.hci    = &hci;
     mv.t      = hci.times[0];
-    
+
     if(argc == 3)
       {
         mv.back_image = new big_image(argv[2]);
@@ -1377,7 +1437,7 @@ int main(int argc, char *argv[])
       }
 
 
-    
+
     Fl::add_timeout(1.0/30.0, draw_callback, &mv);
 
     vec3f low(FLT_MAX);
