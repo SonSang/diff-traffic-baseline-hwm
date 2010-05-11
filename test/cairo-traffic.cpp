@@ -839,13 +839,13 @@ public:
                 if(Fl::event_state() & FL_SHIFT)
                 {
                     if(Fl::event_state() & FL_CTRL)
-                        back_image_yscale *= std::pow(2.0, 0.1*fy);
+                        back_image_yscale *= std::pow(2.0f, 0.1f*fy);
                     else
-                        back_image_scale  *= std::pow(2.0, 0.1*fy);
+                        back_image_scale  *= std::pow(2.0f, 0.1f*fy);
                 }
                 else
                 {
-                    scale *= std::pow(2.0, fy);
+                    scale *= std::pow(2.0f, fy);
                     retex_roads(center, scale, vec2i(w(), h()));
                 }
             }

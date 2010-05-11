@@ -226,7 +226,7 @@ inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &__restrict__ q_l
     full_q res;
 
     res.u_eq() = q_r.u() - q_l.u() + q_l.u_eq();
-    res.rho()  = std::pow(1.0 - res.u_eq()*inv_u_max, inv_gamma);
+    res.rho()  = std::pow(1 - res.u_eq()*inv_u_max, inv_gamma);
     res.u()    = q_r.u();
     res.y()    = res.rho()*(res.u() - res.u_eq());
 

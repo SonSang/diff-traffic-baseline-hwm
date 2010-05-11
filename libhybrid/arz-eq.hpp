@@ -35,7 +35,7 @@ inline T arz<T>::eq::inv_u_eq(const T u_eq,
                               const T inv_u_max,
                               const T inv_gamma)
 {
-    return std::pow(1.0 - u_eq*inv_u_max, inv_gamma);
+    return std::pow(1 - u_eq*inv_u_max, inv_gamma);
 }
 
 template <typename T>
