@@ -14,6 +14,85 @@
 #include "libroad/hwm_draw.hpp"
 #include "libhybrid/timer.hpp"
 #include "big-image-tile.hpp"
+#include <png.h>
+
+void abort_(const char * s, ...)
+{
+	va_list args;
+	va_start(args, s);
+	vfprintf(stderr, s, args);
+	fprintf(stderr, "\n");
+	va_end(args);
+	abort();
+}
+
+// writes a RGB png from an BGRA buffer
+void write_png_file(const unsigned char *pix, const vec2i &dim, const std::string &fname)
+{
+    png_byte color_type = PNG_COLOR_TYPE_RGB;
+    png_byte bit_depth = 8;
+
+    png_infop info_ptr;
+
+	/* create file */
+    FILE *fp = fopen(fname.c_str(), "wb");
+	if (!fp)
+		abort_("[write_png_file] File %s could not be opened for writing", fname.c_str());
+
+	/* initialize stuff */
+	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+	if (!png_ptr)
+		abort_("[write_png_file] png_create_write_struct failed");
+
+	info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr)
+		abort_("[write_png_file] png_create_info_struct failed");
+
+	if (setjmp(png_jmpbuf(png_ptr)))
+		abort_("[write_png_file] Error during init_io");
+
+	png_init_io(png_ptr, fp);
+
+	/* write header */
+	if (setjmp(png_jmpbuf(png_ptr)))
+		abort_("[write_png_file] Error during writing header");
+
+	png_set_IHDR(png_ptr, info_ptr, dim[0], dim[1],
+		     bit_depth, color_type, PNG_INTERLACE_NONE,
+		     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+	png_write_info(png_ptr, info_ptr);
+
+	/* write bytes */
+	if (setjmp(png_jmpbuf(png_ptr)))
+		abort_("[write_png_file] Error during writing bytes");
+
+    png_set_compression_level(png_ptr,
+                              Z_NO_COMPRESSION);
+
+    png_bytep row = (png_bytep)malloc(sizeof(png_byte)*3*dim[0]);
+    for(int i = dim[1]-1; i >= 0; --i)
+    {
+        png_bytep row_pointer = (png_byte*)pix+i*4*dim[0];
+        for(int p = 0; p < dim[0]; ++p)
+        {
+            row[3*p+0] = row_pointer[4*p+2];
+            row[3*p+1] = row_pointer[4*p+1];
+            row[3*p+2] = row_pointer[4*p+0];
+        }
+        png_write_row(png_ptr, row);
+    }
+    free(row);
+
+	/* end write */
+	if (setjmp(png_jmpbuf(png_ptr)))
+		abort_("[write_png_file] Error during end of write");
+
+	png_write_end(png_ptr, NULL);
+
+    fclose(fp);
+}
 
 inline bool checkFramebufferStatus() {
     GLenum status;
@@ -210,18 +289,19 @@ static void put_text(cairo_t * cr, const std::string &str, float x, float y, con
 struct write_image
 {
     write_image(const std::string &fname_, const vec2i &dim, unsigned char *pix) :
-        fname(fname_), res(dim[0], dim[1], "BGRA", Magick::CharPixel, pix)
+        fname(fname_), dimensions(dim), pixels(pix)
     {
     }
 
     void operator()()
     {
-        res.write(fname);
+        write_png_file(pixels, dimensions, fname);
         std::cout << "Wrote " << fname << std::endl;
     }
 
-    std::string  fname;
-    Magick::Image res;
+    std::string    fname;
+    vec2i          dimensions;
+    unsigned char *pixels;
 };
 
 static const char *lshader       =
@@ -1140,7 +1220,7 @@ public:
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadBuffer(GL_BACK);
         glReadPixels(0, 0, w(), h(), GL_BGRA, GL_UNSIGNED_BYTE, screenshot_buffer);
-        write_image wi(boost::str(boost::format("screenshot%05d.bmp")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
+        write_image wi(boost::str(boost::format("screenshot%05d.png")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
         wi();
     }
 
