@@ -24,6 +24,12 @@ struct tile
         glPopMatrix();
     }
 
+    void free_texture()
+    {
+        if(glIsTexture(tex))
+            glDeleteTextures(1, &tex);
+    }
+
     vec2i  origin;
     vec2i  size;
     GLuint tex;
@@ -31,20 +37,30 @@ struct tile
 
 struct big_image
 {
-    big_image(const std::string &im_name) : im(im_name)
+    big_image(const std::string &im_name) : im(new Magick::Image(im_name)), dimensions(im->columns(), im->rows())
     {
-        std::cout << boost::str(boost::format("Loaded image %s: %dx%d") % im_name % im.columns() % im.rows()) << std::endl;
+        std::cout << "Loaded image " <<  im_name << " "  << dim() << std::endl;
     }
 
-    vec2i dim() const
+    big_image(Magick::Image *image) : im(image), dimensions(im->columns(), im->rows())
     {
-        return vec2i(im.columns(), im.rows());
+        std::cout << "Copied image " << dim() << std::endl;
+    }
+
+    ~big_image()
+    {
+        if(im)
+            delete im;
+    }
+
+    const vec2i &dim() const
+    {
+        return dimensions;
     }
 
     void draw() const
     {
         glEnable(GL_TEXTURE_2D);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glPushMatrix();
         glScalef(1, -1, 1);
@@ -56,17 +72,27 @@ struct big_image
     }
 
     void make_tiles(int max_tile_size)
+    void free_textures()
     {
-        const vec2i dim(im.columns(), im.rows());
+        BOOST_FOREACH(tile &t, tiles)
+        {
+            t.free_texture();
+        }
+    }
 
-        vec2i ntiles(dim/max_tile_size);
-        const vec2i rest(dim - ntiles*max_tile_size);
+    {
+        assert(im);
+
+        vec2i ntiles(dim()/max_tile_size);
+        const vec2i rest(dim() - ntiles*max_tile_size);
         if(rest[0] > 0)
             ++ntiles[0];
         if(rest[1] > 0)
             ++ntiles[1];
 
         unsigned char *pix = new unsigned char[max_tile_size*max_tile_size*4];
+        free_textures();
+        tiles.clear();
         tiles.reserve(ntiles[0]*ntiles[1]);
         for(int j = 0; j < ntiles[1]; ++j)
             for(int i = 0; i < ntiles[0]; ++i)
@@ -94,11 +120,10 @@ struct big_image
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-                im.write(t.origin[0], t.origin[1], t.size[0], t.size[1], "RGBA", Magick::CharPixel, pix);
+                im->write(t.origin[0], t.origin[1], t.size[0], t.size[1], "RGBA", Magick::CharPixel, pix);
 
                 glTexImage2D (GL_TEXTURE_2D,
                               0,
-                              GL_R3_G3_B2,//GL_RGB4,
                               t.size[0],
                               t.size[1],
                               0,
@@ -111,10 +136,13 @@ struct big_image
              }
 
         delete[] pix;
+        delete im;
+        im = 0;
     }
 
-    std::vector<tile> tiles;
-    Magick::Image     im;
+    std::vector<tile>  tiles;
+    Magick::Image     *im;
+    vec2i              dimensions;
 };
 
 #endif
