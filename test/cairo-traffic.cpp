@@ -716,6 +716,7 @@ public:
         }
         if(back_image && back_image->tiles.empty())
         {
+            back_image->make_tiles(biggest_width/2, false);
             back_image->make_tiles(biggest_width/2);
         }
         if(!glIsTexture(overlay_tex_))

@@ -71,7 +71,6 @@ struct big_image
         glPopMatrix();
     }
 
-    void make_tiles(int max_tile_size)
     void free_textures()
     {
         BOOST_FOREACH(tile &t, tiles)
@@ -80,6 +79,7 @@ struct big_image
         }
     }
 
+    void make_tiles(int max_tile_size, bool alpha)
     {
         assert(im);
 
@@ -124,6 +124,7 @@ struct big_image
 
                 glTexImage2D (GL_TEXTURE_2D,
                               0,
+                              alpha ? GL_RGBA4 : GL_R3_G3_B2,
                               t.size[0],
                               t.size[1],
                               0,
