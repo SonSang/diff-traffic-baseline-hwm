@@ -224,14 +224,15 @@ struct write_image
     Magick::Image res;
 };
 
-static const char *lshader =
+static const char *lshader       =
 "uniform sampler2D lum_tex, to_light_tex;       \
                                                 \
 void main()                                     \
 {                                               \
-vec4               lum  = texture2D(lum_tex, gl_TexCoord[0].st); \
-vec4               back = texture2D(to_light_tex, gl_TexCoord[0].st); \
-gl_FragColor            = lum*back+0.3*back;\
+vec4               lum           = texture2D(lum_tex, gl_TexCoord[0].st); \
+vec4               back          = texture2D(to_light_tex, gl_TexCoord[0].st); \
+vec4               effective_lum = clamp(lum, 0.0, 0.4)/0.6; \
+gl_FragColor                     = clamp(effective_lum*back, 0.0, 0.9) + 0.3*back; \
 }";
 
 #define HEADLIGHT_TEX "/home/sewall/Desktop/siga10/small-headlight.png"
@@ -717,7 +718,6 @@ public:
         if(back_image && back_image->tiles.empty())
         {
             back_image->make_tiles(biggest_width/2, false);
-            back_image->make_tiles(biggest_width/2);
         }
         if(!glIsTexture(overlay_tex_))
         {
