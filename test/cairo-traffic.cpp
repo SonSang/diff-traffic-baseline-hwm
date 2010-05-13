@@ -690,7 +690,6 @@ public:
                                                           net(0),
                                                           netaux(0),
                                                           glew_state(GLEW_OK+1),
-                                                          road_tex_(0),
                                                           back_image(0),
                                                           back_image_center(0),
                                                           back_image_scale(1),
@@ -782,18 +781,6 @@ public:
     {
         GLint biggest_width = biggest_texture();
         std::cout << "Largest texture I support: " << biggest_width << std::endl;
-        if(!glIsTexture(road_tex_))
-        {
-            glGenTextures(1, &road_tex_);
-            glBindTexture (GL_TEXTURE_2D, road_tex_);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-            retex_roads(center, scale, vec2i(w(), h()));
-        }
         if(back_image && back_image->tiles.empty())
         {
             back_image->make_tiles(biggest_width/2, false);
@@ -821,61 +808,6 @@ public:
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         }
-    }
-
-    void retex_roads(const vec2f &my_center, const float my_scale, const vec2i &im_res)
-    {
-        cairo_surface_t *cs = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                                         im_res[0],
-                                                         im_res[1]);
-        cairo_t         *cr = cairo_create(cs);
-        cairo_set_source_rgba(cr, 0.0, 0, 0, 0.0);
-        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-        cairo_paint(cr);
-
-        cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-        cairo_translate(cr,
-                        im_res[0]/2,
-                        im_res[1]/2);
-
-        cairo_scale(cr,
-                    im_res[0]/my_scale,
-                    im_res[1]/my_scale);
-
-
-        if(im_res[0] > im_res[1])
-            cairo_scale(cr,
-                        static_cast<float>(im_res[1])/im_res[0],
-                        1.0);
-        else
-            cairo_scale(cr,
-                        1.0,
-                        static_cast<float>(im_res[0])/im_res[1]);
-
-        cairo_translate(cr,
-                        -my_center[0],
-                        -my_center[1]);
-
-        cairo_set_line_width(cr, 0.5);
-        netaux->cairo_roads(cr);
-
-        cairo_destroy(cr);
-
-        glBindTexture (GL_TEXTURE_2D, road_tex_);
-        glTexImage2D (GL_TEXTURE_2D,
-                      0,
-                      GL_RGBA,
-                      im_res[0],
-                      im_res[1],
-                      0,
-                      GL_BGRA,
-                      GL_UNSIGNED_BYTE,
-                      cairo_image_surface_get_data(cs));
-
-        cairo_surface_destroy(cs);
-
-        cscale_to_box(tex_low, tex_high, my_center, my_scale, im_res);
     }
 
     void retex_overlay(const vec2f &my_center, const float my_scale, const vec2i &im_res, bool text)
@@ -1025,7 +957,10 @@ public:
                 init_glew();
 
             if(!network_drawer.initialized())
-                network_drawer.initialize(sim->hnet, 0.05f);
+                network_drawer.initialize(sim->hnet, 0.01f);
+
+            if(!network_aux_drawer.initialized())
+                network_aux_drawer.initialize(netaux, 0.01f);
 
             init_textures();
             if(car_drawers.empty())
@@ -1035,6 +970,8 @@ public:
             glEnable(GL_BLEND);
 
             night_setup.initialize(vec2i(w(), h()));
+            glEnable(GL_POLYGON_SMOOTH);
+            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -1042,7 +979,7 @@ public:
 
         vec2f lo, hi;
         cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
-        gluOrtho2D(lo[0], hi[0], lo[1], hi[1]);
+        glOrtho(lo[0], hi[0], lo[1], hi[1], -20, 20.0);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -1067,20 +1004,12 @@ public:
             glPopMatrix();
         }
 
-        glBindTexture (GL_TEXTURE_2D, road_tex_);
+        glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
 
-        glPushMatrix();
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2fv(tex_low.data());
-        glTexCoord2f(1.0, 0.0);
-        glVertex2f(tex_high[0], tex_low[1]);
-        glTexCoord2f(1.0, 1.0);
-        glVertex2fv(tex_high.data());
-        glTexCoord2f(0.0, 1.0);
-        glVertex2f(tex_low[0], tex_high[1]);
-        glEnd();
-        glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        network_aux_drawer.draw_roads_wire();
+        network_aux_drawer.draw_intersections_wire();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_TEXTURE_2D);
@@ -1112,6 +1041,7 @@ public:
             network_drawer.draw_lane_solid(l.parent->id);
         }
 
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         if(hci)
         {
             BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
@@ -1328,7 +1258,6 @@ public:
                 {
                     dvec = vec2f(world - lastpick);
                     center -= dvec;
-                    retex_roads(center, scale, vec2i(w(), h()));
                 }
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
@@ -1391,7 +1320,6 @@ public:
                 else
                 {
                     scale *= std::pow(2.0f, fy);
-                    retex_roads(center, scale, vec2i(w(), h()));
                 }
             }
             take_focus();
@@ -1412,7 +1340,6 @@ public:
     float             scale;
 
     GLuint     glew_state;
-    GLuint     road_tex_;
     GLuint     background_tex_;
     big_image *back_image;
     vec2i      back_image_dim;
@@ -1431,6 +1358,7 @@ public:
 
     std::vector<tex_car_draw*> car_drawers;
     hwm::network_draw          network_drawer;
+    hwm::network_aux_draw      network_aux_drawer;
 
     vec4f               light_position;
     hybrid::simulator  *sim;

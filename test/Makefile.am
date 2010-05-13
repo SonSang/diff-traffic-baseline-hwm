@@ -18,14 +18,14 @@ pc_int_test_LDFLAGS  = $(LDFLAGS)
 pc_int_test_LDADD    = $(top_builddir)/libhybrid/libhybrid.la
 
 if DO_VISUAL
+if DO_IMAGE
 noinst_PROGRAMS += hybrid-viewer
 
 hybrid_viewer_SOURCES = hybrid-viewer.cpp
 hybrid_viewer_CPPFLAGS = $(LIBROAD_CFLAGS) $(CAIRO_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(FLTK_CXXFLAGS) $(CXXFLAGS) -I$(top_srcdir)
 hybrid_viewer_LDFLAGS  = $(LDFLAGS) $(FLTK_LDFLAGS) $(FLTK_GL_LDFLAGS) $(GLEW_LIBS)
-hybrid_viewer_LDADD    = $(top_builddir)/libhybrid/libhybrid.la $(LIBROAD_LIBS)/libroad_visual.la
+hybrid_viewer_LDADD    = $(LIBROAD_LIBS)/libroad.la $(LIBROAD_LIBS)/libroad_visual.la $(LIBROAD_LIBS)/libroad_image.la $(top_builddir)/libhybrid/libhybrid.la $(LIBROAD_LIBS)/libroad_image.la
 
-if DO_IMAGE
 noinst_PROGRAMS += cairo-traffic
 
 cairo_traffic_SOURCES  = cairo-traffic.cpp
