@@ -305,15 +305,15 @@ struct write_image
 };
 
 static const char *lshader       =
-"uniform sampler2D lum_tex, to_light_tex;       \
-                                                \
-void main()                                     \
-{                                               \
-vec4               lum           = texture2D(lum_tex, gl_TexCoord[0].st); \
-vec4               back          = texture2D(to_light_tex, gl_TexCoord[0].st); \
-vec4               effective_lum = clamp(lum, 0.0, 0.4)/0.6; \
-gl_FragColor                     = clamp(effective_lum*back, 0.0, 0.9) + 0.3*back; \
-}";
+"uniform sampler2D lum_tex, to_light_tex;                                           \n"
+"                                                                                   \n"
+"void main()                                                                        \n"
+"{                                                                                  \n"
+"vec4               lum           = texture2D(lum_tex, gl_TexCoord[0].st);          \n"
+"vec4               back          = texture2D(to_light_tex, gl_TexCoord[0].st);     \n"
+"vec4               effective_lum = clamp(lum, 0.0, 0.4)/0.6;                       \n"
+"gl_FragColor                     = clamp(effective_lum*back, 0.0, 0.9) + 0.3*back; \n"
+"}                                                                                  \n";
 
 #define HEADLIGHT_TEX "/home/sewall/Desktop/siga10/small-headlight.png"
 #define TAILLIGHT_TEX "/home/sewall/Desktop/siga10/taillight.png"
@@ -538,14 +538,14 @@ struct night_render
 };
 
 static const char *fshader =
-"uniform sampler2D full_tex, body_tex;          \
-                                                \
-void main()                                     \
-{                                               \
-vec4               color   = texture2D(full_tex, gl_TexCoord[0].st); \
-vec4               mask    = texture2D(body_tex, gl_TexCoord[0].st); \
-gl_FragColor               = gl_Color*mask.r*color + (1.0-mask.r)*color; \
-}";
+"uniform sampler2D full_tex, body_tex;                                    \n"
+"                                                                         \n"
+"void main()                                                              \n"
+"{                                                                        \n"
+"vec4               color   = texture2D(full_tex, gl_TexCoord[0].st);     \n"
+"vec4               mask    = texture2D(body_tex, gl_TexCoord[0].st);     \n"
+"gl_FragColor               = gl_Color*mask.r*color + (1.0-mask.r)*color; \n"
+"}                                                                        \n";
 
 struct tex_car_draw
 {
