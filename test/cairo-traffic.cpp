@@ -701,6 +701,7 @@ public:
                                                           light_position(50.0, 100.0, 50.0, 1.0),
                                                           sim(0),
                                                           t(0),
+                                                          sim_time_scale(1),
                                                           go(false),
                                                           screenshot_mode(0),
                                                           screenshot_buffer(0),
@@ -900,7 +901,16 @@ public:
                         -im_res[0]/2,
                         -im_res[1]/2);
         if(text)
-            put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
+        {
+            put_text(cr, boost::str(boost::format("real time:     %8.3fs; scaling factor %8.3fx") % t % sim_time_scale), 10, 5, LEFT, TOP);
+            if(go)
+            {
+                cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
+                put_text(cr, "simulating", 10, 25, LEFT, TOP);
+                cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+            }
+
+        }
 
         cairo_identity_matrix(cr);
 
@@ -983,9 +993,9 @@ public:
         if(go)
         {
             if(screenshot_mode)
-                t += 1.0/24.0;
+                t += sim_time_scale*1.0/24.0;
             else
-                t += frame_timer.interval_S();
+                t += sim_time_scale*frame_timer.interval_S();
         }
         frame_timer.reset();
         frame_timer.start();
@@ -997,7 +1007,7 @@ public:
             {
                 hci->capture(*sim);
                 dt = sim->hybrid_step();
-		sim->advance_intersections(dt);
+                sim->advance_intersections(dt);
             }
         }
 
@@ -1336,6 +1346,14 @@ public:
             case 's':
                 screenshot_mode = !screenshot_mode;
                 break;
+            case '-':
+                sim_time_scale -= 0.5;
+                if(sim_time_scale < 0.0)
+                    sim_time_scale = 0;
+                break;
+            case '=':
+                sim_time_scale += 0.5;
+                break;
             case ' ':
                 go = !go;
                 if(go)
@@ -1418,6 +1436,7 @@ public:
     hybrid::simulator  *sim;
     hybrid::car_interp *hci;
     float               t;
+    float               sim_time_scale;
     timer               frame_timer;
     bool                go;
 
