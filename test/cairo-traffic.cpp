@@ -1004,12 +1004,21 @@ public:
             glPopMatrix();
         }
 
-        glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        glEnable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glColor3f(237.0/255, 234.0/255, 186.0/255);
+        network_aux_drawer.draw_roads_solid();
+        network_aux_drawer.draw_intersections_solid();
+
+        glLineWidth(2000.0/scale);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3f(135.0/255, 103.0/255, 61.0/255);
         network_aux_drawer.draw_roads_wire();
         network_aux_drawer.draw_intersections_wire();
+        glDisable(GL_DEPTH_TEST);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_TEXTURE_2D);
