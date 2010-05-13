@@ -16,6 +16,8 @@
 #include "big-image-tile.hpp"
 #include <png.h>
 
+#define FRAME_RATE (1.0/24.0)
+
 void abort_(const char * s, ...)
 {
 	va_list args;
@@ -925,7 +927,7 @@ public:
         if(go)
         {
             if(screenshot_mode)
-                t += sim_time_scale*1.0/24.0;
+                t += sim_time_scale*FRAME_RATE;
             else
                 t += sim_time_scale*frame_timer.interval_S();
         }
@@ -1388,7 +1390,7 @@ public:
 void draw_callback(void *v)
 {
     reinterpret_cast<fltkview*>(v)->redraw();
-    Fl::repeat_timeout(1.0/30.0, draw_callback, v);
+    Fl::repeat_timeout(FRAME_RATE, draw_callback, v);
 }
 
 int main(int argc, char *argv[])
@@ -1471,9 +1473,7 @@ int main(int argc, char *argv[])
 	mv.back_image_yscale = 0.812253;
       }
 
-
-
-    Fl::add_timeout(1.0/30.0, draw_callback, &mv);
+    Fl::add_timeout(FRAME_RATE, draw_callback, &mv);
 
     vec3f low(FLT_MAX);
     vec3f high(-FLT_MAX);
