@@ -127,12 +127,11 @@ static void printShaderInfoLog(GLuint obj)
 
     glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
 
-    if (infologLength > 0)
+    if (infologLength > 1)
     {
-        infoLog = (char *)malloc(infologLength);
+        infoLog = (char *)alloca(infologLength);
         glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
         printf("%s\n",infoLog);
-        free(infoLog);
     }
 }
 
@@ -144,12 +143,11 @@ static void printProgramInfoLog(GLuint obj)
 
     glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
 
-    if (infologLength > 0)
+    if (infologLength > 1)
     {
-        infoLog = (char *)malloc(infologLength);
+        infoLog = (char *)alloca(infologLength);
         glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
         printf("%s\n",infoLog);
-        free(infoLog);
     }
 }
 
