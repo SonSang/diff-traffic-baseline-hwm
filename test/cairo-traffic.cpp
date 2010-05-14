@@ -1,11 +1,10 @@
 #include <Magick++.h>
 #include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/Fl_Menu_Button.H>
-#include <FL/gl.h>
-#include <FL/glu.h>
-#include <FL/glut.h>
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -306,20 +305,28 @@ struct write_image
 };
 
 static const char *lshader       =
-"uniform sampler2D lum_tex, to_light_tex;                                                     \n"
-"uniform float     light_level, ambient_level;                                                \n"
-"                                                                                             \n"
-"void main()                                                                                  \n"
-"{                                                                                            \n"
-"vec4               lum           = texture2D(lum_tex, gl_TexCoord[0].st);                    \n"
-"vec4               back          = texture2D(to_light_tex, gl_TexCoord[0].st);               \n"
-"vec4               effective_lum = clamp(lum, 0.0, 0.4)/0.6;                                 \n"
-"vec4               light         = clamp(effective_lum*back, 0.0, 0.9);                      \n"
-"gl_FragColor                     = light_level*light + ambient_level*back;                   \n"
-"}                                                                                            \n";
+"#version 150                                                               \n"
+"#extension GL_ARB_texture_multisample : enable                             \n"
+"uniform sampler2D lum_tex;                                                 \n"
+"uniform sampler2DMS to_light_tex;                                          \n"
+"uniform float     light_level, ambient_level;                              \n"
+"out vec4 FragColor;                                                        \n"
+"                                                                           \n"
+"void main()                                                                \n"
+"{                                                                          \n"
+"    ivec2 screen_coord = ivec2(gl_FragCoord.xy);                           \n"
+"    vec4 back = vec4(0.0);                                                 \n"
+"    for(int i = 0; i < 4; ++i)                                             \n"
+"        back += texelFetch(to_light_tex, screen_coord, i);                 \n"
+"    back /= vec4(4.0);                                                     \n"
+"    vec4               lum  = texelFetch(lum_tex, screen_coord,0);         \n"
+"    vec4      effective_lum = clamp(lum, 0.0, 0.4)/0.6;                    \n"
+"    vec4              light = clamp(effective_lum*back, 0.0, 0.9);         \n"
+"    FragColor               = light_level*light + ambient_level*back;      \n"
+"}                                                                          \n";
 
-#define HEADLIGHT_TEX "/home/sewall/Desktop/siga10/small-headlight.png"
-#define TAILLIGHT_TEX "/home/sewall/Desktop/siga10/taillight.png"
+#define HEADLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/small-headlight.png"
+#define TAILLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/taillight.png"
 
 struct night_render
 {
@@ -381,12 +388,11 @@ struct night_render
 
         glBindFramebuffer(GL_FRAMEBUFFER, lum_fb);
         glBindTexture(GL_TEXTURE_2D, lum_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, dim[0], dim[1], 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE,NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dim[0], dim[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lum_tex, 0);
         checkFramebufferStatus();
@@ -400,15 +406,12 @@ struct night_render
         glGenTextures(1, &to_light_tex);
 
         glBindFramebuffer(GL_FRAMEBUFFER, to_light_fb);
-        glBindTexture(GL_TEXTURE_2D, to_light_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dim[0], dim[1], 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE,NULL);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, to_light_tex);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, dim[0], dim[1], false);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
-                                  GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, to_light_tex, 0);
+                               GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, to_light_tex, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, to_light_tex, 0);
         checkFramebufferStatus();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -503,12 +506,14 @@ struct night_render
         int lum_uniform_location = glGetUniformLocationARB(lprogram, "lum_tex");
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, lum_tex);
-        glUniform1iARB(lum_uniform_location, 0);
+        glUniform1i(lum_uniform_location, 0);
 
         int to_light_uniform_location = glGetUniformLocationARB(lprogram, "to_light_tex");
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, to_light_tex);
-        glUniform1iARB(to_light_uniform_location, 1);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, to_light_tex);
+        glUniform1i(to_light_uniform_location, 1);
+
+        glBindFragDataLocation(lprogram, 0, "FragColor") ;
 
         vec2f lighting_factors(ambient_level(t));
         int light_level_uniform_location = glGetUniformLocation(lprogram, "light_level");
@@ -517,7 +522,6 @@ struct night_render
         int ambient_level_uniform_location = glGetUniformLocation(lprogram, "ambient_level");
         glUniform1f(ambient_level_uniform_location, lighting_factors[1]);
 
-        glBindTexture(GL_TEXTURE_2D, to_light_tex);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glBegin(GL_QUADS);
@@ -773,6 +777,17 @@ public:
             delete[] screenshot_buffer;
     }
 
+    void init_glew()
+    {
+        glew_state = glewInit();
+        if (GLEW_OK != glew_state)
+        {
+            /* Problem: glewInit failed, something is seriously wrong. */
+            std::cerr << "Error: " << glewGetErrorString(glew_state)  << std::endl;
+        }
+        std::cerr << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
+    }
+
     void setup_light()
     {
         static const GLfloat amb_light_rgba[]  = { 0.1, 0.1, 0.1, 1.0 };
@@ -796,17 +811,6 @@ public:
         glMaterialfv( GL_FRONT, GL_DIFFUSE, material );
         glMaterialfv( GL_FRONT, GL_SPECULAR, spec_material );
         glMaterialfv( GL_FRONT, GL_SHININESS, &shininess);
-    }
-
-    void init_glew()
-    {
-        glew_state = glewInit();
-        if (GLEW_OK != glew_state)
-        {
-            /* Problem: glewInit failed, something is seriously wrong. */
-            std::cerr << "Error: " << glewGetErrorString(glew_state)  << std::endl;
-        }
-        std::cerr << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
     }
 
     void init_car_drawers(const std::string &dir)
@@ -990,7 +994,6 @@ public:
         frame_timer.reset();
         frame_timer.start();
 
-
         if(sim && hci)
         {
             while(t > hci->times[1])
@@ -1003,16 +1006,17 @@ public:
 
         if (!valid())
         {
+            std::cout << "Shader version is " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
             std::cout << "Window size is " << w() << " " << h() << std::endl;
             glViewport(0, 0, w(), h());
-            glClearColor(0.0, 0.0, 0.0, 0.0);
+            glClearColor(0.0, 0.0, 0.0, 1.0);
+
+            if(GLEW_OK != glew_state)
+                init_glew();
 
             if(screenshot_buffer)
                 delete[] screenshot_buffer;
             screenshot_buffer = new unsigned char[w()*h()*4];
-
-            if(GLEW_OK != glew_state)
-                init_glew();
 
             if(!network_drawer.initialized())
                 network_drawer.initialize(sim->hnet, 0.01f);
@@ -1022,14 +1026,13 @@ public:
 
             init_textures();
             if(car_drawers.empty())
-                init_car_drawers("/home/sewall/Desktop/siga10/");
+                init_car_drawers("/home/sewall/Dropbox/Shared/siga10/");
 
             setup_light();
             glEnable(GL_BLEND);
 
             night_setup.initialize(vec2i(w(), h()));
-            glEnable(GL_POLYGON_SMOOTH);
-            glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+            glEnable(GL_MULTISAMPLE);
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -1064,19 +1067,17 @@ public:
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glEnable(GL_DEPTH_TEST);
         glDisable(GL_TEXTURE_2D);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor3f(237.0/255, 234.0/255, 186.0/255);
         network_aux_drawer.draw_roads_solid();
         network_aux_drawer.draw_intersections_solid();
 
-        glLineWidth(2000.0/scale);
+        glLineWidth(2000.0*scale);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glColor3f(135.0/255, 103.0/255, 61.0/255);
         network_aux_drawer.draw_roads_wire();
         network_aux_drawer.draw_intersections_wire();
-        glDisable(GL_DEPTH_TEST);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_TEXTURE_2D);
@@ -1227,7 +1228,8 @@ public:
 
     void screenshot()
     {
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_PACK_ALIGNMENT,   1);
         glReadBuffer(GL_BACK);
         glReadPixels(0, 0, w(), h(), GL_BGRA, GL_UNSIGNED_BYTE, screenshot_buffer);
         write_image wi(boost::str(boost::format("screenshot%05d.png")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
@@ -1529,14 +1531,15 @@ int main(int argc, char *argv[])
     mv.time_offset = 17.75*60*60;
 
     if(argc == 3)
-      {
+    {
         mv.back_image = new big_image(argv[2]);
-	mv.back_image_center = vec2f(-12.7838, -971.966);
-	mv.back_image_scale = 0.420448;
-	mv.back_image_yscale = 0.812253;
-      }
+        mv.back_image_center = vec2f(-12.7838, -971.966);
+        mv.back_image_scale = 0.420448;
+        mv.back_image_yscale = 0.812253;
+    }
 
     Fl::add_timeout(FRAME_RATE, draw_callback, &mv);
+
 
     vec3f low(FLT_MAX);
     vec3f high(-FLT_MAX);
@@ -1544,7 +1547,7 @@ int main(int argc, char *argv[])
     box_to_cscale(mv.center, mv.scale, sub<0,2>::vector(low), sub<0,2>::vector(high), vec2i(500,500));
 
     mv.take_focus();
-    Fl::visual(FL_DOUBLE|FL_DEPTH);
+    Fl::visual(FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE);
 
     mv.show(1, argv);
     return Fl::run();
