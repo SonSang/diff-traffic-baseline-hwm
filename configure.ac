@@ -166,6 +166,7 @@ AM_CONDITIONAL(DO_IMAGE, test x"$image_ok" = xyes)
 BOOST_REQUIRE([1.39])
 BOOST_REGEX
 BOOST_THREADS
+BOOST_DATE_TIME
 
 AS_IF([test x"$boost_optimize" != xno],
       [BOOST_CPPFLAGS+=" -DBOOST_DISABLE_ASSERTS"],

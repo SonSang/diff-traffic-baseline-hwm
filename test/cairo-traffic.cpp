@@ -8,6 +8,7 @@
 #include <FL/glut.h>
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "libroad/hwm_network.hpp"
 #include "libroad/geometric.hpp"
 #include "libhybrid/hybrid-sim.hpp"
@@ -305,15 +306,17 @@ struct write_image
 };
 
 static const char *lshader       =
-"uniform sampler2D lum_tex, to_light_tex;                                           \n"
-"                                                                                   \n"
-"void main()                                                                        \n"
-"{                                                                                  \n"
-"vec4               lum           = texture2D(lum_tex, gl_TexCoord[0].st);          \n"
-"vec4               back          = texture2D(to_light_tex, gl_TexCoord[0].st);     \n"
-"vec4               effective_lum = clamp(lum, 0.0, 0.4)/0.6;                       \n"
-"gl_FragColor                     = clamp(effective_lum*back, 0.0, 0.9) + 0.3*back; \n"
-"}                                                                                  \n";
+"uniform sampler2D lum_tex, to_light_tex;                                                     \n"
+"uniform float     light_level, ambient_level;                                                \n"
+"                                                                                             \n"
+"void main()                                                                                  \n"
+"{                                                                                            \n"
+"vec4               lum           = texture2D(lum_tex, gl_TexCoord[0].st);                    \n"
+"vec4               back          = texture2D(to_light_tex, gl_TexCoord[0].st);               \n"
+"vec4               effective_lum = clamp(lum, 0.0, 0.4)/0.6;                                 \n"
+"vec4               light         = clamp(effective_lum*back, 0.0, 0.9);                      \n"
+"gl_FragColor                     = light_level*light + ambient_level*back;                   \n"
+"}                                                                                            \n";
 
 #define HEADLIGHT_TEX "/home/sewall/Desktop/siga10/small-headlight.png"
 #define TAILLIGHT_TEX "/home/sewall/Desktop/siga10/taillight.png"
@@ -325,7 +328,10 @@ struct night_render
                      to_light_fb(0),
                      to_light_tex(0),
                      headlight_tex(0),
-                     taillight_tex(0)
+                     taillight_tex(0),
+                     day_length(24*60*60),
+                     sunrise_interval(60*60*vec2f(5.5, 7.5)),
+                     sunset_interval(60*60*vec2f(18.0, 20.0))
                      {}
 
     void initialize(const vec2i &dim)
@@ -487,7 +493,7 @@ struct night_render
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void compose(const vec2f &lo, const vec2f &hi)
+    void compose(const float t, const vec2f &lo, const vec2f &hi)
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -503,6 +509,13 @@ struct night_render
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, to_light_tex);
         glUniform1iARB(to_light_uniform_location, 1);
+
+        vec2f lighting_factors(ambient_level(t));
+        int light_level_uniform_location = glGetUniformLocation(lprogram, "light_level");
+        glUniform1f(light_level_uniform_location, lighting_factors[0]);
+
+        int ambient_level_uniform_location = glGetUniformLocation(lprogram, "ambient_level");
+        glUniform1f(ambient_level_uniform_location, lighting_factors[1]);
 
         glBindTexture(GL_TEXTURE_2D, to_light_tex);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -526,6 +539,38 @@ struct night_render
         glDisable(GL_TEXTURE_2D);
     }
 
+    bool draw_lights(float t) const
+    {
+        t = std::fmod(t, day_length);
+        return (t < sunrise_interval[0] +  0.5*(sunrise_interval[1]-sunrise_interval[0]) ||
+                t > sunset_interval[0] +  0.5*(sunset_interval[1]-sunset_interval[0]));
+    }
+
+    vec2f ambient_level(float t) const
+    {
+        static const float DARKNESS = 0.3;
+        static const float DAYLIGHT = 1.0;
+
+        static const float DIMMEST_LIGHT   = 0.0;
+        static const float BRIGHTEST_LIGHT = 0.9;
+
+        t = std::fmod(t, day_length);
+        if(t < sunrise_interval[0] || t > sunset_interval[1])
+            return vec2f(BRIGHTEST_LIGHT, DARKNESS);
+        else if(t > sunrise_interval[0] && t < sunrise_interval[1])
+        {
+            const float scale = (t - sunrise_interval[0])/(sunrise_interval[1] - sunrise_interval[0]);
+            return vec2f( (DIMMEST_LIGHT-BRIGHTEST_LIGHT)*scale + BRIGHTEST_LIGHT, (DAYLIGHT-DARKNESS)*scale + DARKNESS);
+        }
+        else if(t > sunset_interval[0] && t < sunset_interval[1])
+        {
+            const float scale = (t - sunset_interval[0])/(sunset_interval[1] - sunset_interval[0]);
+            return vec2f( (BRIGHTEST_LIGHT-DIMMEST_LIGHT)*scale + DIMMEST_LIGHT, (DARKNESS-DAYLIGHT)*scale + DAYLIGHT);
+        }
+        else
+            return vec2f(DIMMEST_LIGHT, DAYLIGHT);
+    }
+
     GLuint lum_fb;
     GLuint lum_tex;
     GLuint to_light_fb;
@@ -535,6 +580,10 @@ struct night_render
     float  headlight_aspect;
     GLuint taillight_tex;
     float  taillight_aspect;
+
+    float  day_length;
+    vec2f  sunrise_interval;
+    vec2f  sunset_interval;
 };
 
 static const char *fshader =
@@ -702,6 +751,7 @@ public:
                                                           light_position(50.0, 100.0, 50.0, 1.0),
                                                           sim(0),
                                                           t(0),
+                                                          time_offset(0),
                                                           sim_time_scale(1),
                                                           go(false),
                                                           screenshot_mode(0),
@@ -836,11 +886,17 @@ public:
                         -im_res[1]/2);
         if(text)
         {
-            put_text(cr, boost::str(boost::format("real time:     %8.3fs; scaling factor %8.3fx") % t % sim_time_scale), 10, 5, LEFT, TOP);
+            boost::posix_time::time_duration td(0,
+                                                0,
+                                                std::floor(t+time_offset),
+                                                t+time_offset-std::floor(t+time_offset));
+            put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
+            put_text(cr, boost::str(boost::format("time of day: %s") % boost::posix_time::to_simple_string(td)), 10, 30, LEFT, TOP);
+            put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 250, 5, LEFT, TOP);
             if(go)
             {
                 cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
-                put_text(cr, "simulating", 10, 25, LEFT, TOP);
+                put_text(cr, "simulating", 10, 50, LEFT, TOP);
                 cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
             }
 
@@ -1086,56 +1142,61 @@ public:
 
         night_setup.start_lum();
         glClear(GL_COLOR_BUFFER_BIT);
-        glColor3f(0.2*255/255.0, 0.2*254/255.0, 0.2*149/255.0);
-        glBlendFunc(GL_ONE, GL_ONE);
-        if(hci)
+
+        if(night_setup.draw_lights(t+time_offset))
         {
-            BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
+            glColor3f(0.2*255/255.0, 0.2*254/255.0, 0.2*149/255.0);
+            glBlendFunc(GL_ONE, GL_ONE);
+            if(hci)
             {
-                if(!hci->in_second(cs.first))
-                    continue;
-
-                std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.first));
-                assert(drawer != car_map.end());
-
-                mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
-                mat4x4f ttrans(tvmet::trans(trans));
-                glPushMatrix();
-                glMultMatrixf(ttrans.data());
-
-                glPushMatrix();
+                BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
                 {
-                    glTranslatef(sim->front_bumper_offset()-0.1, 0, 0);
-                    glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
+                    if(!hci->in_second(cs.first))
+                        continue;
+
+                    std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.first));
+                    assert(drawer != car_map.end());
+
+                    mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
+                    mat4x4f ttrans(tvmet::trans(trans));
+                    glPushMatrix();
+                    glMultMatrixf(ttrans.data());
+
                     glPushMatrix();
                     {
-                        glTranslatef(0,sim->hnet->lane_width*0.2, 0);
-                        glRotatef(3.0, 0.0, 0.0, 1.0);
-                        night_setup.draw_headlight();
+                        glTranslatef(sim->front_bumper_offset()-0.1, 0, 0);
+                        glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
+                        glPushMatrix();
+                        {
+                            glTranslatef(0,sim->hnet->lane_width*0.2, 0);
+                            glRotatef(3.0, 0.0, 0.0, 1.0);
+                            night_setup.draw_headlight();
+                        }
+                        glPopMatrix();
+                        glPushMatrix();
+                        {
+                            glTranslatef(0,-sim->hnet->lane_width*0.2, 0);
+                            glRotatef(-3.0, 0.0, 0.0, 1.0);
+                            night_setup.draw_headlight();
+                        }
+                        glPopMatrix();
                     }
                     glPopMatrix();
-                    glPushMatrix();
-                    {
-                        glTranslatef(0,-sim->hnet->lane_width*0.2, 0);
-                        glRotatef(-3.0, 0.0, 0.0, 1.0);
-                        night_setup.draw_headlight();
-                    }
+
+                    glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
+                    glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
+                    night_setup.draw_taillight();
+
                     glPopMatrix();
                 }
-                glPopMatrix();
-
-                glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
-                glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
-                night_setup.draw_taillight();
-
-                glPopMatrix();
             }
         }
         glFlush();
         night_setup.finish_lum();
+
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        night_setup.compose(lo, hi);
+        night_setup.compose(t+time_offset, lo, hi);
 
         glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
@@ -1375,6 +1436,7 @@ public:
     hybrid::simulator  *sim;
     hybrid::car_interp *hci;
     float               t;
+    float               time_offset;
     float               sim_time_scale;
     timer               frame_timer;
     bool                go;
@@ -1464,6 +1526,7 @@ int main(int argc, char *argv[])
     mv.sim    = &s;
     mv.hci    = &hci;
     mv.t      = hci.times[0];
+    mv.time_offset = 17.75*60*60;
 
     if(argc == 3)
       {
