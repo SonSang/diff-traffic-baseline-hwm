@@ -758,6 +758,8 @@ public:
                                                           time_offset(0),
                                                           sim_time_scale(1),
                                                           go(false),
+                                                          avg_dt(0),
+                                                          avg_step_time(0),
                                                           screenshot_mode(0),
                                                           screenshot_buffer(0),
                                                           screenshot_count(0)
@@ -902,8 +904,8 @@ public:
                 cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
                 put_text(cr, "simulating", 10, 50, LEFT, TOP);
                 cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+                put_text(cr, boost::str(boost::format("avg. dt %8.3fs; avg. step time %8.3fs") % avg_dt % avg_step_time), 10, 70, LEFT, TOP);
             }
-
         }
 
         cairo_identity_matrix(cr);
@@ -996,11 +998,23 @@ public:
 
         if(sim && hci)
         {
+            timer step_timer;
+            float dt_accum  = 0;
+            int   num_steps = 0;
+            step_timer.start();
             while(t > hci->times[1])
             {
                 hci->capture(*sim);
                 dt = sim->hybrid_step();
                 sim->advance_intersections(dt);
+                ++num_steps;
+                dt_accum += dt;
+            }
+            step_timer.stop();
+            if(num_steps > 0)
+            {
+                avg_dt = dt_accum / num_steps;
+                avg_step_time = step_timer.interval_S()/num_steps;
             }
         }
 
@@ -1442,6 +1456,8 @@ public:
     float               sim_time_scale;
     timer               frame_timer;
     bool                go;
+    float               avg_dt;
+    float               avg_step_time;
 
     bool                                            screenshot_mode;
     unsigned char                                  *screenshot_buffer;
@@ -1539,7 +1555,6 @@ int main(int argc, char *argv[])
     }
 
     Fl::add_timeout(FRAME_RATE, draw_callback, &mv);
-
 
     vec3f low(FLT_MAX);
     vec3f high(-FLT_MAX);
