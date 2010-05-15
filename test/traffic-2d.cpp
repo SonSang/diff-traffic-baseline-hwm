@@ -987,6 +987,20 @@ public:
         cairo_surface_destroy(cs);
     }
 
+    void update_drawers()
+    {
+        std::vector<hybrid::car_interp::car_spatial> gone_cars;
+        std::set_difference(hci->car_data[0].begin(), hci->car_data[0].end(),
+                            hci->car_data[1].begin(), hci->car_data[1].end(),
+                            std::inserter(gone_cars, gone_cars.end()),
+                            hci->car_data[0].value_comp());
+
+        BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, gone_cars)
+        {
+            std::tr1::unordered_map<size_t, car_draw_desc>::iterator = std::car_map.find(cs.c.id);
+        }
+    }
+
     void draw()
     {
         float dt = 0;
