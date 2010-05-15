@@ -621,6 +621,14 @@ struct night_render
     vec2f  sunset_interval;
 };
 
+struct tex_car_draw;
+
+struct car_draw_desc
+{
+    int           color_idx;
+    tex_car_draw *drawer;
+};
+
 static const char *fshader =
 "uniform sampler2D full_tex, body_tex;                                    \n"
 "                                                                         \n"
@@ -753,12 +761,8 @@ struct tex_car_draw
     GLuint full_tex;
     GLuint body_tex;
     GLuint fprogram;
-};
 
-struct car_draw_desc
-{
-    int           color_idx;
-    tex_car_draw *drawer;
+    std::tr1::unordered_map<size_t, car_draw_desc> members;
 };
 
 static const float CAR_LENGTH    = 4.5f;
@@ -1128,22 +1132,22 @@ public:
 
         if(hci)
         {
-            BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
+            BOOST_FOREACH(const hybrid::car_interp::car_spatial &cs, hci->car_data[0])
             {
-                if(!hci->in_second(cs.first))
+                if(!hci->in_second(cs.c.id))
                     continue;
 
-                std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.first));
+                std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.c.id));
                 if(drawer == car_map.end())
                 {
                     car_draw_desc cdd;
                     cdd.color_idx = rand() % n_car_colors;
                     cdd.drawer = car_drawers[rand() % car_drawers.size()];
-                    drawer            = car_map.insert(drawer, std::make_pair(cs.first, cdd));
+                    drawer            = car_map.insert(drawer, std::make_pair(cs.c.id, cdd));
                 }
 
                 glColor3fv(car_colors[drawer->second.color_idx]);
-                mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
+                mat4x4f trans(hci->point_frame(cs.c.id, t, sim->hnet->lane_width));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
@@ -1166,15 +1170,15 @@ public:
             glBlendFunc(GL_ONE, GL_ONE);
             if(hci)
             {
-                BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
+                BOOST_FOREACH(const hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
                 {
-                    if(!hci->in_second(cs.first))
+                    if(!hci->in_second(cs.c.id))
                         continue;
 
-                    std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.first));
+                    std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.c.id));
                     assert(drawer != car_map.end());
 
-                    mat4x4f trans(hci->point_frame(cs.first, t, sim->hnet->lane_width));
+                    mat4x4f trans(hci->point_frame(cs.c.id, t, sim->hnet->lane_width));
                     mat4x4f ttrans(tvmet::trans(trans));
                     glPushMatrix();
                     glMultMatrixf(ttrans.data());

@@ -2,6 +2,7 @@
 #include "libhybrid/libhybrid-common.hpp"
 #include "arz.hpp"
 #include <boost/random.hpp>
+#include <set>
 
 namespace hybrid
 {
@@ -57,11 +58,16 @@ namespace hybrid
             car_spatial();
             car_spatial(const car &in_c, const hwm::lane *l);
 
+            bool operator<(const car_spatial &o) const
+            {
+                return c.id < o.c.id;
+            }
+
             car              c;
             const hwm::lane *la;
         };
 
-        typedef std::tr1::unordered_map<size_t, car_spatial> car_hash;
+        typedef std::set<car_spatial> car_hash;
 
         car_interp(simulator &s);
         void capture(simulator &s);

@@ -197,7 +197,7 @@ namespace hybrid
 
             BOOST_FOREACH(const car &c, l.current_cars())
             {
-                res[c.id] = car_interp::car_spatial(c, l.parent);
+                res.insert(car_interp::car_spatial(c, l.parent));
             }
         }
         return res;
@@ -326,7 +326,7 @@ namespace hybrid
         car_swap();
 
         time += dt;
-	
+
 	return dt;
     }
 

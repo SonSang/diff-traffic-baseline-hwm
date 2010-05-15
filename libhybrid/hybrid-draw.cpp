@@ -29,7 +29,9 @@ namespace hybrid
 
     bool car_interp::in_second(size_t id) const
     {
-        const car_hash::const_iterator high (car_data[1].find(id));
+        car_spatial tmp;
+        tmp.c.id = id;
+        const car_hash::const_iterator high (car_data[1].find(tmp));
         return high != car_data[1].end();
     }
 
@@ -40,11 +42,11 @@ namespace hybrid
                            float                                    rel_time)
     {
         std::vector<std::pair<float, const hwm::lane*> > visited;
-        visited.push_back(std::make_pair(0, start.second.la));
-        float            distance = start.second.la->length()*(1-start.second.c.position);
+        visited.push_back(std::make_pair(0, start.la));
+        float            distance = start.la->length()*(1-start.c.position);
         {
-            const hwm::lane *current  = start.second.la->downstream_lane();
-            while(current != end.second.la)
+            const hwm::lane *current  = start.la->downstream_lane();
+            while(current != end.la)
             {
                 if(!current)
                     return false;
@@ -53,7 +55,7 @@ namespace hybrid
                 current  = current->downstream_lane();
             }
             visited.push_back(std::make_pair(distance, current));
-            distance += end.second.la->length()*end.second.c.position;
+            distance += end.la->length()*end.c.position;
         }
 
         const float target_distance = rel_time*distance;
@@ -70,18 +72,20 @@ namespace hybrid
         }
         if(!res)
         {
-            res   = end.second.la;
+            res   = end.la;
             param = (target_distance-visited.back().first)/res->length();
         }
-        if(res == start.second.la)
-            param += start.second.c.position;
+        if(res == start.la)
+            param += start.c.position;
         return true;
     }
 
     mat4x4f car_interp::point_frame(size_t id, float time, float lane_width) const
     {
-        const car_hash::const_iterator low (car_data[0].find(id));
-        const car_hash::const_iterator high(car_data[1].find(id));
+        car_spatial tmp;
+        tmp.c.id = id;
+        const car_hash::const_iterator low (car_data[0].find(tmp));
+        const car_hash::const_iterator high(car_data[1].find(tmp));
 
         assert(low  != car_data[0].end());
         assert(high != car_data[1].end());
@@ -89,19 +93,19 @@ namespace hybrid
         const float w0 = 1 - (time - times[0])*inv_dt;
         const float w1 = 1 - (times[1] - time)*inv_dt;
 
-        if(low->second.la == high->second.la)
+        if(low->la == high->la)
         {
             car fake_car;
-            fake_car.position                          = low->second.c.position*w0 + high->second.c.position*w1;
-            fake_car.other_lane_membership.other_lane  = (low->second.c.other_lane_membership.other_lane == high->second.c.other_lane_membership.other_lane) ? low->second.c.other_lane_membership.other_lane : 0;
-            fake_car.other_lane_membership.is_left     = low->second.c.other_lane_membership.is_left;
-            fake_car.other_lane_membership.merge_param = low->second.c.other_lane_membership.merge_param*w0 +
-                                                         high->second.c.other_lane_membership.merge_param*w1;
-            fake_car.other_lane_membership.position    = low->second.c.other_lane_membership.position*w0 +
-                                                         high->second.c.other_lane_membership.position*w1;
-            fake_car.other_lane_membership.theta       = low->second.c.other_lane_membership.theta*w0 +
-                                                         high->second.c.other_lane_membership.theta*w1;
-            return fake_car.point_frame(low->second.la, lane_width);
+            fake_car.position                          = low->c.position*w0 + high->c.position*w1;
+            fake_car.other_lane_membership.other_lane  = (low->c.other_lane_membership.other_lane == high->c.other_lane_membership.other_lane) ? low->c.other_lane_membership.other_lane : 0;
+            fake_car.other_lane_membership.is_left     = low->c.other_lane_membership.is_left;
+            fake_car.other_lane_membership.merge_param = low->c.other_lane_membership.merge_param*w0 +
+                                                         high->c.other_lane_membership.merge_param*w1;
+            fake_car.other_lane_membership.position    = low->c.other_lane_membership.position*w0 +
+                                                         high->c.other_lane_membership.position*w1;
+            fake_car.other_lane_membership.theta       = low->c.other_lane_membership.theta*w0 +
+                                                         high->c.other_lane_membership.theta*w1;
+            return fake_car.point_frame(low->la, lane_width);
         }
         else
         {
@@ -111,8 +115,8 @@ namespace hybrid
                 return l->point_frame(param);
             else
             {
-                mat4x4f res0(low->second.c.point_frame(low->second.la, lane_width));
-                mat4x4f res1(high->second.c.point_frame(high->second.la, lane_width));
+                mat4x4f res0(low->c.point_frame(low->la, lane_width));
+                mat4x4f res1(high->c.point_frame(high->la, lane_width));
                 return mat4x4f(res0*w0+res1*w1);
             }
         }
