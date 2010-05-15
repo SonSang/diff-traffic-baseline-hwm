@@ -557,7 +557,6 @@ struct night_render
         ambient_color_vec[3] = 1.0f;
         glUniform4fv(ambient_level_uniform_location, 1, ambient_color_vec.data());
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glRectfv(lo.data(),
                  hi.data());
 
@@ -730,7 +729,6 @@ struct tex_car_draw
         glBindTexture(GL_TEXTURE_2D, body_tex);
         glUniform1iARB(body_uniform_location, 1);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glPushMatrix();
         glTranslatef(-car_length+car_rear_axle, 0, 0);
         glScalef(car_length, car_length/2, 1);
@@ -1050,10 +1048,13 @@ public:
                 init_car_drawers("/home/sewall/Dropbox/Shared/siga10/");
 
             glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
             night_setup.initialize(vec2i(w(), h()));
             glEnable(GL_MULTISAMPLE);
             glEnable(GL_TEXTURE_2D);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -1066,7 +1067,6 @@ public:
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         glDisable(GL_LIGHTING);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         night_setup.start_to_light();
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1085,10 +1085,7 @@ public:
             glPopMatrix();
         }
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         glDisable(GL_TEXTURE_2D);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor3f(237.0/255, 234.0/255, 186.0/255);
         network_aux_drawer.draw_roads_solid();
         network_aux_drawer.draw_intersections_solid();
@@ -1101,10 +1098,10 @@ public:
             glColor3f(135.0/255, 103.0/255, 61.0/255);
             network_aux_drawer.draw_roads_wire();
             network_aux_drawer.draw_intersections_wire();
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         glEnable(GL_TEXTURE_2D);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBindTexture (GL_TEXTURE_2D, continuum_tex_);
         std::vector<vec4f> colors;
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
@@ -1133,7 +1130,6 @@ public:
             network_drawer.draw_lane_solid(l.parent->id);
         }
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         if(hci)
         {
             BOOST_FOREACH(hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
@@ -1202,11 +1198,10 @@ public:
                     glPopMatrix();
                 }
             }
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
         glFlush();
         night_setup.finish_lum();
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         night_setup.compose(t+time_offset, lo, hi);
 
