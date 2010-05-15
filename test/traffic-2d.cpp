@@ -454,7 +454,6 @@ struct night_render
     void draw_headlight()
     {
         glBindTexture (GL_TEXTURE_2D, headlight_tex);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glPushMatrix();
         glScalef(14.0/headlight_aspect, 14.0/headlight_aspect, 1);
         glTranslatef(0, -0.5, 0);
@@ -475,7 +474,6 @@ struct night_render
     void draw_taillight()
     {
         glBindTexture (GL_TEXTURE_2D, taillight_tex);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glPushMatrix();
         glScalef(5.0/taillight_aspect, 3.0/taillight_aspect, 1);
         glTranslatef(-taillight_aspect+0.05, -0.5, 0);
@@ -852,7 +850,6 @@ public:
         {
             glGenTextures(1, &overlay_tex_);
             glBindTexture (GL_TEXTURE_2D, overlay_tex_);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -864,7 +861,6 @@ public:
         {
             glGenTextures(1, &continuum_tex_);
             glBindTexture (GL_TEXTURE_2D, continuum_tex_);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1050,11 +1046,12 @@ public:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
             night_setup.initialize(vec2i(w(), h()));
             glEnable(GL_MULTISAMPLE);
             glEnable(GL_TEXTURE_2D);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            glDisable(GL_LIGHTING);
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -1066,13 +1063,11 @@ public:
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glDisable(GL_LIGHTING);
 
         night_setup.start_to_light();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        glColor3f(1.0, 1.0, 1.0);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
         if(back_image && !back_image->tiles.empty())
         {
             glPushMatrix();
@@ -1103,6 +1098,7 @@ public:
         glEnable(GL_TEXTURE_2D);
 
         glBindTexture (GL_TEXTURE_2D, continuum_tex_);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
         std::vector<vec4f> colors;
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
         {
@@ -1205,9 +1201,8 @@ public:
 
         night_setup.compose(t+time_offset, lo, hi);
 
-        glColor3f(1.0, 1.0, 1.0);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         retex_overlay(center, scale, vec2i(w(), h()), !screenshot_mode);
         glPushMatrix();
         glBegin(GL_QUADS);
