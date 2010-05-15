@@ -936,11 +936,11 @@ public:
         {
             boost::posix_time::time_duration td(0,
                                                 0,
-                                                std::floor(t+time_offset),
-                                                t+time_offset-std::floor(t+time_offset));
+                                                std::floor(std::fmod(t+time_offset, night_setup.day_length)),
+                                                0);
             put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
             put_text(cr, boost::str(boost::format("time of day: %s") % boost::posix_time::to_simple_string(td)), 10, 30, LEFT, TOP);
-            put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 250, 5, LEFT, TOP);
+            put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 270, 5, LEFT, TOP);
             if(go)
             {
                 cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
