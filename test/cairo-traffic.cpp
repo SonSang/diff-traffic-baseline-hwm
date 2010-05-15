@@ -638,8 +638,8 @@ static const char *fshader =
 "void main()                                                              \n"
 "{                                                                        \n"
 "vec4               color   = texture2D(full_tex, gl_TexCoord[0].st);     \n"
-"vec4               mask    = texture2D(body_tex, gl_TexCoord[0].st);     \n"
-"gl_FragColor               = gl_Color*mask.r*color + (1.0-mask.r)*color; \n"
+"float              mask    = texture2D(body_tex, gl_TexCoord[0].st).r;   \n"
+"gl_FragColor               = mix(color, gl_Color*color, mask);           \n"
 "}                                                                        \n";
 
 struct tex_car_draw
