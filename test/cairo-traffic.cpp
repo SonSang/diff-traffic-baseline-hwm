@@ -328,6 +328,7 @@ static const char *lshader       =
 
 #define HEADLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/small-headlight.png"
 #define TAILLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/taillight.png"
+#define AMBIENT_TEX   "/home/sewall/Dropbox/Shared/siga10/ambient-timeofday.png"
 
 struct night_render
 {
@@ -337,15 +338,32 @@ struct night_render
                      to_light_tex(0),
                      headlight_tex(0),
                      taillight_tex(0),
-
+                     ambient_dim(0),
+                     ambient_data(0),
                      nsamples(4),
                      day_length(24*60*60),
                      sunrise_interval(60*60*vec2f(5.5, 7.5)),
                      sunset_interval(60*60*vec2f(18.0, 20.0))
                      {}
 
+    ~night_render()
+    {
+        if(ambient_data)
+            delete[] ambient_data;
+    }
+
     void initialize(const vec2i &dim)
     {
+        {
+            if(ambient_data)
+                delete[] ambient_data;
+            Magick::Image am_im(AMBIENT_TEX);
+            assert(am_im.rows() == 1);
+            ambient_dim          = am_im.columns();
+            ambient_data         = new unsigned char[ambient_dim*3];
+            am_im.write(0, 0, ambient_dim, 1, "RGB", Magick::CharPixel, ambient_data);
+        }
+
         if(glIsTexture(headlight_tex))
             glDeleteTextures(1, &headlight_tex);
         glGenTextures(1, &headlight_tex);
@@ -499,6 +517,14 @@ struct night_render
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    vec3f ambient_color(float t) const
+    {
+        t                           = std::fmod(t, day_length);
+        const float          lookup = t * ambient_dim/day_length;
+        const unsigned char *base   = ambient_data + static_cast<int>(std::floor(lookup))*3;
+        return vec3f(vec3f(base[0], base[1], base[2])/255.0);
+    }
+
     void compose(const float t, const vec2f &lo, const vec2f &hi)
     {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -528,9 +554,14 @@ struct night_render
         glUniform4fv(light_level_uniform_location, 1, lighting_color.data());
 
         int ambient_level_uniform_location = glGetUniformLocation(lprogram, "ambient_level");
-        vec4f ambient_color(lighting_factors[1]);
-        ambient_color[3] = 1.0f;
-        glUniform4fv(ambient_level_uniform_location, 1, ambient_color.data());
+
+        vec4f ambient_color_vec;
+        if(ambient_data)
+            sub<0,3>::vector(ambient_color_vec) = ambient_color(t);
+        else
+            sub<0,3>::vector(ambient_color_vec) = vec3f(lighting_factors[1]);
+        ambient_color_vec[3] = 1.0f;
+        glUniform4fv(ambient_level_uniform_location, 1, ambient_color_vec.data());
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glRectfv(lo.data(),
@@ -544,11 +575,18 @@ struct night_render
         glDisable(GL_TEXTURE_2D);
     }
 
-    bool draw_lights(float t) const
+    bool draw_lights(const float t) const
     {
-        t = std::fmod(t, day_length);
-        return (t < sunrise_interval[0] +  0.5*(sunrise_interval[1]-sunrise_interval[0]) ||
-                t > sunset_interval[0] +  0.5*(sunset_interval[1]-sunset_interval[0]));
+        vec3f ambient_color_vec;
+        if(ambient_data)
+            ambient_color_vec = ambient_color(t);
+        else
+        {
+            vec2f lighting_factors(ambient_level(t));
+            ambient_color_vec = vec3f(lighting_factors[1]);
+        }
+
+        return length(ambient_color_vec) < 0.65*1.732;
     }
 
     vec2f ambient_level(float t) const
@@ -576,16 +614,18 @@ struct night_render
             return vec2f(DIMMEST_LIGHT, DAYLIGHT);
     }
 
-    GLuint lum_fb;
-    GLuint lum_tex;
-    GLuint to_light_fb;
-    GLuint to_light_tex;
-    GLuint lprogram;
-    GLuint headlight_tex;
-    float  headlight_aspect;
-    GLuint taillight_tex;
-    float  taillight_aspect;
-    int    nsamples;
+    GLuint         lum_fb;
+    GLuint         lum_tex;
+    GLuint         to_light_fb;
+    GLuint         to_light_tex;
+    GLuint         lprogram;
+    GLuint         headlight_tex;
+    float          headlight_aspect;
+    GLuint         taillight_tex;
+    float          taillight_aspect;
+    int            ambient_dim;
+    unsigned char *ambient_data;
+    int            nsamples;
 
     float  day_length;
     vec2f  sunrise_interval;
