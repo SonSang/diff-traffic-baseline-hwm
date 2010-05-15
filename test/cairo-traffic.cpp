@@ -310,7 +310,7 @@ static const char *lshader       =
 "uniform sampler2D lum_tex;                                                 \n"
 "uniform sampler2DMS to_light_tex;                                          \n"
 "uniform int       nsamples;                                                \n"
-"uniform float     light_level, ambient_level;                              \n"
+"uniform vec4      light_level, ambient_level;                              \n"
 "out vec4 FragColor;                                                        \n"
 "                                                                           \n"
 "void main()                                                                \n"
@@ -319,7 +319,7 @@ static const char *lshader       =
 "    vec4 back = vec4(0.0);                                                 \n"
 "    for(int i = 0; i < nsamples; ++i)                                      \n"
 "        back += texelFetch(to_light_tex, screen_coord, i);                 \n"
-"    back /= vec4(nsamples);                                                \n"
+"    back *= vec4(1.0/nsamples);                                            \n"
 "    vec4               lum  = texelFetch(lum_tex, screen_coord,0);         \n"
 "    vec4      effective_lum = clamp(lum, 0.0, 0.4)/0.6;                    \n"
 "    vec4              light = clamp(effective_lum*back, 0.0, 0.9);         \n"
@@ -337,6 +337,7 @@ struct night_render
                      to_light_tex(0),
                      headlight_tex(0),
                      taillight_tex(0),
+
                      nsamples(4),
                      day_length(24*60*60),
                      sunrise_interval(60*60*vec2f(5.5, 7.5)),
@@ -522,19 +523,18 @@ struct night_render
 
         vec2f lighting_factors(ambient_level(t));
         int light_level_uniform_location = glGetUniformLocation(lprogram, "light_level");
-        glUniform1f(light_level_uniform_location, lighting_factors[0]);
+        vec4f lighting_color(lighting_factors[0]);
+        lighting_color[3] = 1.0f;
+        glUniform4fv(light_level_uniform_location, 1, lighting_color.data());
 
         int ambient_level_uniform_location = glGetUniformLocation(lprogram, "ambient_level");
-        glUniform1f(ambient_level_uniform_location, lighting_factors[1]);
+        vec4f ambient_color(lighting_factors[1]);
+        ambient_color[3] = 1.0f;
+        glUniform4fv(ambient_level_uniform_location, 1, ambient_color.data());
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glBegin(GL_QUADS);
-        glVertex2fv(lo.data());
-        glVertex2f(hi[0], lo[1]);
-        glVertex2fv(hi.data());
-        glVertex2f(lo[0], hi[1]);
-        glEnd();
+        glRectfv(lo.data(),
+                 hi.data());
 
         glUseProgram(0);
         glActiveTexture(GL_TEXTURE0);
