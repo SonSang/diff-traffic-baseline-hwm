@@ -453,7 +453,6 @@ struct night_render
 
     void draw_headlight()
     {
-        glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, headlight_tex);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glPushMatrix();
@@ -471,12 +470,10 @@ struct night_render
         glVertex2f(0, 1);
         glEnd();
         glPopMatrix();
-        glDisable(GL_TEXTURE_2D);
     }
 
     void draw_taillight()
     {
-        glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, taillight_tex);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         glPushMatrix();
@@ -494,7 +491,6 @@ struct night_render
         glVertex2f(0, 1);
         glEnd();
         glPopMatrix();
-        glDisable(GL_TEXTURE_2D);
     }
 
     void start_to_light()
@@ -528,8 +524,6 @@ struct night_render
     void compose(const float t, const vec2f &lo, const vec2f &hi)
     {
         glClear(GL_COLOR_BUFFER_BIT);
-
-        glEnable(GL_TEXTURE_2D);
 
         glUseProgram(lprogram);
         int lum_uniform_location = glGetUniformLocationARB(lprogram, "lum_tex");
@@ -571,8 +565,6 @@ struct night_render
         glActiveTexture(GL_TEXTURE0);
 
         glError();
-
-        glDisable(GL_TEXTURE_2D);
     }
 
     bool draw_lights(const float t) const
@@ -727,8 +719,6 @@ struct tex_car_draw
 
     void draw() const
     {
-        glEnable(GL_TEXTURE_2D);
-
         glUseProgram(fprogram);
         int full_uniform_location = glGetUniformLocationARB(fprogram, "full_tex");
         glActiveTexture(GL_TEXTURE0);
@@ -1063,6 +1053,7 @@ public:
 
             night_setup.initialize(vec2i(w(), h()));
             glEnable(GL_MULTISAMPLE);
+            glEnable(GL_TEXTURE_2D);
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -1080,7 +1071,6 @@ public:
         night_setup.start_to_light();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glEnable(GL_TEXTURE_2D);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glColor3f(1.0, 1.0, 1.0);
         if(back_image && !back_image->tiles.empty())
@@ -1112,9 +1102,9 @@ public:
             network_aux_drawer.draw_roads_wire();
             network_aux_drawer.draw_intersections_wire();
         }
+        glEnable(GL_TEXTURE_2D);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, continuum_tex_);
         std::vector<vec4f> colors;
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
@@ -1170,7 +1160,6 @@ public:
             }
         }
 
-        glDisable(GL_TEXTURE_2D);
         glFlush();
         night_setup.finish_to_light();
         glError();
@@ -1222,7 +1211,6 @@ public:
         night_setup.compose(t+time_offset, lo, hi);
 
         glColor3f(1.0, 1.0, 1.0);
-        glEnable(GL_TEXTURE_2D);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         retex_overlay(center, scale, vec2i(w(), h()), !screenshot_mode);

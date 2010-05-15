@@ -60,8 +60,6 @@ struct big_image
 
     void draw() const
     {
-        glEnable(GL_TEXTURE_2D);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glPushMatrix();
         glScalef(1, -1, 1);
         BOOST_FOREACH(const tile &t, tiles)
