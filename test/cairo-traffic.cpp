@@ -18,7 +18,7 @@
 
 #define FRAME_RATE (1.0/24.0)
 
-void abort_(const char * s, ...)
+static void abort_(const char * s, ...)
 {
 	va_list args;
 	va_start(args, s);
@@ -28,8 +28,8 @@ void abort_(const char * s, ...)
 	abort();
 }
 
-// writes a RGB png from an BGRA buffer
-void write_png_file(const unsigned char *pix, const vec2i &dim, const std::string &fname)
+// writes an 8-bit RGB png from an BGRA buffer
+static void write_png_file(const unsigned char *pix, const vec2i &dim, const std::string &fname)
 {
     png_byte color_type = PNG_COLOR_TYPE_RGB;
     png_byte bit_depth = 8;
@@ -832,31 +832,6 @@ public:
         std::cerr << "Status: Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
     }
 
-    void setup_light()
-    {
-        static const GLfloat amb_light_rgba[]  = { 0.1, 0.1, 0.1, 1.0 };
-        static const GLfloat diff_light_rgba[] = { 0.7, 0.7, 0.7, 1.0 };
-        static const GLfloat spec_light_rgba[] = { 1.0, 1.0, 1.0, 1.0 };
-        static const GLfloat spec_material[]   = { 1.0, 1.0, 1.0, 1.0 };
-        static const GLfloat material[]        = { 1.0, 1.0, 1.0, 1.0 };
-        static const GLfloat shininess         = 100.0;
-
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_COLOR_MATERIAL);
-        glPushMatrix();
-        glLoadIdentity();
-        glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
-        glPopMatrix();
-        glLightfv(GL_LIGHT0, GL_AMBIENT, amb_light_rgba );
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, diff_light_rgba );
-        glLightfv(GL_LIGHT0, GL_SPECULAR, spec_light_rgba );
-        glMaterialfv( GL_FRONT, GL_AMBIENT, material );
-        glMaterialfv( GL_FRONT, GL_DIFFUSE, material );
-        glMaterialfv( GL_FRONT, GL_SPECULAR, spec_material );
-        glMaterialfv( GL_FRONT, GL_SHININESS, &shininess);
-    }
-
     void init_car_drawers(const std::string &dir)
     {
         assert(bf::is_directory(dir));
@@ -1084,7 +1059,6 @@ public:
             if(car_drawers.empty())
                 init_car_drawers("/home/sewall/Dropbox/Shared/siga10/");
 
-            setup_light();
             glEnable(GL_BLEND);
 
             night_setup.initialize(vec2i(w(), h()));
