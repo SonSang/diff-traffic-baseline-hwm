@@ -309,6 +309,7 @@ static const char *lshader       =
 "#extension GL_ARB_texture_multisample : enable                             \n"
 "uniform sampler2D lum_tex;                                                 \n"
 "uniform sampler2DMS to_light_tex;                                          \n"
+"uniform int       nsamples;                                                \n"
 "uniform float     light_level, ambient_level;                              \n"
 "out vec4 FragColor;                                                        \n"
 "                                                                           \n"
@@ -316,9 +317,9 @@ static const char *lshader       =
 "{                                                                          \n"
 "    ivec2 screen_coord = ivec2(gl_FragCoord.xy);                           \n"
 "    vec4 back = vec4(0.0);                                                 \n"
-"    for(int i = 0; i < 4; ++i)                                             \n"
+"    for(int i = 0; i < nsamples; ++i)                                      \n"
 "        back += texelFetch(to_light_tex, screen_coord, i);                 \n"
-"    back /= vec4(4.0);                                                     \n"
+"    back /= vec4(nsamples);                                                \n"
 "    vec4               lum  = texelFetch(lum_tex, screen_coord,0);         \n"
 "    vec4      effective_lum = clamp(lum, 0.0, 0.4)/0.6;                    \n"
 "    vec4              light = clamp(effective_lum*back, 0.0, 0.9);         \n"
@@ -336,6 +337,7 @@ struct night_render
                      to_light_tex(0),
                      headlight_tex(0),
                      taillight_tex(0),
+                     nsamples(4),
                      day_length(24*60*60),
                      sunrise_interval(60*60*vec2f(5.5, 7.5)),
                      sunset_interval(60*60*vec2f(18.0, 20.0))
@@ -407,7 +409,7 @@ struct night_render
 
         glBindFramebuffer(GL_FRAMEBUFFER, to_light_fb);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, to_light_tex);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, dim[0], dim[1], false);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], false);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, to_light_tex, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
@@ -515,6 +517,9 @@ struct night_render
 
         glBindFragDataLocation(lprogram, 0, "FragColor") ;
 
+        int nsamples_uniform_location = glGetUniformLocation(lprogram, "nsamples");
+        glUniform1i(nsamples_uniform_location, nsamples);
+
         vec2f lighting_factors(ambient_level(t));
         int light_level_uniform_location = glGetUniformLocation(lprogram, "light_level");
         glUniform1f(light_level_uniform_location, lighting_factors[0]);
@@ -580,6 +585,7 @@ struct night_render
     float  headlight_aspect;
     GLuint taillight_tex;
     float  taillight_aspect;
+    int    nsamples;
 
     float  day_length;
     vec2f  sunrise_interval;
