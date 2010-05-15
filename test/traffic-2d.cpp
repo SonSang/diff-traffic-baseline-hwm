@@ -1181,6 +1181,7 @@ public:
         if(night_setup.draw_lights(t+time_offset))
         {
             glColor3f(0.2*255/255.0, 0.2*254/255.0, 0.2*149/255.0);
+
             glBlendFunc(GL_ONE, GL_ONE);
             if(hci)
             {
@@ -1551,7 +1552,7 @@ int main(int argc, char *argv[])
     mv.sim    = &s;
     mv.hci    = &hci;
     mv.t      = hci.times[0];
-    mv.time_offset = 17.75*60*60;
+    mv.time_offset = 0; //17.75*60*60;
 
     if(argc == 3)
     {
