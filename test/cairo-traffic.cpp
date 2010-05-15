@@ -326,7 +326,7 @@ static const char *lshader       =
 "    FragColor               = light_level*light + ambient_level*back;      \n"
 "}                                                                          \n";
 
-#define HEADLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/small-headlight.png"
+#define HEADLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/small-headlight-pair.png"
 #define TAILLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/taillight.png"
 #define AMBIENT_TEX   "/home/sewall/Dropbox/Shared/siga10/ambient-timeofday.png"
 
@@ -1225,22 +1225,9 @@ public:
 
                     glPushMatrix();
                     {
-                        glTranslatef(sim->front_bumper_offset()-0.1, 0, 0);
+                        glTranslatef(sim->front_bumper_offset()-1, 0, 0);
                         glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
-                        glPushMatrix();
-                        {
-                            glTranslatef(0,sim->hnet->lane_width*0.2, 0);
-                            glRotatef(3.0, 0.0, 0.0, 1.0);
-                            night_setup.draw_headlight();
-                        }
-                        glPopMatrix();
-                        glPushMatrix();
-                        {
-                            glTranslatef(0,-sim->hnet->lane_width*0.2, 0);
-                            glRotatef(-3.0, 0.0, 0.0, 1.0);
-                            night_setup.draw_headlight();
-                        }
-                        glPopMatrix();
+                        night_setup.draw_headlight();
                     }
                     glPopMatrix();
 
