@@ -1241,7 +1241,6 @@ public:
             }
         }
 
-        glFlush();
         night_setup.finish_to_light();
         glError();
 
@@ -1272,7 +1271,6 @@ public:
             }
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
-        glFlush();
         night_setup.finish_lum();
 
         night_setup.compose(t+time_offset, lo, hi);
@@ -1293,13 +1291,13 @@ public:
         glEnd();
         glPopMatrix();
 
-        glFlush();
-        glFinish();
-
         glError();
 
         if(screenshot_mode)
+        {
+            glFinish();
             screenshot();
+        }
     }
 
     void screenshot()
