@@ -981,18 +981,37 @@ public:
 
     void update_drawers()
     {
-        std::vector<hybrid::car_interp::car_spatial> gone_cars;
-        std::set_difference(hci->car_data[0].begin(), hci->car_data[0].end(),
-                            hci->car_data[1].begin(), hci->car_data[1].end(),
-                            std::inserter(gone_cars, gone_cars.end()),
-                            hci->car_data[0].value_comp());
-
-        BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, gone_cars)
         {
-            std::tr1::unordered_map<size_t, tex_car_draw*>::iterator to_remove = car_map.find(cs.c.id);
-            assert(to_remove != car_map.end());
-            to_remove->second->members.erase(cs.c.id);
-            car_map.erase(to_remove);
+            std::vector<hybrid::car_interp::car_spatial> gone_cars;
+            std::set_difference(hci->car_data[0].begin(), hci->car_data[0].end(),
+                                hci->car_data[1].begin(), hci->car_data[1].end(),
+                                std::inserter(gone_cars, gone_cars.end()),
+                                hci->car_data[0].value_comp());
+
+            BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, gone_cars)
+            {
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator to_remove = car_map.find(cs.c.id);
+                assert(to_remove != car_map.end());
+                to_remove->second->members.erase(cs.c.id);
+                car_map.erase(to_remove);
+            }
+        }
+        {
+            std::vector<hybrid::car_interp::car_spatial> new_cars;
+            std::set_difference(hci->car_data[1].begin(), hci->car_data[1].end(),
+                                hci->car_data[0].begin(), hci->car_data[0].end(),
+                                std::inserter(new_cars, new_cars.end()),
+                                hci->car_data[0].value_comp());
+
+            BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, new_cars)
+            {
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.c.id));
+                assert(drawer == car_map.end());
+                tex_car_draw *draw_pick = car_drawers[rand() % car_drawers.size()];
+                drawer                  = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
+                draw_pick->members.insert(std::make_pair(cs.c.id, rand() % n_car_colors));
+                drawer->second          = draw_pick;
+            }
         }
     }
 
@@ -1019,6 +1038,7 @@ public:
             while(t > hci->times[1])
             {
                 hci->capture(*sim);
+                update_drawers();
                 dt = sim->hybrid_step();
                 sim->advance_intersections(dt);
                 ++num_steps;
@@ -1054,7 +1074,21 @@ public:
 
             init_textures();
             if(car_drawers.empty())
+            {
                 init_car_drawers("/home/sewall/Dropbox/Shared/siga10/");
+
+                if(sim && hci)
+                {
+                    update_drawers();
+
+                    sim->hybrid_step();
+                    hci->capture(*sim);
+                    update_drawers();
+                    sim->hybrid_step();
+
+                    t = hci->times[0];
+                }
+            }
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1141,28 +1175,19 @@ public:
 
         if(hci)
         {
-            BOOST_FOREACH(const hybrid::car_interp::car_spatial &cs, hci->car_data[0])
+            BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
-                if(!hci->in_second(cs.c.id))
-                    continue;
-
-                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.c.id));
-                if(drawer == car_map.end())
+                typedef std::pair<size_t, int> id_color;
+                BOOST_FOREACH(const id_color &car, drawer->members)
                 {
-                    tex_car_draw *draw_pick = car_drawers[rand() % car_drawers.size()];
-                    drawer                  = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
-                    draw_pick->members.insert(std::make_pair(cs.c.id, rand() % n_car_colors));
-                    drawer->second          = draw_pick;
+                    glColor3fv(car_colors[car.second]);
+                    mat4x4f trans(hci->point_frame(car.first, t, sim->hnet->lane_width));
+                    mat4x4f ttrans(tvmet::trans(trans));
+                    glPushMatrix();
+                    glMultMatrixf(ttrans.data());
+                    drawer->draw();
+                    glPopMatrix();
                 }
-                assert(drawer->second);
-                assert(drawer->second->members.find(cs.c.id) != drawer->second->members.end());
-                glColor3fv(car_colors[drawer->second->members[cs.c.id]]);
-                mat4x4f trans(hci->point_frame(cs.c.id, t, sim->hnet->lane_width));
-                mat4x4f ttrans(tvmet::trans(trans));
-                glPushMatrix();
-                glMultMatrixf(ttrans.data());
-                drawer->second->draw();
-                glPopMatrix();
             }
         }
 
@@ -1180,32 +1205,29 @@ public:
             glBlendFunc(GL_ONE, GL_ONE);
             if(hci)
             {
-                BOOST_FOREACH(const hybrid::car_interp::car_hash::value_type &cs, hci->car_data[0])
+                BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
                 {
-                    if(!hci->in_second(cs.c.id))
-                        continue;
-
-                    std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.c.id));
-                    assert(drawer != car_map.end());
-
-                    mat4x4f trans(hci->point_frame(cs.c.id, t, sim->hnet->lane_width));
-                    mat4x4f ttrans(tvmet::trans(trans));
-                    glPushMatrix();
-                    glMultMatrixf(ttrans.data());
-
-                    glPushMatrix();
+                    typedef std::pair<size_t, int> id_color;
+                    BOOST_FOREACH(const id_color &car, drawer->members)
                     {
-                        glTranslatef(sim->front_bumper_offset()-1, 0, 0);
-                        glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
-                        night_setup.draw_headlight();
+                        glColor3fv(car_colors[car.second]);
+                        mat4x4f trans(hci->point_frame(car.first, t, sim->hnet->lane_width));
+                        mat4x4f ttrans(tvmet::trans(trans));
+                        glPushMatrix();
+                        glMultMatrixf(ttrans.data());
+                        glPushMatrix();
+                        {
+                            glTranslatef(sim->front_bumper_offset()-1, 0, 0);
+                            glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
+                            night_setup.draw_headlight();
+                        }
+                        glPopMatrix();
+
+                        glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
+                        glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
+                        night_setup.draw_taillight();
+                        glPopMatrix();
                     }
-                    glPopMatrix();
-
-                    glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
-                    glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
-                    night_setup.draw_taillight();
-
-                    glPopMatrix();
                 }
             }
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1533,18 +1555,15 @@ int main(int argc, char *argv[])
 
     //    s.settle(0.033);
 
-    hybrid::car_interp hci(s);
-    s.hybrid_step();
-    hci.capture(s);
-    s.hybrid_step();
-
     fltkview mv(0, 0, 1280, 720, "fltk View");
     mv.net    = &net;
     mv.netaux = &neta;
     mv.sim    = &s;
+
+    hybrid::car_interp hci(s);
     mv.hci    = &hci;
-    mv.t      = hci.times[0];
-    mv.time_offset = 0; //17.75*60*60;
+
+    mv.time_offset = 0;         //17.75*60*60;
 
     if(argc == 3)
     {
