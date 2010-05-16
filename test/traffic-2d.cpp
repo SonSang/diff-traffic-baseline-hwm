@@ -846,6 +846,8 @@ static const float CAR_LENGTH    = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
 static const float CAR_REAR_AXLE = 3.5f;
 
+static void draw_callback(void *v);
+
 class fltkview : public Fl_Gl_Window
 {
 public:
@@ -875,7 +877,8 @@ public:
                                                           screenshot_buffer(0),
                                                           screenshot_count(0),
                                                           view(1.0f),
-                                                          imode(NONE)
+                                                          imode(NONE),
+                                                          throttle(true)
     {
         this->resizable(this);
         frame_timer.reset();
@@ -987,6 +990,8 @@ public:
             put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
             put_text(cr, boost::str(boost::format("time of day: %s") % boost::posix_time::to_simple_string(td)), 10, 30, LEFT, TOP);
             put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 270, 5, LEFT, TOP);
+            if(throttle)
+                put_text(cr, "throttle", w(), 5, RIGHT, TOP);
             if(go)
             {
                 cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
@@ -1536,6 +1541,21 @@ public:
                 else if(imode == NONE)
                     imode = REGION_MANIP;
                 break;
+            case 't':
+                throttle = !throttle;
+                if(throttle)
+                {
+                    std::cout << "Throttling FPS to " << FRAME_RATE << std::endl;
+                    Fl::remove_idle(draw_callback, this);
+                    Fl::add_timeout(FRAME_RATE, draw_callback, this);
+                }
+                else
+                {
+                    std::cout << "Removing throttling" << std::endl;
+                    Fl::remove_timeout(draw_callback);
+                    Fl::add_idle(draw_callback, this);
+                }
+                break;
             case ' ':
                 go = !go;
                 if(go)
@@ -1635,12 +1655,14 @@ public:
     night_render     night_setup;
     view_path        view;
     interaction_mode imode;
+    bool             throttle;
 };
 
-void draw_callback(void *v)
+static void draw_callback(void *v)
 {
     reinterpret_cast<fltkview*>(v)->redraw();
-    Fl::repeat_timeout(FRAME_RATE, draw_callback, v);
+    if(reinterpret_cast<fltkview*>(v)->throttle)
+        Fl::repeat_timeout(FRAME_RATE, draw_callback, v);
 }
 
 int main(int argc, char *argv[])
