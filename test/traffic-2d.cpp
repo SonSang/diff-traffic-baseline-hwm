@@ -656,7 +656,7 @@ static const char *fshader =
 
 struct tex_car_draw
 {
-    tex_car_draw() : full_tex(0), body_tex(0)
+    tex_car_draw() : full_tex(0), body_tex(0), car_list(0)
     {
     }
 
@@ -738,6 +738,11 @@ struct tex_car_draw
 
         full_uniform_location = glGetUniformLocationARB(fprogram, "full_tex");
         body_uniform_location = glGetUniformLocationARB(fprogram, "body_tex");
+
+        car_list = glGenLists(1);
+        glNewList(car_list, GL_COMPILE);
+        draw_full_car();
+        glEndList();
     }
 
     void draw_start() const
@@ -753,7 +758,12 @@ struct tex_car_draw
         glUniform1iARB(body_uniform_location, 1);
     }
 
-    void draw() const
+    void draw_car_list() const
+    {
+        glCallList(car_list);
+    }
+
+    void draw_full_car() const
     {
         glPushMatrix();
         glTranslatef(-car_length+car_rear_axle, 0, 0);
@@ -785,6 +795,7 @@ struct tex_car_draw
     GLuint full_tex;
     GLuint body_tex;
     GLuint fprogram;
+    GLuint car_list;
 
     GLint full_uniform_location;
     GLint body_uniform_location;
@@ -1221,7 +1232,7 @@ public:
                     mat4x4f ttrans(tvmet::trans(trans));
                     glPushMatrix();
                     glMultMatrixf(ttrans.data());
-                    drawer->draw();
+                    drawer->draw_car_list();
                     glPopMatrix();
                 }
                 drawer->draw_end();
