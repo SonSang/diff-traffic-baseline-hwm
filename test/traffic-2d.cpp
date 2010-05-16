@@ -18,102 +18,6 @@
 
 #define FRAME_RATE (1.0/24.0)
 
-static void map_dump(const unsigned char *pix, const vec2i &dim, const std::string &fname)
-{
-    int    f     = open(fname.c_str(), O_TRUNC, O_WRONLY);
-    assert(f != -1);
-    size_t fsize = sizeof(unsigned char)*dim[0]*dim[1]*4;
-    lseek(f, fsize, SEEK_SET);
-    int    m     = 0;
-    write(f, &m, 1);
-    close(f);
-
-    // void *newbuff = mmap(0, fsize, PROT_WRITE, MAP_SHARED, f, 0);
-    // assert(newbuff);
-
-    // memcpy(newbuff, pix, fsize);
-
-    // munmap(newbuff, fsize);
-}
-
-static void abort_(const char * s, ...)
-{
-	va_list args;
-	va_start(args, s);
-	vfprintf(stderr, s, args);
-	fprintf(stderr, "\n");
-	va_end(args);
-	abort();
-}
-
-// writes an 8-bit RGB png from an BGRA buffer
-static void write_png_file(const unsigned char *pix, const vec2i &dim, const std::string &fname)
-{
-    png_byte color_type = PNG_COLOR_TYPE_RGB;
-    png_byte bit_depth = 8;
-
-    png_infop info_ptr;
-
-	/* create file */
-    FILE *fp = fopen(fname.c_str(), "wb");
-	if (!fp)
-		abort_("[write_png_file] File %s could not be opened for writing", fname.c_str());
-
-	/* initialize stuff */
-	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
-	if (!png_ptr)
-		abort_("[write_png_file] png_create_write_struct failed");
-
-	info_ptr = png_create_info_struct(png_ptr);
-	if (!info_ptr)
-		abort_("[write_png_file] png_create_info_struct failed");
-
-	if (setjmp(png_jmpbuf(png_ptr)))
-		abort_("[write_png_file] Error during init_io");
-
-	png_init_io(png_ptr, fp);
-
-	/* write header */
-	if (setjmp(png_jmpbuf(png_ptr)))
-		abort_("[write_png_file] Error during writing header");
-
-	png_set_IHDR(png_ptr, info_ptr, dim[0], dim[1],
-		     bit_depth, color_type, PNG_INTERLACE_NONE,
-		     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-	png_write_info(png_ptr, info_ptr);
-
-	/* write bytes */
-	if (setjmp(png_jmpbuf(png_ptr)))
-		abort_("[write_png_file] Error during writing bytes");
-
-    png_set_compression_level(png_ptr,
-                              Z_NO_COMPRESSION);
-
-    png_bytep row = (png_bytep)malloc(sizeof(png_byte)*3*dim[0]);
-    for(int i = dim[1]-1; i >= 0; --i)
-    {
-        png_bytep row_pointer = (png_byte*)pix+i*4*dim[0];
-        for(int p = 0; p < dim[0]; ++p)
-        {
-            row[3*p+0] = row_pointer[4*p+2];
-            row[3*p+1] = row_pointer[4*p+1];
-            row[3*p+2] = row_pointer[4*p+0];
-        }
-        png_write_row(png_ptr, row);
-    }
-    free(row);
-
-	/* end write */
-	if (setjmp(png_jmpbuf(png_ptr)))
-		abort_("[write_png_file] Error during end of write");
-
-	png_write_end(png_ptr, NULL);
-
-    fclose(fp);
-}
-
 inline bool checkFramebufferStatus() {
     GLenum status;
     status = (GLenum) glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -303,25 +207,6 @@ static void put_text(cairo_t * cr, const std::string &str, float x, float y, con
 
     cairo_restore(cr);
 }
-
-struct write_image
-{
-    write_image(const std::string &fname_, const vec2i &dim, unsigned char *pix) :
-        fname(fname_), dimensions(dim), pixels(pix)
-    {
-    }
-
-    void operator()()
-    {
-        map_dump(pixels, dimensions, fname);
-        // write_png_file(pixels, dimensions, fname);
-        std::cout << "Wrote " << fname << std::endl;
-    }
-
-    std::string    fname;
-    vec2i          dimensions;
-    unsigned char *pixels;
-};
 
 static const char *lshader       =
 "#version 150                                                               \n"
@@ -1287,10 +1172,6 @@ public:
             if(GLEW_OK != glew_state)
                 init_glew();
 
-            if(screenshot_buffer)
-                delete[] screenshot_buffer;
-            screenshot_buffer = new unsigned char[w()*h()*4];
-
             if(!network_drawer.initialized())
                 network_drawer.initialize(sim->hnet, 0.01f);
 
@@ -1483,12 +1364,43 @@ public:
 
     void screenshot()
     {
+        const std::string new_file(boost::str(boost::format("screenshot%05d.dump")%screenshot_count++));
+        int               f = open(new_file.c_str(), O_CREAT | O_TRUNC | O_RDWR, 00664);
+        assert(f != -1);
+
+        struct header
+        {
+            char magic[5];
+            int w;
+            int h;
+            int bpp;
+            char format[5];
+        };
+
+        size_t fsize = sizeof(unsigned char)*w()*h()*4 + sizeof(header);
+        header head;
+        strncpy(head.magic, "DUMP", 5);
+        head.w       = w();
+        head.h       = h();
+        head.bpp     = sizeof(unsigned char);
+        strncpy(head.format, "BGRA", 5);
+        write(f, &head, sizeof(header));
+
+        lseek(f, fsize, SEEK_SET);
+        int m = 0;
+        write(f, &m, 1);
+
+        void *newbuff = mmap(0, fsize, PROT_WRITE | PROT_READ, MAP_SHARED, f, 0);
+        assert(newbuff && newbuff != MAP_FAILED);
+        close(f);
+
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glPixelStorei(GL_PACK_ALIGNMENT,   1);
         glReadBuffer(GL_BACK);
-        glReadPixels(0, 0, w(), h(), GL_BGRA, GL_UNSIGNED_BYTE, screenshot_buffer);
-        write_image wi(boost::str(boost::format("screenshot%05d.png")%screenshot_count++), vec2i(w(), h()), screenshot_buffer);
-        wi();
+        glReadPixels(0, 0, w(), h(), GL_BGRA, GL_UNSIGNED_BYTE, static_cast<unsigned char*>(newbuff)+sizeof(header));
+
+        munmap(newbuff, fsize);
+        std::cout << "Wrote " << new_file << " : " << fsize << " bytes" << std::endl;
     }
 
     int handle(int event)
