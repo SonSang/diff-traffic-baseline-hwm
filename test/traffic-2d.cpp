@@ -338,6 +338,7 @@ struct night_render
                      to_light_tex(0),
                      headlight_tex(0),
                      taillight_tex(0),
+                     light_list(0),
                      ambient_dim(0),
                      ambient_data(0),
                      nsamples(4),
@@ -352,7 +353,7 @@ struct night_render
             delete[] ambient_data;
     }
 
-    void initialize(const vec2i &dim)
+    void initialize(hybrid::simulator *sim, const vec2i &dim)
     {
         {
             if(ambient_data)
@@ -449,6 +450,27 @@ struct night_render
         glAttachShader(lprogram, shader);
         glLinkProgram(lprogram);
         glError();
+
+        light_list = glGenLists(1);
+        glNewList(light_list, GL_COMPILE);
+
+        glPushMatrix();
+        {
+            glTranslatef(sim->front_bumper_offset()-1, 0, 0);
+            glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
+            draw_headlight();
+        }
+        glPopMatrix();
+
+        glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
+        glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
+        draw_taillight();
+        glEndList();
+    }
+
+    void draw_car_lights()
+    {
+        glCallList(light_list);
     }
 
     void draw_headlight()
@@ -611,6 +633,7 @@ struct night_render
     GLuint         headlight_tex;
     float          headlight_aspect;
     GLuint         taillight_tex;
+    GLuint         light_list;
     float          taillight_aspect;
     int            ambient_dim;
     unsigned char *ambient_data;
@@ -1105,7 +1128,7 @@ public:
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            night_setup.initialize(vec2i(w(), h()));
+            night_setup.initialize(sim, vec2i(w(), h()));
             glEnable(GL_MULTISAMPLE);
             glEnable(GL_TEXTURE_2D);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -1229,17 +1252,7 @@ public:
                         mat4x4f ttrans(tvmet::trans(trans));
                         glPushMatrix();
                         glMultMatrixf(ttrans.data());
-                        glPushMatrix();
-                        {
-                            glTranslatef(sim->front_bumper_offset()-1, 0, 0);
-                            glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
-                            night_setup.draw_headlight();
-                        }
-                        glPopMatrix();
-
-                        glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
-                        glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
-                        night_setup.draw_taillight();
+                        night_setup.draw_car_lights();
                         glPopMatrix();
                     }
                 }
