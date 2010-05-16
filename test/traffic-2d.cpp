@@ -671,7 +671,6 @@ struct tex_car_draw
         initialize(car_width_, car_length_, car_height_, car_rear_axle_, str);
     }
 
-
     bool initialized() const
     {
         return glIsTexture(full_tex) && glIsTexture(body_tex);
@@ -805,6 +804,140 @@ struct tex_car_draw
     std::tr1::unordered_map<size_t, int> members;
 };
 
+static const char *pointVertexShader =
+    "void main()                                                            \n"
+    "{                                                                      \n"
+    "    gl_PointSize = 500*gl_Point.size;                                  \n"
+    "    gl_TexCoord[0] = gl_MultiTexCoord0;                                \n"
+    "    gl_Position = ftransform();                                        \n"
+    "    gl_FrontColor = gl_Color;                                          \n"
+    "}                                                                      \n";
+
+static const char *pointPixelShader =
+    "uniform sampler2D splatTexture;                                        \n"
+    "void main()                                                            \n"
+    "{                                                                      \n"
+    "    vec4 color =  gl_Color * texture2D(splatTexture, gl_TexCoord[0].st); \n"
+    "    gl_FragColor =                                                     \n"
+    "         color;\n"
+    "}                                                                      \n";
+
+
+static unsigned char* point_tex(int N)
+{
+    unsigned char *B = new unsigned char[4*N*N];
+
+    const float inc = 2.0f/(N-1);
+
+    float y = -1.0f;
+    for (int j=0; j < N; j++)
+    {
+        float x = -1.0f;
+        for (int i=0; i < N; i++)
+        {
+            unsigned char v =  (x*x + y*y) > 1.0f ? 0 : 255;
+            int idx = (j*N + i)*4;
+            B[idx+3] = B[idx+2] = B[idx+1] = B[idx] = v;
+            x += inc;
+        }
+        y += inc;
+    }
+    return B;
+}
+
+struct view_path
+{
+    view_path(float psize) : program(0), texture(0), point_size(psize)
+    {}
+
+    void initialize()
+    {
+        if(!glIsProgram(program))
+        {
+            GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+            printShaderInfoLog(vertex_shader);
+            GLuint pixel_shader  = glCreateShader(GL_FRAGMENT_SHADER);
+            printShaderInfoLog(pixel_shader);
+
+            glShaderSource(vertex_shader, 1, &pointVertexShader, 0);
+            glShaderSource(pixel_shader,  1,  &pointPixelShader, 0);
+
+            glCompileShader(vertex_shader);
+            glCompileShader(pixel_shader);
+
+            program = glCreateProgram();
+
+            glAttachShader(program, vertex_shader);
+            glAttachShader(program, pixel_shader);
+
+            glLinkProgram(program);
+        }
+
+        if(!glIsTexture(texture))
+        {
+            const int      resolution = 32;
+            unsigned char *data       = point_tex(resolution);
+
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, resolution, resolution, 0,
+                         GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+            delete data;
+        }
+        glEnable(GL_POINT_SPRITE);
+        glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+
+    void draw(float scale) const
+    {
+        glColor4f(1.0, 1.0, 0.0, 1.0);
+        glDisable(GL_TEXTURE_2D);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glLineWidth(1.0);
+        glBegin(GL_LINE_STRIP);
+        BOOST_FOREACH(const vec3f &p, path.points_)
+        {
+            glVertex3fv(p.data());
+        }
+        glEnd();
+
+        glEnable(GL_TEXTURE_2D);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glPointSize(5*point_size/scale);
+
+        glError();
+
+        glUseProgram(program);
+        GLuint texLoc = glGetUniformLocation(program, "splatTexture");
+        glUniform1i(texLoc, 0);
+
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glColor4f(1.0, 1.0, 0.0, 1.0);
+        glBegin(GL_POINTS);
+        BOOST_FOREACH(const vec3f &p, path.points_)
+        {
+            glVertex3fv(p.data());
+        }
+        glEnd();
+
+        glUseProgram(0);
+    }
+
+    arc_road path;
+
+    GLuint program;
+    GLuint texture;
+
+    float point_size;
+};
+
 static const float CAR_LENGTH    = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
 static const float CAR_REAR_AXLE = 3.5f;
@@ -812,6 +945,8 @@ static const float CAR_REAR_AXLE = 3.5f;
 class fltkview : public Fl_Gl_Window
 {
 public:
+    typedef enum {REGION_MANIP, ARC_MANIP, BACK_MANIP, NONE} interaction_mode;
+
     fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l),
                                                           lastpick(0),
                                                           net(0),
@@ -834,11 +969,15 @@ public:
                                                           avg_step_time(0),
                                                           screenshot_mode(0),
                                                           screenshot_buffer(0),
-                                                          screenshot_count(0)
+                                                          screenshot_count(0),
+                                                          view(1.0f),
+                                                          imode(NONE)
     {
         this->resizable(this);
         frame_timer.reset();
         frame_timer.start();
+        view.path.points_.push_back(vec3f(0.0, 0.0, 0.0));
+        view.path.points_.push_back(vec3f(10.0, 10.0, 0.0));
     }
 
     ~fltkview()
@@ -951,6 +1090,22 @@ public:
                 cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
                 put_text(cr, boost::str(boost::format("avg. dt %8.3fs; avg. step time %8.3fs") % avg_dt % avg_step_time), 10, 70, LEFT, TOP);
             }
+            cairo_set_source_rgba (cr, 1.0f, 1.0f, 0.0f, 1.0f);
+            switch(imode)
+            {
+            case ARC_MANIP:
+                put_text(cr, "arc manip", w(), h(), RIGHT, BOTTOM);
+                break;
+            case BACK_MANIP:
+                put_text(cr, "back manip", w(), h(), RIGHT, BOTTOM);
+                break;
+            case REGION_MANIP:
+                put_text(cr, "region manip", w(), h(), RIGHT, BOTTOM);
+                break;
+            default:
+                break;
+            };
+            cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
         }
 
         cairo_identity_matrix(cr);
@@ -982,33 +1137,36 @@ public:
         cairo_matrix_t cmat;
         cairo_get_matrix(cr, &cmat);
 
-        BOOST_FOREACH(const aabb2d &r, rectangles)
+        if(imode == REGION_MANIP)
         {
-            cairo_set_matrix(cr, &cmat);
-            cairo_rectangle(cr, r.bounds[0][0], r.bounds[0][1], r.bounds[1][0]-r.bounds[0][0], r.bounds[1][1]-r.bounds[0][1]);
-            cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
-            cairo_fill_preserve(cr);
-            cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
-            cairo_identity_matrix(cr);
-            cairo_set_line_width(cr, 2.0);
-            cairo_stroke(cr);
-        }
+            BOOST_FOREACH(const aabb2d &r, rectangles)
+            {
+                cairo_set_matrix(cr, &cmat);
+                cairo_rectangle(cr, r.bounds[0][0], r.bounds[0][1], r.bounds[1][0]-r.bounds[0][0], r.bounds[1][1]-r.bounds[0][1]);
+                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
+                cairo_fill_preserve(cr);
+                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
+                cairo_identity_matrix(cr);
+                cairo_set_line_width(cr, 2.0);
+                cairo_stroke(cr);
+            }
 
-        if(drawing)
-        {
-            const vec2f low(std::min(first_point[0], second_point[0]),
-                            std::min(first_point[1], second_point[1]));
-            const vec2f high(std::max(first_point[0], second_point[0]),
-                             std::max(first_point[1], second_point[1]));
+            if(drawing)
+            {
+                const vec2f low(std::min(first_point[0], second_point[0]),
+                                std::min(first_point[1], second_point[1]));
+                const vec2f high(std::max(first_point[0], second_point[0]),
+                                 std::max(first_point[1], second_point[1]));
 
-            cairo_set_matrix(cr, &cmat);
-            cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
-            cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
-            cairo_fill_preserve(cr);
-            cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
-            cairo_identity_matrix(cr);
-            cairo_set_line_width(cr, 2.0);
-            cairo_stroke(cr);
+                cairo_set_matrix(cr, &cmat);
+                cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
+                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
+                cairo_fill_preserve(cr);
+                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
+                cairo_identity_matrix(cr);
+                cairo_set_line_width(cr, 2.0);
+                cairo_stroke(cr);
+            }
         }
 
         cairo_destroy(cr);
@@ -1121,6 +1279,7 @@ public:
                 network_aux_drawer.initialize(netaux, 0.01f);
 
             init_textures();
+            view.initialize();
             if(car_drawers.empty())
             {
                 init_car_drawers("/home/sewall/Dropbox/Shared/siga10/");
@@ -1275,6 +1434,9 @@ public:
 
         night_setup.compose(t+time_offset, lo, hi);
 
+        if(imode == ARC_MANIP)
+            view.draw(scale);
+
         glColor4f(1.0, 1.0, 1.0, 1.0);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
         retex_overlay(center, scale, vec2i(w(), h()), !screenshot_mode);
@@ -1331,7 +1493,7 @@ public:
             {
                 if(Fl::event_button() == FL_LEFT_MOUSE)
                 {
-                    if(drawing)
+                    if(imode == REGION_MANIP && drawing)
                     {
                         rectangles.clear();
                         rectangles.push_back(aabb2d());
@@ -1399,7 +1561,8 @@ public:
                 vec2f dvec(0);
                 if(Fl::event_button() == FL_LEFT_MOUSE)
                 {
-                    drawing      = true;
+                    if(imode == REGION_MANIP)
+                        drawing      = true;
                     second_point = world;
                 }
                 else if(Fl::event_button() == FL_MIDDLE_MOUSE)
@@ -1410,7 +1573,8 @@ public:
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
                     dvec = vec2f(world - lastpick);
-                    back_image_center -= dvec;
+                    if(imode == BACK_MANIP)
+                        back_image_center -= dvec;
                     dvec = 0;
                 }
                 lastpick = world-dvec;
@@ -1430,6 +1594,16 @@ public:
                 break;
             case '=':
                 sim_time_scale += 0.5;
+                break;
+            case 'm':
+                if(imode == REGION_MANIP)
+                    imode = ARC_MANIP;
+                if(imode == ARC_MANIP)
+                    imode = BACK_MANIP;
+                else if(imode == BACK_MANIP)
+                    imode = NONE;
+                else if(imode == NONE)
+                    imode = REGION_MANIP;
                 break;
             case ' ':
                 go = !go;
@@ -1460,10 +1634,13 @@ public:
 
                 if(Fl::event_state() & FL_SHIFT)
                 {
-                    if(Fl::event_state() & FL_CTRL)
-                        back_image_yscale *= std::pow(2.0f, 0.1f*fy);
-                    else
-                        back_image_scale  *= std::pow(2.0f, 0.1f*fy);
+                    if(imode == BACK_MANIP)
+                    {
+                        if(Fl::event_state() & FL_CTRL)
+                            back_image_yscale *= std::pow(2.0f, 0.1f*fy);
+                        else
+                            back_image_scale  *= std::pow(2.0f, 0.1f*fy);
+                    }
                 }
                 else
                 {
@@ -1524,7 +1701,9 @@ public:
     int                                             screenshot_count;
     std::tr1::unordered_map<size_t, tex_car_draw*>  car_map;
 
-    night_render night_setup;
+    night_render     night_setup;
+    view_path        view;
+    interaction_mode imode;
 };
 
 void draw_callback(void *v)
