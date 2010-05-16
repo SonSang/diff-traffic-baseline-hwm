@@ -375,6 +375,7 @@ struct night_render
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         Magick::Image im(HEADLIGHT_TEX);
+        im.sample(Magick::Geometry("40x40"));
         unsigned char *pix = new unsigned char[im.columns()*im.rows()*4];
         im.write(0, 0, im.columns(), im.rows(), "RGBA", Magick::CharPixel, pix);
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, im.columns(), im.rows(),
@@ -392,6 +393,7 @@ struct night_render
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         Magick::Image tim(TAILLIGHT_TEX);
+        tim.sample(Magick::Geometry("40x40"));
         pix = new unsigned char[tim.columns()*tim.rows()*4];
         tim.write(0, 0, tim.columns(), tim.rows(), "RGBA", Magick::CharPixel, pix);
         gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, tim.columns(), tim.rows(),
