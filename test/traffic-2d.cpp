@@ -18,6 +18,24 @@
 
 #define FRAME_RATE (1.0/24.0)
 
+static void map_dump(const unsigned char *pix, const vec2i &dim, const std::string &fname)
+{
+    int    f     = open(fname.c_str(), O_TRUNC, O_WRONLY);
+    assert(f != -1);
+    size_t fsize = sizeof(unsigned char)*dim[0]*dim[1]*4;
+    lseek(f, fsize, SEEK_SET);
+    int    m     = 0;
+    write(f, &m, 1);
+    close(f);
+
+    // void *newbuff = mmap(0, fsize, PROT_WRITE, MAP_SHARED, f, 0);
+    // assert(newbuff);
+
+    // memcpy(newbuff, pix, fsize);
+
+    // munmap(newbuff, fsize);
+}
+
 static void abort_(const char * s, ...)
 {
 	va_list args;
@@ -295,7 +313,8 @@ struct write_image
 
     void operator()()
     {
-        write_png_file(pixels, dimensions, fname);
+        map_dump(pixels, dimensions, fname);
+        // write_png_file(pixels, dimensions, fname);
         std::cout << "Wrote " << fname << std::endl;
     }
 
@@ -1755,7 +1774,7 @@ int main(int argc, char *argv[])
         l.current_cars().clear();
         l.sim_type = hybrid::MICRO;
 
-        const int cars_per_lane = 2;
+        const int cars_per_lane = 200;
         double    p             = -s.rear_bumper_offset()*l.inv_length;
 
         for (int i = 0; i < cars_per_lane; i++)
@@ -1780,7 +1799,7 @@ int main(int argc, char *argv[])
     hybrid::car_interp hci(s);
     mv.hci    = &hci;
 
-    mv.time_offset = 0;         //17.75*60*60;
+    mv.time_offset = 0;
 
     if(argc == 3)
     {
