@@ -712,21 +712,26 @@ struct tex_car_draw
         glAttachShader(fprogram, shader);
         glLinkProgram(fprogram);
         glError();
+
+        full_uniform_location = glGetUniformLocationARB(fprogram, "full_tex");
+        body_uniform_location = glGetUniformLocationARB(fprogram, "body_tex");
     }
 
-    void draw() const
+    void draw_start() const
     {
         glUseProgram(fprogram);
-        int full_uniform_location = glGetUniformLocationARB(fprogram, "full_tex");
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, full_tex);
         glUniform1iARB(full_uniform_location, 0);
 
-        int body_uniform_location = glGetUniformLocationARB(fprogram, "body_tex");
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, body_tex);
         glUniform1iARB(body_uniform_location, 1);
+    }
 
+    void draw() const
+    {
         glPushMatrix();
         glTranslatef(-car_length+car_rear_axle, 0, 0);
         glScalef(car_length, car_length/2, 1);
@@ -741,6 +746,10 @@ struct tex_car_draw
         glVertex2f  (0, extents[1]);
         glEnd();
         glPopMatrix();
+    }
+
+    void draw_end() const
+    {
         glUseProgram(0);
         glActiveTexture(GL_TEXTURE0);
     }
@@ -753,6 +762,9 @@ struct tex_car_draw
     GLuint full_tex;
     GLuint body_tex;
     GLuint fprogram;
+
+    GLint full_uniform_location;
+    GLint body_uniform_location;
 
     std::tr1::unordered_map<size_t, int> members;
 };
@@ -1177,6 +1189,7 @@ public:
         {
             BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
+                drawer->draw_start();
                 typedef std::pair<size_t, int> id_color;
                 BOOST_FOREACH(const id_color &car, drawer->members)
                 {
@@ -1188,6 +1201,7 @@ public:
                     drawer->draw();
                     glPopMatrix();
                 }
+                drawer->draw_end();
             }
         }
 
