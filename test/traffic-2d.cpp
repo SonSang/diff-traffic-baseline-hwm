@@ -621,14 +621,6 @@ struct night_render
     vec2f  sunset_interval;
 };
 
-struct tex_car_draw;
-
-struct car_draw_desc
-{
-    int           color_idx;
-    tex_car_draw *drawer;
-};
-
 static const char *fshader =
 "uniform sampler2D full_tex, body_tex;                                    \n"
 "                                                                         \n"
@@ -762,7 +754,7 @@ struct tex_car_draw
     GLuint body_tex;
     GLuint fprogram;
 
-    std::tr1::unordered_map<size_t, car_draw_desc> members;
+    std::tr1::unordered_map<size_t, int> members;
 };
 
 static const float CAR_LENGTH    = 4.5f;
@@ -997,7 +989,10 @@ public:
 
         BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, gone_cars)
         {
-            std::tr1::unordered_map<size_t, car_draw_desc>::iterator = std::car_map.find(cs.c.id);
+            std::tr1::unordered_map<size_t, tex_car_draw*>::iterator to_remove = car_map.find(cs.c.id);
+            assert(to_remove != car_map.end());
+            to_remove->second->members.erase(cs.c.id);
+            car_map.erase(to_remove);
         }
     }
 
@@ -1151,21 +1146,22 @@ public:
                 if(!hci->in_second(cs.c.id))
                     continue;
 
-                std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.c.id));
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.c.id));
                 if(drawer == car_map.end())
                 {
-                    car_draw_desc cdd;
-                    cdd.color_idx = rand() % n_car_colors;
-                    cdd.drawer = car_drawers[rand() % car_drawers.size()];
-                    drawer            = car_map.insert(drawer, std::make_pair(cs.c.id, cdd));
+                    tex_car_draw *draw_pick = car_drawers[rand() % car_drawers.size()];
+                    drawer                  = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
+                    draw_pick->members.insert(std::make_pair(cs.c.id, rand() % n_car_colors));
+                    drawer->second          = draw_pick;
                 }
-
-                glColor3fv(car_colors[drawer->second.color_idx]);
+                assert(drawer->second);
+                assert(drawer->second->members.find(cs.c.id) != drawer->second->members.end());
+                glColor3fv(car_colors[drawer->second->members[cs.c.id]]);
                 mat4x4f trans(hci->point_frame(cs.c.id, t, sim->hnet->lane_width));
                 mat4x4f ttrans(tvmet::trans(trans));
                 glPushMatrix();
                 glMultMatrixf(ttrans.data());
-                drawer->second.drawer->draw();
+                drawer->second->draw();
                 glPopMatrix();
             }
         }
@@ -1189,7 +1185,7 @@ public:
                     if(!hci->in_second(cs.c.id))
                         continue;
 
-                    std::tr1::unordered_map<size_t, car_draw_desc>::iterator drawer(car_map.find(cs.c.id));
+                    std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.c.id));
                     assert(drawer != car_map.end());
 
                     mat4x4f trans(hci->point_frame(cs.c.id, t, sim->hnet->lane_width));
@@ -1466,7 +1462,7 @@ public:
     bool                                            screenshot_mode;
     unsigned char                                  *screenshot_buffer;
     int                                             screenshot_count;
-    std::tr1::unordered_map<size_t, car_draw_desc>  car_map;
+    std::tr1::unordered_map<size_t, tex_car_draw*>  car_map;
 
     night_render night_setup;
 };
