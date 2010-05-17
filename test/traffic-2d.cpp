@@ -1550,7 +1550,7 @@ public:
             case 'm':
                 if(imode == REGION_MANIP)
                     imode = ARC_MANIP;
-                if(imode == ARC_MANIP)
+                else if(imode == ARC_MANIP)
                     imode = BACK_MANIP;
                 else if(imode == BACK_MANIP)
                     imode = NONE;
