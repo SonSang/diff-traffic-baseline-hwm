@@ -1,4 +1,4 @@
-noinst_PROGRAMS = hybrid ih-riemann-test pc-int-test
+noinst_PROGRAMS = hybrid ih-riemann-test pc-int-test dump-to-png
 
 EXTRA_DIST = arcball.hpp big-image-tile.hpp
 
@@ -16,6 +16,11 @@ pc_int_test_SOURCES  = pc-int-test.cpp
 pc_int_test_CPPFLAGS = $(LIBROAD_CFLAGS) $(CAIRO_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS) -I$(top_srcdir)
 pc_int_test_LDFLAGS  = $(LDFLAGS)
 pc_int_test_LDADD    = $(top_builddir)/libhybrid/libhybrid.la
+
+dump_to_png_SOURCES  = dump-to-png.cpp
+dump_to_png_CPPFLAGS = $(LIBROAD_CFLAGS) $(CAIRO_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS) -I$(top_srcdir)
+dump_to_png_LDFLAGS  = $(LDFLAGS)
+dump_to_png_LDADD    = $(top_builddir)/libhybrid/libhybrid.la
 
 if DO_VISUAL
 if DO_IMAGE
