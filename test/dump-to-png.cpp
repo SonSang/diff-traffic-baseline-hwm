@@ -62,7 +62,7 @@ static void write_png_file(const unsigned char *pix, const int w, const int h, c
 		abort_("[write_png_file] Error during writing bytes");
 
     png_set_compression_level(png_ptr,
-                              Z_NO_COMPRESSION);
+                              Z_BEST_COMPRESSION);
 
     png_bytep row = (png_bytep)malloc(sizeof(png_byte)*3*w);
     for(int i = h-1; i >= 0; --i)
