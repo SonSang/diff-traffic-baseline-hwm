@@ -561,6 +561,17 @@ static const char *fshader =
 "gl_FragColor               = mix(color, gl_Color*color, mask);           \n"
 "}                                                                        \n";
 
+struct car_draw_info
+{
+    car_draw_info()
+    {}
+    car_draw_info(int c) : color(c)
+    {}
+
+    int     color;
+    mat4x4f frame;
+};
+
 struct tex_car_draw
 {
     tex_car_draw() : full_tex(0), body_tex(0), car_list(0)
@@ -706,7 +717,7 @@ struct tex_car_draw
     GLint full_uniform_location;
     GLint body_uniform_location;
 
-    std::tr1::unordered_map<size_t, int> members;
+    std::tr1::unordered_map<size_t, car_draw_info> members;
 };
 
 static const char *pointVertexShader =
@@ -1122,7 +1133,7 @@ public:
                 assert(drawer == car_map.end());
                 tex_car_draw *draw_pick = car_drawers[rand() % car_drawers.size()];
                 drawer                  = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
-                draw_pick->members.insert(std::make_pair(cs.c.id, rand() % n_car_colors));
+                draw_pick->members.insert(std::make_pair(cs.c.id, car_draw_info(rand() % n_car_colors)));
                 drawer->second          = draw_pick;
             }
         }
@@ -1288,14 +1299,14 @@ public:
             BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
                 drawer->draw_start();
-                typedef std::pair<size_t, int> id_color;
-                BOOST_FOREACH(const id_color &car, drawer->members)
+                typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
+                BOOST_FOREACH(id_car_draw_info &car, drawer->members)
                 {
-                    glColor3fv(car_colors[car.second]);
-                    mat4x4f trans(hci->point_frame(car.first, t, sim->hnet->lane_width));
-                    mat4x4f ttrans(tvmet::trans(trans));
+                    glColor3fv(car_colors[car.second.color]);
+                    const mat4x4f trans(hci->point_frame(car.first, t, sim->hnet->lane_width));
+                    car.second.frame = tvmet::trans(trans);
                     glPushMatrix();
-                    glMultMatrixf(ttrans.data());
+                    glMultMatrixf(car.second.frame.data());
                     drawer->draw_car_list();
                     glPopMatrix();
                 }
@@ -1318,14 +1329,12 @@ public:
             {
                 BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
                 {
-                    typedef std::pair<size_t, int> id_color;
-                    BOOST_FOREACH(const id_color &car, drawer->members)
+                    typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
+                    BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
                     {
-                        glColor3fv(car_colors[car.second]);
-                        mat4x4f trans(hci->point_frame(car.first, t, sim->hnet->lane_width));
-                        mat4x4f ttrans(tvmet::trans(trans));
+                        glColor3fv(car_colors[car.second.color]);
                         glPushMatrix();
-                        glMultMatrixf(ttrans.data());
+                        glMultMatrixf(car.second.frame.data());
                         night_setup.draw_car_lights();
                         glPopMatrix();
                     }
