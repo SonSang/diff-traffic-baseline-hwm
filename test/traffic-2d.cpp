@@ -1298,6 +1298,7 @@ public:
 
         if(hci)
         {
+            const float car_draw_time = cog::clamp(t, hci->times[0], hci->times[1]);
             BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
                 drawer->draw_start();
@@ -1305,7 +1306,7 @@ public:
                 BOOST_FOREACH(id_car_draw_info &car, drawer->members)
                 {
                     glColor3fv(car_colors[car.second.color]);
-                    const mat4x4f trans(hci->point_frame(car.first, t, sim->hnet->lane_width));
+                    const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
                     car.second.frame = tvmet::trans(trans);
                     glPushMatrix();
                     glMultMatrixf(car.second.frame.data());
@@ -1533,12 +1534,18 @@ public:
                 screenshot_mode = !screenshot_mode;
                 break;
             case '-':
-                sim_time_scale -= 0.5;
+                if(Fl::event_state() & FL_SHIFT)
+                    sim_time_scale *= 0.5;
+                else
+                    sim_time_scale -= 0.5;
                 if(sim_time_scale < 0.0)
                     sim_time_scale = 0;
                 break;
             case '=':
-                sim_time_scale += 0.5;
+                if(Fl::event_state() & FL_SHIFT)
+                    sim_time_scale *= 2.0;
+                else
+                    sim_time_scale += 0.5;
                 break;
             case 'm':
                 if(imode == REGION_MANIP)
