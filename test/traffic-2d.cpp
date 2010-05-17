@@ -765,8 +765,84 @@ static unsigned char* point_tex(int N)
 
 struct view_path
 {
-    view_path(float psize) : program(0), texture(0), point_size(psize)
+    view_path(float psize) : active_point(-1), duration(0.0),
+                             program(0), texture(0), point_size(psize)
     {}
+
+    void clear()
+    {
+        extracted.clear();
+        path         = arc_road();
+        active_point = -1;
+    }
+
+    int pick_point(const vec3f &point, float dist)
+    {
+        float min_d = dist;
+        int   pick  = -1;
+        for(size_t i = 0; i < path.points_.size(); ++i)
+        {
+            const float current_distance = distance(point, path.points_[i]);
+            if(current_distance < min_d)
+            {
+                min_d = current_distance;
+                pick = i;
+            }
+        }
+        return active_point = pick;
+    }
+
+    int add_point(const vec3f &point)
+    {
+        path.points_.push_back(point);
+        const size_t new_size = path.points_.size();
+
+        if(path.points_.size() > 2)
+        {
+            arc_road new_path;
+
+            new_path.initialize_from_polyline(1.0, path.points_);
+            path = new_path;
+            update_extracted(0.01);
+        }
+        if(path.points_.size() != new_size)
+            return -1;
+        else
+            return static_cast<int>(path.points_.size())-1;
+    }
+
+    void update_active(const vec3f &point)
+    {
+        if(active_point < 0 || active_point >= static_cast<int>(path.points_.size()))
+            return;
+        path.points_[active_point] = point;
+        const size_t size = path.points_.size();
+
+        if(path.points_.size() > 2)
+        {
+            arc_road new_path;
+            new_path.initialize_from_polyline(1.0, path.points_);
+            path = new_path;
+            update_extracted(0.01);
+        }
+
+        if(path.points_.size() != size)
+            active_point = -1;
+    }
+
+    void set_active_point(int p)
+    {
+        if(p >=0 && p < static_cast<int>(path.points_.size()))
+            active_point = p;
+        else
+            active_point = -1;
+    }
+
+    void update_extracted(float resolution)
+    {
+        extracted.clear();
+        path.extract_center(extracted, vec2f(0.0, 1.0), 0.0, resolution);
+    }
 
     void initialize()
     {
@@ -818,9 +894,27 @@ struct view_path
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glLineWidth(1.0);
         glBegin(GL_LINE_STRIP);
-        BOOST_FOREACH(const vec3f &p, path.points_)
+        for(int i = 0; i < active_point; ++i)
         {
-            glVertex3fv(p.data());
+            glVertex3fv(path.points_[i].data());
+        }
+        if(active_point > -1)
+        {
+            glColor4f(0.0, 1.0, 1.0, 1.0);
+            glVertex3fv(path.points_[active_point].data());
+            glColor4f(1.0, 1.0, 0.0, 1.0);
+        }
+        for(size_t i = active_point+1; i < path.points_.size(); ++i)
+        {
+            glVertex3fv(path.points_[i].data());
+        }
+        glEnd();
+
+        glColor4f(0.5, 0.5, 1.0, 1.0);
+        glBegin(GL_LINE_STRIP);
+        BOOST_FOREACH(const vertex &v, extracted)
+        {
+            glVertex3fv(v.position.data());
         }
         glEnd();
 
@@ -839,21 +933,35 @@ struct view_path
 
         glColor4f(1.0, 1.0, 0.0, 1.0);
         glBegin(GL_POINTS);
-        BOOST_FOREACH(const vec3f &p, path.points_)
+        for(int i = 0; i < active_point; ++i)
         {
-            glVertex3fv(p.data());
+            glVertex3fv(path.points_[i].data());
+        }
+        if(active_point > -1)
+        {
+            glColor4f(0.0, 1.0, 1.0, 1.0);
+            glVertex3fv(path.points_[active_point].data());
+            glColor4f(1.0, 1.0, 0.0, 1.0);
+        }
+        for(size_t i = active_point+1; i < path.points_.size(); ++i)
+        {
+            glVertex3fv(path.points_[i].data());
         }
         glEnd();
 
         glUseProgram(0);
     }
 
-    arc_road path;
+    arc_road            path;
+    std::vector<vertex> extracted;
+    int                 active_point;
+    float               duration;
 
     GLuint program;
     GLuint texture;
 
     float point_size;
+
 };
 
 static const float CAR_LENGTH    = 4.5f;
@@ -895,8 +1003,6 @@ public:
         this->resizable(this);
         frame_timer.reset();
         frame_timer.start();
-        view.path.points_.push_back(vec3f(0.0, 0.0, 0.0));
-        view.path.points_.push_back(vec3f(10.0, 10.0, 0.0));
     }
 
     ~fltkview()
@@ -1013,7 +1119,12 @@ public:
             switch(imode)
             {
             case ARC_MANIP:
-                put_text(cr, "arc manip", w(), h(), RIGHT, BOTTOM);
+                {
+                    if(view.path.points_.size() > 2)
+                        put_text(cr, boost::str(boost::format("path length: %6.3f") % view.path.length(0)), w(), h()-50, RIGHT, BOTTOM);
+                    put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w(), h()-25, RIGHT, BOTTOM);
+                    put_text(cr, "arc manip", w(), h(), RIGHT, BOTTOM);
+                }
                 break;
             case BACK_MANIP:
                 put_text(cr, "back manip", w(), h(), RIGHT, BOTTOM);
@@ -1428,7 +1539,38 @@ public:
                 const vec2f world(world_point(vec2i(xy[0], h()-xy[1]), center, scale, vec2i(w(), h())));
 
                 if(Fl::event_button() == FL_LEFT_MOUSE)
-                    first_point = world;
+                {
+                    switch(imode)
+                    {
+                    case REGION_MANIP:
+                        first_point  = world;
+                        break;
+                    case ARC_MANIP:
+                        {
+                            const int pt = view.add_point(vec3f(world[0], world[1], 0.0f));
+                            view.set_active_point(pt);
+                            if(pt > 0)
+                                drawing      = true;
+                            break;
+                        }
+                    default:
+                        break;
+                    };
+                }
+                else if(Fl::event_button() == FL_RIGHT_MOUSE)
+                {
+                    switch(imode)
+                    {
+                    case ARC_MANIP:
+                        {
+                            view.pick_point(vec3f(world[0], world[1], 0.0f), view.point_size*5);
+                            drawing = true;
+                            break;
+                        }
+                    default:
+                        break;
+                    };
+                }
 
                 lastpick = world;
             }
@@ -1436,64 +1578,73 @@ public:
             return 1;
         case FL_RELEASE:
             {
-                if(Fl::event_button() == FL_LEFT_MOUSE)
+                if(Fl::event_button() == FL_LEFT_MOUSE && drawing)
                 {
-                    if(imode == REGION_MANIP && drawing)
+                    switch(imode)
                     {
-                        rectangles.clear();
-                        rectangles.push_back(aabb2d());
-                        rectangles.back().enclose_point(first_point[0], first_point[1]);
-                        rectangles.back().enclose_point(second_point[0], second_point[1]);
-                        drawing = false;
-                        query_results = netaux->road_space.query(rectangles.back());
+                    case REGION_MANIP:
+                        {
+                            rectangles.clear();
+                            rectangles.push_back(aabb2d());
+                            rectangles.back().enclose_point(first_point[0], first_point[1]);
+                            rectangles.back().enclose_point(second_point[0], second_point[1]);
+                            drawing = false;
+                            query_results = netaux->road_space.query(rectangles.back());
 
-                        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
-                        {
-                            l.updated_flag = false;
-                        }
-                        BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, query_results)
-                        {
-                            BOOST_FOREACH(hwm::network_aux::road_rev_map::lane_cont::value_type &lcv, *e.lc)
+                            BOOST_FOREACH(hybrid::lane &l, sim->lanes)
                             {
-                                hwm::lane    &hwm_l = *(lcv.second.lane);
-                                hybrid::lane &hyb_l = *(hwm_l.user_data<hybrid::lane>());
-                                if(!hyb_l.updated_flag && hyb_l.active())
-                                {
-                                    hyb_l.convert_to_micro(*sim);
-                                    hyb_l.updated_flag = true;
-                                }
+                                l.updated_flag = false;
                             }
-                        }
-                        BOOST_FOREACH(hwm::intersection_pair &ip, sim->hnet->intersections)
-                        {
-                            BOOST_FOREACH(hwm::intersection::state &s, ip.second.states)
+                            BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, query_results)
                             {
-                                BOOST_FOREACH(hwm::lane_pair &lp, s.fict_lanes)
+                                BOOST_FOREACH(hwm::network_aux::road_rev_map::lane_cont::value_type &lcv, *e.lc)
                                 {
-                                    hybrid::lane &hyb_l = *(lp.second.user_data<hybrid::lane>());
+                                    hwm::lane    &hwm_l = *(lcv.second.lane);
+                                    hybrid::lane &hyb_l = *(hwm_l.user_data<hybrid::lane>());
                                     if(!hyb_l.updated_flag && hyb_l.active())
                                     {
-                                        hybrid::lane *up_l(hyb_l.upstream_lane());
-                                        hybrid::lane *dn_l(hyb_l.downstream_lane());
-                                        if((up_l && up_l->updated_flag && up_l->is_micro()) ||
-                                           (dn_l && dn_l->updated_flag && dn_l->is_micro()))
+                                        hyb_l.convert_to_micro(*sim);
+                                        hyb_l.updated_flag = true;
+                                    }
+                                }
+                            }
+                            BOOST_FOREACH(hwm::intersection_pair &ip, sim->hnet->intersections)
+                            {
+                                BOOST_FOREACH(hwm::intersection::state &s, ip.second.states)
+                                {
+                                    BOOST_FOREACH(hwm::lane_pair &lp, s.fict_lanes)
+                                    {
+                                        hybrid::lane &hyb_l = *(lp.second.user_data<hybrid::lane>());
+                                        if(!hyb_l.updated_flag && hyb_l.active())
                                         {
-                                            hyb_l.convert_to_micro(*sim);
-                                            hyb_l.updated_flag = true;
+                                            hybrid::lane *up_l(hyb_l.upstream_lane());
+                                            hybrid::lane *dn_l(hyb_l.downstream_lane());
+                                            if((up_l && up_l->updated_flag && up_l->is_micro()) ||
+                                               (dn_l && dn_l->updated_flag && dn_l->is_micro()))
+                                            {
+                                                hyb_l.convert_to_micro(*sim);
+                                                hyb_l.updated_flag = true;
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
-                        {
-                            if(!l.updated_flag && l.active())
+                            BOOST_FOREACH(hybrid::lane &l, sim->lanes)
                             {
-                                l.convert_to_macro(*sim);
-                                l.updated_flag = true;
+                                if(!l.updated_flag && l.active())
+                                {
+                                    l.convert_to_macro(*sim);
+                                    l.updated_flag = true;
+                                }
                             }
                         }
+                        break;
+                    case ARC_MANIP:
+                        drawing = false;
+                        break;
+                    default:
+                        break;
                     }
                 }
             }
@@ -1506,9 +1657,19 @@ public:
                 vec2f dvec(0);
                 if(Fl::event_button() == FL_LEFT_MOUSE)
                 {
-                    if(imode == REGION_MANIP)
+                    switch(imode)
+                    {
+                    case REGION_MANIP:
                         drawing      = true;
-                    second_point = world;
+                        second_point = world;
+                        break;
+                    case ARC_MANIP:
+                        drawing = true;
+                        view.update_active(vec3f(world[0], world[1], 0.0f));
+                        break;
+                    default:
+                        break;
+                    }
                 }
                 else if(Fl::event_button() == FL_MIDDLE_MOUSE)
                 {
@@ -1518,8 +1679,18 @@ public:
                 else if(Fl::event_button() == FL_RIGHT_MOUSE)
                 {
                     dvec = vec2f(world - lastpick);
-                    if(imode == BACK_MANIP)
+                    switch(imode)
+                    {
+                    case BACK_MANIP:
                         back_image_center -= dvec;
+                        break;
+                    case ARC_MANIP:
+                        drawing = true;
+                        view.update_active(vec3f(world[0], world[1], 0.0f));
+                        break;
+                    default:
+                        break;
+                    }
                     dvec = 0;
                 }
                 lastpick = world-dvec;
@@ -1529,6 +1700,44 @@ public:
         case FL_KEYBOARD:
             switch(Fl::event_key())
             {
+            case 'c':
+                switch(imode)
+                {
+                case ARC_MANIP:
+                    view.clear();
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case '1':
+                switch(imode)
+                {
+                case ARC_MANIP:
+                    if(Fl::event_state() & FL_SHIFT)
+                        view.duration *= 0.5;
+                    else
+                        view.duration -= 0.5;
+                    if(view.duration < 0.0)
+                        view.duration = 0;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case '2':
+                switch(imode)
+                {
+                case ARC_MANIP:
+                    if(Fl::event_state() & FL_SHIFT)
+                        view.duration *= 2.0;
+                    else
+                        view.duration += 0.5;
+                    break;
+                default:
+                    break;
+                }
+                break;
             case 's':
                 screenshot_mode = !screenshot_mode;
                 break;
@@ -1547,14 +1756,21 @@ public:
                     sim_time_scale += 0.5;
                 break;
             case 'm':
-                if(imode == REGION_MANIP)
+                switch(imode)
+                {
+                case REGION_MANIP:
                     imode = ARC_MANIP;
-                else if(imode == ARC_MANIP)
+                    break;
+                case ARC_MANIP:
                     imode = BACK_MANIP;
-                else if(imode == BACK_MANIP)
+                    break;
+                case BACK_MANIP:
                     imode = NONE;
-                else if(imode == NONE)
+                    break;
+                case NONE:
                     imode = REGION_MANIP;
+                    break;
+                }
                 break;
             case 't':
                 throttle = !throttle;
