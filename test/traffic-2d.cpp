@@ -879,7 +879,6 @@ public:
                                                           overlay_tex_(0),
                                                           continuum_tex_(0),
                                                           drawing(false),
-                                                          light_position(50.0, 100.0, 50.0, 1.0),
                                                           sim(0),
                                                           t(0),
                                                           time_offset(0),
@@ -1652,7 +1651,6 @@ public:
     hwm::network_draw          network_drawer;
     hwm::network_aux_draw      network_aux_drawer;
 
-    vec4f               light_position;
     hybrid::simulator  *sim;
     hybrid::car_interp *hci;
     float               t;
