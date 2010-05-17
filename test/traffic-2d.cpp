@@ -875,7 +875,6 @@ public:
                                                           avg_dt(0),
                                                           avg_step_time(0),
                                                           screenshot_mode(0),
-                                                          screenshot_buffer(0),
                                                           screenshot_count(0),
                                                           view(1.0f),
                                                           imode(NONE),
@@ -894,8 +893,6 @@ public:
         {
             delete tcd;
         }
-        if(screenshot_buffer)
-            delete[] screenshot_buffer;
     }
 
     void init_glew()
@@ -1649,7 +1646,6 @@ public:
     float               avg_step_time;
 
     bool                                            screenshot_mode;
-    unsigned char                                  *screenshot_buffer;
     int                                             screenshot_count;
     std::tr1::unordered_map<size_t, tex_car_draw*>  car_map;
 
