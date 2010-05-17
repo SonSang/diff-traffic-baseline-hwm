@@ -1753,8 +1753,8 @@ int main(int argc, char *argv[])
     if(argc == 3)
     {
         mv.back_image = new big_image(argv[2]);
-        mv.back_image_center = vec2f(-12.7838, -971.966);
-        mv.back_image_scale = 0.420448;
+        mv.back_image_center = vec2f(-11.7303, -876.804);
+        mv.back_image_scale =  0.378929;
         mv.back_image_yscale = 0.812253;
     }
 
