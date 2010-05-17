@@ -231,9 +231,11 @@ static const char *lshader       =
 "    FragColor               = light_level*light + ambient_level*back;      \n"
 "}                                                                          \n";
 
-#define HEADLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/small-headlight-pair.png"
-#define TAILLIGHT_TEX "/home/sewall/Dropbox/Shared/siga10/taillight.png"
-#define AMBIENT_TEX   "/home/sewall/Dropbox/Shared/siga10/ambient-timeofday.png"
+#define RESOURCE_ROOT "/home/sewall/Dropbox/Shared/siga10/"
+
+#define HEADLIGHT_TEX RESOURCE_ROOT "small-headlight-pair.png"
+#define TAILLIGHT_TEX RESOURCE_ROOT "taillight.png"
+#define AMBIENT_TEX   RESOURCE_ROOT "ambient-timeofday.png"
 
 struct night_render
 {
@@ -1196,7 +1198,7 @@ public:
             view.initialize();
             if(car_drawers.empty())
             {
-                init_car_drawers("/home/sewall/Dropbox/Shared/siga10/");
+                init_car_drawers(RESOURCE_ROOT);
 
                 if(sim && hci)
                 {
