@@ -18,25 +18,26 @@
 
 #define FRAME_RATE (1.0/24.0)
 
-inline bool checkFramebufferStatus() {
-    GLenum status;
-    status = (GLenum) glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    switch(status) {
-		case GL_FRAMEBUFFER_COMPLETE:
+static bool checkFramebufferStatus()
+{
+    const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    switch(status)
+    {
+    case GL_FRAMEBUFFER_COMPLETE:
 		return true;
-		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
 		printf("Framebuffer incomplete, incomplete attachment\n");
 		return false;
-		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 		printf("Framebuffer incomplete, missing attachment\n");
 		return false;
-		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
 		printf("Framebuffer incomplete, missing draw buffer\n");
 		return false;
-		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
 		printf("Framebuffer incomplete, missing read buffer\n");
 		return false;
-		case GL_FRAMEBUFFER_UNSUPPORTED:
+    case GL_FRAMEBUFFER_UNSUPPORTED:
 		printf("Unsupported framebuffer format\n");
 		return false;
 	}
