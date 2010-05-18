@@ -774,6 +774,7 @@ struct view_path
         extracted.clear();
         path         = arc_road();
         active_point = -1;
+        scales.clear();
     }
 
     int pick_point(const vec3f &point, float dist)
@@ -842,6 +843,27 @@ struct view_path
     {
         extracted.clear();
         path.extract_center(extracted, vec2f(0.0, 1.0), 0.0, resolution);
+    }
+
+    bool get_scale(float &scale, float t)
+    {
+        if(scales.empty())
+            return false;
+        else
+        {
+            float local;
+            partition01<float>::const_iterator pt(scales.find_rescale(t, local));
+            if(boost::next(pt) == scales.end())
+                scale = pt->second;
+            else
+                scale = pt->second * (1-local)  + boost::next(pt)->second * local;
+            return true;
+        }
+    }
+
+    void insert_scale_keyframe(float t, float scale)
+    {
+        scales.insert(t, scale);
     }
 
     void initialize()
@@ -952,10 +974,11 @@ struct view_path
         glUseProgram(0);
     }
 
-    arc_road            path;
-    std::vector<vertex> extracted;
-    int                 active_point;
-    float               duration;
+    arc_road               path;
+    std::vector<vertex>    extracted;
+    int                    active_point;
+    partition01<float>     scales;
+    float                  duration;
 
     GLuint program;
     GLuint texture;
@@ -1347,7 +1370,11 @@ public:
         glLoadIdentity();
 
         if(imode == MC_PREVIEW && view.path.points_.size() > 2)
+        {
             center = sub<0,2>::vector(view.path.point(t/view.duration, 0));
+            if(go)
+                view.get_scale(scale, t/view.duration);
+        }
 
         vec2f lo, hi;
         cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
@@ -1757,6 +1784,16 @@ public:
                 {
                 case MC_PREVIEW:
                     t = hci->times[0];
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case 'k':
+                switch(imode)
+                {
+                case MC_PREVIEW:
+                    view.insert_scale_keyframe(t/view.duration, scale);
                     break;
                 default:
                     break;
