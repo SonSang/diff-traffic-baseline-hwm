@@ -765,7 +765,7 @@ static unsigned char* point_tex(int N)
 
 struct view_path
 {
-    view_path(float psize) : active_point(-1), duration(0.0),
+    view_path(float psize) : active_point(-1), duration(1.0),
                              program(0), texture(0), point_size(psize)
     {}
 
@@ -973,7 +973,7 @@ static void draw_callback(void *v);
 class fltkview : public Fl_Gl_Window
 {
 public:
-    typedef enum {REGION_MANIP, ARC_MANIP, BACK_MANIP, NONE} interaction_mode;
+    typedef enum {REGION_MANIP, ARC_MANIP, MC_PREVIEW, BACK_MANIP, NONE} interaction_mode;
 
     fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l),
                                                           lastpick(0),
@@ -1119,12 +1119,16 @@ public:
             switch(imode)
             {
             case ARC_MANIP:
-                {
+                    put_text(cr, "arc manip", w(), h(), RIGHT, BOTTOM);
                     if(view.path.points_.size() > 2)
                         put_text(cr, boost::str(boost::format("path length: %6.3f") % view.path.length(0)), w(), h()-50, RIGHT, BOTTOM);
-                    put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w(), h()-25, RIGHT, BOTTOM);
-                    put_text(cr, "arc manip", w(), h(), RIGHT, BOTTOM);
-                }
+                break;
+            case MC_PREVIEW:
+                    put_text(cr, "motion preview", w(), h(), RIGHT, BOTTOM);
+                    if(view.path.points_.size() > 2)
+                        put_text(cr, boost::str(boost::format("path param: %6.3f") % (t/view.duration)), w(), h()-50, RIGHT, BOTTOM);
+                    else
+                        put_text(cr, "no path!", w(), h()-50, RIGHT, BOTTOM);
                 break;
             case BACK_MANIP:
                 put_text(cr, "back manip", w(), h(), RIGHT, BOTTOM);
@@ -1136,6 +1140,11 @@ public:
                 break;
             };
             cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+
+            if(imode == ARC_MANIP || imode == MC_PREVIEW)
+            {
+                put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w(), h()-25, RIGHT, BOTTOM);
+            }
         }
 
         cairo_identity_matrix(cr);
@@ -1265,7 +1274,7 @@ public:
         frame_timer.reset();
         frame_timer.start();
 
-        if(sim && hci)
+        if(sim && hci && ( imode == NONE || imode == REGION_MANIP))
         {
             timer step_timer;
             float dt_accum  = 0;
@@ -1336,6 +1345,9 @@ public:
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
+
+        if(imode == MC_PREVIEW && view.path.points_.size() > 2)
+            center = sub<0,2>::vector(view.path.point(t/view.duration, 0));
 
         vec2f lo, hi;
         cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
@@ -1714,6 +1726,7 @@ public:
                 switch(imode)
                 {
                 case ARC_MANIP:
+                case MC_PREVIEW:
                     if(Fl::event_state() & FL_SHIFT)
                         view.duration *= 0.5;
                     else
@@ -1729,10 +1742,21 @@ public:
                 switch(imode)
                 {
                 case ARC_MANIP:
+                case MC_PREVIEW:
                     if(Fl::event_state() & FL_SHIFT)
                         view.duration *= 2.0;
                     else
                         view.duration += 0.5;
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case 'r':
+                switch(imode)
+                {
+                case MC_PREVIEW:
+                    t = hci->times[0];
                     break;
                 default:
                     break;
@@ -1762,6 +1786,9 @@ public:
                     imode = ARC_MANIP;
                     break;
                 case ARC_MANIP:
+                    imode = MC_PREVIEW;
+                    break;
+                case MC_PREVIEW:
                     imode = BACK_MANIP;
                     break;
                 case BACK_MANIP:
