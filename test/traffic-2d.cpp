@@ -801,7 +801,7 @@ struct view_path
         {
             arc_road new_path;
 
-            new_path.initialize_from_polyline(1.0, path.points_);
+            new_path.initialize_from_polyline(1.0, path.points_, false);
             path = new_path;
             update_extracted(0.01);
         }
@@ -821,7 +821,7 @@ struct view_path
         if(path.points_.size() > 2)
         {
             arc_road new_path;
-            new_path.initialize_from_polyline(1.0, path.points_);
+            new_path.initialize_from_polyline(1.0, path.points_, false);
             path = new_path;
             update_extracted(0.01);
         }
