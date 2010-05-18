@@ -93,32 +93,13 @@ namespace hybrid
         const float w0 = 1 - (time - times[0])*inv_dt;
         const float w1 = 1 - (times[1] - time)*inv_dt;
 
-        if(low->la == high->la)
-        {
-            car fake_car;
-            fake_car.position                          = low->c.position*w0 + high->c.position*w1;
-            fake_car.other_lane_membership.other_lane  = (low->c.other_lane_membership.other_lane == high->c.other_lane_membership.other_lane) ? low->c.other_lane_membership.other_lane : 0;
-            fake_car.other_lane_membership.is_left     = low->c.other_lane_membership.is_left;
-            fake_car.other_lane_membership.merge_param = low->c.other_lane_membership.merge_param*w0 +
-                                                         high->c.other_lane_membership.merge_param*w1;
-            fake_car.other_lane_membership.position    = low->c.other_lane_membership.position*w0 +
-                                                         high->c.other_lane_membership.position*w1;
-            fake_car.other_lane_membership.theta       = low->c.other_lane_membership.theta*w0 +
-                                                         high->c.other_lane_membership.theta*w1;
-            return fake_car.point_frame(low->la, lane_width);
-        }
-        else
-        {
-            const hwm::lane *l;
-            float param;
-            if(walk_lanes(l, param, *low, *high, 1-w0))
-                return l->point_frame(param);
-            else
-            {
-                mat4x4f res0(low->c.point_frame(low->la, lane_width));
-                mat4x4f res1(high->c.point_frame(high->la, lane_width));
-                return mat4x4f(res0*w0+res1*w1);
-            }
-        }
+        float theta0, theta1;
+        const vec3f position0(low->c.point_theta(theta0, low->la, lane_width));
+        const vec3f position1(high->c.point_theta(theta1, high->la, lane_width));
+
+        mat4x4f res(axis_angle_matrix(theta0*w0 + theta1*w1, vec3f(0.0, 0.0, 1.0)));
+        for(int i = 0; i < 3; ++i)
+            res(i, 3) = position0[i]*w0 + position1[i]*w1;
+        return res;
     }
 }

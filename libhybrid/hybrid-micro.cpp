@@ -63,6 +63,30 @@ namespace hybrid
         return trans;
     }
 
+    vec3f car::point_theta(float &theta, const hwm::lane *l, const float lane_width) const
+    {
+        vec3f pos;
+        if (other_lane_membership.other_lane != 0)
+        {
+            float offset  = std::min(lc_curve::y(other_lane_membership.merge_param), (float)1.0);
+            offset       *= lane_width;
+            if (!other_lane_membership.is_left)
+            {
+                offset *= -1;
+            }
+
+            theta = other_lane_membership.theta;
+
+            float lane_theta;
+            pos = other_lane_membership.other_lane->parent->point_theta(lane_theta, other_lane_membership.position, offset);
+            theta += lane_theta;
+        }
+        else
+            pos = l->point_theta(theta, position);
+
+        return pos;
+    }
+
     float car::check_lane(const lane* l, const float param, const float timestep, const simulator &sim)
     {
         float polite           = 0;

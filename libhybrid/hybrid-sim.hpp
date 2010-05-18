@@ -47,6 +47,7 @@ namespace hybrid
         void check_if_valid_acceleration(lane& l, float timestep);
         float check_lane(const lane* l, const float param, const float timestep, const simulator& sim);
         mat4x4f point_frame(const hwm::lane *l, float lane_width) const;
+        vec3f  point_theta(float &theta, const hwm::lane *l, float lane_width) const;
 
         // macro data
     };
