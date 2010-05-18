@@ -47,7 +47,7 @@
       <line_rep>
 	<points>
 	  -103.66 -100.0 0.0 0.0
-	  -103.66  50.0  0.0 0.0
+	  -103.66  53.66 0.0 0.0
 	</points>
       </line_rep>
     </road>
@@ -97,13 +97,13 @@
       <road_intervals>
 	<interval>
 	  <base>
-	    <road_membership parent_road_ref="road5" interval_start="0.0" interval_end="0.3167" lane_position="-3.66"/>
+	    <road_membership parent_road_ref="road5" interval_start="0.0" interval_end="0.3015749" lane_position="-3.66"/>
 	  </base>
 	  <divider value="0.2818">
 	    <road_membership parent_road_ref="road4" interval_start="0.0" interval_end="1.0" lane_position="0.0"/>
 	  </divider>
 	  <divider value="0.7478">
-	    <road_membership parent_road_ref="road0" interval_start="0.3704" interval_end="1.0" lane_position="-3.66"/>
+	    <road_membership parent_road_ref="road0" interval_start="0.37685" interval_end="1.0" lane_position="-3.66"/>
 	  </divider>
 	</interval>
       </road_intervals>
