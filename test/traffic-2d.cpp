@@ -16,7 +16,11 @@
 #include "big-image-tile.hpp"
 #include <png.h>
 
-#define FRAME_RATE (1.0/24.0)
+static const float FRAME_RATE            = 1.0/24.0;
+static const float HEADLIGHT_COLOR[3]    = {0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0};
+static const float TAILLIGHT_COLOR[3]    = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
+static const float ROAD_SURFACE_COLOR[3] = {    237/255.0,     234/255.0,     186/255.0};
+static const float ROAD_LINE_COLOR[3]    = {    135/255.0,     103/255.0,      61/255.0};
 
 static bool checkFramebufferStatus()
 {
@@ -372,12 +376,12 @@ struct night_render
         glPushMatrix();
         {
             glTranslatef(sim->front_bumper_offset()-1, 0, 0);
-            glColor3f(0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0);
+            glColor3fv(HEADLIGHT_COLOR);
             draw_headlight();
         }
         glPopMatrix();
 
-        glColor3f(0.6*122/255.0, 0.6*15/255.0, 0.6*25/255.0);
+        glColor3fv(TAILLIGHT_COLOR);
         glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
         draw_taillight();
         glEndList();
@@ -1412,7 +1416,7 @@ public:
         glPolygonOffset(20000.0/scale, 0.0);
 
         glDisable(GL_TEXTURE_2D);
-        glColor3f(237.0/255, 234.0/255, 186.0/255);
+        glColor3fv(ROAD_SURFACE_COLOR);
         network_aux_drawer.draw_roads_solid();
         network_aux_drawer.draw_intersections_solid();
         glDisable(GL_POLYGON_OFFSET_FILL);
@@ -1422,7 +1426,7 @@ public:
         {
             glLineWidth(line_width);
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glColor3f(135.0/255, 103.0/255, 61.0/255);
+            glColor3fv(ROAD_LINE_COLOR);
             network_aux_drawer.draw_roads_wire();
             network_aux_drawer.draw_intersections_wire();
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -1491,9 +1495,6 @@ public:
         if(night_setup.draw_lights(t+time_offset))
         {
             glDepthMask(GL_FALSE);
-
-            glColor3f(0.2*255/255.0, 0.2*254/255.0, 0.2*149/255.0);
-
             glBlendFunc(GL_ONE, GL_ONE);
             if(hci)
             {
