@@ -97,6 +97,11 @@ namespace hybrid
         const vec3f position0(low->c.point_theta(theta0, low->la, lane_width));
         const vec3f position1(high->c.point_theta(theta1, high->la, lane_width));
 
+        if(theta1 - theta0 > M_PI)
+            theta0 += 2*M_PI;
+        else if(theta0 - theta1 > M_PI)
+            theta1 += 2*M_PI;
+
         mat4x4f res(axis_angle_matrix(theta0*w0 + theta1*w1, vec3f(0.0, 0.0, 1.0)));
         for(int i = 0; i < 3; ++i)
             res(i, 3) = position0[i]*w0 + position1[i]*w1;
