@@ -270,7 +270,9 @@ struct night_render
         {
             if(ambient_data)
                 delete[] ambient_data;
-            Magick::Image am_im((bf::path(RESOURCE_ROOT) / AMBIENT_TEX).string());
+            const std::string ambient_path((bf::path(RESOURCE_ROOT) / AMBIENT_TEX).string());
+            std::cout << "Looking for ambient texture in " << ambient_path << std::endl;
+            Magick::Image am_im(ambient_path);
             assert(am_im.rows() == 1);
             ambient_dim          = am_im.columns();
             ambient_data         = new unsigned char[ambient_dim*3];
@@ -286,7 +288,9 @@ struct night_render
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Magick::Image im((bf::path(RESOURCE_ROOT) / HEADLIGHT_TEX).string());
+        const std::string headlight_path((bf::path(RESOURCE_ROOT) / HEADLIGHT_TEX).string());
+        std::cout << "Looking for headlight texture in " << headlight_path << std::endl;
+        Magick::Image im(headlight_path);
         im.sample(Magick::Geometry("40x40"));
         unsigned char *pix = new unsigned char[im.columns()*im.rows()*4];
         im.write(0, 0, im.columns(), im.rows(), "RGBA", Magick::CharPixel, pix);
@@ -304,7 +308,9 @@ struct night_render
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Magick::Image tim((bf::path(RESOURCE_ROOT) / TAILLIGHT_TEX).string());
+        const std::string taillight_tex((bf::path(RESOURCE_ROOT) / TAILLIGHT_TEX).string());
+        std::cout << "Looking for taillight texture in " << headlight_path << std::endl;
+        Magick::Image tim(taillight_tex);
         tim.sample(Magick::Geometry("40x40"));
         pix = new unsigned char[tim.columns()*tim.rows()*4];
         tim.write(0, 0, tim.columns(), tim.rows(), "RGBA", Magick::CharPixel, pix);
@@ -1066,14 +1072,20 @@ public:
              itr != end_itr;
              ++itr)
         {
-            if(itr->path().has_filename() && bf::is_directory(itr->path())
-               && bf::exists(itr->path() / "full.png"))
+            if(! (itr->path().has_filename() && bf::is_directory(itr->path())))
+                continue;
+            if(bf::exists(itr->path() / "full.png"))
             {
+                std::cout << "car drawers adding " << itr->path() << std::endl;
                 car_drawers.push_back(new tex_car_draw(2,
                                                        CAR_LENGTH,
                                                        1.5f,
                                                        CAR_REAR_AXLE,
                                                        itr->path().string()));
+            }
+            else
+            {
+                std::cout << "car drawers skipping " << itr->path() << std::endl;
             }
         }
     }
