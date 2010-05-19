@@ -21,6 +21,7 @@ static const float HEADLIGHT_COLOR[3]    = {0.4*255/255.0, 0.4*254/255.0, 0.4*14
 static const float TAILLIGHT_COLOR[3]    = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
 static const float ROAD_SURFACE_COLOR[3] = {    237/255.0,     234/255.0,     186/255.0};
 static const float ROAD_LINE_COLOR[3]    = {    135/255.0,     103/255.0,      61/255.0};
+static const float ROAD_LINE_SCALE       = 300.0;
 
 static bool checkFramebufferStatus()
 {
@@ -1421,7 +1422,7 @@ public:
         network_aux_drawer.draw_intersections_solid();
         glDisable(GL_POLYGON_OFFSET_FILL);
 
-        const float line_width = 1000.0/scale;
+        const float line_width = ROAD_LINE_SCALE/scale;
         if(line_width > 1)
         {
             glLineWidth(line_width);
