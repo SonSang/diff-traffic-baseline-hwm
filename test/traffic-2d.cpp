@@ -16,12 +16,17 @@
 #include "big-image-tile.hpp"
 #include <png.h>
 
-static const float FRAME_RATE            = 1.0/24.0;
-static const float HEADLIGHT_COLOR[3]    = {0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0};
-static const float TAILLIGHT_COLOR[3]    = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
-static const float ROAD_SURFACE_COLOR[3] = {    237/255.0,     234/255.0,     186/255.0};
-static const float ROAD_LINE_COLOR[3]    = {    135/255.0,     103/255.0,      61/255.0};
-static const float ROAD_LINE_SCALE       = 300.0;
+static const float FRAME_RATE               = 1.0/24.0;
+static const float HEADLIGHT_COLOR[3]       = {0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0};
+static const float TAILLIGHT_COLOR[3]       = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
+static const float ROAD_SURFACE_COLOR[3]    = {    237/255.0,     234/255.0,     186/255.0};
+static const float ROAD_LINE_COLOR[3]       = {    135/255.0,     103/255.0,      61/255.0};
+static const float ROAD_LINE_SCALE          = 300.0;
+static const char  RESOURCE_ROOT_ENV_NAME[] = "TRAFFIC_2D_RESOURCE_ROOT";
+static const char  HEADLIGHT_TEX[]          = "small-headlight-pair.png";
+static const char  TAILLIGHT_TEX[]          = "taillight.png";
+static const char  AMBIENT_TEX[]            = "ambient-timeofday.png";
+static char       *RESOURCE_ROOT            = 0;
 
 static bool checkFramebufferStatus()
 {
@@ -236,12 +241,6 @@ static const char *lshader       =
 "    FragColor               = light_level*light + ambient_level*back;      \n"
 "}                                                                          \n";
 
-#define RESOURCE_ROOT "/home/sewall/Dropbox/Shared/siga10/"
-
-#define HEADLIGHT_TEX RESOURCE_ROOT "small-headlight-pair.png"
-#define TAILLIGHT_TEX RESOURCE_ROOT "taillight.png"
-#define AMBIENT_TEX   RESOURCE_ROOT "ambient-timeofday.png"
-
 struct night_render
 {
     night_render() : lum_fb(0),
@@ -271,7 +270,7 @@ struct night_render
         {
             if(ambient_data)
                 delete[] ambient_data;
-            Magick::Image am_im(AMBIENT_TEX);
+            Magick::Image am_im((bf::path(RESOURCE_ROOT) / AMBIENT_TEX).string());
             assert(am_im.rows() == 1);
             ambient_dim          = am_im.columns();
             ambient_data         = new unsigned char[ambient_dim*3];
@@ -287,7 +286,7 @@ struct night_render
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Magick::Image im(HEADLIGHT_TEX);
+        Magick::Image im((bf::path(RESOURCE_ROOT) / HEADLIGHT_TEX).string());
         im.sample(Magick::Geometry("40x40"));
         unsigned char *pix = new unsigned char[im.columns()*im.rows()*4];
         im.write(0, 0, im.columns(), im.rows(), "RGBA", Magick::CharPixel, pix);
@@ -305,7 +304,7 @@ struct night_render
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        Magick::Image tim(TAILLIGHT_TEX);
+        Magick::Image tim((bf::path(RESOURCE_ROOT) / TAILLIGHT_TEX).string());
         tim.sample(Magick::Geometry("40x40"));
         pix = new unsigned char[tim.columns()*tim.rows()*4];
         tim.write(0, 0, tim.columns(), tim.rows(), "RGBA", Magick::CharPixel, pix);
@@ -1988,6 +1987,18 @@ int main(int argc, char *argv[])
         std::cerr << "Usage: " << argv[0] << " <input network> [background image]" << std::endl;
         return 1;
     }
+    RESOURCE_ROOT = getenv(RESOURCE_ROOT_ENV_NAME);
+    if(!RESOURCE_ROOT)
+    {
+        std::cerr << "Couldn't locate environment variable " << RESOURCE_ROOT_ENV_NAME << " for needed resources!" << std::endl;
+        return 1;
+    }
+    if(!bf::exists(RESOURCE_ROOT))
+    {
+        std::cerr << "RESOURCE_ROOT path " << RESOURCE_ROOT << " doesn't exist!" << std::endl;
+        return 1;
+    }
+
     hwm::network net(hwm::load_xml_network(argv[1], vec3f(1.0, 1.0, 1.0f)));
 
     net.build_intersections();
