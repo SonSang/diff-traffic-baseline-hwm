@@ -217,6 +217,7 @@ namespace hybrid
 
         while(tmp_position >= 1.0)
         {
+
             hwm::lane *hwm_downstream = curr->parent->downstream_lane();
 
             if (!hwm_downstream)
@@ -251,12 +252,18 @@ namespace hybrid
 
     void car::find_free_dist_and_vel(const lane &l, float& next_velocity, float& distance, const simulator& sim)
     {
-        const float min_for_free_movement = 1000;
+        const float  min_for_free_movement = 1000;
+
+        if(l.parent->end->network_boundary())
+        {
+            next_velocity = l.parent->speedlimit;
+            distance      = min_for_free_movement;
+            return;
+        }
 
         hwm::lane *hwm_downstream = l.parent->downstream_lane();
-
-        next_velocity = 0.0f;
-        distance      = (1.0 - position) * l.length - sim.rear_bumper_offset();
+        next_velocity             = 0.0f;
+        distance                  = (1.0 - position) * l.length - sim.rear_bumper_offset();
         if(hwm_downstream)
             hwm_downstream->user_data<lane>()->distance_to_car(distance, next_velocity, min_for_free_movement, sim);
     }
@@ -273,34 +280,27 @@ namespace hybrid
     void car::integrate(const float timestep, const lane& l, const float lane_width)
     {
         //Update position and velocity
-        velocity = std::max(0.0f, velocity + acceleration * timestep);
+        velocity  = std::max(0.0f, velocity + acceleration * timestep);
         position += (velocity * timestep) * l.inv_length;
 
         //Move car that is also a member of the other lane
         if (other_lane_membership.other_lane != 0)
         {
-            const float old_y = lc_curve::y(other_lane_membership.merge_param);
-
-            float needed_duration = lc_curve::end(velocity);
-
+            const float old_y                  = lc_curve::y(other_lane_membership.merge_param);
+            float       needed_duration        = lc_curve::end(velocity);
             other_lane_membership.merge_param += timestep / needed_duration;
-
-            const float new_y = lc_curve::y(other_lane_membership.merge_param);
-
-            float del_y = lane_width*(old_y-new_y);
+            const float new_y                  = lc_curve::y(other_lane_membership.merge_param);
+            float       del_y                  = lane_width*(old_y-new_y);
             if(other_lane_membership.is_left)
-                del_y *= -1;
-
-            other_lane_membership.theta     = std::atan2(del_y, (velocity * timestep));
-            other_lane_membership.position += (velocity * timestep) * other_lane_membership.other_lane->inv_length;
+                del_y                         *= -1;
+            other_lane_membership.theta        = std::atan2(del_y, (velocity * timestep));
+            other_lane_membership.position    += (velocity * timestep) * other_lane_membership.other_lane->inv_length;
 
             //TODO L is wheelbase -- length to rear axel
             // float L = 4.5;
             // float u_s = 1.0f/sin(other_lane_membership.theta)*velocity;
             // float d_x = u_s*cos(theta);
             // float d_theta = (u_s/L)*tan(other_lane_membership.merge_param*other_lane_membership.phi_max)*timestep;
-
-
 
             if (other_lane_membership.merge_param > 1)
             {
@@ -368,6 +368,13 @@ namespace hybrid
             }
             else
             {
+                if(parent->end->network_boundary())
+                {
+                    velocity = 0.0f;
+                    distance = distance_max;
+                    return;
+                }
+
                 hwm::lane *hwm_downstream = parent->downstream_lane();
                 if(hwm_downstream)
                     hwm_downstream->user_data<lane>()->distance_to_car(distance, velocity, distance_max, sim);
@@ -513,8 +520,6 @@ namespace hybrid
 
              if (potential_left and next_l.position > -1)
                  current_car(i).acceleration = std::min(current_car(i).acceleration, (float)left_accel);
-
-             //            current_car(i).check_if_valid_acceleration(*this, timestep);  For debugging only
          }
      }
 
@@ -657,6 +662,9 @@ namespace hybrid
 
                      while(c.position >= 1.0)
                      {
+                         if(curr->parent->end->network_boundary())
+                             goto next_car;
+
                          hwm::lane *hwm_downstream = curr->parent->downstream_lane();
                          assert(hwm_downstream);
                          assert(hwm_downstream->active);
@@ -676,8 +684,7 @@ namespace hybrid
                                                                                       hwm_downstream->speedlimit,
                                                                                       gamma));
                             assert(downstream->q[0].check());
-			    goto next_car;
-                            break;
+                            goto next_car;
                         }
 
                         if (c.position >= 1.0)
@@ -690,7 +697,7 @@ namespace hybrid
 
                     destination_lane->next_cars().push_back(c);
 
-		 next_car:;
+                 next_car:;
                 }
             }
         }
