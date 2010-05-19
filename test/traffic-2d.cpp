@@ -212,7 +212,7 @@ static void put_text(cairo_t * cr, const std::string &str, float x, float y, con
 static const char *lshader       =
 "#version 150                                                               \n"
 "#extension GL_ARB_texture_multisample : enable                             \n"
-"uniform sampler2D lum_tex;                                                 \n"
+"uniform sampler2DMS lum_tex;                                               \n"
 "uniform sampler2DMS to_light_tex;                                          \n"
 "uniform int       nsamples;                                                \n"
 "uniform vec4      light_level, ambient_level;                              \n"
@@ -243,6 +243,7 @@ struct night_render
                      lum_tex(0),
                      to_light_fb(0),
                      to_light_tex(0),
+                     depth_fb(0),
                      headlight_tex(0),
                      taillight_tex(0),
                      light_list(0),
@@ -308,6 +309,14 @@ struct night_render
         delete[] pix;
         taillight_aspect = tim.columns()/static_cast<float>(tim.rows());
 
+        if(glIsRenderbuffer(depth_fb))
+            glDeleteRenderbuffers(1, &depth_fb);
+        glGenRenderbuffers(1, &depth_fb);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, depth_fb);
+
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, nsamples, GL_DEPTH_COMPONENT32F, dim[0], dim[1]);
+        glError();
 
         if(glIsFramebuffer(lum_fb))
             glDeleteFramebuffers(1, &lum_fb);
@@ -318,14 +327,11 @@ struct night_render
         glGenTextures(1, &lum_tex);
 
         glBindFramebuffer(GL_FRAMEBUFFER, lum_fb);
-        glBindTexture(GL_TEXTURE_2D, lum_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dim[0], dim[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, lum_tex);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], false);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lum_tex, 0);
+                               GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, lum_tex, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_fb);
         checkFramebufferStatus();
 
         if(glIsFramebuffer(to_light_fb))
@@ -341,9 +347,9 @@ struct night_render
         glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], false);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, to_light_tex, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, to_light_tex, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_fb);
         checkFramebufferStatus();
+        glError();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -457,7 +463,7 @@ struct night_render
         glUseProgram(lprogram);
         int lum_uniform_location = glGetUniformLocationARB(lprogram, "lum_tex");
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, lum_tex);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, lum_tex);
         glUniform1i(lum_uniform_location, 0);
 
         int to_light_uniform_location = glGetUniformLocationARB(lprogram, "to_light_tex");
@@ -538,6 +544,7 @@ struct night_render
     GLuint         lum_tex;
     GLuint         to_light_fb;
     GLuint         to_light_tex;
+    GLuint         depth_fb;
     GLuint         lprogram;
     GLuint         headlight_tex;
     float          headlight_aspect;
@@ -1364,6 +1371,7 @@ public:
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDisable(GL_LIGHTING);
+            glDepthFunc(GL_LEQUAL);
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -1378,13 +1386,13 @@ public:
 
         vec2f lo, hi;
         cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
-        glOrtho(lo[0], hi[0], lo[1], hi[1], -20, 20.0);
+        glOrtho(lo[0], hi[0], lo[1], hi[1], -50.0, 50.0);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
         night_setup.start_to_light();
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
         glColor4f(1.0, 1.0, 1.0, 1.0);
         if(back_image && !back_image->tiles.empty())
@@ -1399,10 +1407,15 @@ public:
             glPopMatrix();
         }
 
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(20000.0/scale, 0.0);
+
         glDisable(GL_TEXTURE_2D);
         glColor3f(237.0/255, 234.0/255, 186.0/255);
         network_aux_drawer.draw_roads_solid();
         network_aux_drawer.draw_intersections_solid();
+        glDisable(GL_POLYGON_OFFSET_FILL);
 
         const float line_width = 1000.0/scale;
         if(line_width > 1)
@@ -1414,6 +1427,7 @@ public:
             network_aux_drawer.draw_intersections_wire();
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
+
         glEnable(GL_TEXTURE_2D);
 
         glBindTexture (GL_TEXTURE_2D, continuum_tex_);
@@ -1447,6 +1461,7 @@ public:
 
         if(hci)
         {
+            glDepthMask(GL_FALSE);
             const float car_draw_time = cog::clamp(t, hci->times[0], hci->times[1]);
             BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
@@ -1464,6 +1479,7 @@ public:
                 }
                 drawer->draw_end();
             }
+            glDepthMask(GL_TRUE);
         }
 
         night_setup.finish_to_light();
@@ -1474,6 +1490,8 @@ public:
 
         if(night_setup.draw_lights(t+time_offset))
         {
+            glDepthMask(GL_FALSE);
+
             glColor3f(0.2*255/255.0, 0.2*254/255.0, 0.2*149/255.0);
 
             glBlendFunc(GL_ONE, GL_ONE);
@@ -1493,7 +1511,9 @@ public:
                 }
             }
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthMask(GL_TRUE);
         }
+        glDisable(GL_DEPTH_TEST);
         night_setup.finish_lum();
 
         night_setup.compose(t+time_offset, lo, hi);
