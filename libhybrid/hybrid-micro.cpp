@@ -605,9 +605,8 @@ namespace hybrid
 
          if (distance > car_length)
              distance -= car_length;
-         if (distance == 0)
+         if (distance <= 0)
              distance = EPSILON;
-
 
          //         std::cout << "leader vel " << leader_velocity << " dist " << distance << std::endl;
          const float t               = a_max*(1 - std::pow((follower_velocity / v_pref), delta) - std::pow((optimal_spacing/(distance)), 2));
