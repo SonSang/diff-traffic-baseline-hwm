@@ -17,6 +17,7 @@
 #include <png.h>
 
 static const float FRAME_RATE               = 1.0/24.0;
+static const float HEADLIGHT_THRESHOLD      = 0.65*1.732;
 static const float HEADLIGHT_COLOR[3]       = {0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0};
 static const float TAILLIGHT_COLOR[3]       = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
 static const float ROAD_SURFACE_COLOR[3]    = {    237/255.0,     234/255.0,     186/255.0};
@@ -522,7 +523,7 @@ struct night_render
             ambient_color_vec = vec3f(lighting_factors[1]);
         }
 
-        return length(ambient_color_vec) < 0.65*1.732;
+        return length(ambient_color_vec) < HEADLIGHT_THRESHOLD;
     }
 
     vec2f ambient_level(float t) const
