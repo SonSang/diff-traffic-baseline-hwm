@@ -17,6 +17,7 @@
 #include <png.h>
 
 static const float FRAME_RATE               = 1.0/24.0;
+static const float EXPIRE_TIME              = 2.0f;
 static const float HEADLIGHT_THRESHOLD      = 0.65*1.732;
 static const float HEADLIGHT_COLOR[3]       = {0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0};
 static const float TAILLIGHT_COLOR[3]       = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
@@ -250,8 +251,9 @@ struct night_render
                      to_light_tex(0),
                      depth_fb(0),
                      headlight_tex(0),
+                     headlight_list(0),
                      taillight_tex(0),
-                     light_list(0),
+                     taillight_list(0),
                      ambient_dim(0),
                      ambient_data(0),
                      nsamples(4),
@@ -377,26 +379,30 @@ struct night_render
         glLinkProgram(lprogram);
         glError();
 
-        light_list = glGenLists(1);
-        glNewList(light_list, GL_COMPILE);
+        headlight_list = glGenLists(1);
+        glNewList(headlight_list, GL_COMPILE);
 
         glPushMatrix();
         {
             glTranslatef(sim->front_bumper_offset()-1, 0, 0);
-            glColor3fv(HEADLIGHT_COLOR);
             draw_headlight();
         }
         glPopMatrix();
+        glEndList();
 
-        glColor3fv(TAILLIGHT_COLOR);
+        taillight_list = glGenLists(1);
+        glNewList(taillight_list, GL_COMPILE);
         glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
         draw_taillight();
         glEndList();
     }
 
-    void draw_car_lights()
+    void draw_car_lights(float opacity=1.0)
     {
-        glCallList(light_list);
+        glColor3f(opacity*HEADLIGHT_COLOR[0], opacity*HEADLIGHT_COLOR[1], opacity*HEADLIGHT_COLOR[2]);
+        glCallList(headlight_list);
+        glColor3f(opacity*TAILLIGHT_COLOR[0], opacity*TAILLIGHT_COLOR[1], opacity*TAILLIGHT_COLOR[2]);
+        glCallList(taillight_list);
     }
 
     void draw_headlight()
@@ -472,12 +478,12 @@ struct night_render
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(lprogram);
-        int lum_uniform_location = glGetUniformLocationARB(lprogram, "lum_tex");
+        int lum_uniform_location = glGetUniformLocation(lprogram, "lum_tex");
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, lum_tex);
         glUniform1i(lum_uniform_location, 0);
 
-        int to_light_uniform_location = glGetUniformLocationARB(lprogram, "to_light_tex");
+        int to_light_uniform_location = glGetUniformLocation(lprogram, "to_light_tex");
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, to_light_tex);
         glUniform1i(to_light_uniform_location, 1);
@@ -559,9 +565,10 @@ struct night_render
     GLuint         lprogram;
     GLuint         headlight_tex;
     float          headlight_aspect;
+    GLuint         headlight_list;
     GLuint         taillight_tex;
-    GLuint         light_list;
     float          taillight_aspect;
+    GLuint         taillight_list;
     int            ambient_dim;
     unsigned char *ambient_data;
     int            nsamples;
@@ -573,10 +580,12 @@ struct night_render
 
 static const char *fshader =
 "uniform sampler2D full_tex, body_tex;                                    \n"
+"uniform float     opacity;                                               \n"
 "                                                                         \n"
 "void main()                                                              \n"
 "{                                                                        \n"
 "vec4               color   = texture2D(full_tex, gl_TexCoord[0].st);     \n"
+"color.a                   *= opacity;                                    \n"
 "float              mask    = texture2D(body_tex, gl_TexCoord[0].st).r;   \n"
 "gl_FragColor               = mix(color, gl_Color*color, mask);           \n"
 "}                                                                        \n";
@@ -585,10 +594,13 @@ struct car_draw_info
 {
     car_draw_info()
     {}
-    car_draw_info(int c) : color(c)
+    car_draw_info(int c) : color(c), expired(false)
     {}
 
     int     color;
+    bool    expired;
+    float   timestamp;
+    float   last_velocity;
     mat4x4f frame;
 };
 
@@ -673,8 +685,9 @@ struct tex_car_draw
         glLinkProgram(fprogram);
         glError();
 
-        full_uniform_location = glGetUniformLocationARB(fprogram, "full_tex");
-        body_uniform_location = glGetUniformLocationARB(fprogram, "body_tex");
+        full_uniform_location    = glGetUniformLocation(fprogram, "full_tex");
+        body_uniform_location    = glGetUniformLocation(fprogram, "body_tex");
+        opacity_uniform_location = glGetUniformLocation(fprogram, "opacity");
 
         car_list = glGenLists(1);
         glNewList(car_list, GL_COMPILE);
@@ -688,15 +701,16 @@ struct tex_car_draw
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, full_tex);
-        glUniform1iARB(full_uniform_location, 0);
+        glUniform1i(full_uniform_location, 0);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, body_tex);
-        glUniform1iARB(body_uniform_location, 1);
+        glUniform1i(body_uniform_location, 1);
     }
 
-    void draw_car_list() const
+    void draw_car_list(float opacity=1.0) const
     {
+        glUniform1f(opacity_uniform_location, opacity);
         glCallList(car_list);
     }
 
@@ -736,6 +750,7 @@ struct tex_car_draw
 
     GLint full_uniform_location;
     GLint body_uniform_location;
+    GLint opacity_uniform_location;
 
     std::tr1::unordered_map<size_t, car_draw_info> members;
 };
@@ -1282,10 +1297,12 @@ public:
 
             BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, gone_cars)
             {
-                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator to_remove = car_map.find(cs.c.id);
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator  to_remove = car_map.find(cs.c.id);
                 assert(to_remove != car_map.end());
-                to_remove->second->members.erase(cs.c.id);
-                car_map.erase(to_remove);
+                car_draw_info                                            &cdi       = to_remove->second->members.find(cs.c.id)->second;
+                cdi.expired                                                         = true;
+                cdi.last_velocity                                                   = cs.c.velocity;
+                cdi.timestamp                                                       = t;
             }
         }
         {
@@ -1303,6 +1320,21 @@ public:
                 drawer                  = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
                 draw_pick->members.insert(std::make_pair(cs.c.id, car_draw_info(rand() % n_car_colors)));
                 drawer->second          = draw_pick;
+            }
+        }
+
+        BOOST_FOREACH(tex_car_draw *tcd, car_drawers)
+        {
+            std::tr1::unordered_map<size_t, car_draw_info>::iterator current = tcd->members.begin();
+            while(current != tcd->members.end())
+            {
+                std::tr1::unordered_map<size_t, car_draw_info>::iterator copy(current);
+                ++current;
+                if(copy->second.expired && t - copy->second.timestamp > EXPIRE_TIME)
+                {
+                    car_map.erase(copy->first);
+                    tcd->members.erase(copy);
+                }
             }
         }
     }
@@ -1487,11 +1519,20 @@ public:
                 BOOST_FOREACH(id_car_draw_info &car, drawer->members)
                 {
                     glColor3fv(car_colors[car.second.color]);
-                    const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
-                    car.second.frame = tvmet::trans(trans);
+                    float opacity = 1.0;
+                    if(!car.second.expired)
+                    {
+                        const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
+                        car.second.frame = tvmet::trans(trans);
+                    }
+                    else
+                        opacity -= (t - car.second.timestamp)/EXPIRE_TIME;
+
                     glPushMatrix();
                     glMultMatrixf(car.second.frame.data());
-                    drawer->draw_car_list();
+                    if(car.second.expired)
+                        glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
+                    drawer->draw_car_list(opacity);
                     glPopMatrix();
                 }
                 drawer->draw_end();
@@ -1516,10 +1557,14 @@ public:
                     typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
                     BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
                     {
-                        glColor3fv(car_colors[car.second.color]);
+                        float opacity = 1.0;
+                        if(car.second.expired)
+                            opacity -= (t - car.second.timestamp)/EXPIRE_TIME;
                         glPushMatrix();
                         glMultMatrixf(car.second.frame.data());
-                        night_setup.draw_car_lights();
+                        if(car.second.expired)
+                            glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
+                        night_setup.draw_car_lights(opacity);
                         glPopMatrix();
                     }
                 }
