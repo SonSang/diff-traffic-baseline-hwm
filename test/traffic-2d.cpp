@@ -238,8 +238,7 @@ static const char *lshader       =
 "        back += texelFetch(to_light_tex, screen_coord, i);                 \n"
 "    back *= vec4(1.0/nsamples);                                            \n"
 "    vec4               lum  = texelFetch(lum_tex, screen_coord,0);         \n"
-"    vec4      effective_lum = clamp(lum, 0.0, 0.4)/0.6;                    \n"
-"    vec4              light = clamp(effective_lum*back, 0.0, 0.9);         \n"
+"    vec4              light = lum*(vec4(0.5)+back);                        \n"
 "    FragColor               = light_level*light + ambient_level*back;      \n"
 "}                                                                          \n";
 
