@@ -1396,8 +1396,16 @@ public:
             if(!network_drawer.initialized())
                 network_drawer.initialize(sim->hnet, 0.01f);
 
+            hwm::road_metrics rm;
+            rm.lane_width      = sim->hnet->lane_width;
+            rm.shoulder_width  = 2.0f;
+            rm.line_width      = 0.125;
+            rm.line_sep_width  = 0.125;
+            rm.line_length     = 3.0f;
+            rm.line_gap_length = 9.0f;
+
             if(!network_aux_drawer.initialized())
-                network_aux_drawer.initialize(netaux, 0.01f);
+                network_aux_drawer.initialize(netaux, rm, 0.01f);
 
             init_textures();
             view.initialize();
