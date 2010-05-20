@@ -1043,6 +1043,7 @@ public:
                                                           overlay_tex_(0),
                                                           continuum_tex_(0),
                                                           drawing(false),
+                                                          abstract_network(true),
                                                           sim(0),
                                                           t(0),
                                                           time_offset(0),
@@ -1466,11 +1467,32 @@ public:
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(20000.0/scale, 0.0);
 
-        glColor3f(1.0, 1.0, 1.0);
-        network_aux_drawer.draw_roads_solid();
+        if(abstract_network)
+        {
+            glDisable(GL_TEXTURE_2D);
+            glColor3fv(ROAD_SURFACE_COLOR);
+            network_aux_drawer.draw_roads_solid();
 
-        glDisable(GL_TEXTURE_2D);
-        glColor3f(0.4, 0.4, 0.4);
+            const float line_width = ROAD_LINE_SCALE/scale;
+            if(line_width > 1)
+            {
+                glLineWidth(line_width);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glColor3fv(ROAD_LINE_COLOR);
+                network_aux_drawer.draw_roads_wire();
+                network_aux_drawer.draw_intersections_wire();
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            glColor3fv(ROAD_SURFACE_COLOR);
+        }
+        else
+        {
+            glColor3f(1.0, 1.0, 1.0);
+            network_aux_drawer.draw_roads_solid();
+            glDisable(GL_TEXTURE_2D);
+            glColor3f(0.4, 0.4, 0.4);
+        }
+
         network_aux_drawer.draw_intersections_solid();
         glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -1815,6 +1837,9 @@ public:
         case FL_KEYBOARD:
             switch(Fl::event_key())
             {
+            case 'n':
+                abstract_network = !abstract_network;
+                break;
             case 'c':
                 switch(imode)
                 {
@@ -2006,6 +2031,7 @@ public:
     std::vector<tex_car_draw*> car_drawers;
     hwm::network_draw          network_drawer;
     hwm::network_aux_draw      network_aux_drawer;
+    bool                       abstract_network;
 
     hybrid::simulator  *sim;
     hybrid::car_interp *hci;
