@@ -161,7 +161,7 @@ namespace hybrid
         else
         {
             distance += length;
-            if(distance >= distance_max)
+            if(distance >= distance_max || parent->end->network_boundary())
             {
                 vel      = 0.0f;
                 distance = distance_max;
@@ -266,30 +266,37 @@ namespace hybrid
             std::swap(fq[0], fq[1]);
         }
 
-        const hwm::lane *downstream = parent->downstream_lane();
-        if(!downstream)
+        if(parent->end->network_boundary())
         {
-            rs[N].stop_riemann(*fq[0],
-                               parent->speedlimit,
-                               1.0f/parent->speedlimit,
-                               gamma,
-                               inv_gamma);
-            maxspeed = std::max(std::abs(rs[N].speeds[0]), maxspeed);
+            rs[N].clear();
         }
         else
         {
-            const lane &sim_downstream = *(downstream->user_data<lane>());
+            const hwm::lane *downstream = parent->downstream_lane();
+            if(!downstream)
+            {
+                rs[N].stop_riemann(*fq[0],
+                                   parent->speedlimit,
+                                   1.0f/parent->speedlimit,
+                                   gamma,
+                                   inv_gamma);
+                maxspeed = std::max(std::abs(rs[N].speeds[0]), maxspeed);
+            }
+            else
+            {
+                const lane &sim_downstream = *(downstream->user_data<lane>());
 
-            rs[N].lebaque_inhomogeneous_riemann(*fq[0],
-                                                arz<float>::full_q(sim_downstream.q[0],
-                                                                   downstream->speedlimit,
-                                                                   gamma),
-                                                parent->speedlimit,
-                                                downstream->speedlimit,
-                                                gamma,
-                                                inv_gamma);
-            maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
-                                maxspeed);
+                rs[N].lebaque_inhomogeneous_riemann(*fq[0],
+                                                    arz<float>::full_q(sim_downstream.q[0],
+                                                                       downstream->speedlimit,
+                                                                       gamma),
+                                                    parent->speedlimit,
+                                                    downstream->speedlimit,
+                                                    gamma,
+                                                    inv_gamma);
+                maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
+                                    maxspeed);
+            }
         }
 
         assert(rs[N].check());
