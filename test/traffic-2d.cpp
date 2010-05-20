@@ -1466,22 +1466,13 @@ public:
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(20000.0/scale, 0.0);
 
-        glDisable(GL_TEXTURE_2D);
-        glColor3fv(ROAD_SURFACE_COLOR);
+        glColor3f(1.0, 1.0, 1.0);
         network_aux_drawer.draw_roads_solid();
+
+        glDisable(GL_TEXTURE_2D);
+        glColor3f(0.4, 0.4, 0.4);
         network_aux_drawer.draw_intersections_solid();
         glDisable(GL_POLYGON_OFFSET_FILL);
-
-        const float line_width = ROAD_LINE_SCALE/scale;
-        if(line_width > 1)
-        {
-            glLineWidth(line_width);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glColor3fv(ROAD_LINE_COLOR);
-            network_aux_drawer.draw_roads_wire();
-            network_aux_drawer.draw_intersections_wire();
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
 
         glEnable(GL_TEXTURE_2D);
 
