@@ -153,7 +153,7 @@ namespace hybrid
     void lane::macro_distance_to_car(float &distance, float &vel, const float distance_max, const simulator &sim) const
     {
         float param;
-        if(macro_find_first(param, sim))
+        if(!fictitious && macro_find_first(param, sim))
         {
             distance += param*length;
             vel       = velocity(param, sim.gamma);
@@ -219,25 +219,32 @@ namespace hybrid
                                     gamma);
 
         float maxspeed = 0.0f;
-        const hwm::lane *upstream = parent->upstream_lane();
+        lane *upstream = upstream_lane();
         if(!upstream)
         {
             rs[0].starvation_riemann(*fq[0],
-                                     parent->speedlimit,
-                                     1.0f/parent->speedlimit,
+                                     speedlimit(),
+                                     1.0f/speedlimit(),
                                      gamma,
                                      inv_gamma);
             maxspeed = std::max(rs[0].speeds[1], maxspeed);
         }
         else
         {
-            const lane &sim_upstream = *(upstream->user_data<lane>());
-            rs[0].lebaque_inhomogeneous_riemann(arz<float>::full_q(sim_upstream.q[sim_upstream.N-1],
-                                                                   upstream->speedlimit,
+            if(upstream->fictitious)
+            {
+                lane* next_upstream = upstream->upstream_lane();
+                assert(next_upstream);
+                assert(!next_upstream->fictitious);
+                upstream = next_upstream;
+            }
+
+            rs[0].lebaque_inhomogeneous_riemann(arz<float>::full_q(upstream->q[upstream->N-1],
+                                                                   speedlimit(),
                                                                    gamma),
                                                 *fq[0],
-                                                upstream->speedlimit,
-                                                parent->speedlimit,
+                                                upstream->speedlimit(),
+                                                speedlimit(),
                                                 gamma,
                                                 inv_gamma);
             maxspeed = std::max(std::max(std::abs(rs[0].speeds[0]), std::abs(rs[0].speeds[1])),
@@ -272,7 +279,7 @@ namespace hybrid
         }
         else
         {
-            const hwm::lane *downstream = parent->downstream_lane();
+            lane *downstream = downstream_lane();
             if(!downstream)
             {
                 rs[N].stop_riemann(*fq[0],
@@ -284,14 +291,20 @@ namespace hybrid
             }
             else
             {
-                const lane &sim_downstream = *(downstream->user_data<lane>());
+                if(downstream->fictitious)
+                {
+                    lane* next_downstream = downstream->downstream_lane();
+                    assert(next_downstream);
+                    assert(!next_downstream->fictitious);
+                    downstream = next_downstream;
+                }
 
                 rs[N].lebaque_inhomogeneous_riemann(*fq[0],
-                                                    arz<float>::full_q(sim_downstream.q[0],
-                                                                       downstream->speedlimit,
+                                                    arz<float>::full_q(downstream->q[0],
+                                                                       downstream->speedlimit(),
                                                                        gamma),
-                                                    parent->speedlimit,
-                                                    downstream->speedlimit,
+                                                    speedlimit(),
+                                                    downstream->speedlimit(),
                                                     gamma,
                                                     inv_gamma);
                 maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
@@ -407,6 +420,8 @@ namespace hybrid
         // initialize new lanes, compute how many cells to allocate
         BOOST_FOREACH(lane &l, lanes)
         {
+            if(l.fictitious)
+                continue;
             l.macro_initialize(h_suggest);
             N += l.N;
             min_h = std::min(min_h, l.h);
@@ -431,6 +446,9 @@ namespace hybrid
         size_t rs_count = 0;
         BOOST_FOREACH(lane &l, lanes)
         {
+            if(l.fictitious)
+                continue;
+
             l.q       = q_base + q_count;
             l.rs      = rs_base + rs_count;
             q_count  += l.N;
@@ -456,17 +474,17 @@ namespace hybrid
     {
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.sim_type & sim_mask)
+            if(l.sim_type & sim_mask && !l.fictitious)
                 l.clear_macro();
         }
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.sim_type & sim_mask)
+            if(l.sim_type & sim_mask && !l.fictitious)
                 l.convert_cars(*this);
         }
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.sim_type & sim_mask)
+            if(l.sim_type & sim_mask && !l.fictitious)
                 l.fill_y(gamma);
         }
     }
@@ -476,7 +494,7 @@ namespace hybrid
         float maxspeed = 0.0f;
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.is_macro() && l.parent->active)
+            if(l.is_macro() && l.parent->active && !l.fictitious)
                 maxspeed = std::max(l.collect_riemann(gamma, 1.0f/gamma),
                                     maxspeed);
         }
@@ -488,7 +506,7 @@ namespace hybrid
 
         BOOST_FOREACH(lane &l, lanes)
         {
-            if(l.is_macro() && l.parent->active)
+            if(l.is_macro() && l.parent->active && !l.fictitious)
                 l.update(dt, *this);
         }
 

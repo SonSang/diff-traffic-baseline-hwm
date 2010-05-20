@@ -100,7 +100,8 @@ namespace hybrid
         if(sim_type == MICRO)
             return;
 
-        macro_instantiate(sim);
+        if(!fictitious)
+            macro_instantiate(sim);
 
         sim_type = MICRO;
     }
@@ -110,14 +111,17 @@ namespace hybrid
         if(sim_type == MACRO)
             return;
 
+        sim_type = MACRO;
+
+        if(fictitious)
+            return;
+
         clear_macro();
         convert_cars(sim);
         fill_y(sim.gamma);
 
         current_cars().clear();
         next_cars().clear();
-
-        sim_type = MACRO;
     }
 
     lane *lane::left_adjacency(float &param)
@@ -240,14 +244,20 @@ namespace hybrid
         // create them
         lanes.resize(lane_count);
 
+        float min_len = std::numeric_limits<float>::max();
         std::vector<lane>::iterator current     = lanes.begin();
         for(hwm::lane_map::iterator hwm_current = hnet->lanes.begin();
             hwm_current != hnet->lanes.end() && current != lanes.end();
             ++current, ++hwm_current)
         {
             current->initialize(&(hwm_current->second));
+            current->fictitious = false;
+            min_len = std::min(current->length, min_len);
         }
 
+        std::cout << "Min length of regular lane  is: " << min_len << std::endl;
+
+        min_len = std::numeric_limits<float>::max();
         BOOST_FOREACH(hwm::intersection_pair &ip, hnet->intersections)
         {
             BOOST_FOREACH(hwm::intersection::state &current_state, ip.second.states)
@@ -256,10 +266,13 @@ namespace hybrid
                 {
                     assert(current != lanes.end());
                     current->initialize(&(lp.second));
+                    current->fictitious = true;
+                    min_len             = std::min(current->length, min_len);
                     ++current;
                 }
             }
         }
+        std::cout << "Min length of fict lane  is: " << min_len << std::endl;
     }
 
     simulator::~simulator()

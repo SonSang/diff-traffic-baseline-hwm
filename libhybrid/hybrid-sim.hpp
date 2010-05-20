@@ -123,6 +123,7 @@ namespace hybrid
         lane                   *right_adjacency(float &param);
         lane                   *upstream_lane();
         lane                   *downstream_lane();
+        float                   speedlimit() const { return parent->speedlimit; }
 
         serial_state serial() const;
 
@@ -132,6 +133,7 @@ namespace hybrid
         std::vector<car>  cars[2];
         sim_t             sim_type;
         bool              updated_flag;
+        bool              fictitious;
 
         void distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
 

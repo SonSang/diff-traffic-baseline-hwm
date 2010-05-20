@@ -1515,7 +1515,7 @@ public:
         std::vector<vec4f> colors;
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
         {
-            if(!l.parent->active || !l.is_macro())
+            if(!l.parent->active || !l.is_macro() || l.fictitious)
                 continue;
 
             colors.resize(l.N);
