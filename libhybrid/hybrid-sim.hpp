@@ -74,6 +74,7 @@ namespace hybrid
         void capture(simulator &s);
 
         bool in_second(size_t id) const;
+        float   acceleration(size_t id, float time) const;
         mat4x4f point_frame(size_t id, float time, float lane_width) const;
 
         vec2f    times;

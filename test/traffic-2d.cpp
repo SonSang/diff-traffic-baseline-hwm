@@ -16,19 +16,21 @@
 #include "big-image-tile.hpp"
 #include <png.h>
 
-static const float FRAME_RATE               = 1.0/24.0;
-static const float EXPIRE_TIME              = 2.0f;
-static const float HEADLIGHT_THRESHOLD      = 0.65*1.732;
-static const float HEADLIGHT_COLOR[3]       = {0.4*255/255.0, 0.4*254/255.0, 0.4*149/255.0};
-static const float TAILLIGHT_COLOR[3]       = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
-static const float ROAD_SURFACE_COLOR[3]    = {    237/255.0,     234/255.0,     186/255.0};
-static const float ROAD_LINE_COLOR[3]       = {    135/255.0,     103/255.0,      61/255.0};
-static const float ROAD_LINE_SCALE          = 300.0;
-static const char  RESOURCE_ROOT_ENV_NAME[] = "TRAFFIC_2D_RESOURCE_ROOT";
-static const char  HEADLIGHT_TEX[]          = "small-headlight-pair.png";
-static const char  TAILLIGHT_TEX[]          = "taillight.png";
-static const char  AMBIENT_TEX[]            = "ambient-timeofday.png";
-static char       *RESOURCE_ROOT            = 0;
+static const float FRAME_RATE                 = 1.0/24.0;
+static const float EXPIRE_TIME                = 2.0f;
+static const float BRAKING_THRESHOLD          = -0.1;
+static const float HEADLIGHT_THRESHOLD        = 0.65*1.732;
+static const float HEADLIGHT_COLOR[3]         = {0.5*255/255.0, 0.5*254/255.0, 0.5*149/255.0};
+static const float TAILLIGHT_COLOR[3]         = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
+static const float BRAKING_TAILLIGHT_COLOR[3] = {2.0*122/255.0, 2.0* 15/255.0, 2.0* 25/255.0};
+static const float ROAD_SURFACE_COLOR[3]      = {    237/255.0,     234/255.0,     186/255.0};
+static const float ROAD_LINE_COLOR[3]         = {    135/255.0,     103/255.0,      61/255.0};
+static const float ROAD_LINE_SCALE            = 300.0;
+static const char  RESOURCE_ROOT_ENV_NAME[]   = "TRAFFIC_2D_RESOURCE_ROOT";
+static const char  HEADLIGHT_TEX[]            = "small-headlight-pair.png";
+static const char  TAILLIGHT_TEX[]            = "taillight.png";
+static const char  AMBIENT_TEX[]              = "ambient-timeofday.png";
+static char       *RESOURCE_ROOT              = 0;
 
 static bool checkFramebufferStatus()
 {
@@ -396,11 +398,14 @@ struct night_render
         glEndList();
     }
 
-    void draw_car_lights(float opacity=1.0)
+    void draw_car_lights(float opacity=1.0, bool braking=false)
     {
         glColor3f(opacity*HEADLIGHT_COLOR[0], opacity*HEADLIGHT_COLOR[1], opacity*HEADLIGHT_COLOR[2]);
         glCallList(headlight_list);
-        glColor3f(opacity*TAILLIGHT_COLOR[0], opacity*TAILLIGHT_COLOR[1], opacity*TAILLIGHT_COLOR[2]);
+        if(braking)
+            glColor3f(opacity*BRAKING_TAILLIGHT_COLOR[0], opacity*BRAKING_TAILLIGHT_COLOR[1], opacity*BRAKING_TAILLIGHT_COLOR[2]);
+        else
+            glColor3f(opacity*TAILLIGHT_COLOR[0], opacity*TAILLIGHT_COLOR[1], opacity*TAILLIGHT_COLOR[2]);
         glCallList(taillight_list);
     }
 
@@ -1590,7 +1595,8 @@ public:
                         glMultMatrixf(car.second.frame.data());
                         if(car.second.expired)
                             glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
-                        night_setup.draw_car_lights(opacity);
+                        const bool braking = !car.second.expired && hci->acceleration(car.first, t) < BRAKING_THRESHOLD;
+                        night_setup.draw_car_lights(opacity, braking);
                         glPopMatrix();
                     }
                 }

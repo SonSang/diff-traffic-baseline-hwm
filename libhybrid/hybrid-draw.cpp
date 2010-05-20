@@ -35,6 +35,22 @@ namespace hybrid
         return high != car_data[1].end();
     }
 
+    float car_interp::acceleration(size_t id, float time) const
+    {
+        car_spatial tmp;
+        tmp.c.id = id;
+        const car_hash::const_iterator low (car_data[0].find(tmp));
+        const car_hash::const_iterator high(car_data[1].find(tmp));
+
+        assert(low  != car_data[0].end());
+        assert(high != car_data[1].end());
+
+        const float w0 = 1 - (time - times[0])*inv_dt;
+        const float w1 = 1 - (times[1] - time)*inv_dt;
+
+        return low->c.acceleration*w0 + high->c.acceleration*w1;
+    }
+
     static bool walk_lanes(const hwm::lane                        *&res,
                            float                                   &param,
                            const car_interp::car_hash::value_type  &start,
