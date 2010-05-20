@@ -939,7 +939,7 @@ struct view_path
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, resolution, resolution, 0,
                          GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-            delete data;
+            delete[] data;
         }
         glEnable(GL_POINT_SPRITE);
         glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
