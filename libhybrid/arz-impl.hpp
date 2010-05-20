@@ -450,7 +450,7 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
     clear();
 
     const T rho_diff = q_m_l.rho() - q_l.rho();
-    speeds[0]        = std::abs(rho_diff) < epsilon() ? 0.0 : (q_m_l.flux_0() - q_l.flux_0())/rho_diff;
+    speeds[0]        = std::abs(rho_diff) < 100*epsilon() ? 0.0 : (q_m_l.flux_0() - q_l.flux_0())/rho_diff;
     waves [0]        = q_m_l - q_l;
 
     speeds[1]           = q_r.u();
