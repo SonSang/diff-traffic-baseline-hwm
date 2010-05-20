@@ -1147,6 +1147,69 @@ public:
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
         cairo_paint(cr);
 
+        cairo_identity_matrix(cr);
+
+        cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+
+        cairo_translate(cr,
+                        im_res[0]/2,
+                        im_res[1]/2);
+
+        cairo_scale(cr,
+                    im_res[0]/my_scale,
+                    im_res[1]/my_scale);
+
+
+        if(im_res[0] > im_res[1])
+            cairo_scale(cr,
+                        static_cast<float>(im_res[1])/im_res[0],
+                        1.0);
+        else
+            cairo_scale(cr,
+                        1.0,
+                        static_cast<float>(im_res[0])/im_res[1]);
+
+        cairo_translate(cr,
+                        -my_center[0],
+                        -my_center[1]);
+        cairo_matrix_t cmat;
+        cairo_get_matrix(cr, &cmat);
+
+        if(imode == REGION_MANIP)
+        {
+            cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+            BOOST_FOREACH(const aabb2d &r, rectangles)
+            {
+                cairo_set_matrix(cr, &cmat);
+                cairo_rectangle(cr, r.bounds[0][0], r.bounds[0][1], r.bounds[1][0]-r.bounds[0][0], r.bounds[1][1]-r.bounds[0][1]);
+                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
+                cairo_fill_preserve(cr);
+                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
+                cairo_identity_matrix(cr);
+                cairo_set_line_width(cr, 2.0);
+                cairo_stroke(cr);
+            }
+
+            if(drawing)
+            {
+                const vec2f low(std::min(first_point[0], second_point[0]),
+                                std::min(first_point[1], second_point[1]));
+                const vec2f high(std::max(first_point[0], second_point[0]),
+                                 std::max(first_point[1], second_point[1]));
+
+                cairo_set_matrix(cr, &cmat);
+                cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
+                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
+                cairo_fill_preserve(cr);
+                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
+                cairo_identity_matrix(cr);
+                cairo_set_line_width(cr, 2.0);
+                cairo_stroke(cr);
+            }
+        }
+
+        cairo_identity_matrix(cr);
+
         cairo_set_font_size (cr, 20);
         cairo_select_font_face (cr, "SANS",
                                 CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
@@ -1210,67 +1273,6 @@ public:
             if(imode == ARC_MANIP || imode == MC_PREVIEW)
             {
                 put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w(), h()-25, RIGHT, BOTTOM);
-            }
-        }
-
-        cairo_identity_matrix(cr);
-
-        cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-
-        cairo_translate(cr,
-                        im_res[0]/2,
-                        im_res[1]/2);
-
-        cairo_scale(cr,
-                    im_res[0]/my_scale,
-                    im_res[1]/my_scale);
-
-
-        if(im_res[0] > im_res[1])
-            cairo_scale(cr,
-                        static_cast<float>(im_res[1])/im_res[0],
-                        1.0);
-        else
-            cairo_scale(cr,
-                        1.0,
-                        static_cast<float>(im_res[0])/im_res[1]);
-
-        cairo_translate(cr,
-                        -my_center[0],
-                        -my_center[1]);
-        cairo_matrix_t cmat;
-        cairo_get_matrix(cr, &cmat);
-
-        if(imode == REGION_MANIP)
-        {
-            BOOST_FOREACH(const aabb2d &r, rectangles)
-            {
-                cairo_set_matrix(cr, &cmat);
-                cairo_rectangle(cr, r.bounds[0][0], r.bounds[0][1], r.bounds[1][0]-r.bounds[0][0], r.bounds[1][1]-r.bounds[0][1]);
-                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
-                cairo_fill_preserve(cr);
-                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
-                cairo_identity_matrix(cr);
-                cairo_set_line_width(cr, 2.0);
-                cairo_stroke(cr);
-            }
-
-            if(drawing)
-            {
-                const vec2f low(std::min(first_point[0], second_point[0]),
-                                std::min(first_point[1], second_point[1]));
-                const vec2f high(std::max(first_point[0], second_point[0]),
-                                 std::max(first_point[1], second_point[1]));
-
-                cairo_set_matrix(cr, &cmat);
-                cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
-                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
-                cairo_fill_preserve(cr);
-                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
-                cairo_identity_matrix(cr);
-                cairo_set_line_width(cr, 2.0);
-                cairo_stroke(cr);
             }
         }
 
