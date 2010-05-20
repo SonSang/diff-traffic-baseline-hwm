@@ -312,6 +312,16 @@ namespace hybrid
         return *(res->second.user_data<const lane>());
     }
 
+    size_t simulator::ncars() const
+    {
+        size_t res = 0;
+        BOOST_FOREACH(const lane &l, lanes)
+        {
+            res += l.ncars();
+        }
+        return res;
+    }
+
     float simulator::hybrid_step()
     {
         // fill in micro

@@ -1168,6 +1168,10 @@ public:
             put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
             put_text(cr, boost::str(boost::format("time of day: %s") % boost::posix_time::to_simple_string(td)), 10, 30, LEFT, TOP);
             put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 270, 5, LEFT, TOP);
+
+            if(sim)
+                put_text(cr, boost::str(boost::format("number of micro cars %ld") % sim->ncars()), 0, h(), LEFT, BOTTOM);
+
             if(throttle)
                 put_text(cr, "throttle", w(), 5, RIGHT, TOP);
             if(go)

@@ -109,11 +109,12 @@ namespace hybrid
         const car               &next_car(size_t i) const { return cars[1][i]; }
         car                     &next_car(size_t i)       { return cars[1][i]; };
 
+        size_t                  ncars()     const { return current_cars().size(); }
         void                    car_swap();
-        bool                    is_micro() const;
-        bool                    is_macro() const;
-        bool                    occupied() const;
-        bool                    active() const;
+        bool                    is_micro()  const;
+        bool                    is_macro()  const;
+        bool                    occupied()  const;
+        bool                    active()    const;
         void                    convert(sim_t dest_type, simulator &sim);
         void                    convert_to_micro(simulator &sim);
         void                    convert_to_macro(simulator &sim);
@@ -195,6 +196,8 @@ namespace hybrid
 
         lane       &get_lane_by_name(const str &s);
         const lane &get_lane_by_name(const str &s) const;
+
+        size_t ncars() const;
 
         float hybrid_step();
         void advance_intersections(float dt);
