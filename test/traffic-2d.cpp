@@ -2076,6 +2076,7 @@ static void draw_callback(void *v)
 int main(int argc, char *argv[])
 {
     std::cout << libroad_package_string() << std::endl;
+    std::cout << libhybrid_package_string() << std::endl;
     if(argc < 2)
     {
         std::cerr << "Usage: " << argv[0] << " <input network> [background image]" << std::endl;
