@@ -244,18 +244,22 @@ namespace hybrid
         // create them
         lanes.resize(lane_count);
 
-        float min_len = std::numeric_limits<float>::max();
-        std::vector<lane>::iterator current     = lanes.begin();
+        float                       min_len         = std::numeric_limits<float>::max();
+        float                       max_speedlimit  = -std::numeric_limits<float>::max();
+        std::vector<lane>::iterator current         = lanes.begin();
         for(hwm::lane_map::iterator hwm_current = hnet->lanes.begin();
-            hwm_current != hnet->lanes.end() && current != lanes.end();
+            hwm_current                            != hnet->lanes.end() && current != lanes.end();
             ++current, ++hwm_current)
         {
             current->initialize(&(hwm_current->second));
+
             current->fictitious = false;
-            min_len = std::min(current->length, min_len);
+            min_len             = std::min(current->length, min_len);
+            max_speedlimit      = std::max(current->speedlimit(), max_speedlimit);
         }
 
-        std::cout << "Min length of regular lane  is: " << min_len << std::endl;
+        std::cout << "Min length of regular lane is: " << min_len << std::endl;
+        std::cout << "Max speedlimit of regular lane is: " << max_speedlimit << std::endl;
 
         min_len = std::numeric_limits<float>::max();
         BOOST_FOREACH(hwm::intersection_pair &ip, hnet->intersections)
