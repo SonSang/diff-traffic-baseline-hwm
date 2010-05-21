@@ -125,6 +125,7 @@ namespace hybrid
         lane                   *upstream_lane();
         lane                   *downstream_lane();
         float                   speedlimit() const { return parent->speedlimit; }
+        void                    populate(float rate, simulator &sim);
 
         serial_state serial() const;
 

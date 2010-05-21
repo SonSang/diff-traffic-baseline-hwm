@@ -2069,22 +2069,8 @@ int main(int argc, char *argv[])
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        l.current_cars().clear();
         l.sim_type = hybrid::MICRO;
-
-        const int cars_per_lane = 200;
-        double    p             = -s.rear_bumper_offset()*l.inv_length;
-
-        for (int i = 0; i < cars_per_lane; i++)
-        {
-            //TODO Just creating some cars here...
-            l.current_cars().push_back(s.make_car(p, 0, 0));
-
-            //Cars need a minimal distance spacing
-            p += (30.0 * l.inv_length);
-            if(p + s.front_bumper_offset()*l.inv_length >= 1.0)
-                break;
-        }
+        l.populate(0.05/s.car_length, s);
     }
 
     //    s.settle(0.033);

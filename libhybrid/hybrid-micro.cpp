@@ -521,6 +521,29 @@ namespace hybrid
         }
     }
 
+    void lane::populate(const float rate, simulator &sim)
+    {
+        current_cars().clear();
+        next_cars().clear();
+
+        float t = pproc::exp_rvar((*sim.uni)())/rate*inv_length;
+        if(t > 1.0)
+            return;
+        do
+        {
+            current_cars().push_back(sim.make_car(t, 0, 0));
+
+            float next;
+            do
+            {
+                next = pproc::exp_rvar((*sim.uni)())/rate;
+            }
+            while(next < 2*sim.car_length);
+            t += next*inv_length;
+        }
+        while(t < 1.0);
+    }
+
     float lane::settle_pass(const float timestep, const float epsilon, const float epsilon_2,
                             const simulator &sim)
     {
