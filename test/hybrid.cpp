@@ -2,6 +2,7 @@
 
 int main(int argc, char *argv[])
 {
+    std::cout << libroad_package_string() << std::endl;
     std::cerr << libhybrid_package_string() << std::endl;
     if(argc < 2)
     {
@@ -9,9 +10,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    hwm::network net(hwm::load_xml_network(argv[1], vec3f(1.0, 1.0, 15.0f)));
+    hwm::network net(hwm::load_xml_network(argv[1], vec3f(1.0, 1.0, 1.0f)));
+
     net.build_intersections();
     net.build_fictitious_lanes();
+    net.auto_scale_memberships();
     net.center();
     std::cerr << "HWM net loaded successfully" << std::endl;
 
@@ -27,33 +30,29 @@ int main(int argc, char *argv[])
     }
 
     hybrid::simulator s(&net,
-                        5.0f,
+                        4.5f,
                         1.0);
     s.micro_initialize(0.73,
                        1.67,
                        33,
                        4);
+    s.macro_initialize(0.5, 4.1*4.5, 0.0f);
 
-    static const int cars_per_lane = 1;
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
-        if(!l.parent->active)
-            continue;
-
-        double p = s.rear_bumper_offset()*l.inv_length;
-        for (int i = 0; i < cars_per_lane; i++)
-        {
-            //TODO Just creating some cars here...
-            l.current_cars().push_back(s.make_car(p, 33, 0));
-            //Cars need a minimal distance spacing
-            p += (15.0 / l.length);
-        }
+        l.sim_type = hybrid::MICRO;
+        l.populate(0.05/s.car_length, s);
+        l.convert_to_macro(s);
     }
 
-    s.settle(0.033);
-
-    s.update(0.033);
-    s.car_swap();
-
+    int   num_steps = 0;
+    while(1)
+    {
+        float dt = s.hybrid_step();
+        s.advance_intersections(dt);
+        ++num_steps;
+        std::cout << "\r" << num_steps << " " << dt;
+        std::cout.flush();
+    }
     return 0;
 }
