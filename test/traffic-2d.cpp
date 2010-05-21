@@ -229,7 +229,7 @@ static const char *lshader       =
 "uniform sampler2DMS lum_tex;                                               \n"
 "uniform sampler2DMS to_light_tex;                                          \n"
 "uniform int       nsamples;                                                \n"
-"uniform vec4      light_level, ambient_level;                              \n"
+"uniform vec4      ambient_level;                                           \n"
 "out vec4 FragColor;                                                        \n"
 "                                                                           \n"
 "void main()                                                                \n"
@@ -241,7 +241,7 @@ static const char *lshader       =
 "    back *= vec4(1.0/nsamples);                                            \n"
 "    vec4               lum  = texelFetch(lum_tex, screen_coord,0);         \n"
 "    vec4              light = lum*(vec4(0.5)+back);                        \n"
-"    FragColor               = light_level*light + ambient_level*back;      \n"
+"    FragColor               = light + ambient_level*back;                  \n"
 "}                                                                          \n";
 
 struct night_render
@@ -497,20 +497,12 @@ struct night_render
         int nsamples_uniform_location = glGetUniformLocation(lprogram, "nsamples");
         glUniform1i(nsamples_uniform_location, nsamples);
 
-        vec2f lighting_factors(ambient_level(t));
-        int light_level_uniform_location = glGetUniformLocation(lprogram, "light_level");
-        vec4f lighting_color(lighting_factors[0]);
-        lighting_color[3] = 1.0f;
-        glUniform4fv(light_level_uniform_location, 1, lighting_color.data());
-
         int ambient_level_uniform_location = glGetUniformLocation(lprogram, "ambient_level");
 
+        assert(ambient_data);
         vec4f ambient_color_vec;
-        if(ambient_data)
-            sub<0,3>::vector(ambient_color_vec) = ambient_color(t);
-        else
-            sub<0,3>::vector(ambient_color_vec) = vec3f(lighting_factors[1]);
-        ambient_color_vec[3] = 1.0f;
+        sub<0,3>::vector(ambient_color_vec) = ambient_color(t);
+        ambient_color_vec[3]                = 1.0f;
         glUniform4fv(ambient_level_uniform_location, 1, ambient_color_vec.data());
 
         glRectfv(lo.data(),
@@ -524,41 +516,7 @@ struct night_render
 
     bool draw_lights(const float t) const
     {
-        vec3f ambient_color_vec;
-        if(ambient_data)
-            ambient_color_vec = ambient_color(t);
-        else
-        {
-            vec2f lighting_factors(ambient_level(t));
-            ambient_color_vec = vec3f(lighting_factors[1]);
-        }
-
-        return length(ambient_color_vec) < HEADLIGHT_THRESHOLD;
-    }
-
-    vec2f ambient_level(float t) const
-    {
-        static const float DARKNESS = 0.3;
-        static const float DAYLIGHT = 1.0;
-
-        static const float DIMMEST_LIGHT   = 0.0;
-        static const float BRIGHTEST_LIGHT = 0.9;
-
-        t = std::fmod(t, day_length);
-        if(t < sunrise_interval[0] || t > sunset_interval[1])
-            return vec2f(BRIGHTEST_LIGHT, DARKNESS);
-        else if(t > sunrise_interval[0] && t < sunrise_interval[1])
-        {
-            const float scale = (t - sunrise_interval[0])/(sunrise_interval[1] - sunrise_interval[0]);
-            return vec2f( (DIMMEST_LIGHT-BRIGHTEST_LIGHT)*scale + BRIGHTEST_LIGHT, (DAYLIGHT-DARKNESS)*scale + DARKNESS);
-        }
-        else if(t > sunset_interval[0] && t < sunset_interval[1])
-        {
-            const float scale = (t - sunset_interval[0])/(sunset_interval[1] - sunset_interval[0]);
-            return vec2f( (BRIGHTEST_LIGHT-DIMMEST_LIGHT)*scale + DIMMEST_LIGHT, (DARKNESS-DAYLIGHT)*scale + DAYLIGHT);
-        }
-        else
-            return vec2f(DIMMEST_LIGHT, DAYLIGHT);
+        return length(ambient_color(t)) < HEADLIGHT_THRESHOLD;
     }
 
     GLuint         lum_fb;
