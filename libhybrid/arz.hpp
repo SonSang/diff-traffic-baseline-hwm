@@ -8,6 +8,9 @@
 #include <iostream>
 #include "libhybrid/libhybrid-common.hpp"
 
+static const float GAMMA     = 0.5;
+static const float INV_GAMMA = 2.0f;
+
 /** Class that implements the ARZ system of equations.
  *  For traffic flow.
  *  \tparam T The arithmetic type to use (to set precision).
@@ -44,8 +47,7 @@ struct arz
          *  \returns The above equation computed with the input params.
          */
         static inline T y(const T rho, const T u,
-                          const T u_max,
-                          const T gamma);
+                          const T u_max);
 
         /** Compute velocity u from rho and y (with u_max and gamma).
          *  \f[ \frac{y}{\rho} + u_{\textrm{eq}}\left(\rho, u_{\max}, \gamma\right) \f]
@@ -57,8 +59,7 @@ struct arz
          *  \returns The above equation computed with the input params.
          */
         static inline T u(const T rho, const T y,
-                          const T u_max,
-                          const T gamma);
+                          const T u_max);
 
         /** Compute 'equilibrium velocity' u_eq from rho (with u_max and gamma).
          *  \f[ u_{\max}\left(1 - \rho^{\gamma}\right) \f]
@@ -69,8 +70,7 @@ struct arz
          *  \returns The above equation computed with the input params.
          */
         static inline T u_eq(const T rho,
-                             const T u_max,
-                             const T gamma);
+                             const T u_max);
 
         /** Compute inverse of 'equilibrium velocity' (rho) from u_eq (with 1/u_max and 1/gamma).
          *  \f[ \left(1 - \frac{u_{\textrm{eq}}}{u_{\max}}\right)^{\frac{1}{\gamma}} \f]
@@ -81,8 +81,7 @@ struct arz
          *  \returns The above equation computed with the input params.
          */
         static inline T inv_u_eq(const T u_eq,
-                                 const T inv_u_max,
-                                 const T inv_gamma);
+                                 const T inv_u_max);
 
         /** Compute derivative of 'equilibrium velocity' u_eq from rho (with u_max and gamma).
          *  \f[ -u_{\max}\gamma\rho^{\gamma-1} \f]
@@ -93,8 +92,7 @@ struct arz
          *  \returns The above equation computed with the input params.
          */
         static inline T u_eq_prime(const T rho,
-                                   const T u_max,
-                                   const T gamma);
+                                   const T u_max);
 
         /** Compute left-middle state in inhomogeneous speedlimit situations
          *  \tparam T The arithmetic type for the computation.
@@ -106,8 +104,7 @@ struct arz
          */
         static inline T rho_m_l_solve(const T flow_m_r,
                                       const T relv,
-                                      const T u_max_l,
-                                      const T gamma);
+                                      const T u_max_l);
     };
 
     /** Unknowns for the ARZ equations.
@@ -144,8 +141,7 @@ struct arz
          * \param gamma The gamma to use on this region.
          */
         q(const T in_rho, const T in_u,
-          const T u_max,
-          const T gamma);
+          const T u_max);
 
         /** Accessor/mutator for rho
          * \returns rho.
@@ -189,8 +185,7 @@ struct arz
          *  \param gamma The gamma on this region.
          */
         full_q(const      q &__restrict__ o,
-               const T                    u_max,
-               const T                    gamma);
+               const T                    u_max);
 
         /** Construct from a rho, u pair.
          *  \param in_rho The density to use.
@@ -199,8 +194,7 @@ struct arz
          *  \param gamma The gamma on this region.
          */
         full_q(const T                    in_rho, const T in_u,
-               const T                    u_max,
-               const T                    gamma);
+               const T                    u_max);
 
         /** Zero out structure.
          */
@@ -248,16 +242,14 @@ struct arz
          *  \param gamma The gamma of this region.
          *  \returns The 0- (rho-) wave speed.
          */
-        inline T lambda_0(const T u_max,
-                          const T gamma) const;
+        inline T lambda_0(const T u_max) const;
 
         /** Compute the second (y) speed of the equations.
          *  \param u_max The maximum speed of in this region.
          *  \param gamma The gamma of this region.
          *  \returns The 1- (y-) wave speed.
          */
-        inline T lambda_1(const T u_max,
-                          const T gamma) const;
+        inline T lambda_1(const T u_max) const;
 
         bool check() const;
 
@@ -275,9 +267,7 @@ struct arz
      *  \returns The centered rarefaction state.
      */
     static inline full_q centered_rarefaction(const full_q &__restrict__ q_l,
-                                              const T                    u_max,
-                                              const T                    gamma,
-                                              const T                    inv_gamma);
+                                              const T                    u_max);
 
     /** Compute q_m from a given left and right state.
      *  Note that this is only valid when \f$\rho_l^{\gamma} + \frac{u_l - u_r }{u_{\max} > 0\f$
@@ -290,8 +280,7 @@ struct arz
      */
     static inline full_q rho_middle(const full_q &__restrict__ q_l,
                                     const full_q &__restrict__ q_r,
-                                    const T                    inv_u_max,
-                                    const T                    inv_gamma);
+                                    const T                    inv_u_max);
 
     /** Class to compute Riemann solutions for the ARZ equations.
      */
@@ -308,10 +297,7 @@ struct arz
         inline void riemann(const full_q &__restrict__ q_l,
                             const full_q &__restrict__ q_r,
                             const T                    u_max,
-                            const T                    inv_u_max,
-                            const T                    gamma,
-                            const T                    inv_gamma);
-
+                            const T                    inv_u_max);
 
         /** Compute the full riemann solution with inhomogeneous speedlimits, store in this instance.
          *  \param q_l The left state.
@@ -324,9 +310,7 @@ struct arz
         inline void lebaque_inhomogeneous_riemann(const full_q &__restrict__ q_l,
                                                   const full_q &__restrict__ q_r,
                                                   float                      u_max_l,
-                                                  float                      u_max_r,
-                                                  float                      gamma,
-                                                  float                      inv_gamma);
+                                                  float                      u_max_r);
 
         /** Compute the one-sided riemann solution where there is no inflow, store in this instance.
          *  \param q_r The right state.
@@ -337,9 +321,7 @@ struct arz
          */
         inline void starvation_riemann(const full_q &__restrict__ q_r,
                                        const T                    u_max,
-                                       const T                    inv_u_max,
-                                       const T                    gamma,
-                                       const T                    inv_gamma);
+                                       const T                    inv_u_max);
 
         /** Compute the one-sided riemann solution where there is no outflow, store in this instance.
          *  \param q_l The left state.
@@ -350,9 +332,7 @@ struct arz
          */
         inline void stop_riemann(const full_q &__restrict__ q_l,
                                  const T                    u_max,
-                                 const T                    inv_u_max,
-                                 const T                    gamma,
-                                 const T                    inv_gamma);
+                                 const T                    inv_u_max);
 
         /** Zero-out data structure.
          */

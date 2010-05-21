@@ -156,12 +156,12 @@ namespace hybrid
         bool  macro_find_last(float &param, const simulator &sim) const;
         void  macro_distance_to_car(float &distance, float &velocity, const float distance_max, const simulator &sim) const;
         int   which_cell(float pos) const;
-        float velocity(float pos, float gamma) const;
-        float collect_riemann(const float gamma, const float inv_gamma);
+        float velocity(float pos) const;
+        float collect_riemann();
         void  update         (const float dt,    simulator  &sim);
         void  clear_macro();
         void  convert_cars(const simulator &sim);
-        void  fill_y(const float gamma);
+        void  fill_y();
 
         float                         h;
         float                         inv_h;
@@ -241,7 +241,7 @@ namespace hybrid
         float delta;
 
         // macro
-        void  macro_initialize(float gamma, float h_suggest, float relaxation);
+        void  macro_initialize(float h_suggest, float relaxation);
         void  macro_cleanup();
         void  convert_cars(sim_t sim_mask);
         float macro_step(const float cfl=1.0f);
@@ -249,7 +249,6 @@ namespace hybrid
         arz<float>::q                *q_base;
         size_t                        N;
         arz<float>::riemann_solution *rs_base;
-        float                         gamma;
         float                         h_suggest;
         float                         min_h;
         float                         relaxation_factor;

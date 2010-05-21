@@ -205,8 +205,7 @@ public:
                     else
                         val = arz<float>::eq::u(l.q[i].rho(),
                                                 l.q[i].y(),
-                                                l.parent->speedlimit,
-                                                sim->gamma)/l.parent->speedlimit;
+                                                l.parent->speedlimit)/l.parent->speedlimit;
 
                     blackbody(colors[i].data(), val);
                     colors[i][3] = 1.0f;
@@ -457,7 +456,7 @@ int main(int argc, char *argv[])
                        1.67,
                        33,
                        4);
-    s.macro_initialize(0.5, 2.1*4.5, 0.0f);
+    s.macro_initialize(2.1*4.5, 0.0f);
 
     {
         hybrid::lane &l = s.get_lane_by_name("lane0b");

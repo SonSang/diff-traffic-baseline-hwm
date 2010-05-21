@@ -104,7 +104,7 @@ namespace hybrid
         {
             const float position = candidate/helper.end();
             current_cars().push_back(sim.make_car(position,
-                                                  velocity(position, sim.gamma),
+                                                  velocity(position),
                                                   0.0f));
 
             while(1)
@@ -158,7 +158,7 @@ namespace hybrid
         if(!fictitious && macro_find_first(param, sim))
         {
             distance += param*length;
-            vel       = velocity(param, sim.gamma);
+            vel       = velocity(param);
         }
         else
         {
@@ -186,20 +186,20 @@ namespace hybrid
         return static_cast<int>(std::floor(pos*N));
     }
 
-    float lane::velocity(const float pos, const float gamma) const
+    float lane::velocity(const float pos) const
     {
         const int   cell  = which_cell(pos);
         const float local = pos*N - cell;
         assert(cell >= 0);
         assert(cell < static_cast<int>(N));
 
-        const arz<float>::full_q q_c(q[cell], speedlimit(), gamma);
+        const arz<float>::full_q q_c(q[cell], speedlimit());
         if(local < 0.5f)
         {
             if(cell == 0)
                 return q_c.u();
 
-            const arz<float>::full_q q_c_m(q[cell-1], speedlimit(), gamma);
+            const arz<float>::full_q q_c_m(q[cell-1], speedlimit());
             return (local+0.5f) * q_c.u() + (0.5f-local) * q_c_m.u();
         }
         //local >= 0.5f
@@ -207,11 +207,11 @@ namespace hybrid
         if(cell == static_cast<int>(N)-1)
             return q_c.u();
 
-        const arz<float>::full_q q_c_p(q[cell+1], speedlimit(), gamma);
+        const arz<float>::full_q q_c_p(q[cell+1], speedlimit());
         return (1.5f-local) * q_c.u() + (local-0.5f) * q_c_p.u();
     }
 
-    float lane::collect_riemann(const float gamma, const float inv_gamma)
+    float lane::collect_riemann()
     {
         arz<float>::full_q  full_q_buff[2];
         arz<float>::full_q *fq[2] = { full_q_buff, full_q_buff + 1 };
@@ -220,8 +220,7 @@ namespace hybrid
         const float inv_speedlimit = 1.0f/my_speedlimit;
 
         *fq[0] = arz<float>::full_q(q[0],
-                                    my_speedlimit,
-                                    gamma);
+                                    my_speedlimit);
 
         float maxspeed = 0.0f;
         lane *upstream = upstream_lane();
@@ -229,9 +228,7 @@ namespace hybrid
         {
             rs[0].starvation_riemann(*fq[0],
                                      my_speedlimit,
-                                     inv_speedlimit,
-                                     gamma,
-                                     inv_gamma);
+                                     inv_speedlimit);
             maxspeed = std::max(rs[0].speeds[1], maxspeed);
         }
         else
@@ -245,23 +242,18 @@ namespace hybrid
             }
 
             const arz<float>::full_q us_end(upstream->q[upstream->N-1],
-                                            my_speedlimit,
-                                            gamma);
+                                            my_speedlimit);
 
             if(upstream->speedlimit() == my_speedlimit)
                 rs[0].riemann(us_end,
                               *fq[0],
                               my_speedlimit,
-                              inv_speedlimit,
-                              gamma,
-                              inv_gamma);
+                              inv_speedlimit);
             else
                 rs[0].lebaque_inhomogeneous_riemann(us_end,
                                                     *fq[0],
                                                     upstream->speedlimit(),
-                                                    my_speedlimit,
-                                                    gamma,
-                                                    inv_gamma);
+                                                    my_speedlimit);
 
             maxspeed = std::max(std::max(std::abs(rs[0].speeds[0]), std::abs(rs[0].speeds[1])),
                                 maxspeed);
@@ -272,15 +264,12 @@ namespace hybrid
         for(size_t i = 1; i < N; ++i)
         {
             *fq[1] = arz<float>::full_q(q[i],
-                                        my_speedlimit,
-                                        gamma);
+                                        my_speedlimit);
 
             rs[i].riemann(*fq[0],
                           *fq[1],
                           my_speedlimit,
-                          inv_speedlimit,
-                          gamma,
-                          inv_gamma);
+                          inv_speedlimit);
 
             assert(rs[i].check());
 
@@ -300,9 +289,7 @@ namespace hybrid
             {
                 rs[N].stop_riemann(*fq[0],
                                    my_speedlimit,
-                                   inv_speedlimit,
-                                   gamma,
-                                   inv_gamma);
+                                   inv_speedlimit);
                 maxspeed = std::max(std::abs(rs[N].speeds[0]), maxspeed);
             }
             else
@@ -316,23 +303,18 @@ namespace hybrid
                 }
 
                 const arz<float>::full_q ds_start(downstream->q[0],
-                                                  downstream->speedlimit(),
-                                                  gamma);
+                                                  downstream->speedlimit());
 
                 if(my_speedlimit == downstream->speedlimit())
                     rs[N].riemann(*fq[0],
                                   ds_start,
                                   my_speedlimit,
-                                  inv_speedlimit,
-                                  gamma,
-                                  inv_gamma);
+                                  inv_speedlimit);
                 else
                     rs[N].lebaque_inhomogeneous_riemann(*fq[0],
                                                         ds_start,
                                                         my_speedlimit,
-                                                        downstream->speedlimit(),
-                                                        gamma,
-                                                        inv_gamma);
+                                                        downstream->speedlimit());
 
                 maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
                                     maxspeed);
@@ -360,13 +342,13 @@ namespace hybrid
             float param;
             if(macro_find_last(param, sim))
             {
-                car c(0, param, velocity(param, sim.gamma), 0.0f);
+                car c(0, param, velocity(param), 0.0f);
                 c.compute_intersection_acceleration(sim, *this);
                 c.integrate(dt, *this, sim.hnet->lane_width);
 
                 const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
                 assert(cell >=0);
-                q[cell] = arz<float>::q(q[cell].rho(), c.velocity, speedlimit(), sim.gamma);
+                q[cell] = arz<float>::q(q[cell].rho(), c.velocity, speedlimit());
                 if(c.position >= 1.0)
                 {
                     c.position = length*downstream->inv_length*(c.position-1.0f);
@@ -422,7 +404,7 @@ namespace hybrid
         }
     }
 
-    void lane::fill_y(const float gamma)
+    void lane::fill_y()
     {
         for(size_t i = 0; i < N; ++i)
         {
@@ -430,19 +412,17 @@ namespace hybrid
                 q[i].y() /= q[i].rho();
             q[i].y() = arz<float>::eq::y(q[i].rho(),
                                          q[i].y(),
-                                         speedlimit(),
-                                         gamma);
+                                         speedlimit());
             q[i].fix();
         }
     }
 
-    void simulator::macro_initialize(const float in_gamma, const float h_suggest, const float rf)
+    void simulator::macro_initialize(const float h_suggest, const float rf)
     {
         // Try to stay out of FP_ASSIST - enable DAZ and FTZ
         _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
 
-        gamma             = in_gamma;
         relaxation_factor = rf;
         min_h             = std::numeric_limits<float>::max();
 
@@ -489,7 +469,7 @@ namespace hybrid
             //     l.q[2].rho() = 0.5;
             //     l.q[2].y()   = 1.5;
             // }
-            l.fill_y(gamma);
+            l.fill_y();
         }
         std::cout << "min_h is " << min_h << std::endl;
     }
@@ -515,7 +495,7 @@ namespace hybrid
         BOOST_FOREACH(lane &l, lanes)
         {
             if(l.sim_type & sim_mask && !l.fictitious)
-                l.fill_y(gamma);
+                l.fill_y();
         }
     }
 
@@ -525,7 +505,7 @@ namespace hybrid
         BOOST_FOREACH(lane &l, lanes)
         {
             if(l.is_macro() && l.parent->active && !l.fictitious)
-                maxspeed = std::max(l.collect_riemann(gamma, 1.0f/gamma),
+                maxspeed = std::max(l.collect_riemann(),
                                     maxspeed);
         }
 

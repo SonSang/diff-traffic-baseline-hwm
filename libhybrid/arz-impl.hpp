@@ -41,9 +41,8 @@ arz<T>::q::q(const T in_rho, const T in_y)
 
 template <typename T>
 arz<T>::q::q(const T in_rho, const T in_u,
-             const T u_max,
-             const T gamma)
-    : base(in_rho, std::min(eq::y(in_rho, in_u, u_max, gamma), 0.0f))
+             const T u_max)
+    : base(in_rho, std::min(eq::y(in_rho, in_u, u_max), 0.0f))
 {}
 
 template <typename T>
@@ -112,11 +111,10 @@ arz<T>::full_q::full_q(const full_q &__restrict__ o)
 
 template <typename T>
 arz<T>::full_q::full_q(const q &__restrict__ o,
-                       const T               u_max,
-                       const T               gamma)
+                       const T               u_max)
     : base(o)
 {
-    u_eq_ = eq::u_eq(base::rho(), u_max, gamma);
+    u_eq_ = eq::u_eq(base::rho(), u_max);
     u_    = base::rho() <= std::numeric_limits<T>::epsilon() ? u_max :
             std::max(base::y()/base::rho() + u_eq_,
                      static_cast<T>(0));
@@ -125,11 +123,10 @@ arz<T>::full_q::full_q(const q &__restrict__ o,
 
 template <typename T>
 arz<T>::full_q::full_q(const T in_rho, const T in_u,
-                       const T u_max,
-                       const T gamma)
+                       const T u_max)
 {
     base::rho() = in_rho;
-    u_eq_       = eq::u_eq(base::rho(), u_max, gamma);
+    u_eq_       = eq::u_eq(base::rho(), u_max);
     u_          = std::min(u_eq_, in_u);
     base::y()   = base::rho()*(u() - u_eq_);
     assert(check());
@@ -190,28 +187,26 @@ inline T arz<T>::full_q::flux_1() const
 }
 
 template <typename T>
-inline T arz<T>::full_q::lambda_0(const T u_max, const T gamma) const
+inline T arz<T>::full_q::lambda_0(const T u_max) const
 {
-    return u() + base::rho()*eq::u_eq_prime(base::rho(), u_max, gamma);
+    return u() + base::rho()*eq::u_eq_prime(base::rho(), u_max);
 }
 
 template <typename T>
-inline T arz<T>::full_q::lambda_1(const T u_max, const T gamma) const
+inline T arz<T>::full_q::lambda_1(const T u_max) const
 {
     return u();
 }
 
 template <typename T>
 inline typename arz<T>::full_q arz<T>::centered_rarefaction(const full_q &__restrict__ q_l,
-                                                            const T                    u_max,
-                                                            const T                    gamma,
-                                                            const T                    inv_gamma)
+                                                            const T                    u_max)
 {
     full_q res;
 
-    res.u()    = gamma*(q_l.u() + u_max - q_l.u_eq())/(gamma+1);
-    res.u_eq() = u_max - res.u()/(u_max*gamma);
-    res.rho()  = std::pow( u_max - res.u_eq(), inv_gamma);
+    res.u()    = GAMMA*(q_l.u() + u_max - q_l.u_eq())/(GAMMA+1);
+    res.u_eq() = u_max - res.u()/(u_max*GAMMA);
+    res.rho()  = std::pow( u_max - res.u_eq(), INV_GAMMA);
     res.y()    = res.rho()*(res.u() - res.u_eq());
 
     return res;
@@ -220,13 +215,12 @@ inline typename arz<T>::full_q arz<T>::centered_rarefaction(const full_q &__rest
 template <typename T>
 inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &__restrict__ q_l,
                                                   const full_q &__restrict__ q_r,
-                                                  const T                    inv_u_max,
-                                                  const T                    inv_gamma)
+                                                  const T                    inv_u_max)
 {
     full_q res;
 
     res.u_eq() = q_r.u() - q_l.u() + q_l.u_eq();
-    res.rho()  = std::pow(1 - res.u_eq()*inv_u_max, inv_gamma);
+    res.rho()  = std::pow(1 - res.u_eq()*inv_u_max, INV_GAMMA);
     res.u()    = q_r.u();
     res.y()    = res.rho()*(res.u() - res.u_eq());
 
@@ -244,9 +238,7 @@ template <typename T>
 inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
                                               const full_q &__restrict__ q_r,
                                               const T                    u_max,
-                                              const T                    inv_u_max,
-                                              const T                    gamma,
-                                              const T                    inv_gamma)
+                                              const T                    inv_u_max)
 {
     const full_q *fq_0;
     full_q        q_m;
@@ -265,9 +257,9 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
     else if(q_r.rho() < VACUUM_EPS)
     {   // case 5
         q_m = full_q(0.0, q_l.u() + (u_max - q_l.u_eq()),
-                     u_max, gamma);
+                     u_max);
 
-        const T lambda_0_l = q_l.lambda_0(u_max, gamma);
+        const T lambda_0_l = q_l.lambda_0(u_max);
         const T lambda_0_m = q_m.u();
 
         speeds[0] = (lambda_0_l + lambda_0_m)/2;
@@ -280,7 +272,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
             fq_0 = &q_l;
         else
         {
-            q_m = centered_rarefaction(q_l, u_max, gamma, inv_gamma);
+            q_m = centered_rarefaction(q_l, u_max);
             fq_0 = &q_m;
         }
     }
@@ -296,7 +288,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
     }
     else if(q_l.u() > q_r.u())
     {   // case 1
-        q_m = rho_middle(q_l, q_r, inv_u_max, inv_gamma);
+        q_m = rho_middle(q_l, q_r, inv_u_max);
 
         const T flux_0_diff = q_m.flux_0() - q_l.flux_0();
         speeds[0] = std::abs(flux_0_diff) < epsilon() ? 0.0 : flux_0_diff/(q_m.rho() - q_l.rho());
@@ -309,10 +301,10 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
     }
     else if(u_max + q_l.u() - q_l.u_eq() > q_r.u())
     {   // case 2
-        q_m = rho_middle(q_l, q_r, inv_u_max, inv_gamma);
+        q_m = rho_middle(q_l, q_r, inv_u_max);
 
-        const T lambda0_l = q_l.lambda_0(u_max, gamma);
-        const T lambda0_m = q_m.lambda_0(u_max, gamma);
+        const T lambda0_l = q_l.lambda_0(u_max);
+        const T lambda0_m = q_m.lambda_0(u_max);
 
         speeds[0] = (lambda0_l + lambda0_m)/2;
         waves [0] = q_m - q_l;
@@ -326,7 +318,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
             fq_0 = &q_m;
         else
         {
-            q_m = centered_rarefaction(q_l, u_max, gamma, inv_gamma);
+            q_m = centered_rarefaction(q_l, u_max);
             fq_0 = &q_m;
         }
     }
@@ -337,7 +329,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
         q_m.u_eq() = u_max;
         q_m.u()    = u_max + q_l.u() - q_l.u_eq();
 
-        const T lambda0_l = q_l.lambda_0(u_max, gamma);
+        const T lambda0_l = q_l.lambda_0(u_max);
         const T lambda0_m = q_m.u();
 
         speeds[0] = (lambda0_l + lambda0_m)/2;
@@ -350,7 +342,7 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
             fq_0 = &q_l;
         else
         {
-            q_m = centered_rarefaction(q_l, u_max, gamma, inv_gamma);
+            q_m = centered_rarefaction(q_l, u_max);
             fq_0 = &q_m;
         }
     }
@@ -387,26 +379,24 @@ template <typename T>
 inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q &__restrict__ q_l,
                                                                     const full_q &__restrict__ q_r,
                                                                     const float u_max_l,
-                                                                    const float u_max_r,
-                                                                    const float gamma,
-                                                                    const float inv_gamma)
+                                                                    const float u_max_r)
 {
-    const T rho_m = std::min(static_cast<float>(1.0), eq::inv_u_eq(q_r.u() - q_l.u() + q_l.u_eq(), 1.0f/u_max_r, inv_gamma));
+    const T rho_m = std::min(static_cast<float>(1.0), eq::inv_u_eq(q_r.u() - q_l.u() + q_l.u_eq(), 1.0f/u_max_r));
 
     //    printf("rho_m:     %8.5f\n", rho_m);
 
-    const T demand_l = std::max(0.0f, demand(q_l.rho(),  q_l.u() - q_l.u_eq(), u_max_l, gamma));
-    const T supply_r = std::max(0.0f, supply(rho_m,      q_l.u() - q_l.u_eq(), u_max_r, gamma));
+    const T demand_l = std::max(0.0f, demand(q_l.rho(),  q_l.u() - q_l.u_eq(), u_max_l));
+    const T supply_r = std::max(0.0f, supply(rho_m,      q_l.u() - q_l.u_eq(), u_max_r));
 
     float m_l_rho, m_r_rho;
     if(demand_l <= supply_r)
     {
         m_l_rho = q_l.rho();
-        m_r_rho = inv_demand(demand_l, q_l.u() - q_l.u_eq(), u_max_r, gamma);
+        m_r_rho = inv_demand(demand_l, q_l.u() - q_l.u_eq(), u_max_r);
     }
     else
     {
-        m_l_rho = inv_supply(supply_r, q_l.u() - q_l.u_eq(), u_max_l, gamma);
+        m_l_rho = inv_supply(supply_r, q_l.u() - q_l.u_eq(), u_max_l);
         m_r_rho = rho_m;
     }
     assert(m_l_rho >= 0.0 && m_l_rho <= 1.0);
@@ -415,14 +405,12 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
     //    const float ueq = eq::u_eq(m_l_rho, u_max_l, gamma);
 
     const full_q q_m_r(m_r_rho,
-                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_r_rho, u_max_r, gamma)),
-                       u_max_r,
-                       gamma);
+                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_r_rho, u_max_r)),
+                       u_max_r);
 
     const full_q q_m_l(m_l_rho,
-                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l, gamma)),
-                       u_max_l,
-                       gamma);
+                       std::max(static_cast<T>(0.0), q_l.u() - q_l.u_eq() + eq::u_eq(m_l_rho, u_max_l)),
+                       u_max_l);
 
 
 //     printf("demand_l:   %8.5f       supply_r:     %8.5f\n", demand_l, supply_r);
@@ -464,9 +452,7 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
 template <typename T>
 inline void arz<T>::riemann_solution::starvation_riemann(const full_q &__restrict__ q_r,
                                                          const T                    u_max,
-                                                         const T                    inv_u_max,
-                                                         const T                    gamma,
-                                                         const T                    inv_gamma)
+                                                         const T                    inv_u_max)
 {
     if(q_r.rho() < VACUUM_EPS)
     {
@@ -486,14 +472,12 @@ inline void arz<T>::riemann_solution::starvation_riemann(const full_q &__restric
 template <typename T>
 inline void arz<T>::riemann_solution::stop_riemann(const full_q &__restrict__ q_l,
                                                    const T                    u_max,
-                                                   const T                    inv_u_max,
-                                                   const T                    gamma,
-                                                   const T                    inv_gamma)
+                                                   const T                    inv_u_max)
 {
     full_q q_m;
     q_m.u_eq() = q_l.u_eq() - q_l.u();
     q_m.u()    = 0.0;
-    q_m.rho()  = eq::inv_u_eq(q_m.u_eq(), inv_u_max, inv_gamma);
+    q_m.rho()  = eq::inv_u_eq(q_m.u_eq(), inv_u_max);
     q_m.y()    = -q_m.rho()*q_m.u_eq();
 
     const T rho_diff  = q_m.rho() - q_l.rho();

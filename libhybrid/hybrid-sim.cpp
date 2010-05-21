@@ -118,7 +118,7 @@ namespace hybrid
 
         clear_macro();
         convert_cars(sim);
-        fill_y(sim.gamma);
+        fill_y();
 
         current_cars().clear();
         next_cars().clear();

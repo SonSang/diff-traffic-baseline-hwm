@@ -706,8 +706,7 @@ namespace hybrid
                             }
                             downstream->q[0].rho() = std::min(1.0f, downstream->q[0].rho() + car_length/downstream->h);
                             downstream->q[0].y()   = std::min(0.0f, arz<float>::eq::y(downstream->q[0].rho(), c.velocity,
-                                                                                      downstream->speedlimit(),
-                                                                                      gamma));
+                                                                                      downstream->speedlimit()));
                             assert(downstream->q[0].check());
                             goto next_car;
                         }
