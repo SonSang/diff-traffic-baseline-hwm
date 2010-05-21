@@ -2104,7 +2104,7 @@ int main(int argc, char *argv[])
                        1.67,
                        33,
                        4);
-    s.macro_initialize(2.1*4.5, 0.0f);
+    s.macro_initialize(0.5, 2.1*4.5, 0.0f);
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {

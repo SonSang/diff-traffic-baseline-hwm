@@ -58,7 +58,8 @@ int main(int argc, char *argv[])
         ++num_steps;
         step_timer.stop();
         total_time += step_timer.interval_S();
-        std::cout << "\r" << num_steps << " " << dt << " " << step_timer.interval_S() << " " << total_time/num_steps;
+
+        std::cout << "\r" << num_steps << " " << dt << " " << step_timer.interval_S() << " " << total_time/num_steps << " " << s.ncars();
         std::cout.flush();
     }
     return 0;
