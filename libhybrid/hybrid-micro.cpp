@@ -685,11 +685,9 @@ namespace hybrid
                         if(curr->parent->end->network_boundary())
                             goto next_car;
 
-                        hwm::lane *hwm_downstream = curr->parent->downstream_lane();
-                        assert(hwm_downstream);
-                        assert(hwm_downstream->active);
-
-                        lane* downstream = hwm_downstream->user_data<lane>();
+                        lane *downstream = curr->downstream_lane();
+                        assert(downstream);
+                        assert(downstream->parent->active);
 
                         switch(downstream->sim_type)
                         {
@@ -699,18 +697,23 @@ namespace hybrid
                             destination_lane = downstream;
                             break;
                         case MACRO: //TODO update for correctness
+                            if(downstream->fictitious)
+                            {
+                                lane *next_downstream = downstream->downstream_lane();
+                                assert(next_downstream);
+                                assert(!next_downstream->fictitious);
+                                downstream = next_downstream;
+                            }
                             downstream->q[0].rho() = std::min(1.0f, downstream->q[0].rho() + car_length/downstream->h);
                             downstream->q[0].y()   = std::min(0.0f, arz<float>::eq::y(downstream->q[0].rho(), c.velocity,
-                                                                                      hwm_downstream->speedlimit,
+                                                                                      downstream->speedlimit(),
                                                                                       gamma));
                             assert(downstream->q[0].check());
                             goto next_car;
                         }
 
                         if (c.position >= 1.0)
-                        {
                             curr = downstream;
-                        }
                     }
 
                     assert(c.position < 1.0);
