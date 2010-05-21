@@ -190,13 +190,13 @@ namespace hybrid
         assert(cell >= 0);
         assert(cell < static_cast<int>(N));
 
-        const arz<float>::full_q q_c(q[cell], parent->speedlimit, gamma);
+        const arz<float>::full_q q_c(q[cell], speedlimit(), gamma);
         if(local < 0.5f)
         {
             if(cell == 0)
                 return q_c.u();
 
-            const arz<float>::full_q q_c_m(q[cell-1], parent->speedlimit, gamma);
+            const arz<float>::full_q q_c_m(q[cell-1], speedlimit(), gamma);
             return (local+0.5f) * q_c.u() + (0.5f-local) * q_c_m.u();
         }
         //local >= 0.5f
@@ -204,7 +204,7 @@ namespace hybrid
         if(cell == static_cast<int>(N)-1)
             return q_c.u();
 
-        const arz<float>::full_q q_c_p(q[cell+1], parent->speedlimit, gamma);
+        const arz<float>::full_q q_c_p(q[cell+1], speedlimit(), gamma);
         return (1.5f-local) * q_c.u() + (local-0.5f) * q_c_p.u();
     }
 
@@ -214,7 +214,7 @@ namespace hybrid
         arz<float>::full_q *fq[2] = { full_q_buff, full_q_buff + 1 };
 
         *fq[0] = arz<float>::full_q(q[0],
-                                    parent->speedlimit,
+                                    speedlimit(),
                                     gamma);
 
         float maxspeed = 0.0f;
@@ -266,13 +266,13 @@ namespace hybrid
         for(size_t i = 1; i < N; ++i)
         {
             *fq[1] = arz<float>::full_q(q[i],
-                                        parent->speedlimit,
+                                        speedlimit(),
                                         gamma);
 
             rs[i].riemann(*fq[0],
                           *fq[1],
-                          parent->speedlimit,
-                          1.0f/parent->speedlimit,
+                          speedlimit(),
+                          1.0f/speedlimit(),
                           gamma,
                           inv_gamma);
 
@@ -293,8 +293,8 @@ namespace hybrid
             if(!downstream)
             {
                 rs[N].stop_riemann(*fq[0],
-                                   parent->speedlimit,
-                                   1.0f/parent->speedlimit,
+                                   speedlimit(),
+                                   1.0f/speedlimit(),
                                    gamma,
                                    inv_gamma);
                 maxspeed = std::max(std::abs(rs[N].speeds[0]), maxspeed);
@@ -360,7 +360,7 @@ namespace hybrid
 
                 const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
                 assert(cell >=0);
-                q[cell] = arz<float>::q(q[cell].rho(), c.velocity, parent->speedlimit, sim.gamma);
+                q[cell] = arz<float>::q(q[cell].rho(), c.velocity, speedlimit(), sim.gamma);
                 if(c.position >= 1.0)
                 {
                     lane &sim_downstream = *(downstream->user_data<lane>());
@@ -425,7 +425,7 @@ namespace hybrid
                 q[i].y() /= q[i].rho();
             q[i].y() = arz<float>::eq::y(q[i].rho(),
                                          q[i].y(),
-                                         parent->speedlimit,
+                                         speedlimit(),
                                          gamma);
             q[i].fix();
         }

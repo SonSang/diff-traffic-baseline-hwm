@@ -254,7 +254,7 @@ namespace hybrid
 
         if(l.parent->end->network_boundary())
         {
-            next_velocity = l.parent->speedlimit;
+            next_velocity = l.speedlimit();
             distance      = min_for_free_movement;
             return;
         }
