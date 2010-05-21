@@ -238,14 +238,25 @@ namespace hybrid
                 upstream = next_upstream;
             }
 
-            rs[0].lebaque_inhomogeneous_riemann(arz<float>::full_q(upstream->q[upstream->N-1],
-                                                                   speedlimit(),
-                                                                   gamma),
-                                                *fq[0],
-                                                upstream->speedlimit(),
-                                                speedlimit(),
-                                                gamma,
-                                                inv_gamma);
+            const arz<float>::full_q us_end(upstream->q[upstream->N-1],
+                                            speedlimit(),
+                                            gamma);
+
+            if(upstream->speedlimit() == speedlimit())
+                rs[0].riemann(us_end,
+                              *fq[0],
+                              speedlimit(),
+                              1.0f/speedlimit(),
+                              gamma,
+                              inv_gamma);
+            else
+                rs[0].lebaque_inhomogeneous_riemann(us_end,
+                                                    *fq[0],
+                                                    upstream->speedlimit(),
+                                                    speedlimit(),
+                                                    gamma,
+                                                    inv_gamma);
+
             maxspeed = std::max(std::max(std::abs(rs[0].speeds[0]), std::abs(rs[0].speeds[1])),
                                 maxspeed);
         }
@@ -298,14 +309,25 @@ namespace hybrid
                     downstream = next_downstream;
                 }
 
-                rs[N].lebaque_inhomogeneous_riemann(*fq[0],
-                                                    arz<float>::full_q(downstream->q[0],
-                                                                       downstream->speedlimit(),
-                                                                       gamma),
-                                                    speedlimit(),
-                                                    downstream->speedlimit(),
-                                                    gamma,
-                                                    inv_gamma);
+                const arz<float>::full_q ds_start(downstream->q[0],
+                                                  downstream->speedlimit(),
+                                                  gamma);
+
+                if(speedlimit() == downstream->speedlimit())
+                    rs[N].riemann(*fq[0],
+                                  ds_start,
+                                  speedlimit(),
+                                  1.0f/speedlimit(),
+                                  gamma,
+                                  inv_gamma);
+                else
+                    rs[N].lebaque_inhomogeneous_riemann(*fq[0],
+                                                        ds_start,
+                                                        speedlimit(),
+                                                        downstream->speedlimit(),
+                                                        gamma,
+                                                        inv_gamma);
+
                 maxspeed = std::max(std::max(std::abs(rs[N].speeds[0]), std::abs(rs[N].speeds[1])),
                                     maxspeed);
             }
