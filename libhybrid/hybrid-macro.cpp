@@ -1,5 +1,8 @@
 #include "libhybrid/hybrid-sim.hpp"
 
+#include "xmmintrin.h"
+#include "pmmintrin.h"
+
 namespace hybrid
 {
     void lane::macro_initialize(const float h_suggest)
@@ -435,6 +438,10 @@ namespace hybrid
 
     void simulator::macro_initialize(const float in_gamma, const float h_suggest, const float rf)
     {
+        // Try to stay out of FP_ASSIST - enable DAZ and FTZ
+        _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+        _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+
         gamma             = in_gamma;
         relaxation_factor = rf;
         min_h             = std::numeric_limits<float>::max();
