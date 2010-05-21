@@ -339,6 +339,57 @@ namespace hybrid
         return res;
     }
 
+    void simulator::mass_reassign(std::vector<hwm::network_aux::road_spatial::entry> &qr)
+    {
+        BOOST_FOREACH(lane &l, lanes)
+        {
+            l.updated_flag = false;
+        }
+        BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, qr)
+        {
+            BOOST_FOREACH(hwm::network_aux::road_rev_map::lane_cont::value_type &lcv, *e.lc)
+            {
+                hwm::lane    &hwm_l = *(lcv.second.lane);
+                hybrid::lane &hyb_l = *(hwm_l.user_data<lane>());
+                if(!hyb_l.updated_flag && hyb_l.active())
+                {
+                    hyb_l.convert_to_micro(*this);
+                    hyb_l.updated_flag = true;
+                }
+            }
+        }
+        BOOST_FOREACH(hwm::intersection_pair &ip, hnet->intersections)
+        {
+            BOOST_FOREACH(hwm::intersection::state &s, ip.second.states)
+            {
+                BOOST_FOREACH(hwm::lane_pair &lp, s.fict_lanes)
+                {
+                    lane &hyb_l = *(lp.second.user_data<lane>());
+                    if(!hyb_l.updated_flag && hyb_l.active())
+                    {
+                        lane *up_l(hyb_l.upstream_lane());
+                        lane *dn_l(hyb_l.downstream_lane());
+                        if((up_l && up_l->updated_flag && up_l->is_micro()) ||
+                           (dn_l && dn_l->updated_flag && dn_l->is_micro()))
+                        {
+                            hyb_l.convert_to_micro(*this);
+                            hyb_l.updated_flag = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        BOOST_FOREACH(lane &l, lanes)
+        {
+            if(!l.updated_flag && l.active())
+            {
+                l.convert_to_macro(*this);
+                l.updated_flag = true;
+            }
+        }
+    }
+
     float simulator::hybrid_step()
     {
         // fill in micro

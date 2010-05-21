@@ -202,6 +202,8 @@ namespace hybrid
 
         size_t ncars() const;
 
+        void mass_reassign(std::vector<hwm::network_aux::road_spatial::entry> &qr);
+
         float hybrid_step();
         void advance_intersections(float dt);
 
