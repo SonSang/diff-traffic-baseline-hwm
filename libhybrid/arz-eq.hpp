@@ -24,14 +24,14 @@ inline T arz<T>::eq::u_eq(const T rho,
                           const T u_max)
 {
     assert(rho >= 0.0f);
-    return u_max*(1.0 - std::pow(rho, GAMMA));
+    return u_max*(1.0 - std::sqrt(rho));
 }
 
 template <typename T>
 inline T arz<T>::eq::inv_u_eq(const T u_eq,
                               const T inv_u_max)
 {
-    return std::pow(1 - u_eq*inv_u_max, INV_GAMMA);
+    return (1 - u_eq*inv_u_max)*(1 - u_eq*inv_u_max);
 }
 
 template <typename T>
@@ -40,7 +40,7 @@ inline T arz<T>::eq::u_eq_prime(const T rho,
 {
     if(rho < epsilon())
         return 0.0;
-    return -u_max*GAMMA*std::pow(rho, GAMMA - 1);
+    return -u_max*GAMMA*1/std::sqrt(rho);
 }
 
 
@@ -77,7 +77,8 @@ inline T fundamental_diagram(const T rho, const T relv, const T u_max)
 template <typename T>
 inline T critical_density(const T relv, const T u_max)
 {
-    return std::pow((u_max + relv)/(u_max*(1.0f+GAMMA)), INV_GAMMA);
+    const float arg = (u_max + relv)/(u_max*(1.0f+GAMMA));
+    return arg*arg;
 }
 
 template <typename T>

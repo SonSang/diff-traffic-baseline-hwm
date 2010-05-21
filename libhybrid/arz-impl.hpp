@@ -206,7 +206,7 @@ inline typename arz<T>::full_q arz<T>::centered_rarefaction(const full_q &__rest
 
     res.u()    = GAMMA*(q_l.u() + u_max - q_l.u_eq())/(GAMMA+1);
     res.u_eq() = u_max - res.u()/(u_max*GAMMA);
-    res.rho()  = std::pow( u_max - res.u_eq(), INV_GAMMA);
+    res.rho()  = (u_max - res.u_eq())*(u_max - res.u_eq());
     res.y()    = res.rho()*(res.u() - res.u_eq());
 
     return res;
@@ -220,7 +220,7 @@ inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &__restrict__ q_l
     full_q res;
 
     res.u_eq() = q_r.u() - q_l.u() + q_l.u_eq();
-    res.rho()  = std::pow(1 - res.u_eq()*inv_u_max, INV_GAMMA);
+    res.rho()  = (1 - res.u_eq()*inv_u_max)*(1 - res.u_eq()*inv_u_max);
     res.u()    = q_r.u();
     res.y()    = res.rho()*(res.u() - res.u_eq());
 
