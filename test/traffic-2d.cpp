@@ -596,13 +596,15 @@ static const char *fshader =
 
 struct car_draw_info
 {
+    typedef enum {ENTERING, NORMAL, LEAVING} state_t;
+
     car_draw_info()
     {}
-    car_draw_info(int c) : color(c), expired(false)
+    car_draw_info(int c) : color(c), state(NORMAL)
     {}
 
     int     color;
-    bool    expired;
+    state_t state;
     float   timestamp;
     float   last_velocity;
     mat4x4f frame;
@@ -1311,9 +1313,9 @@ public:
                 std::tr1::unordered_map<size_t, tex_car_draw*>::iterator  to_remove = car_map.find(cs.c.id);
                 assert(to_remove != car_map.end());
                 car_draw_info                                            &cdi       = to_remove->second->members.find(cs.c.id)->second;
-                cdi.expired                                                         = true;
+                cdi.state                                                           = car_draw_info::LEAVING;
                 cdi.last_velocity                                                   = cs.c.velocity;
-                cdi.timestamp                                                       = t;
+                cdi.timestamp                                                       = hci->times[0];
             }
         }
         {
@@ -1325,12 +1327,17 @@ public:
 
             BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, new_cars)
             {
-                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator drawer(car_map.find(cs.c.id));
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator  drawer(car_map.find(cs.c.id));
                 assert(drawer == car_map.end());
-                tex_car_draw *draw_pick = car_drawers[rand() % car_drawers.size()];
-                drawer                  = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
-                draw_pick->members.insert(std::make_pair(cs.c.id, car_draw_info(rand() % n_car_colors)));
-                drawer->second          = draw_pick;
+                tex_car_draw                                             *draw_pick = car_drawers[rand() % car_drawers.size()];
+                drawer                                                              = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
+                std::tr1::unordered_map<size_t, car_draw_info>::iterator  new_cdi   = draw_pick->members.insert(std::make_pair(cs.c.id, car_draw_info(rand() % n_car_colors))).first;
+                drawer->second                                                      = draw_pick;
+                new_cdi->second.state                                               = car_draw_info::ENTERING;
+                new_cdi->second.last_velocity                                       = cs.c.velocity;
+                new_cdi->second.timestamp                                           = hci->times[1];
+                const mat4x4f trans(cs.c.point_frame(cs.la, sim->hnet->lane_width));
+                new_cdi->second.frame                                               = tvmet::trans(trans);
             }
         }
 
@@ -1341,10 +1348,14 @@ public:
             {
                 std::tr1::unordered_map<size_t, car_draw_info>::iterator copy(current);
                 ++current;
-                if(copy->second.expired && t - copy->second.timestamp > EXPIRE_TIME)
+                if(copy->second.state == car_draw_info::LEAVING && t - copy->second.timestamp > EXPIRE_TIME)
                 {
                     car_map.erase(copy->first);
                     tcd->members.erase(copy);
+                }
+                else if(copy->second.state == car_draw_info::ENTERING && t > copy->second.timestamp)
+                {
+                    copy->second.state = car_draw_info::NORMAL;
                 }
             }
         }
@@ -1550,18 +1561,27 @@ public:
                 BOOST_FOREACH(id_car_draw_info &car, drawer->members)
                 {
                     glColor3fv(car_colors[car.second.color]);
-                    float opacity = 1.0;
-                    if(!car.second.expired)
+                    float opacity;
+                    switch(car.second.state)
                     {
-                        const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
-                        car.second.frame = tvmet::trans(trans);
+                    case car_draw_info::NORMAL:
+                        {
+                            const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
+                            car.second.frame = tvmet::trans(trans);
+                            opacity          = 1.0;
+                        }
+                        break;
+                    case car_draw_info::ENTERING:
+                        opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
+                        break;
+                    case car_draw_info::LEAVING:
+                        opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                        break;
                     }
-                    else
-                        opacity -= (t - car.second.timestamp)/EXPIRE_TIME;
 
                     glPushMatrix();
                     glMultMatrixf(car.second.frame.data());
-                    if(car.second.expired)
+                    if(car.second.state != car_draw_info::NORMAL)
                         glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
                     drawer->draw_car_list(opacity);
                     glPopMatrix();
@@ -1588,14 +1608,24 @@ public:
                     typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
                     BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
                     {
-                        float opacity = 1.0;
-                        if(car.second.expired)
-                            opacity -= (t - car.second.timestamp)/EXPIRE_TIME;
+                        float opacity;
+                        switch(car.second.state)
+                        {
+                        case car_draw_info::NORMAL:
+                            opacity = 1.0;
+                        break;
+                        case car_draw_info::ENTERING:
+                            opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
+                            break;
+                        case car_draw_info::LEAVING:
+                            opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                            break;
+                        }
                         glPushMatrix();
                         glMultMatrixf(car.second.frame.data());
-                        if(car.second.expired)
+                        if(car.second.state != car_draw_info::NORMAL)
                             glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
-                        const bool braking = !car.second.expired && hci->acceleration(car.first, t) < BRAKING_THRESHOLD;
+                        const bool braking = car.second.state == car_draw_info::NORMAL && hci->acceleration(car.first, t) < BRAKING_THRESHOLD;
                         night_setup.draw_car_lights(opacity, braking);
                         glPopMatrix();
                     }
