@@ -1,6 +1,4 @@
-#include "hybrid-sim.hpp"
-
-#include <iostream>
+#include "libhybrid/hybrid-sim.hpp"
 
 namespace hybrid
 {

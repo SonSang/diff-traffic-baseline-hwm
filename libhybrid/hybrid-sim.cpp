@@ -1,4 +1,4 @@
-#include "hybrid-sim.hpp"
+#include "libhybrid/hybrid-sim.hpp"
 
 namespace hybrid
 {

@@ -1,6 +1,7 @@
 #include "libroad/hwm_network.hpp"
 #include "libhybrid/libhybrid-common.hpp"
-#include "arz.hpp"
+#include "libhybrid/arz.hpp"
+#include "libhybrid/pc-poisson.hpp"
 #include <boost/random.hpp>
 #include <set>
 
