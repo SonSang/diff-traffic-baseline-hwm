@@ -1189,10 +1189,10 @@ public:
                         -im_res[1]/2);
         if(text)
         {
-            boost::posix_time::time_duration td(0,
-                                                0,
-                                                std::floor(std::fmod(t+time_offset, night_setup.day_length)),
-                                                0);
+            const int seconds                         = static_cast<int>(std::fmod(t+time_offset, night_setup.day_length));
+            const int milliseconds                    = static_cast<int>((std::fmod(t+time_offset, night_setup.day_length) - seconds)*1000);
+            const boost::posix_time::time_duration td = boost::posix_time::seconds(seconds) +
+                                                        boost::posix_time::milliseconds(milliseconds);
             put_text(cr, boost::str(boost::format("real time:     %8.3fs") % t), 10, 5, LEFT, TOP);
             put_text(cr, boost::str(boost::format("time of day: %s") % boost::posix_time::to_simple_string(td)), 10, 30, LEFT, TOP);
             put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 270, 5, LEFT, TOP);
