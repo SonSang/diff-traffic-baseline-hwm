@@ -213,8 +213,11 @@ namespace hybrid
         arz<float>::full_q  full_q_buff[2];
         arz<float>::full_q *fq[2] = { full_q_buff, full_q_buff + 1 };
 
+        const float my_speedlimit  = speedlimit();
+        const float inv_speedlimit = 1.0f/my_speedlimit;
+
         *fq[0] = arz<float>::full_q(q[0],
-                                    speedlimit(),
+                                    my_speedlimit,
                                     gamma);
 
         float maxspeed = 0.0f;
@@ -222,8 +225,8 @@ namespace hybrid
         if(!upstream)
         {
             rs[0].starvation_riemann(*fq[0],
-                                     speedlimit(),
-                                     1.0f/speedlimit(),
+                                     my_speedlimit,
+                                     inv_speedlimit,
                                      gamma,
                                      inv_gamma);
             maxspeed = std::max(rs[0].speeds[1], maxspeed);
@@ -239,21 +242,21 @@ namespace hybrid
             }
 
             const arz<float>::full_q us_end(upstream->q[upstream->N-1],
-                                            speedlimit(),
+                                            my_speedlimit,
                                             gamma);
 
-            if(upstream->speedlimit() == speedlimit())
+            if(upstream->speedlimit() == my_speedlimit)
                 rs[0].riemann(us_end,
                               *fq[0],
-                              speedlimit(),
-                              1.0f/speedlimit(),
+                              my_speedlimit,
+                              inv_speedlimit,
                               gamma,
                               inv_gamma);
             else
                 rs[0].lebaque_inhomogeneous_riemann(us_end,
                                                     *fq[0],
                                                     upstream->speedlimit(),
-                                                    speedlimit(),
+                                                    my_speedlimit,
                                                     gamma,
                                                     inv_gamma);
 
@@ -266,13 +269,13 @@ namespace hybrid
         for(size_t i = 1; i < N; ++i)
         {
             *fq[1] = arz<float>::full_q(q[i],
-                                        speedlimit(),
+                                        my_speedlimit,
                                         gamma);
 
             rs[i].riemann(*fq[0],
                           *fq[1],
-                          speedlimit(),
-                          1.0f/speedlimit(),
+                          my_speedlimit,
+                          inv_speedlimit,
                           gamma,
                           inv_gamma);
 
@@ -293,8 +296,8 @@ namespace hybrid
             if(!downstream)
             {
                 rs[N].stop_riemann(*fq[0],
-                                   speedlimit(),
-                                   1.0f/speedlimit(),
+                                   my_speedlimit,
+                                   inv_speedlimit,
                                    gamma,
                                    inv_gamma);
                 maxspeed = std::max(std::abs(rs[N].speeds[0]), maxspeed);
@@ -313,17 +316,17 @@ namespace hybrid
                                                   downstream->speedlimit(),
                                                   gamma);
 
-                if(speedlimit() == downstream->speedlimit())
+                if(my_speedlimit == downstream->speedlimit())
                     rs[N].riemann(*fq[0],
                                   ds_start,
-                                  speedlimit(),
-                                  1.0f/speedlimit(),
+                                  my_speedlimit,
+                                  inv_speedlimit,
                                   gamma,
                                   inv_gamma);
                 else
                     rs[N].lebaque_inhomogeneous_riemann(*fq[0],
                                                         ds_start,
-                                                        speedlimit(),
+                                                        my_speedlimit,
                                                         downstream->speedlimit(),
                                                         gamma,
                                                         inv_gamma);
