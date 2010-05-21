@@ -167,9 +167,9 @@ namespace hybrid
             }
             else
             {
-                hwm::lane *hwm_downstream = parent->downstream_lane();
-                if(hwm_downstream)
-                    hwm_downstream->user_data<lane>()->distance_to_car(distance, vel, distance_max, sim);
+                const lane *downstream = downstream_lane();
+                if(downstream)
+                    downstream->distance_to_car(distance, vel, distance_max, sim);
                 else
                     vel = 0.0f;
             }
@@ -351,7 +351,7 @@ namespace hybrid
             q[i].y() -= q[i].y()*coefficient*sim.relaxation_factor;
             q[i].fix();
         }
-        hwm::lane *downstream = parent->downstream_lane();
+        lane *downstream = downstream_lane();
         if(downstream)
         {
             float param;
@@ -366,9 +366,8 @@ namespace hybrid
                 q[cell] = arz<float>::q(q[cell].rho(), c.velocity, speedlimit(), sim.gamma);
                 if(c.position >= 1.0)
                 {
-                    lane &sim_downstream = *(downstream->user_data<lane>());
-                    c.position = length/sim_downstream.length*(c.position-1.0f);
-                    sim_downstream.next_cars().push_back(sim.make_car(c.position, c.velocity, c.acceleration));
+                    c.position = length*downstream->inv_length*(c.position-1.0f);
+                    downstream->next_cars().push_back(sim.make_car(c.position, c.velocity, c.acceleration));
                 }
             }
         }

@@ -142,10 +142,22 @@ namespace hybrid
         return l ? l->user_data<lane>() : 0;
     }
 
+    const lane *lane::upstream_lane() const
+    {
+        const hwm::lane *l(parent->upstream_lane());
+        return l ? l->user_data<const lane>() : 0;
+    }
+
     lane *lane::downstream_lane()
     {
         hwm::lane *l(parent->downstream_lane());
         return l ? l->user_data<lane>() : 0;
+    }
+
+    const lane *lane::downstream_lane() const
+    {
+        const hwm::lane *l(parent->downstream_lane());
+        return l ? l->user_data<const lane>() : 0;
     }
 
     lane::serial_state lane::serial() const

@@ -123,7 +123,9 @@ namespace hybrid
         lane                   *left_adjacency(float &param);
         lane                   *right_adjacency(float &param);
         lane                   *upstream_lane();
+        const lane             *upstream_lane() const;
         lane                   *downstream_lane();
+        const lane             *downstream_lane() const;
         float                   speedlimit() const { return parent->speedlimit; }
         void                    populate(float rate, simulator &sim);
 
