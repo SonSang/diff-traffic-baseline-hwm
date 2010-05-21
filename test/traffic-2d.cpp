@@ -30,6 +30,7 @@ static const char  RESOURCE_ROOT_ENV_NAME[]   = "TRAFFIC_2D_RESOURCE_ROOT";
 static const char  HEADLIGHT_TEX[]            = "small-headlight-pair.png";
 static const char  TAILLIGHT_TEX[]            = "taillight.png";
 static const char  AMBIENT_TEX[]              = "ambient-timeofday.png";
+static const char  ARROW_TEX[]                = "arrow.png";
 static char       *RESOURCE_ROOT              = 0;
 
 static bool checkFramebufferStatus()
@@ -1100,6 +1101,26 @@ public:
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         }
+        if(!glIsTexture(arrow_tex_))
+        {
+            glGenTextures(1, &arrow_tex_);
+            glBindTexture (GL_TEXTURE_2D, arrow_tex_);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+            const std::string arrow_path((bf::path(RESOURCE_ROOT) / ARROW_TEX).string());
+            std::cout << "Looking for arrow texture in " << arrow_path << std::endl;
+            Magick::Image aim(arrow_path);
+            unsigned char *pix = new unsigned char[aim.columns()*aim.rows()*4];
+            arrow_aspect = aim.columns()/static_cast<float>(aim.rows());
+            aim.write(0, 0, aim.columns(), aim.rows(), "RGBA", Magick::CharPixel, pix);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, aim.columns(), aim.rows(),
+                              GL_RGBA, GL_UNSIGNED_BYTE, pix);
+            delete[] pix;
+        }
     }
 
     void retex_overlay(const vec2f &my_center, const float my_scale, const vec2i &im_res, bool text)
@@ -1479,33 +1500,49 @@ public:
 
         glEnable(GL_TEXTURE_2D);
 
-        glBindTexture (GL_TEXTURE_2D, continuum_tex_);
         glColor4f(1.0, 1.0, 1.0, 1.0);
+        const float arrow_length = arrow_aspect*sim->hnet->lane_width;
         std::vector<vec4f> colors;
         BOOST_FOREACH(hybrid::lane &l, sim->lanes)
         {
-            if(!l.parent->active || !l.is_macro() || l.fictitious)
+            if(!l.parent->active)
                 continue;
 
-            colors.resize(l.N);
-            for(size_t i = 0; i < l.N; ++i)
+            if(l.is_macro() && !l.fictitious)
             {
-                float val    = l.q[i].rho();
-                blackbody(colors[i].data(), val);
-                colors[i][3] = 1.0f;
+                glBindTexture (GL_TEXTURE_2D, continuum_tex_);
+                colors.resize(l.N);
+                for(size_t i = 0; i < l.N; ++i)
+                {
+                    float val    = l.q[i].rho();
+                    blackbody(colors[i].data(), val);
+                    colors[i][3] = 1.0f;
+                }
+
+                glTexImage2D (GL_TEXTURE_2D,
+                              0,
+                              GL_RGBA,
+                              l.N,
+                              1,
+                              0,
+                              GL_RGBA,
+                              GL_FLOAT,
+                              colors[0].data());
+            }
+            else if(!l.fictitious)
+                continue;
+            else
+            {
+                glBindTexture (GL_TEXTURE_2D, arrow_tex_);
+                glMatrixMode(GL_TEXTURE);
+                glTranslatef(1.0-l.length/arrow_length, 0.0, 0.0);
+                glScalef(l.length/arrow_length, 1.0, 1.0);
             }
 
-            glTexImage2D (GL_TEXTURE_2D,
-                          0,
-                          GL_RGBA,
-                          l.N,
-                          1,
-                          0,
-                          GL_RGBA,
-                          GL_FLOAT,
-                          colors[0].data());
-
             network_drawer.draw_lane_solid(l.parent->id);
+
+            glLoadIdentity();
+            glMatrixMode(GL_MODELVIEW);
         }
 
         if(hci)
@@ -1977,6 +2014,8 @@ public:
 
     GLuint   overlay_tex_;
     GLuint   continuum_tex_;
+    GLuint   arrow_tex_;
+    float    arrow_aspect;
 
     std::vector<aabb2d>                                rectangles;
     bool                                               drawing;
