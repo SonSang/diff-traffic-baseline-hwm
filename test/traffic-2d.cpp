@@ -1522,18 +1522,19 @@ public:
                     float opacity;
                     switch(car.second.state)
                     {
-                    case car_draw_info::NORMAL:
-                        {
-                            const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
-                            car.second.frame = tvmet::trans(trans);
-                            opacity          = 1.0;
-                        }
-                        break;
                     case car_draw_info::ENTERING:
                         opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
                         break;
                     case car_draw_info::LEAVING:
                         opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                        break;
+                    case car_draw_info::NORMAL:
+                    default:
+                        {
+                            const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
+                            car.second.frame = tvmet::trans(trans);
+                            opacity          = 1.0;
+                        }
                         break;
                     }
 
@@ -1569,14 +1570,15 @@ public:
                         float opacity;
                         switch(car.second.state)
                         {
-                        case car_draw_info::NORMAL:
-                            opacity = 1.0;
-                        break;
                         case car_draw_info::ENTERING:
                             opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
                             break;
                         case car_draw_info::LEAVING:
                             opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                            break;
+                        case car_draw_info::NORMAL:
+                        default:
+                            opacity = 1.0;
                             break;
                         }
                         glPushMatrix();
