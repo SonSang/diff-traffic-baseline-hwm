@@ -1,4 +1,5 @@
 #include "libhybrid/hybrid-sim.hpp"
+#include "libhybrid/timer.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -36,22 +37,28 @@ int main(int argc, char *argv[])
                        1.67,
                        33,
                        4);
-    s.macro_initialize(0.5, 4.1*4.5, 0.0f);
+    s.macro_initialize(0.5, 8.1*4.5, 0.0f);
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
         l.sim_type = hybrid::MICRO;
-        l.populate(0.05/s.car_length, s);
+        l.populate(0.25/s.car_length, s);
         l.convert_to_macro(s);
     }
 
-    int   num_steps = 0;
+    int   num_steps  = 0;
+    float total_time = 0;
+    timer step_timer;
     while(1)
     {
+        step_timer.reset();
+        step_timer.start();
         float dt = s.hybrid_step();
         s.advance_intersections(dt);
         ++num_steps;
-        std::cout << "\r" << num_steps << " " << dt;
+        step_timer.stop();
+        total_time += step_timer.interval_S();
+        std::cout << "\r" << num_steps << " " << dt << " " << step_timer.interval_S() << " " << total_time/num_steps;
         std::cout.flush();
     }
     return 0;
