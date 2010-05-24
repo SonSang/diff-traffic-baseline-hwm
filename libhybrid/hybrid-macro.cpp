@@ -472,10 +472,18 @@ namespace hybrid
             l.fill_y();
         }
         std::cout << "min_h is " << min_h << std::endl;
+
+        const int max_thr = omp_get_max_threads();
+        maxes             = (float*)xmalloc(max_thr*MAXES_STRIDE*sizeof(float));
+        struct sched_param sp;
+        sp.sched_priority = 10;
+        if (sched_setscheduler(0, SCHED_FIFO, &sp) == 0)
+            printf("Running with real-time priority (SCHED_FIFO)\n");
     }
 
     void simulator::macro_cleanup()
     {
+        free(maxes);
         free(q_base);
         free(rs_base);
     }
@@ -501,23 +509,45 @@ namespace hybrid
 
     float simulator::macro_step(const float cfl)
     {
-        float maxspeed = 0.0f;
-        BOOST_FOREACH(lane &l, lanes)
+        const int max_thr  = omp_get_max_threads();
+        float     maxspeed = 0.0f;
+        float     dt;
+#pragma omp parallel
         {
-            if(l.is_macro() && l.parent->active && !l.fictitious)
-                maxspeed = std::max(l.collect_riemann(),
-                                    maxspeed);
-        }
+            const int thr_id = omp_get_thread_num();
+            maxes[thr_id*MAXES_STRIDE] = 0.0f;
 
-        if(maxspeed < arz<float>::epsilon())
-            maxspeed = min_h;
+#pragma omp for
+            for(size_t i = 0; i < lanes.size(); ++i)
+            {
+                lane &l = lanes[i];
+                if(l.is_macro() && l.parent->active && !l.fictitious)
+                {
+                    const float max = l.collect_riemann();
+                    maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
+                }
+            }
 
-        const float dt = std::min(cfl*min_h/maxspeed, 0.5f);
+#pragma omp barrier
+#pragma omp single
+            {
+                maxspeed = 0.0f;
+                for(int t = 0; t < max_thr; ++t)
+                    maxspeed = std::max(maxspeed, maxes[t*MAXES_STRIDE]);
 
-        BOOST_FOREACH(lane &l, lanes)
-        {
-            if(l.is_macro() && l.parent->active && !l.fictitious)
-                l.update(dt, *this);
+                if(maxspeed < arz<float>::epsilon())
+                    maxspeed = min_h;
+
+                dt = std::min(cfl*min_h/maxspeed, 0.5f);
+            }
+
+#pragma omp for
+            for(size_t i = 0; i < lanes.size(); ++i)
+            {
+                lane &l = lanes[i];
+                if(l.is_macro() && l.parent->active && !l.fictitious)
+                    l.update(dt, *this);
+            }
         }
 
         return dt;

@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     std::cerr << libhybrid_package_string() << std::endl;
     if(argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <network file>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <network file> [number of threads]" << std::endl;
         return 1;
     }
 
@@ -29,6 +29,12 @@ int main(int argc, char *argv[])
         std::cerr << "HWM net doesn't check out: " << e.what() << std::endl;
         exit(1);
     }
+
+    int n_threads = 1;
+    if(argc == 3)
+        n_threads = boost::lexical_cast<int>(argv[2]);
+    omp_set_num_threads(n_threads);
+    std::cout << "OpenMP using " << n_threads << " threads" << std::endl;
 
     hybrid::simulator s(&net,
                         4.5f,

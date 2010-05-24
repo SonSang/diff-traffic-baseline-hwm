@@ -2,8 +2,10 @@
 #include "libhybrid/libhybrid-common.hpp"
 #include "libhybrid/arz.hpp"
 #include "libhybrid/pc-poisson.hpp"
+#include "libhybrid/allocate.hpp"
 #include <boost/random.hpp>
 #include <set>
+#include <omp.h>
 
 namespace hybrid
 {
@@ -252,5 +254,6 @@ namespace hybrid
         float                         h_suggest;
         float                         min_h;
         float                         relaxation_factor;
+        float                        *maxes;
     };
 }
