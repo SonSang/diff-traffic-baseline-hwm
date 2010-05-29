@@ -14,7 +14,8 @@ pkginclude_HEADERS  = arz.hpp \
 		      pc-integrate.hpp \
 		      pc-poisson.hpp \
 		      timer.hpp \
-		      libhybrid-common.hpp
+		      libhybrid-common.hpp \
+                      allocate.hpp
 
 libhybrid_la_CPPFLAGS =  $(LIBROAD_CFLAGS) $(CAIRO_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CXXFLAGS) $(OPENMP_CXXFLAGS)
 
