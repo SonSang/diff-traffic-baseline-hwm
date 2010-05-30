@@ -215,7 +215,6 @@ namespace hybrid
 
         while(tmp_position >= 1.0)
         {
-
             hwm::lane *hwm_downstream = curr->parent->downstream_lane();
 
             if (!hwm_downstream)
@@ -602,11 +601,12 @@ namespace hybrid
         do
         {
             max_acceleration = EPSILON;
-            BOOST_FOREACH(lane &l, lanes)
+            BOOST_FOREACH(lane *l, micro_lanes)
             {
-                if(l.is_micro() && l.parent->active)
-                    max_acceleration = std::max(l.settle_pass(timestep, EPSILON, EPSILON_2, *this),
-                                                (float) max_acceleration);
+                assert(l->is_micro());
+                assert(l->active());
+                max_acceleration = std::max(l->settle_pass(timestep, EPSILON, EPSILON_2, *this),
+                                            (float) max_acceleration);
             }
 
             std::cout << "Max acceleration in settle: " << max_acceleration << std::endl;
@@ -638,21 +638,28 @@ namespace hybrid
 
     void simulator::compute_accelerations(const float timestep)
     {
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            if (l.is_micro() && l.parent->active)
-                l.compute_lane_accelerations(timestep, *this);
+            assert(l->is_micro());
+            if(!l->active())
+                continue;
+            l->compute_lane_accelerations(timestep, *this);
         }
 
-        BOOST_FOREACH(lane& l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            if (l.is_micro() and l.parent->active)
-                l.compute_merges(timestep, *this);
+            assert(l->is_micro());
+            if(!l->active())
+                continue;
+            l->compute_merges(timestep, *this);
         }
 
-        BOOST_FOREACH(lane& l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            l.car_swap();
+            assert(l->is_micro());
+            if(!l->active())
+                continue;
+            l->car_swap();
         }
     }
 
@@ -660,67 +667,69 @@ namespace hybrid
     {
         compute_accelerations(timestep);
 
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            if(l.is_micro() && l.parent->active)
+            assert(l->is_micro());
+            if(!l->active())
+                continue;
+
+            BOOST_FOREACH(car &c, l->current_cars())
             {
-                BOOST_FOREACH(car &c, l.current_cars())
-                {
-                    c.integrate(timestep, l, hnet->lane_width);
-                }
+                c.integrate(timestep, *l, hnet->lane_width);
             }
         }
 
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            if(l.is_micro() && l.parent->active)
+            assert(l->is_micro());
+            if(!l->active())
+                continue;
+
+            BOOST_FOREACH(car &c, l->current_cars())
             {
-                BOOST_FOREACH(car &c, l.current_cars())
+                lane* destination_lane = l;
+                lane* curr             = l;
+
+                while(c.position >= 1.0)
                 {
-                    lane* destination_lane = &l;
-                    lane* curr = &l;
+                    if(curr->parent->end->network_boundary())
+                        goto next_car;
 
-                    while(c.position >= 1.0)
+                    lane *downstream = curr->downstream_lane();
+                    assert(downstream);
+                    assert(downstream->active());
+
+                    switch(downstream->sim_type)
                     {
-                        if(curr->parent->end->network_boundary())
-                            goto next_car;
-
-                        lane *downstream = curr->downstream_lane();
-                        assert(downstream);
-                        assert(downstream->parent->active);
-
-                        switch(downstream->sim_type)
+                    case MICRO:
+                        c.position = (c.position - 1.0f) * curr->length * downstream->inv_length;
+                        // downstream->next_cars().push_back(c);
+                        destination_lane = downstream;
+                        break;
+                    case MACRO: //TODO update for correctness
+                        if(downstream->fictitious)
                         {
-                        case MICRO:
-                            c.position = (c.position - 1.0f) * curr->length * downstream->inv_length;
-                            // downstream->next_cars().push_back(c);
-                            destination_lane = downstream;
-                            break;
-                        case MACRO: //TODO update for correctness
-                            if(downstream->fictitious)
-                            {
-                                lane *next_downstream = downstream->downstream_lane();
-                                assert(next_downstream);
-                                assert(!next_downstream->fictitious);
-                                downstream = next_downstream;
-                            }
-                            downstream->q[0].rho() = std::min(1.0f, downstream->q[0].rho() + car_length/downstream->h);
-                            downstream->q[0].y()   = std::min(0.0f, arz<float>::eq::y(downstream->q[0].rho(), c.velocity,
-                                                                                      downstream->speedlimit()));
-                            assert(downstream->q[0].check());
-                            goto next_car;
+                            lane *next_downstream = downstream->downstream_lane();
+                            assert(next_downstream);
+                            assert(!next_downstream->fictitious);
+                            downstream = next_downstream;
                         }
-
-                        if (c.position >= 1.0)
-                            curr = downstream;
+                        downstream->q[0].rho() = std::min(1.0f, downstream->q[0].rho() + car_length/downstream->h);
+                        downstream->q[0].y()   = std::min(0.0f, arz<float>::eq::y(downstream->q[0].rho(), c.velocity,
+                                                                                  downstream->speedlimit()));
+                        assert(downstream->q[0].check());
+                        goto next_car;
                     }
 
-                    assert(c.position < 1.0);
-
-                    destination_lane->next_cars().push_back(c);
-
-                next_car:;
+                    if (c.position >= 1.0)
+                        curr = downstream;
                 }
+
+                assert(c.position < 1.0);
+
+                destination_lane->next_cars().push_back(c);
+
+            next_car:;
             }
         }
     }

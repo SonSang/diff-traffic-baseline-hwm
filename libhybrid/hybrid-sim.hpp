@@ -120,8 +120,6 @@ namespace hybrid
         bool                    occupied()  const;
         bool                    active()    const;
         void                    convert(sim_t dest_type, simulator &sim);
-        void                    convert_to_micro(simulator &sim);
-        void                    convert_to_macro(simulator &sim);
         lane                   *left_adjacency(float &param);
         lane                   *right_adjacency(float &param);
         lane                   *upstream_lane();
@@ -211,6 +209,9 @@ namespace hybrid
         void  mass_reassign(std::vector<hwm::network_aux::road_spatial::entry> &qr);
         float hybrid_step();
 
+        void convert_to_micro(lane &l);
+        void convert_to_macro(lane &l);
+
         void parallel_hybrid_run(int nsteps);
         void advance_intersections(float dt);
         void apply_incoming_bc(float dt, float t);
@@ -220,6 +221,9 @@ namespace hybrid
 
         hwm::network          *hnet;
         std::vector<lane>      lanes;
+        std::vector<lane*>     micro_lanes;
+        std::vector<lane*>     macro_lanes;
+
         float                  car_length;
         float                  rear_bumper_rear_axle;
         float                  time;

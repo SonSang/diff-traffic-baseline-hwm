@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     {
         l.sim_type = hybrid::MICRO;
         l.populate(0.25/s.car_length, s);
-        l.convert_to_macro(s);
+        s.convert_to_macro(l);
     }
 
     int   num_steps  = 1000;

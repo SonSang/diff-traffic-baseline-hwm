@@ -2110,6 +2110,7 @@ int main(int argc, char *argv[])
     {
         l.sim_type = hybrid::MICRO;
         l.populate(0.05/s.car_length, s);
+        s.micro_lanes.push_back(&l);
     }
 
     //    s.settle(0.033);

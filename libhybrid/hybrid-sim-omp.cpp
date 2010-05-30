@@ -47,14 +47,14 @@ namespace hybrid
 
                     maxes[thr_id*MAXES_STRIDE] = 0.0f;
 #pragma omp for
-                    for(size_t i = 0; i < lanes.size(); ++i)
+                    for(size_t i = 0; i < macro_lanes.size(); ++i)
                     {
-                        lane &l = lanes[i];
-                        if(l.is_macro() && l.parent->active && !l.fictitious)
-                        {
-                            const float max = l.collect_riemann();
-                            maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
-                        }
+                        lane *l = macro_lanes[i];
+                        assert(l->is_macro());
+                        assert(l->active());
+                        assert(!l->fictitious);
+                        const float max = l->collect_riemann();
+                        maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
                     }
 
 #pragma omp barrier
@@ -91,11 +91,13 @@ namespace hybrid
                     }
 
 #pragma omp for
-                    for(size_t i = 0; i < lanes.size(); ++i)
+                    for(size_t i = 0; i < macro_lanes.size(); ++i)
                     {
-                        lane &l = lanes[i];
-                        if(l.is_macro() && l.parent->active && !l.fictitious)
-                            l.update(dt, *this);
+                        lane *l = macro_lanes[i];
+                        assert(l->is_macro());
+                        assert(l->active());
+                        assert(!l->fictitious);
+                        l->update(dt, *this);
                     }
 
 #pragma omp barrier

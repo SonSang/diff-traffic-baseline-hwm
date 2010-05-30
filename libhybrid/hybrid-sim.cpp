@@ -79,51 +79,6 @@ namespace hybrid
         return parent->active;
     }
 
-    void lane::convert(const sim_t dest_type, simulator &sim)
-    {
-        switch(dest_type)
-        {
-        case MICRO:
-            convert_to_micro(sim);
-            break;
-        case MACRO:
-            convert_to_macro(sim);
-            break;
-        default:
-            assert(0);
-            return;
-        }
-    };
-
-    void lane::convert_to_micro(simulator &sim)
-    {
-        if(sim_type == MICRO)
-            return;
-
-        if(!fictitious)
-            macro_instantiate(sim);
-
-        sim_type = MICRO;
-    }
-
-    void lane::convert_to_macro(simulator &sim)
-    {
-        if(sim_type == MACRO)
-            return;
-
-        sim_type = MACRO;
-
-        if(fictitious)
-            return;
-
-        clear_macro();
-        convert_cars(sim);
-        fill_y();
-
-        current_cars().clear();
-        next_cars().clear();
-    }
-
     lane *lane::left_adjacency(float &param)
     {
         hwm::lane *l(parent->left_adjacency(param));
@@ -206,14 +161,15 @@ namespace hybrid
     car_interp::car_hash simulator::get_car_hash() const
     {
         car_interp::car_hash res;
-        BOOST_FOREACH(const lane &l, lanes)
+        BOOST_FOREACH(const lane *l, micro_lanes)
         {
-            if(!l.parent->active || !l.is_micro())
+            assert(l->is_micro());
+            if(!l->active())
                 continue;
 
-            BOOST_FOREACH(const car &c, l.current_cars())
+            BOOST_FOREACH(const car &c, l->current_cars())
             {
-                res.insert(car_interp::car_spatial(c, l.parent));
+                res.insert(car_interp::car_spatial(c, l->parent));
             }
         }
         return res;
@@ -313,9 +269,9 @@ namespace hybrid
 
     void simulator::car_swap()
     {
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            l.car_swap();
+            l->car_swap();
         }
     }
 
@@ -344,9 +300,9 @@ namespace hybrid
     size_t simulator::ncars() const
     {
         size_t res = 0;
-        BOOST_FOREACH(const lane &l, lanes)
+        BOOST_FOREACH(const lane *l, micro_lanes)
         {
-            res += l.ncars();
+            res += l->ncars();
         }
         return res;
     }
@@ -357,6 +313,8 @@ namespace hybrid
         {
             l.updated_flag = false;
         }
+        // micro_lanes.clear();
+        // macro_lanes.clear();
         BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, qr)
         {
             BOOST_FOREACH(hwm::network_aux::road_rev_map::lane_cont::value_type &lcv, *e.lc)
@@ -365,7 +323,7 @@ namespace hybrid
                 hybrid::lane &hyb_l = *(hwm_l.user_data<lane>());
                 if(!hyb_l.updated_flag && hyb_l.active())
                 {
-                    hyb_l.convert_to_micro(*this);
+                    convert_to_micro(hyb_l);
                     hyb_l.updated_flag = true;
                 }
             }
@@ -384,7 +342,7 @@ namespace hybrid
                         if((up_l && up_l->updated_flag && up_l->is_micro()) ||
                            (dn_l && dn_l->updated_flag && dn_l->is_micro()))
                         {
-                            hyb_l.convert_to_micro(*this);
+                            convert_to_micro(hyb_l);
                             hyb_l.updated_flag = true;
                         }
                     }
@@ -396,7 +354,7 @@ namespace hybrid
         {
             if(!l.updated_flag && l.active())
             {
-                l.convert_to_macro(*this);
+                convert_to_macro(l);
                 l.updated_flag = true;
             }
         }
@@ -419,6 +377,56 @@ namespace hybrid
         car_swap();
 
         return dt;
+    }
+
+    void simulator::convert_to_micro(lane &l)
+    {
+        if(l.sim_type == MICRO)
+            return;
+
+        if(!l.fictitious)
+            l.macro_instantiate(*this);
+
+        std::vector<lane*>::iterator loc = std::find(macro_lanes.begin(),
+                                                     macro_lanes.end(),
+                                                     &l);
+        if(loc != macro_lanes.end())
+        {
+            std::swap(*loc, *boost::prior(macro_lanes.end()));
+            macro_lanes.pop_back();
+        }
+
+        micro_lanes.push_back(&l);
+        l.sim_type = MICRO;
+    }
+
+    void simulator::convert_to_macro(lane &l)
+    {
+        if(l.sim_type == MACRO)
+            return;
+
+        l.sim_type = MACRO;
+
+        std::vector<lane*>::iterator loc = std::find(micro_lanes.begin(),
+                                                     micro_lanes.end(),
+                                                     &l);
+        if(loc != micro_lanes.end())
+        {
+            std::swap(*loc, *boost::prior(micro_lanes.end()));
+            micro_lanes.pop_back();
+        }
+
+        if(l.fictitious)
+            return;
+
+        macro_lanes.push_back(&l);
+
+        l.clear_macro();
+        l.convert_cars(*this);
+        l.fill_y();
+
+        l.current_cars().clear();
+        l.next_cars().clear();
     }
 
     void simulator::advance_intersections(float dt)
@@ -455,37 +463,38 @@ namespace hybrid
     {
         static const float MIN_SPEED_FRACTION = 0.7;
         static const float rate               = 0.05;
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, micro_lanes)
         {
-            if(l.is_micro() && l.parent->start->network_boundary())
+            assert(l->is_micro());
+            if(!l->parent->start->network_boundary())
+                continue;
+
+            car new_car;
+            if(l->current_cars().empty())
             {
-                car new_car;
-                if(l.current_cars().empty())
-                {
-                    const float add_prob     = (*uni)();
-                    const float prob_of_none = std::exp(-rate*dt);
-                    if(add_prob <= prob_of_none)
-                        continue;
+                const float add_prob     = (*uni)();
+                const float prob_of_none = std::exp(-rate*dt);
+                if(add_prob <= prob_of_none)
+                    continue;
 
-                    new_car = make_car(0, std::max((float)(*uni)(), MIN_SPEED_FRACTION)*l.speedlimit(), 0);
-                    new_car.compute_intersection_acceleration(*this, l);
-                }
-                else
-                {
-                    const car &leader = l.current_car(0);
-                    if(!(leader.position * l.length > 2*car_length))
-                        continue;
-
-                    const float add_prob     = (*uni)();
-                    const float prob_of_none = std::exp(-rate*dt);
-                    if(add_prob <= prob_of_none)
-                        continue;
-
-                    new_car           = make_car(0, leader.velocity, 0);
-                    new_car.compute_acceleration(leader, (leader.position - new_car.position)*l.length, *this);
-                }
-                l.next_cars().push_back(new_car);
+                new_car = make_car(0, std::max((float)(*uni)(), MIN_SPEED_FRACTION)*l->speedlimit(), 0);
+                new_car.compute_intersection_acceleration(*this, *l);
             }
+            else
+            {
+                const car &leader = l->current_car(0);
+                if(!(leader.position * l->length > 2*car_length))
+                    continue;
+
+                const float add_prob     = (*uni)();
+                const float prob_of_none = std::exp(-rate*dt);
+                if(add_prob <= prob_of_none)
+                    continue;
+
+                new_car           = make_car(0, leader.velocity, 0);
+                new_car.compute_acceleration(leader, (leader.position - new_car.position)*l->length, *this);
+            }
+            l->next_cars().push_back(new_car);
         }
     }
 

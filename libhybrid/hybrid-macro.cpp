@@ -490,20 +490,24 @@ namespace hybrid
 
     void simulator::convert_cars(const sim_t sim_mask)
     {
-        BOOST_FOREACH(lane &l, lanes)
+        std::vector<lane*> &thelanes = sim_mask == MICRO ? micro_lanes : macro_lanes;
+        BOOST_FOREACH(lane *l, thelanes)
         {
-            if(l.sim_type & sim_mask && !l.fictitious)
-                l.clear_macro();
+            assert(l->sim_type & sim_mask);
+            if(!l->fictitious)
+                l->clear_macro();
         }
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, thelanes)
         {
-            if(l.sim_type & sim_mask && !l.fictitious)
-                l.convert_cars(*this);
+            assert(l->sim_type & sim_mask);
+            if(!l->fictitious)
+                l->convert_cars(*this);
         }
-        BOOST_FOREACH(lane &l, lanes)
+        BOOST_FOREACH(lane *l, thelanes)
         {
-            if(l.sim_type & sim_mask && !l.fictitious)
-                l.fill_y();
+            assert(l->sim_type & sim_mask);
+            if(!l->fictitious)
+                l->fill_y();
         }
     }
 
@@ -518,14 +522,14 @@ namespace hybrid
             maxes[thr_id*MAXES_STRIDE] = 0.0f;
 
 #pragma omp for
-            for(size_t i = 0; i < lanes.size(); ++i)
+            for(size_t i = 0; i < macro_lanes.size(); ++i)
             {
-                lane &l = lanes[i];
-                if(l.is_macro() && l.parent->active && !l.fictitious)
-                {
-                    const float max = l.collect_riemann();
-                    maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
-                }
+                lane *l = macro_lanes[i];
+                assert(l->is_macro());
+                assert(l->active());
+                assert(!l->fictitious);
+                const float max = l->collect_riemann();
+                maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
             }
 
 #pragma omp barrier
@@ -542,11 +546,13 @@ namespace hybrid
             }
 
 #pragma omp for
-            for(size_t i = 0; i < lanes.size(); ++i)
+            for(size_t i = 0; i < macro_lanes.size(); ++i)
             {
-                lane &l = lanes[i];
-                if(l.is_macro() && l.parent->active && !l.fictitious)
-                    l.update(dt, *this);
+                lane *l = macro_lanes[i];
+                assert(l->is_macro());
+                assert(l->active());
+                assert(!l->fictitious);
+                l->update(dt, *this);
             }
         }
 
