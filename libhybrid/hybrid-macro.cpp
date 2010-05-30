@@ -483,6 +483,7 @@ namespace hybrid
         {
             w.macro_initialize();
             std::cout << "Worker " << worker_no << " has " << w.N << " cells " << std::endl;
+            ++worker_no;
         }
 
         maxes = (float*)xmalloc(max_thr*MAXES_STRIDE*sizeof(float));
