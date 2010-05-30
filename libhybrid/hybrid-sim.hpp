@@ -210,8 +210,10 @@ namespace hybrid
 
         void  mass_reassign(std::vector<hwm::network_aux::road_spatial::entry> &qr);
         float hybrid_step();
-        void  advance_intersections(float dt);
-        void  apply_incoming_bc(float dt, float t);
+
+        void parallel_hybrid_run(int nsteps);
+        void advance_intersections(float dt);
+        void apply_incoming_bc(float dt, float t);
 
         serial_state serial() const;
         car_interp::car_hash get_car_hash() const;

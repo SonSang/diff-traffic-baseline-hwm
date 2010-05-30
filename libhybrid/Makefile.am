@@ -1,6 +1,7 @@
 lib_LTLIBRARIES = libhybrid.la
 
 libhybrid_la_SOURCES  = hybrid-sim.cpp \
+			hybrid-sim-omp.cpp \
 	                hybrid-macro.cpp \
 			hybrid-micro.cpp \
 		        hybrid-draw.cpp \

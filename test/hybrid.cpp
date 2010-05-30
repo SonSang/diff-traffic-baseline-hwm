@@ -52,21 +52,13 @@ int main(int argc, char *argv[])
         l.convert_to_macro(s);
     }
 
-    int   num_steps  = 0;
-    float total_time = 0;
+    int   num_steps  = 1000;
     timer step_timer;
-    while(1)
-    {
-        step_timer.reset();
-        step_timer.start();
-        float dt = s.hybrid_step();
-        s.advance_intersections(dt);
-        ++num_steps;
-        step_timer.stop();
-        total_time += step_timer.interval_S();
+    step_timer.reset();
+    step_timer.start();
+    s.parallel_hybrid_run(num_steps);
+    step_timer.stop();
+    std::cout << num_steps << " " << " " << step_timer.interval_S() << " " << step_timer.interval_S()/num_steps << " " << s.ncars() << std::endl;
 
-        std::cout << "\r" << num_steps << " " << dt << " " << step_timer.interval_S() << " " << total_time/num_steps << " " << s.ncars();
-        std::cout.flush();
-    }
     return 0;
 }
