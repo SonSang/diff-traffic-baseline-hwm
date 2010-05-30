@@ -1502,49 +1502,54 @@ public:
         glEnable(GL_TEXTURE_2D);
 
         glColor4f(1.0, 1.0, 1.0, 1.0);
-        const float arrow_length = arrow_aspect*sim->hnet->lane_width;
         std::vector<vec4f> colors;
-        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+        glBindTexture (GL_TEXTURE_2D, continuum_tex_);
+        BOOST_FOREACH(hybrid::lane *l, sim->macro_lanes)
         {
-            if(!l.parent->active)
+            if(!l->active() || l->fictitious)
                 continue;
 
-            if(l.is_macro() && !l.fictitious)
+            colors.resize(l->N);
+            for(size_t i = 0; i < l->N; ++i)
             {
-                glBindTexture (GL_TEXTURE_2D, continuum_tex_);
-                colors.resize(l.N);
-                for(size_t i = 0; i < l.N; ++i)
-                {
-                    float val    = l.q[i].rho();
-                    blackbody(colors[i].data(), val);
-                    colors[i][3] = 1.0f;
-                }
-
-                glTexImage2D (GL_TEXTURE_2D,
-                              0,
-                              GL_RGBA,
-                              l.N,
-                              1,
-                              0,
-                              GL_RGBA,
-                              GL_FLOAT,
-                              colors[0].data());
-            }
-            else if(!l.fictitious)
-                continue;
-            else
-            {
-                glBindTexture (GL_TEXTURE_2D, arrow_tex_);
-                glMatrixMode(GL_TEXTURE);
-                glTranslatef(1.0-l.length/arrow_length, 0.0, 0.0);
-                glScalef(l.length/arrow_length, 1.0, 1.0);
+                float val    = l->q[i].rho();
+                blackbody(colors[i].data(), val);
+                colors[i][3] = 1.0f;
             }
 
-            network_drawer.draw_lane_solid(l.parent->id);
+            glTexImage2D (GL_TEXTURE_2D,
+                          0,
+                          GL_RGBA,
+                          l->N,
+                          1,
+                          0,
+                          GL_RGBA,
+                          GL_FLOAT,
+                          colors[0].data());
 
-            glLoadIdentity();
-            glMatrixMode(GL_MODELVIEW);
+            network_drawer.draw_lane_solid(l->parent->id);
         }
+
+        const float arrow_length = arrow_aspect*sim->hnet->lane_width;
+        glBindTexture (GL_TEXTURE_2D, arrow_tex_);
+        glMatrixMode(GL_TEXTURE);
+        BOOST_FOREACH(const hwm::intersection_pair &ip, sim->hnet->intersections)
+        {
+            if(ip.second.locked)
+                continue;
+            const hwm::intersection::state &s = ip.second.states[ip.second.current_state];
+            BOOST_FOREACH(const hwm::lane_pair &lp, s.fict_lanes)
+            {
+                const hybrid::lane *hl = lp.second.user_data<const hybrid::lane>();
+                glLoadIdentity();
+                glTranslatef(1.0-hl->length/arrow_length, 0.0, 0.0);
+                glScalef(hl->length/arrow_length, 1.0, 1.0);
+
+                network_drawer.draw_lane_solid(lp.first);
+            }
+        }
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
 
         if(hci)
         {
