@@ -167,6 +167,8 @@ namespace hybrid
         float                         inv_h;
         size_t                        N;
         arz<float>::q                *q;
+        arz<float>::q                *up_aux;
+        arz<float>::q                *down_aux;
         arz<float>::riemann_solution *rs;
     };
 
@@ -196,6 +198,7 @@ namespace hybrid
         std::vector<lane*>            micro_lanes;
 
         arz<float>::q                *q_base;
+        arz<float>::q                *q_aux;
         size_t                        N;
         arz<float>::riemann_solution *rs_base;
     };

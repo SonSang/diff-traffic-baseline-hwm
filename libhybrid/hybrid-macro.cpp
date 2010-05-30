@@ -233,15 +233,7 @@ namespace hybrid
         }
         else
         {
-            if(upstream->fictitious)
-            {
-                lane* next_upstream = upstream->upstream_lane();
-                assert(next_upstream);
-                assert(!next_upstream->fictitious);
-                upstream = next_upstream;
-            }
-
-            const arz<float>::full_q us_end(upstream->q[upstream->N-1],
+            const arz<float>::full_q us_end(*up_aux,
                                             my_speedlimit);
 
             if(upstream->speedlimit() == my_speedlimit)
@@ -294,15 +286,7 @@ namespace hybrid
             }
             else
             {
-                if(downstream->fictitious)
-                {
-                    lane* next_downstream = downstream->downstream_lane();
-                    assert(next_downstream);
-                    assert(!next_downstream->fictitious);
-                    downstream = next_downstream;
-                }
-
-                const arz<float>::full_q ds_start(downstream->q[0],
+                const arz<float>::full_q ds_start(*down_aux,
                                                   downstream->speedlimit());
 
                 if(my_speedlimit == downstream->speedlimit())
@@ -336,23 +320,51 @@ namespace hybrid
             q[i].y() -= q[i].y()*coefficient*sim.relaxation_factor;
             q[i].fix();
         }
-        lane *downstream = downstream_lane();
-        if(downstream && downstream->is_micro())
-        {
-            float param;
-            if(macro_find_last(param, sim))
-            {
-                car c(0, param, velocity(param), 0.0f);
-                c.compute_intersection_acceleration(sim, *this);
-                c.integrate(dt, *this, sim.hnet->lane_width);
 
-                const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
-                assert(cell >=0);
-                q[cell] = arz<float>::q(q[cell].rho(), c.velocity, speedlimit());
-                if(c.position >= 1.0)
+        lane *upstream = upstream_lane();
+        if(upstream && upstream->is_macro())
+        {
+            if(upstream->fictitious)
+            {
+                lane* next_upstream = upstream->upstream_lane();
+                assert(next_upstream);
+                assert(!next_upstream->fictitious);
+                upstream = next_upstream;
+            }
+            *upstream->down_aux = q[N-1];
+        }
+
+        lane *downstream = downstream_lane();
+        if(downstream)
+        {
+            if(downstream->is_macro())
+            {
+                if(downstream->fictitious)
                 {
-                    c.position = length*downstream->inv_length*(c.position-1.0f);
-                    downstream->next_cars().push_back(sim.make_car(c.position, c.velocity, c.acceleration));
+                    lane* next_downstream = downstream->downstream_lane();
+                    assert(next_downstream);
+                    assert(!next_downstream->fictitious);
+                    downstream = next_downstream;
+                }
+                *downstream->up_aux = q[0];
+            }
+            else
+            {
+                float param;
+                if(macro_find_last(param, sim))
+                {
+                    car c(0, param, velocity(param), 0.0f);
+                    c.compute_intersection_acceleration(sim, *this);
+                    c.integrate(dt, *this, sim.hnet->lane_width);
+
+                    const int cell(std::min(which_cell(c.position), static_cast<int>(N)-1));
+                    assert(cell >=0);
+                    q[cell] = arz<float>::q(q[cell].rho(), c.velocity, speedlimit());
+                    if(c.position >= 1.0)
+                    {
+                        c.position = length*downstream->inv_length*(c.position-1.0f);
+                        downstream->next_cars().push_back(sim.make_car(c.position, c.velocity, c.acceleration));
+                    }
                 }
             }
         }
@@ -425,6 +437,12 @@ namespace hybrid
             throw std::exception();
         std::cout << "Done." << std::endl;
 
+        std::cout << "Allocating " << sizeof(arz<float>::q)*2*macro_lanes.size() <<  " bytes for " <<  2*macro_lanes.size() << " aux cells...";
+        q_aux = (arz<float>::q *) xmalloc(sizeof(arz<float>::q)*2*macro_lanes.size());
+        if(!q_aux)
+            throw std::exception();
+        std::cout << "Done." << std::endl;
+
         std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()) <<  " bytes for " << N+macro_lanes.size() << " riemann solutions...";
         rs_base = (arz<float>::riemann_solution *) xmalloc(sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
         if(!rs_base)
@@ -432,16 +450,21 @@ namespace hybrid
         std::cout << "Done." << std::endl;
 
         memset(q_base, 0, sizeof(arz<float>::q)*N);
+        memset(q_aux, 0, sizeof(arz<float>::q)*2*macro_lanes.size());
         memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
 
-        size_t q_count  = 0;
-        size_t rs_count = 0;
+        size_t q_count   = 0;
+        size_t aux_count = 0;
+        size_t rs_count  = 0;
         BOOST_FOREACH(lane *l, macro_lanes)
         {
-            l->q       = q_base + q_count;
-            l->rs      = rs_base + rs_count;
-            q_count  += l->N;
-            rs_count += l->N + 1;
+            l->q         = q_base + q_count;
+            l->up_aux    = q_aux + aux_count;
+            l->down_aux  = q_aux + aux_count+1;
+            l->rs        = rs_base + rs_count;
+            q_count     += l->N;
+            aux_count   += 2;
+            rs_count    += l->N + 1;
 
             l->fill_y();
         }

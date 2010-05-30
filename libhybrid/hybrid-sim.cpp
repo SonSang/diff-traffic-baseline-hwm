@@ -224,6 +224,7 @@ namespace hybrid
 
     worker::worker()
         : q_base(0),
+          q_aux(0),
           N(0),
           rs_base(0)
     {}
@@ -232,6 +233,8 @@ namespace hybrid
     {
         if(q_base)
             free(q_base);
+        if(q_aux)
+            free(q_aux);
         if(rs_base)
             free(rs_base);
     }
