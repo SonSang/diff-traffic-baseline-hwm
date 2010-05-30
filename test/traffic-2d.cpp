@@ -1007,6 +1007,7 @@ public:
                                                           back_image_yscale(1),
                                                           overlay_tex_(0),
                                                           continuum_tex_(0),
+                                                          arrow_tex_(0),
                                                           drawing(false),
                                                           abstract_network(true),
                                                           sim(0),
