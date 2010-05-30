@@ -464,11 +464,6 @@ namespace hybrid
             q_count  += l.N;
             rs_count += l.N + 1;
 
-            // if(l.N > 5)
-            // {
-            //     l.q[2].rho() = 0.5;
-            //     l.q[2].y()   = 1.5;
-            // }
             l.fill_y();
         }
         std::cout << "min_h is " << min_h << std::endl;
@@ -478,7 +473,9 @@ namespace hybrid
         struct sched_param sp;
         sp.sched_priority = 10;
         if (sched_setscheduler(0, SCHED_FIFO, &sp) == 0)
-            printf("Running with real-time priority (SCHED_FIFO)\n");
+            std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
+        else
+            std::cerr << "Warning: can't set real-time priority (SCHED_FIFO)" << std::endl;
     }
 
     void simulator::macro_cleanup()
