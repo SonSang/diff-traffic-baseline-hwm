@@ -337,7 +337,7 @@ namespace hybrid
             q[i].fix();
         }
         lane *downstream = downstream_lane();
-        if(downstream)
+        if(downstream && downstream->is_micro())
         {
             float param;
             if(macro_find_last(param, sim))
