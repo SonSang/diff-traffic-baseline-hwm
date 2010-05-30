@@ -18,7 +18,7 @@ namespace hybrid
         l.current_cars() = cars;
     }
 
-    lane::lane() : parent(0), N(0), q(0), rs(0)
+    lane::lane() : parent(0), N(0), q(0), up_aux(0), down_aux(0), rs(0)
     {
     }
 
