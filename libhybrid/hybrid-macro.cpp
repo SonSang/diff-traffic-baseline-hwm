@@ -331,7 +331,8 @@ namespace hybrid
                 assert(!next_upstream->fictitious);
                 upstream = next_upstream;
             }
-            *upstream->down_aux = q[N-1];
+            if(upstream->is_macro())
+                *upstream->down_aux = q[N-1];
         }
 
         lane *downstream = downstream_lane();
@@ -346,7 +347,8 @@ namespace hybrid
                     assert(!next_downstream->fictitious);
                     downstream = next_downstream;
                 }
-                *downstream->up_aux = q[0];
+                if(downstream->is_macro())
+                    *downstream->up_aux = q[0];
             }
             else
             {
