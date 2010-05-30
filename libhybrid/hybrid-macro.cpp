@@ -417,8 +417,41 @@ namespace hybrid
         }
     }
 
+    void worker::macro_initialize()
+    {
+        std::cout << "Allocating " << sizeof(arz<float>::q)*N <<  " bytes for " << N << " cells...";
+        q_base = (arz<float>::q *) malloc(sizeof(arz<float>::q)*N);
+        if(!q_base)
+            throw std::exception();
+        std::cout << "Done." << std::endl;
+
+        std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()) <<  " bytes for " << N+macro_lanes.size() << " riemann solutions...";
+        rs_base = (arz<float>::riemann_solution *) malloc(sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
+        if(!rs_base)
+            throw std::exception();
+        std::cout << "Done." << std::endl;
+
+        memset(q_base, 0, sizeof(arz<float>::q)*N);
+        memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
+
+        size_t q_count  = 0;
+        size_t rs_count = 0;
+        BOOST_FOREACH(lane *l, macro_lanes)
+        {
+            l->q       = q_base + q_count;
+            l->rs      = rs_base + rs_count;
+            q_count  += l->N;
+            rs_count += l->N + 1;
+
+            l->fill_y();
+        }
+    }
+
     void simulator::macro_initialize(const float h_suggest, const float rf)
     {
+        const size_t max_thr = omp_get_max_threads();
+        assert(workers.size() == max_thr);
+
         // Try to stay out of FP_ASSIST - enable DAZ and FTZ
         _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
@@ -426,63 +459,33 @@ namespace hybrid
         relaxation_factor = rf;
         min_h             = std::numeric_limits<float>::max();
 
-        N = 0;
         // initialize new lanes, compute how many cells to allocate
+        int worker_no = 0;
         BOOST_FOREACH(lane &l, lanes)
         {
             if(l.fictitious)
                 continue;
             l.macro_initialize(h_suggest);
-            N += l.N;
-            min_h = std::min(min_h, l.h);
+            workers[worker_no].N += l.N;
+            min_h                = std::min(min_h, l.h);
+            workers[worker_no].macro_lanes.push_back(&l);
+
+            worker_no = (worker_no + 1) % max_thr;
         }
 
-        std::cout << "Allocating " << sizeof(arz<float>::q)*N <<  " bytes for " << N << " cells...";
-        q_base = (arz<float>::q *) malloc(sizeof(arz<float>::q)*N);
-        if(!q_base)
-            throw std::exception();
-        std::cout << "Done." << std::endl;
-
-        std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(N+lanes.size()) <<  " bytes for " << N+lanes.size() << " riemann solutions...";
-        rs_base = (arz<float>::riemann_solution *) malloc(sizeof(arz<float>::riemann_solution)*(N+lanes.size()));
-        if(!rs_base)
-            throw std::exception();
-        std::cout << "Done." << std::endl;
-
-        memset(q_base, 0, sizeof(arz<float>::q)*N);
-        memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(N+lanes.size()));
-
-        size_t q_count  = 0;
-        size_t rs_count = 0;
-        BOOST_FOREACH(lane &l, lanes)
-        {
-            if(l.fictitious)
-                continue;
-
-            l.q       = q_base + q_count;
-            l.rs      = rs_base + rs_count;
-            q_count  += l.N;
-            rs_count += l.N + 1;
-
-            l.fill_y();
-        }
         std::cout << "min_h is " << min_h << std::endl;
 
-        const int max_thr = omp_get_max_threads();
+        BOOST_FOREACH(worker &w, workers)
+        {
+            w.macro_initialize();
+        }
+
         maxes             = (float*)xmalloc(max_thr*MAXES_STRIDE*sizeof(float));
-        struct sched_param sp;
-        sp.sched_priority = 10;
-        if (sched_setscheduler(0, SCHED_FIFO, &sp) == 0)
-            std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
-        else
-            std::cerr << "Warning: can't set real-time priority (SCHED_FIFO)" << std::endl;
     }
 
     void simulator::macro_cleanup()
     {
         free(maxes);
-        free(q_base);
-        free(rs_base);
     }
 
     void simulator::convert_cars(const sim_t sim_mask)
@@ -510,16 +513,29 @@ namespace hybrid
 
     float simulator::macro_step(const float cfl)
     {
-        const int max_thr  = omp_get_max_threads();
-        float     maxspeed = 0.0f;
-        float     dt;
+        const size_t max_thr   = omp_get_max_threads();
+        assert(max_thr == workers.size());
+        const int    num_procs = omp_get_num_procs();
+        float        maxspeed  = 0.0f;
+        float        dt;
 #pragma omp parallel
         {
             const int thr_id = omp_get_thread_num();
             maxes[thr_id*MAXES_STRIDE] = 0.0f;
 
-#pragma omp for
-            for(size_t i = 0; i < macro_lanes.size(); ++i)
+            cpu_set_t mask;
+            CPU_ZERO(&mask);
+            CPU_SET((thr_id % num_procs), &mask);
+
+            if(sched_setaffinity(0, sizeof(mask), &mask) == -1)
+                fprintf(stderr, "Couldn't set affinity for thread %d\n", thr_id);
+
+            struct sched_param sp;
+            sp.sched_priority = 10;
+            sched_setscheduler(0, SCHED_FIFO, &sp);
+
+            worker &work = workers[thr_id];
+            for(size_t i = 0; i < work.macro_lanes.size(); ++i)
             {
                 lane *l = macro_lanes[i];
                 assert(l->is_macro());
@@ -533,7 +549,7 @@ namespace hybrid
 #pragma omp single
             {
                 maxspeed = 0.0f;
-                for(int t = 0; t < max_thr; ++t)
+                for(size_t t = 0; t < max_thr; ++t)
                     maxspeed = std::max(maxspeed, maxes[t*MAXES_STRIDE]);
 
                 if(maxspeed < arz<float>::epsilon())
@@ -542,8 +558,7 @@ namespace hybrid
                 dt = std::min(cfl*min_h/maxspeed, 0.5f);
             }
 
-#pragma omp for
-            for(size_t i = 0; i < macro_lanes.size(); ++i)
+            for(size_t i = 0; i < work.macro_lanes.size(); ++i)
             {
                 lane *l = macro_lanes[i];
                 assert(l->is_macro());

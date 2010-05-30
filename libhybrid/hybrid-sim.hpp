@@ -170,6 +170,36 @@ namespace hybrid
         arz<float>::riemann_solution *rs;
     };
 
+    struct worker
+    {
+        struct serial_state
+        {
+            serial_state();
+            serial_state(const worker &s);
+            ~serial_state();
+
+            void apply(worker &w) const;
+
+            std::vector<const lane*>  macro_lanes;
+            std::vector<const lane*>  micro_lanes;
+            arz<float>::q            *q_base;
+            size_t                    N;
+        };
+
+        worker();
+        ~worker();
+        void macro_initialize();
+
+        serial_state serial() const;
+
+        std::vector<lane*>            macro_lanes;
+        std::vector<lane*>            micro_lanes;
+
+        arz<float>::q                *q_base;
+        size_t                        N;
+        arz<float>::riemann_solution *rs_base;
+    };
+
     struct simulator
     {
         typedef boost::rand48  base_generator_type;
@@ -183,11 +213,11 @@ namespace hybrid
             void apply(simulator &s) const;
 
             size_t               car_id_counter;
-            arz<float>::q       *q_base;
             base_generator_type  generator;
 
-            hwm::network::serial_state      network_state;
-            std::vector<lane::serial_state> lane_states;
+            hwm::network::serial_state        network_state;
+            std::vector<lane::serial_state>   lane_states;
+            std::vector<worker::serial_state> worker_states;
         };
 
         // common
@@ -224,6 +254,8 @@ namespace hybrid
         std::vector<lane*>     micro_lanes;
         std::vector<lane*>     macro_lanes;
 
+        std::vector<worker>    workers;
+
         float                  car_length;
         float                  rear_bumper_rear_axle;
         float                  time;
@@ -254,9 +286,6 @@ namespace hybrid
         void  convert_cars(sim_t sim_mask);
         float macro_step(const float cfl=1.0f);
 
-        arz<float>::q                *q_base;
-        size_t                        N;
-        arz<float>::riemann_solution *rs_base;
         float                         h_suggest;
         float                         min_h;
         float                         relaxation_factor;

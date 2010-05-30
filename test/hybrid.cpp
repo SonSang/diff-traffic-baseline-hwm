@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
                        1.67,
                        33,
                        4);
-    s.macro_initialize(8.1*4.5, 0.0f);
+    s.macro_initialize(4.1*4.5, 0.0f);
 
     BOOST_FOREACH(hybrid::lane &l, s.lanes)
     {
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         s.convert_to_macro(l);
     }
 
-    int   num_steps  = 1000;
+    int   num_steps = 100;
     timer step_timer;
     step_timer.reset();
     step_timer.start();

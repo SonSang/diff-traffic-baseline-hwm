@@ -5,10 +5,11 @@ namespace hybrid
 {
     void simulator::parallel_hybrid_run(int nsteps)
     {
-        const float cfl      = 1.0f;
-        const int   max_thr  = omp_get_max_threads();
-        float       maxspeed = 0.0f;
-        float       dt;
+        const float  cfl       = 1.0f;
+        const size_t max_thr   = omp_get_max_threads();
+        const size_t num_procs = omp_get_num_procs();
+        float        maxspeed;
+        float        dt;
 
         float convert_time     = 0.0f;
         float riemann_time     = 0.0f;
@@ -19,7 +20,25 @@ namespace hybrid
         timer step_timer;
 #pragma omp parallel
         {
-            const int thr_id = omp_get_thread_num();
+            const size_t thr_id = omp_get_thread_num();
+
+            worker &work = workers[thr_id];
+
+            cpu_set_t mask;
+            CPU_ZERO(&mask);
+            CPU_SET((thr_id % num_procs), &mask);
+
+            if(sched_setaffinity(0, sizeof(mask), &mask) == -1)
+                std::cerr << "Couldn't set affinity for thread: " <<  thr_id << std::endl;
+            else
+                std::cerr << "Set affinity for thread: " <<  thr_id << std::endl;
+
+            struct sched_param sp;
+            sp.sched_priority = 10;
+            if(sched_setscheduler(0, SCHED_FIFO, &sp) == 0)
+                std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
+            else
+                std::cerr << "Can't set SCHED_FIFO" << std::endl;
 
             for(int i = 0; i < nsteps; ++i)
             {
@@ -46,14 +65,13 @@ namespace hybrid
                     }
 
                     maxes[thr_id*MAXES_STRIDE] = 0.0f;
-#pragma omp for
-                    for(size_t i = 0; i < macro_lanes.size(); ++i)
+
+                    BOOST_FOREACH(lane *l, work.macro_lanes)
                     {
-                        lane *l = macro_lanes[i];
                         assert(l->is_macro());
                         assert(l->active());
                         assert(!l->fictitious);
-                        const float max = l->collect_riemann();
+                        const float max            = l->collect_riemann();
                         maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
                     }
 
@@ -71,14 +89,15 @@ namespace hybrid
                         step_timer.start();
 
                         maxspeed = 0.0f;
-                        for(int t = 0; t < max_thr; ++t)
+                        for(size_t t = 0; t < max_thr; ++t)
                             maxspeed = std::max(maxspeed, maxes[t*MAXES_STRIDE]);
 
                         if(maxspeed < arz<float>::epsilon())
                             maxspeed = min_h;
 
-                        dt = std::min(cfl*min_h/maxspeed, 0.5f);
-
+                        dt = std::min(cfl*min_h/maxspeed, 1.0f);
+                        std::cerr << "dt: " << dt << std::endl;
+                        std::cerr.flush();
                         step_timer.stop();
                         max_compute_time += step_timer.interval_S();
                     }
@@ -90,10 +109,8 @@ namespace hybrid
                         step_timer.start();
                     }
 
-#pragma omp for
-                    for(size_t i = 0; i < macro_lanes.size(); ++i)
+                    BOOST_FOREACH(lane *l, work.macro_lanes)
                     {
-                        lane *l = macro_lanes[i];
                         assert(l->is_macro());
                         assert(l->active());
                         assert(!l->fictitious);

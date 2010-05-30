@@ -134,14 +134,12 @@ namespace hybrid
         }
     }
 
-    simulator::serial_state::serial_state() : q_base(0)
+    simulator::serial_state::serial_state()
     {
     }
 
     simulator::serial_state::~serial_state()
     {
-        if(q_base)
-            delete[] q_base;
     }
 
     simulator::serial_state::serial_state(const simulator &s) : car_id_counter(s.car_id_counter),
@@ -154,8 +152,10 @@ namespace hybrid
             lane_states.push_back(l.serial());
         }
 
-        q_base = new arz<float>::q[s.N];
-        std::memcpy(q_base, s.q_base, s.N*sizeof(sizeof(arz<float>::q)));
+        BOOST_FOREACH(const worker &w, s.workers)
+        {
+            worker_states.push_back(w.serial());
+        }
     }
 
     car_interp::car_hash simulator::get_car_hash() const
@@ -175,13 +175,77 @@ namespace hybrid
         return res;
     }
 
+    worker::serial_state::serial_state() : q_base(0), N(0)
+    {
+    }
+
+    worker::serial_state::serial_state(const worker &w)
+    {
+        macro_lanes.clear();
+        macro_lanes.reserve(w.macro_lanes.size());
+        macro_lanes.insert(macro_lanes.end(), w.macro_lanes.begin(), w.macro_lanes.end());
+
+        micro_lanes.clear();
+        micro_lanes.reserve(w.micro_lanes.size());
+        micro_lanes.insert(micro_lanes.end(), w.micro_lanes.begin(), w.micro_lanes.end());
+
+        N      = w.N;
+        q_base = (arz<float>::q *)malloc(sizeof(arz<float>::q) * N);
+        std::memcpy(q_base, w.q_base, sizeof(arz<float>::q) * N);
+    }
+
+    worker::serial_state::~serial_state()
+    {
+        if(q_base)
+            free(q_base);
+    }
+
+    void worker::serial_state::apply(worker &w) const
+    {
+        w.macro_lanes.clear();
+        w.macro_lanes.reserve(macro_lanes.size());
+        BOOST_FOREACH(const lane *l, macro_lanes)
+        {
+            w.macro_lanes.push_back(const_cast<lane*>(l));
+        }
+
+        w.micro_lanes.clear();
+        w.micro_lanes.reserve(micro_lanes.size());
+        BOOST_FOREACH(const lane *l, micro_lanes)
+        {
+            w.micro_lanes.push_back(const_cast<lane*>(l));
+        }
+        if(w.q_base)
+            free(w.q_base);
+        w.N      = N;
+        w.q_base = (arz<float>::q *)malloc(sizeof(arz<float>::q) * w.N);
+        std::memcpy(w.q_base, q_base, sizeof(arz<float>::q) * N);
+    }
+
+    worker::worker()
+        : q_base(0),
+          N(0),
+          rs_base(0)
+    {}
+
+    worker::~worker()
+    {
+        if(q_base)
+            free(q_base);
+        if(rs_base)
+            free(rs_base);
+    }
+
+    worker::serial_state worker::serial() const
+    {
+        return worker::serial_state(*this);
+    }
+
     void simulator::serial_state::apply(simulator &s) const
     {
         s.car_id_counter = car_id_counter;
         *s.generator     = generator;
         network_state.apply(*s.hnet);
-        assert(q_base);
-        std::memcpy(s.q_base, q_base, s.N*sizeof(sizeof(arz<float>::q)));
     }
 
     simulator::simulator(hwm::network *net, float length, float rear_axle)
@@ -189,9 +253,7 @@ namespace hybrid
           car_length(length),
           rear_bumper_rear_axle(rear_axle),
           time(0.0f),
-          car_id_counter(1),
-          q_base(0),
-          rs_base(0)
+          car_id_counter(1)
     {
         generator = new base_generator_type(42ul);
         uni_dist  = new boost::uniform_real<>(0,1);
@@ -245,6 +307,10 @@ namespace hybrid
             }
         }
         std::cout << "Min length of fict lane  is: " << min_len << std::endl;
+
+        const int max_thr = omp_get_max_threads();
+        std::cout << "Making " << max_thr << " workers" << std::endl;
+        workers.resize(max_thr);
     }
 
     simulator::~simulator()
