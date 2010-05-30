@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         s.convert_to_macro(l);
     }
 
-    int   num_steps = 100;
+    int   num_steps = 1000;
     timer step_timer;
     step_timer.reset();
     step_timer.start();

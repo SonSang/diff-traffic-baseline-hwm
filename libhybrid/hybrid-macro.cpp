@@ -420,13 +420,13 @@ namespace hybrid
     void worker::macro_initialize()
     {
         std::cout << "Allocating " << sizeof(arz<float>::q)*N <<  " bytes for " << N << " cells...";
-        q_base = (arz<float>::q *) malloc(sizeof(arz<float>::q)*N);
+        q_base = (arz<float>::q *) xmalloc(sizeof(arz<float>::q)*N);
         if(!q_base)
             throw std::exception();
         std::cout << "Done." << std::endl;
 
         std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()) <<  " bytes for " << N+macro_lanes.size() << " riemann solutions...";
-        rs_base = (arz<float>::riemann_solution *) malloc(sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
+        rs_base = (arz<float>::riemann_solution *) xmalloc(sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
         if(!rs_base)
             throw std::exception();
         std::cout << "Done." << std::endl;
@@ -460,27 +460,32 @@ namespace hybrid
         min_h             = std::numeric_limits<float>::max();
 
         // initialize new lanes, compute how many cells to allocate
-        int worker_no = 0;
         BOOST_FOREACH(lane &l, lanes)
         {
             if(l.fictitious)
                 continue;
             l.macro_initialize(h_suggest);
+
+            int worker_no = 0;
+            for(size_t i = 1; i < workers.size(); ++i)
+                if(workers[i].N < workers[worker_no].N)
+                    worker_no = i;
+
             workers[worker_no].N += l.N;
             min_h                = std::min(min_h, l.h);
             workers[worker_no].macro_lanes.push_back(&l);
-
-            worker_no = (worker_no + 1) % max_thr;
         }
 
         std::cout << "min_h is " << min_h << std::endl;
 
+        int worker_no = 0;
         BOOST_FOREACH(worker &w, workers)
         {
             w.macro_initialize();
+            std::cout << "Worker " << worker_no << " has " << w.N << " cells " << std::endl;
         }
 
-        maxes             = (float*)xmalloc(max_thr*MAXES_STRIDE*sizeof(float));
+        maxes = (float*)xmalloc(max_thr*MAXES_STRIDE*sizeof(float));
     }
 
     void simulator::macro_cleanup()

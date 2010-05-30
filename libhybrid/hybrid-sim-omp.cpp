@@ -96,8 +96,6 @@ namespace hybrid
                             maxspeed = min_h;
 
                         dt = std::min(cfl*min_h/maxspeed, 1.0f);
-                        std::cerr << "dt: " << dt << std::endl;
-                        std::cerr.flush();
                         step_timer.stop();
                         max_compute_time += step_timer.interval_S();
                     }
