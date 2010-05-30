@@ -99,6 +99,7 @@ namespace hybrid
         };
 
         lane();
+        ~lane();
 
         // common data
         void                     initialize(hwm::lane *parent);

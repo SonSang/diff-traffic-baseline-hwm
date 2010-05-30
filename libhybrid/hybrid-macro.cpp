@@ -439,12 +439,6 @@ namespace hybrid
             throw std::exception();
         std::cout << "Done." << std::endl;
 
-        std::cout << "Allocating " << sizeof(arz<float>::q)*2*macro_lanes.size() <<  " bytes for " <<  2*macro_lanes.size() << " aux cells...";
-        q_aux = (arz<float>::q *) xmalloc(sizeof(arz<float>::q)*2*macro_lanes.size());
-        if(!q_aux)
-            throw std::exception();
-        std::cout << "Done." << std::endl;
-
         std::cout << "Allocating " << sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()) <<  " bytes for " << N+macro_lanes.size() << " riemann solutions...";
         rs_base = (arz<float>::riemann_solution *) xmalloc(sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
         if(!rs_base)
@@ -452,7 +446,6 @@ namespace hybrid
         std::cout << "Done." << std::endl;
 
         memset(q_base, 0, sizeof(arz<float>::q)*N);
-        memset(q_aux, 0, sizeof(arz<float>::q)*2*macro_lanes.size());
         memset(rs_base, 0, sizeof(arz<float>::riemann_solution)*(N+macro_lanes.size()));
 
         size_t q_count   = 0;
@@ -461,8 +454,10 @@ namespace hybrid
         BOOST_FOREACH(lane *l, macro_lanes)
         {
             l->q         = q_base + q_count;
-            l->up_aux    = q_aux + aux_count;
-            l->down_aux  = q_aux + aux_count+1;
+            l->up_aux    = (arz<float>::q *) xmalloc(sizeof(arz<float>::q));
+            std::memset(l->up_aux, 0,sizeof(arz<float>::q));
+            l->down_aux  = (arz<float>::q *) xmalloc(sizeof(arz<float>::q));
+            std::memset(l->down_aux, 0,sizeof(arz<float>::q));
             l->rs        = rs_base + rs_count;
             q_count     += l->N;
             aux_count   += 2;
