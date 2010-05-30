@@ -5,9 +5,9 @@ int main(int argc, char *argv[])
 {
     std::cout << libroad_package_string() << std::endl;
     std::cerr << libhybrid_package_string() << std::endl;
-    if(argc < 2)
+    if(argc < 3)
     {
-        std::cerr << "Usage: " << argv[0] << " <network file> [number of threads]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <network file> <steps> [number of threads]" << std::endl;
         return 1;
     }
 
@@ -30,9 +30,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    const int num_steps = boost::lexical_cast<int>(argv[2]);
+
     int n_threads = 1;
-    if(argc == 3)
-        n_threads = boost::lexical_cast<int>(argv[2]);
+    if(argc == 4)
+        n_threads = boost::lexical_cast<int>(argv[3]);
     omp_set_num_threads(n_threads);
     std::cout << "OpenMP using " << n_threads << " threads" << std::endl;
 
@@ -52,7 +54,6 @@ int main(int argc, char *argv[])
         s.convert_to_macro(l);
     }
 
-    int   num_steps = 1000;
     timer step_timer;
     step_timer.reset();
     step_timer.start();
