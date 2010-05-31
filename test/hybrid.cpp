@@ -54,12 +54,7 @@ int main(int argc, char *argv[])
         s.convert_to_macro(l);
     }
 
-    timer step_timer;
-    step_timer.reset();
-    step_timer.start();
     s.parallel_hybrid_run(num_steps);
-    step_timer.stop();
-    std::cout << num_steps << " " << " " << step_timer.interval_S() << " " << step_timer.interval_S()/num_steps << " " << s.ncars() << std::endl;
 
     return 0;
 }

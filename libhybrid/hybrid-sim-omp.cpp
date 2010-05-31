@@ -18,6 +18,7 @@ namespace hybrid
         float micro_time       = 0.0f;
 
         timer step_timer;
+        timer overall_timer;
 #pragma omp parallel
         {
             const size_t thr_id = omp_get_thread_num();
@@ -39,6 +40,13 @@ namespace hybrid
                 std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
             else
                 std::cerr << "Can't set SCHED_FIFO" << std::endl;
+
+#pragma omp barrier
+#pragma omp single
+                {
+                    overall_timer.reset();
+                    overall_timer.start();
+                }
 
             for(int i = 0; i < nsteps; ++i)
             {
@@ -140,11 +148,20 @@ namespace hybrid
                     micro_time += step_timer.interval_S();
                 }
             }
+
+#pragma omp barrier
+#pragma omp single
+                {
+                    overall_timer.stop();
+                }
+
         }
+
         std::cout << "Convert   time: " << convert_time << std::endl
                   << "Riemann   time: " << riemann_time << std::endl
                   << "Max comp. time: " << max_compute_time << std::endl
                   << "Update    time: " << update_time << std::endl
                   << "Micro     time: " << micro_time << std::endl;
+        std::cout << nsteps << " " << " " << overall_timer.interval_S() << " " << overall_timer.interval_S()/nsteps << " " << ncars() << std::endl;
     }
 }
