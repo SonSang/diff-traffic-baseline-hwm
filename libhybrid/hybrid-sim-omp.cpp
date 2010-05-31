@@ -156,12 +156,12 @@ namespace hybrid
                 }
 
         }
-
-        std::cout << "Convert   time: " << convert_time << std::endl
-                  << "Riemann   time: " << riemann_time << std::endl
-                  << "Max comp. time: " << max_compute_time << std::endl
-                  << "Update    time: " << update_time << std::endl
-                  << "Micro     time: " << micro_time << std::endl;
-        std::cout << nsteps << " " << " " << overall_timer.interval_S() << " " << overall_timer.interval_S()/nsteps << " " << ncars() << std::endl;
+        printf("convert = %015.10lf\n", convert_time);
+        printf("riemann = %015.10lf\n", riemann_time);
+        printf("max     = %015.10lf\n", max_compute_time);
+        printf("update  = %015.10lf\n", update_time);
+        printf("micro   = %015.10lf\n", micro_time);
+        printf("--------------------\n");
+        printf("tot. time = %015.10lf\n", overall_timer.interval_S());
     }
 }
