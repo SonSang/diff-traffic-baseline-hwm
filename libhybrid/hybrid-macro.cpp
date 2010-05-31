@@ -546,7 +546,7 @@ namespace hybrid
         float        dt;
 #pragma omp parallel
         {
-            const int thr_id = omp_get_thread_num();
+            const int thr_id           = omp_get_thread_num();
             maxes[thr_id*MAXES_STRIDE] = 0.0f;
 
             cpu_set_t mask;
@@ -563,11 +563,11 @@ namespace hybrid
             worker &work = workers[thr_id];
             for(size_t i = 0; i < work.macro_lanes.size(); ++i)
             {
-                lane *l = macro_lanes[i];
+                lane        *l             = macro_lanes[i];
                 assert(l->is_macro());
                 assert(l->active());
                 assert(!l->fictitious);
-                const float max = l->collect_riemann();
+                const float  max           = l->collect_riemann();
                 maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
             }
 

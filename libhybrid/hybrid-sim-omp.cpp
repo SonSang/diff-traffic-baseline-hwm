@@ -87,14 +87,14 @@ namespace hybrid
                     step_timer.reset();
                     step_timer.start();
 
-                    maxspeed = 0.0f;
+                    maxspeed     = 0.0f;
                     for(size_t t = 0; t < max_thr; ++t)
                         maxspeed = std::max(maxspeed, maxes[t*MAXES_STRIDE]);
 
                     if(maxspeed < arz<float>::epsilon())
                         maxspeed = min_h;
 
-                    dt = std::min(cfl*min_h/maxspeed, 1.0f);
+                    dt                = std::min(cfl*min_h/maxspeed, 1.0f);
                     step_timer.stop();
                     max_compute_time += step_timer.interval_S();
                 }
