@@ -56,71 +56,69 @@ namespace hybrid
                 }
 
                 // macro step (also emit cars)
+#pragma omp barrier
+#pragma omp single
                 {
-#pragma omp barrier
-#pragma omp single
-                    {
-                        step_timer.reset();
-                        step_timer.start();
-                    }
+                    step_timer.reset();
+                    step_timer.start();
+                }
 
-                    maxes[thr_id*MAXES_STRIDE] = 0.0f;
+                maxes[thr_id*MAXES_STRIDE] = 0.0f;
 
-                    BOOST_FOREACH(lane *l, work.macro_lanes)
-                    {
-                        assert(l->is_macro());
-                        assert(l->active());
-                        assert(!l->fictitious);
-                        const float max            = l->collect_riemann();
-                        maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
-                    }
+                BOOST_FOREACH(lane *l, work.macro_lanes)
+                {
+                    assert(l->is_macro());
+                    assert(l->active());
+                    assert(!l->fictitious);
+                    const float max            = l->collect_riemann();
+                    maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
+                }
 
 #pragma omp barrier
 #pragma omp single
-                    {
-                        step_timer.stop();
-                        riemann_time += step_timer.interval_S();
-                    }
+                {
+                    step_timer.stop();
+                    riemann_time += step_timer.interval_S();
+                }
 
 #pragma omp barrier
 #pragma omp single
-                    {
-                        step_timer.reset();
-                        step_timer.start();
+                {
+                    step_timer.reset();
+                    step_timer.start();
 
-                        maxspeed = 0.0f;
-                        for(size_t t = 0; t < max_thr; ++t)
-                            maxspeed = std::max(maxspeed, maxes[t*MAXES_STRIDE]);
+                    maxspeed = 0.0f;
+                    for(size_t t = 0; t < max_thr; ++t)
+                        maxspeed = std::max(maxspeed, maxes[t*MAXES_STRIDE]);
 
-                        if(maxspeed < arz<float>::epsilon())
-                            maxspeed = min_h;
+                    if(maxspeed < arz<float>::epsilon())
+                        maxspeed = min_h;
 
-                        dt = std::min(cfl*min_h/maxspeed, 1.0f);
-                        step_timer.stop();
-                        max_compute_time += step_timer.interval_S();
-                    }
-
-#pragma omp barrier
-#pragma omp single
-                    {
-                        step_timer.reset();
-                        step_timer.start();
-                    }
-
-                    BOOST_FOREACH(lane *l, work.macro_lanes)
-                    {
-                        assert(l->is_macro());
-                        assert(l->active());
-                        assert(!l->fictitious);
-                        l->update(dt, *this);
-                    }
+                    dt = std::min(cfl*min_h/maxspeed, 1.0f);
+                    step_timer.stop();
+                    max_compute_time += step_timer.interval_S();
+                }
 
 #pragma omp barrier
 #pragma omp single
-                    {
-                        step_timer.stop();
-                        update_time += step_timer.interval_S();
-                    }
+                {
+                    step_timer.reset();
+                    step_timer.start();
+                }
+
+                BOOST_FOREACH(lane *l, work.macro_lanes)
+                {
+                    assert(l->is_macro());
+                    assert(l->active());
+                    assert(!l->fictitious);
+                    l->update(dt, *this);
+                }
+
+#pragma omp barrier
+#pragma omp single
+                {
+                    step_timer.stop();
+                    update_time += step_timer.interval_S();
                 }
 
 #pragma omp barrier
