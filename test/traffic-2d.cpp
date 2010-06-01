@@ -2067,7 +2067,7 @@ int main(int argc, char *argv[])
     std::cout << libhybrid_package_string() << std::endl;
     if(argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <input network> [background image]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <input network> [nthreads] [background image] " << std::endl;
         return 1;
     }
     RESOURCE_ROOT = getenv(RESOURCE_ROOT_ENV_NAME);
@@ -2103,6 +2103,12 @@ int main(int argc, char *argv[])
 
     hwm::network_aux neta(net);
 
+    int n_threads = 1;
+    if(argc >= 3)
+        n_threads = boost::lexical_cast<int>(argv[2]);
+    omp_set_num_threads(n_threads);
+    std::cout << "OpenMP using " << n_threads << " threads" << std::endl;
+
     hybrid::simulator s(&net,
                         4.5,
                         1.0);
@@ -2131,9 +2137,9 @@ int main(int argc, char *argv[])
 
     mv.time_offset = 0;
 
-    if(argc == 3)
+    if(argc == 4)
     {
-        mv.back_image = new big_image(argv[2]);
+        mv.back_image = new big_image(argv[3]);
         mv.back_image_center = vec2f(-11.7303, -876.804);
         mv.back_image_scale =  0.378929;
         mv.back_image_yscale = 0.812253;

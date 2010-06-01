@@ -573,24 +573,18 @@ namespace hybrid
 
             if(sched_setaffinity(0, sizeof(mask), &mask) == -1)
                 std::cerr << "Couldn't set affinity for thread: " <<  thr_id << std::endl;
-            else
-                std::cerr << "Set affinity for thread: " <<  thr_id << std::endl;
 
             struct sched_param sp;
             sp.sched_priority = 10;
-            if(sched_setscheduler(0, SCHED_FIFO, &sp) == 0)
-                std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
-            else
-                std::cerr << "Can't set SCHED_FIFO" << std::endl;
+            sched_setscheduler(0, SCHED_FIFO, &sp);
 #endif
 
             worker &work = workers[thr_id];
             for(size_t i = 0; i < work.macro_lanes.size(); ++i)
             {
-                lane        *l             = macro_lanes[i];
-                assert(l->is_macro());
-                assert(l->active());
-                assert(!l->fictitious);
+                lane        *l             = work.macro_lanes[i];
+                if(!(l->is_macro() && l->active() && !l->fictitious))
+                    continue;
                 const float  max           = l->collect_riemann();
                 maxes[thr_id*MAXES_STRIDE] = std::max(max, maxes[thr_id*MAXES_STRIDE]);
             }
@@ -610,10 +604,9 @@ namespace hybrid
 
             for(size_t i = 0; i < work.macro_lanes.size(); ++i)
             {
-                lane *l = macro_lanes[i];
-                assert(l->is_macro());
-                assert(l->active());
-                assert(!l->fictitious);
+                lane *l = work.macro_lanes[i];
+                if(!(l->is_macro() && l->active() && !l->fictitious))
+                    continue;
                 l->update(dt, *this);
             }
         }
