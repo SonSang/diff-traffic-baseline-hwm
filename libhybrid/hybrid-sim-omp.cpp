@@ -1,6 +1,12 @@
 #include "libhybrid/hybrid-sim.hpp"
 #include "libhybrid/timer.hpp"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#undef max
+#undef min
+#endif
+
 namespace hybrid
 {
     void simulator::parallel_hybrid_run(int nsteps)
@@ -25,6 +31,14 @@ namespace hybrid
 
             worker &work = workers[thr_id];
 
+#ifdef _MSC_VER
+            DWORD_PTR mask = (1 << (thr_id % num_procs));
+            if(SetThreadAffinityMask( GetCurrentThread(), mask) == 0)
+                fprintf(stderr, "Couldn't set affinity for thread %d\n", thr_id);
+
+            if(SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL) == 0)
+                fprintf(stderr, "Couldn't set realtime priority for thread %d\n", thr_id);
+#else
             cpu_set_t mask;
             CPU_ZERO(&mask);
             CPU_SET((thr_id % num_procs), &mask);
@@ -40,6 +54,7 @@ namespace hybrid
                 std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
             else
                 std::cerr << "Can't set SCHED_FIFO" << std::endl;
+#endif
 
 #pragma omp barrier
 #pragma omp single

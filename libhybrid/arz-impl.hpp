@@ -19,18 +19,18 @@ arz<T>::q::q()
 {}
 
 template <typename T>
-arz<T>::q::q(const q &__restrict__ o)
+arz<T>::q::q(const q &restrict o)
     : base(o)
 {}
 
 template <typename T>
-arz<T>::q::q(const base &__restrict__ o)
+arz<T>::q::q(const base &restrict o)
     : base(o)
 {}
 
 template <typename T>
 template <class E>
-arz<T>::q::q(const tvmet::XprVector< E, 2 > &__restrict__ e)
+arz<T>::q::q(const tvmet::XprVector< E, 2 > &restrict e)
     : base(e)
 {}
 
@@ -90,8 +90,8 @@ inline void arz<T>::q::fix()
 template <typename T>
 inline bool arz<T>::q::check() const
 {
-    return std::isfinite(rho()) && rho() >= 0 && rho() <= 1.0f
-    && std::isfinite(y()) && y() <= 0;
+    return xisfinite(rho()) && rho() >= 0 && rho() <= 1.0f
+    && xisfinite(y()) && y() <= 0;
 }
 
 // full_q implemenation
@@ -101,7 +101,7 @@ arz<T>::full_q::full_q()
 {}
 
 template <typename T>
-arz<T>::full_q::full_q(const full_q &__restrict__ o)
+arz<T>::full_q::full_q(const full_q &restrict o)
     : base(o),
       u_eq_(o.u_eq_),
       u_(o.u_)
@@ -110,7 +110,7 @@ arz<T>::full_q::full_q(const full_q &__restrict__ o)
 }
 
 template <typename T>
-arz<T>::full_q::full_q(const q &__restrict__ o,
+arz<T>::full_q::full_q(const q &restrict o,
                        const T               u_max)
     : base(o)
 {
@@ -199,7 +199,7 @@ inline T arz<T>::full_q::lambda_1(const T u_max) const
 }
 
 template <typename T>
-inline typename arz<T>::full_q arz<T>::centered_rarefaction(const full_q &__restrict__ q_l,
+inline typename arz<T>::full_q arz<T>::centered_rarefaction(const full_q &restrict q_l,
                                                             const T                    u_max)
 {
     full_q res;
@@ -213,8 +213,8 @@ inline typename arz<T>::full_q arz<T>::centered_rarefaction(const full_q &__rest
 }
 
 template <typename T>
-inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &__restrict__ q_l,
-                                                  const full_q &__restrict__ q_r,
+inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &restrict q_l,
+                                                  const full_q &restrict q_r,
                                                   const T                    inv_u_max)
 {
     full_q res;
@@ -230,13 +230,13 @@ inline typename arz<T>::full_q arz<T>::rho_middle(const full_q &__restrict__ q_l
 template <typename T>
 inline bool arz<T>::full_q::check() const
 {
-    return q::check() && std::isfinite(u()) && u() >= 0.0f
-    && std::isfinite(u_eq()) && u_eq() >= 0.0f;
+    return q::check() && xisfinite(u()) && u() >= 0.0f
+    && xisfinite(u_eq()) && u_eq() >= 0.0f;
 }
 
 template <typename T>
-inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
-                                              const full_q &__restrict__ q_r,
+inline void arz<T>::riemann_solution::riemann(const full_q &restrict q_l,
+                                              const full_q &restrict q_r,
                                               const T                    u_max,
                                               const T                    inv_u_max)
 {
@@ -376,8 +376,8 @@ inline void arz<T>::riemann_solution::riemann(const full_q &__restrict__ q_l,
 // };
 
 template <typename T>
-inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q &__restrict__ q_l,
-                                                                    const full_q &__restrict__ q_r,
+inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q &restrict q_l,
+                                                                    const full_q &restrict q_r,
                                                                     const float u_max_l,
                                                                     const float u_max_r)
 {
@@ -450,7 +450,7 @@ inline void arz<T>::riemann_solution::lebaque_inhomogeneous_riemann(const full_q
 };
 
 template <typename T>
-inline void arz<T>::riemann_solution::starvation_riemann(const full_q &__restrict__ q_r,
+inline void arz<T>::riemann_solution::starvation_riemann(const full_q &restrict q_r,
                                                          const T                    u_max,
                                                          const T                    inv_u_max)
 {
@@ -470,7 +470,7 @@ inline void arz<T>::riemann_solution::starvation_riemann(const full_q &__restric
 }
 
 template <typename T>
-inline void arz<T>::riemann_solution::stop_riemann(const full_q &__restrict__ q_l,
+inline void arz<T>::riemann_solution::stop_riemann(const full_q &restrict q_l,
                                                    const T                    u_max,
                                                    const T                    inv_u_max)
 {
@@ -499,15 +499,15 @@ inline void arz<T>::riemann_solution::clear()
 template <typename T>
 inline bool arz<T>::riemann_solution::check() const
 {
-    return std::isfinite(waves[0][0])
-    && std::isfinite(waves[0][1])
-    && std::isfinite(waves[1][0])
-    && std::isfinite(waves[1][1])
-    && std::isfinite(left_fluctuation[0])
-    && std::isfinite(left_fluctuation[1])
-    && std::isfinite(right_fluctuation[0])
-    && std::isfinite(right_fluctuation[1])
-    && std::isfinite(speeds[0]) && std::isfinite(speeds[1]);
+    return xisfinite(waves[0][0])
+    && xisfinite(waves[0][1])
+    && xisfinite(waves[1][0])
+    && xisfinite(waves[1][1])
+    && xisfinite(left_fluctuation[0])
+    && xisfinite(left_fluctuation[1])
+    && xisfinite(right_fluctuation[0])
+    && xisfinite(right_fluctuation[1])
+    && xisfinite(speeds[0]) && xisfinite(speeds[1]);
 }
 
 #endif

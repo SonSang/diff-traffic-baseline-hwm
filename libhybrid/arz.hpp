@@ -10,6 +10,7 @@
 
 static const float GAMMA     = 0.5;
 static const float INV_GAMMA = 2.0f;
+static const float VACUUM_EPS = 1e-4; /**< Epsilon to use. */
 
 /** Class that implements the ARZ system of equations.
  *  For traffic flow.
@@ -30,8 +31,6 @@ struct arz
     enum   { order = 2 };
     typedef      T   prec_t;
     /*@}*/
-
-    static const T VACUUM_EPS = 1e-4; /**< Epsilon to use. */
 
     /** Simply class that encapsulates equations useful for ARZ.
      */
@@ -122,10 +121,10 @@ struct arz
         /*@{*/
         /** Copy constructors from self, Vectors, and expression.
          */
-        q(const q    &__restrict__ o);
-        q(const base &__restrict__ o);
+        q(const q    &restrict o);
+        q(const base &restrict o);
         template <class E>
-        q(const tvmet::XprVector< E, 2 > &__restrict__ e);
+        q(const tvmet::XprVector< E, 2 > &restrict e);
         /*@}*/
 
         /** Constructor that directly sets rho and y.
@@ -177,14 +176,14 @@ struct arz
         /** Copy constructor.
          *  \param o The full_q to copy.
          */
-        full_q(const full_q &__restrict__ o);
+        full_q(const full_q &restrict o);
 
         /** Construct from a 'regular' q.
          *  \param o The q to create this instance from.
          *  \param u_max The maximum speed for this region.
          *  \param gamma The gamma on this region.
          */
-        full_q(const      q &__restrict__ o,
+        full_q(const      q &restrict o,
                const T                    u_max);
 
         /** Construct from a rho, u pair.
@@ -266,7 +265,7 @@ struct arz
      *  \param inv_gamma 1.0/gamma for this region.
      *  \returns The centered rarefaction state.
      */
-    static inline full_q centered_rarefaction(const full_q &__restrict__ q_l,
+    static inline full_q centered_rarefaction(const full_q &restrict q_l,
                                               const T                    u_max);
 
     /** Compute q_m from a given left and right state.
@@ -278,8 +277,8 @@ struct arz
      *  \param inv_gamma 1.0/gamma for the region.
      *  \return q_m as computed above.
      */
-    static inline full_q rho_middle(const full_q &__restrict__ q_l,
-                                    const full_q &__restrict__ q_r,
+    static inline full_q rho_middle(const full_q &restrict q_l,
+                                    const full_q &restrict q_r,
                                     const T                    inv_u_max);
 
     /** Class to compute Riemann solutions for the ARZ equations.
@@ -294,8 +293,8 @@ struct arz
          *  \param gamma The gamma for this region.
          *  \param inv_gamma 1.0/gamma.
          */
-        inline void riemann(const full_q &__restrict__ q_l,
-                            const full_q &__restrict__ q_r,
+        inline void riemann(const full_q &restrict q_l,
+                            const full_q &restrict q_r,
                             const T                    u_max,
                             const T                    inv_u_max);
 
@@ -307,8 +306,8 @@ struct arz
          *  \param gamma The gamma for this region.
          *  \param inv_gamma 1.0/gamma.
          */
-        inline void lebaque_inhomogeneous_riemann(const full_q &__restrict__ q_l,
-                                                  const full_q &__restrict__ q_r,
+        inline void lebaque_inhomogeneous_riemann(const full_q &restrict q_l,
+                                                  const full_q &restrict q_r,
                                                   float                      u_max_l,
                                                   float                      u_max_r);
 
@@ -319,7 +318,7 @@ struct arz
          *  \param gamma The gamma for this region.
          *  \param inv_gamma 1.0/gamma.
          */
-        inline void starvation_riemann(const full_q &__restrict__ q_r,
+        inline void starvation_riemann(const full_q &restrict q_r,
                                        const T                    u_max,
                                        const T                    inv_u_max);
 
@@ -330,7 +329,7 @@ struct arz
          *  \param gamma The gamma for this region.
          *  \param inv_gamma 1.0/gamma.
          */
-        inline void stop_riemann(const full_q &__restrict__ q_l,
+        inline void stop_riemann(const full_q &restrict q_l,
                                  const T                    u_max,
                                  const T                    inv_u_max);
 

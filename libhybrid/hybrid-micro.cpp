@@ -347,7 +347,7 @@ namespace hybrid
             }
         }
 
-        if (nxt_car_found and (nxt_car.position < cur_car.position))
+        if (nxt_car_found && (nxt_car.position < cur_car.position))
             return nxt_car;
         else
             return cur_car;
@@ -420,7 +420,7 @@ namespace hybrid
 
                 //Merge the cars
                 if (right_accel  > threshold
-                    or left_accel > threshold)
+                    || left_accel > threshold)
                 {
                     if (right_accel > left_accel)
                     {
@@ -512,10 +512,10 @@ namespace hybrid
                 }
             }
 
-            if (potential_right and next_r.position > -1)
+            if (potential_right && next_r.position > -1)
                 current_car(i).acceleration = std::min(current_car(i).acceleration, (float)right_accel);
 
-            if (potential_left and next_l.position > -1)
+            if (potential_left && next_l.position > -1)
                 current_car(i).acceleration = std::min(current_car(i).acceleration, (float)left_accel);
         }
     }
@@ -563,8 +563,8 @@ namespace hybrid
                 max_acceleration = std::max(std::abs(c.acceleration), max_acceleration);
 
                 if( std::abs(c.acceleration) > std::abs(last_acceleration)
-                    or c.position+sim.front_bumper_offset()*inv_length >= 1.0
-                    or ((std::abs(c.acceleration - last_acceleration) < epsilon_2) and (std::abs(c.acceleration) > epsilon)))
+                    || c.position+sim.front_bumper_offset()*inv_length >= 1.0
+                    || ((std::abs(c.acceleration - last_acceleration) < epsilon_2) && (std::abs(c.acceleration) > epsilon)))
                 {
                     for(int j = i; j < static_cast<int>(current_cars().size())-1; ++j)
                         current_car(j) = current_car(j+1);

@@ -6,6 +6,7 @@
 #include <boost/random.hpp>
 #include <set>
 #include <omp.h>
+#include <algorithm>
 
 namespace hybrid
 {

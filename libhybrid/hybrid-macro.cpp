@@ -1,7 +1,15 @@
 #include "libhybrid/hybrid-sim.hpp"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#undef max
+#undef min
+#endif
+
+#ifndef _MSC_VER
 #include "xmmintrin.h"
 #include "pmmintrin.h"
+#endif
 
 namespace hybrid
 {
@@ -472,9 +480,11 @@ namespace hybrid
         const size_t max_thr = omp_get_max_threads();
         assert(workers.size() == max_thr);
 
+#ifndef _MSC_VER
         // Try to stay out of FP_ASSIST - enable DAZ and FTZ
         _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
         _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+#endif
 
         relaxation_factor = rf;
         min_h             = std::numeric_limits<float>::max();
@@ -549,16 +559,30 @@ namespace hybrid
             const int thr_id           = omp_get_thread_num();
             maxes[thr_id*MAXES_STRIDE] = 0.0f;
 
+#ifdef _MSC_VER
+            DWORD_PTR mask = (1 << (thr_id % num_procs));
+            if(SetThreadAffinityMask( GetCurrentThread(), mask) == 0)
+                fprintf(stderr, "Couldn't set affinity for thread %d\n", thr_id);
+
+            if(SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL) == 0)
+                fprintf(stderr, "Couldn't set realtime priority for thread %d\n", thr_id);
+#else
             cpu_set_t mask;
             CPU_ZERO(&mask);
             CPU_SET((thr_id % num_procs), &mask);
 
             if(sched_setaffinity(0, sizeof(mask), &mask) == -1)
-                fprintf(stderr, "Couldn't set affinity for thread %d\n", thr_id);
+                std::cerr << "Couldn't set affinity for thread: " <<  thr_id << std::endl;
+            else
+                std::cerr << "Set affinity for thread: " <<  thr_id << std::endl;
 
             struct sched_param sp;
             sp.sched_priority = 10;
-            sched_setscheduler(0, SCHED_FIFO, &sp);
+            if(sched_setscheduler(0, SCHED_FIFO, &sp) == 0)
+                std::cerr << "Running with real-time priority (SCHED_FIFO)" << std::endl;
+            else
+                std::cerr << "Can't set SCHED_FIFO" << std::endl;
+#endif
 
             worker &work = workers[thr_id];
             for(size_t i = 0; i < work.macro_lanes.size(); ++i)
