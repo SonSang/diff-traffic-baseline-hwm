@@ -737,4 +737,14 @@ namespace hybrid
     void simulator::micro_cleanup()
     {
     }
+
+    float simulator::micro_length() const
+    {
+        float res = 0.0f;
+        BOOST_FOREACH(const lane *l, micro_lanes)
+        {
+            res += l->length;
+        }
+        return res;
+    }
 }

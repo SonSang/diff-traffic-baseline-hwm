@@ -1263,6 +1263,9 @@ public:
             }
         }
 
+        put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 0, h()-50, LEFT, BOTTOM);
+        put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 0, h()-75, LEFT, BOTTOM);
+
         cairo_destroy(cr);
 
         glBindTexture(GL_TEXTURE_2D, overlay_tex_);

@@ -272,13 +272,14 @@ namespace hybrid
         size_t                 car_id_counter;
 
         // micro
-        void   micro_initialize(const float a_max, const float a_pref, const float v_pref,
-                                const float delta);
-        void   micro_cleanup();
-        void   settle(const float timestep);
+        void  micro_initialize(const float a_max, const float a_pref, const float v_pref,
+                               const float delta);
+        void  micro_cleanup();
+        void  settle(const float timestep);
         float acceleration(const float leader_velocity, const float follower_velocity, const float distance) const;
-        void   compute_accelerations(float timestep);
-        void   update(float timestep);
+        void  compute_accelerations(float timestep);
+        void  update(float timestep);
+        float micro_length() const;
 
         float a_max;
         float a_pref;
@@ -290,6 +291,7 @@ namespace hybrid
         void  macro_cleanup();
         void  convert_cars(sim_t sim_mask);
         float macro_step(const float cfl=1.0f);
+        float macro_length() const;
 
         float                         h_suggest;
         float                         min_h;

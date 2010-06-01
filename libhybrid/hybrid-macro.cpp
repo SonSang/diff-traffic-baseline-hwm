@@ -613,4 +613,14 @@ namespace hybrid
 
         return dt;
     }
+
+    float simulator::macro_length() const
+    {
+        float res = 0.0f;
+        BOOST_FOREACH(const lane *l, macro_lanes)
+        {
+            res += l->length;
+        }
+        return res;
+    }
 };
