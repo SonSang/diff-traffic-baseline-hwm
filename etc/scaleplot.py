@@ -8,11 +8,11 @@ import operator as op
 import sys
 import re
 import math
+import os.path
 
 def scale_line(grids, allthreads):
     ngrids = len(grids)
-    gridnames = [x[0] for x in grids]
-
+    gridnames = [os.path.splitext(os.path.basename(x[0]))[0] for x in grids]
     colors = it.cycle(("#E6DA73", "#507EA1", "#CF6795"))
     symbols = it.cycle(("o-", "s-", "D-", "v-"))
 
@@ -29,7 +29,7 @@ def scale_line(grids, allthreads):
         plots.append(pylab.plot(*i[:3], **d))
     pylab.hold(True)
     plots.append(pylab.plot(allthreads, allthreads, '--', color='black'))
-#    pylab.legend(plots, gridnames, 'best')
+    pylab.legend(plots, gridnames + ["linear"], 'best')
     pylab.xticks(allthreads, [str(x) for x in allthreads])
     pylab.yticks(range(0, int(math.ceil(ymax*1.1)), 2))
     for yl in xrange(0, int(math.ceil(ymax*1.1)), 2):
@@ -87,8 +87,8 @@ def threadread(flag):
 
     plotfuncs[flag](datafiles, allthreads)
 
-    pylab.xlabel('threads', fontsize=2*fsize/3)
-    pylab.ylabel('speedup over 1 thread', fontsize=2*fsize/3)
+    pylab.xlabel('threads', fontsize=fsize)
+    pylab.ylabel('speedup over 1 thread', fontsize=fsize)
 
 readfuncs = {scale_line : threadread}
 
