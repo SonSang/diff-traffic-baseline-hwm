@@ -16,22 +16,24 @@
 #include "big-image-tile.hpp"
 #include <png.h>
 
-static const float FRAME_RATE                 = 1.0/24.0;
-static const float EXPIRE_TIME                = 2.0f;
-static const float BRAKING_THRESHOLD          = -0.1;
-static const float HEADLIGHT_THRESHOLD        = 0.65*1.732;
-static const float HEADLIGHT_COLOR[3]         = {0.5*255/255.0, 0.5*254/255.0, 0.5*149/255.0};
-static const float TAILLIGHT_COLOR[3]         = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
-static const float BRAKING_TAILLIGHT_COLOR[3] = {2.0*122/255.0, 2.0* 15/255.0, 2.0* 25/255.0};
-static const float ROAD_SURFACE_COLOR[3]      = {    237/255.0,     234/255.0,     186/255.0};
-static const float ROAD_LINE_COLOR[3]         = {    135/255.0,     103/255.0,      61/255.0};
-static const float ROAD_LINE_SCALE            = 300.0;
-static const char  RESOURCE_ROOT_ENV_NAME[]   = "TRAFFIC_2D_RESOURCE_ROOT";
-static const char  HEADLIGHT_TEX[]            = "small-headlight-pair.png";
-static const char  TAILLIGHT_TEX[]            = "taillight.png";
-static const char  AMBIENT_TEX[]              = "ambient-timeofday.png";
-static const char  ARROW_TEX[]                = "arrow.png";
-static char       *RESOURCE_ROOT              = 0;
+static const float FRAME_RATE                   = 1.0/24.0;
+static const float EXPIRE_TIME                  = 2.0f;
+static const float BRAKING_THRESHOLD            = -0.1;
+static const float HEADLIGHT_THRESHOLD          = 0.65*1.732;
+static const float HEADLIGHT_COLOR[3]           = {0.5*255/255.0, 0.5*254/255.0, 0.5*149/255.0};
+static const float TAILLIGHT_COLOR[3]           = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
+static const float BRAKING_TAILLIGHT_COLOR[3]   = {2.0*122/255.0, 2.0* 15/255.0, 2.0* 25/255.0};
+static const float ROAD_SURFACE_COLOR[3]        = {    237/255.0,     234/255.0,     186/255.0};
+static const float ROAD_LINE_COLOR[3]           = {    135/255.0,     103/255.0,      61/255.0};
+static const float REGION_BOX_BORDER_COLOR[4]   = {     17/255.0,     129/255.0,     255/255.0, 0.7};
+static const float REGION_BOX_INTERNAL_COLOR[4] = {     67/255.0,     127/255.0,     195/255.0, 0.2};
+static const float ROAD_LINE_SCALE              = 300.0;
+static const char  RESOURCE_ROOT_ENV_NAME[]     = "TRAFFIC_2D_RESOURCE_ROOT";
+static const char  HEADLIGHT_TEX[]              = "small-headlight-pair.png";
+static const char  TAILLIGHT_TEX[]              = "taillight.png";
+static const char  AMBIENT_TEX[]                = "ambient-timeofday.png";
+static const char  ARROW_TEX[]                  = "arrow.png";
+static char       *RESOURCE_ROOT                = 0;
 
 static bool checkFramebufferStatus()
 {
@@ -1169,9 +1171,9 @@ public:
             {
                 cairo_set_matrix(cr, &cmat);
                 cairo_rectangle(cr, r.bounds[0][0], r.bounds[0][1], r.bounds[1][0]-r.bounds[0][0], r.bounds[1][1]-r.bounds[0][1]);
-                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
+                cairo_set_source_rgba(cr, REGION_BOX_INTERNAL_COLOR[0], REGION_BOX_INTERNAL_COLOR[1], REGION_BOX_INTERNAL_COLOR[2], REGION_BOX_INTERNAL_COLOR[3]);
                 cairo_fill_preserve(cr);
-                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
+                cairo_set_source_rgba(cr, REGION_BOX_BORDER_COLOR[0], REGION_BOX_BORDER_COLOR[1], REGION_BOX_BORDER_COLOR[2], REGION_BOX_BORDER_COLOR[3]);
                 cairo_identity_matrix(cr);
                 cairo_set_line_width(cr, 2.0);
                 cairo_stroke(cr);
@@ -1183,12 +1185,11 @@ public:
                                 std::min(first_point[1], second_point[1]));
                 const vec2f high(std::max(first_point[0], second_point[0]),
                                  std::max(first_point[1], second_point[1]));
-
                 cairo_set_matrix(cr, &cmat);
                 cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
-                cairo_set_source_rgba(cr, 67/255.0, 127/255.0, 195/255.0, 0.2);
+                cairo_set_source_rgba(cr, REGION_BOX_INTERNAL_COLOR[0], REGION_BOX_INTERNAL_COLOR[1], REGION_BOX_INTERNAL_COLOR[2], REGION_BOX_INTERNAL_COLOR[3]);
                 cairo_fill_preserve(cr);
-                cairo_set_source_rgba(cr, 17/255.0, 129/255.0, 255/255.0, 0.7);
+                cairo_set_source_rgba(cr, REGION_BOX_BORDER_COLOR[0], REGION_BOX_BORDER_COLOR[1], REGION_BOX_BORDER_COLOR[2], REGION_BOX_BORDER_COLOR[3]);
                 cairo_identity_matrix(cr);
                 cairo_set_line_width(cr, 2.0);
                 cairo_stroke(cr);
