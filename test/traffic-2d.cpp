@@ -1012,6 +1012,7 @@ public:
                                                           arrow_tex_(0),
                                                           drawing(false),
                                                           abstract_network(true),
+                                                          draw_intersections(false),
                                                           sim(0),
                                                           t(0),
                                                           time_offset(0),
@@ -1534,26 +1535,29 @@ public:
             network_drawer.draw_lane_solid(l->parent->id);
         }
 
-        const float arrow_length = arrow_aspect*sim->hnet->lane_width;
-        glBindTexture (GL_TEXTURE_2D, arrow_tex_);
-        glMatrixMode(GL_TEXTURE);
-        BOOST_FOREACH(const hwm::intersection_pair &ip, sim->hnet->intersections)
+        if(draw_intersections)
         {
-            if(ip.second.locked)
-                continue;
-            const hwm::intersection::state &s = ip.second.states[ip.second.current_state];
-            BOOST_FOREACH(const hwm::lane_pair &lp, s.fict_lanes)
+            const float arrow_length = arrow_aspect*sim->hnet->lane_width;
+            glBindTexture (GL_TEXTURE_2D, arrow_tex_);
+            glMatrixMode(GL_TEXTURE);
+            BOOST_FOREACH(const hwm::intersection_pair &ip, sim->hnet->intersections)
             {
-                const hybrid::lane *hl = lp.second.user_data<const hybrid::lane>();
-                glLoadIdentity();
-                glTranslatef(1.0-hl->length/arrow_length, 0.0, 0.0);
-                glScalef(hl->length/arrow_length, 1.0, 1.0);
+                if(ip.second.locked)
+                    continue;
+                const hwm::intersection::state &s = ip.second.states[ip.second.current_state];
+                BOOST_FOREACH(const hwm::lane_pair &lp, s.fict_lanes)
+                {
+                    const hybrid::lane *hl = lp.second.user_data<const hybrid::lane>();
+                    glLoadIdentity();
+                    glTranslatef(1.0-hl->length/arrow_length, 0.0, 0.0);
+                    glScalef(hl->length/arrow_length, 1.0, 1.0);
 
-                network_drawer.draw_lane_solid(lp.first);
+                    network_drawer.draw_lane_solid(lp.first);
+                }
             }
+            glLoadIdentity();
+            glMatrixMode(GL_MODELVIEW);
         }
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
 
         if(hci)
         {
@@ -1963,6 +1967,9 @@ public:
                     std::cout << "Simulating stopped" << std::endl;
                 break;
             case 'i':
+                draw_intersections = !draw_intersections;
+                break;
+            case 'b':
                 if(back_image && !back_image->tiles.empty())
                 {
                     std::cout << " scale: "  << back_image_scale  << std::endl
@@ -2037,6 +2044,7 @@ public:
     hwm::network_draw          network_drawer;
     hwm::network_aux_draw      network_aux_drawer;
     bool                       abstract_network;
+    bool                       draw_intersections;
 
     hybrid::simulator  *sim;
     hybrid::car_interp *hci;
