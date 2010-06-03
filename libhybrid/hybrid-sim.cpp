@@ -543,6 +543,7 @@ namespace hybrid
                 continue;
 
             bool add_car = false;
+            float cand_rho;
             if(l.is_micro())
             {
                 if(l.current_cars().empty())
@@ -552,6 +553,9 @@ namespace hybrid
             }
             else
             {
+                cand_rho = l.q[0].rho() + car_length/l.h;
+                if(cand_rho < 0.95)
+                    add_car = true;
             }
 
             if(!add_car)
@@ -577,6 +581,11 @@ namespace hybrid
                     new_car.compute_acceleration(leader, (leader.position - new_car.position)*l.length, *this);
                 }
                 l.next_cars().push_back(new_car);
+            }
+            else
+            {
+                arz<float>::full_q fq(l.q[0], l.speedlimit());
+                l.q[0] = arz<float>::q(cand_rho, 0.5*(fq.u()+std::max((float)(*uni)(), MIN_SPEED_FRACTION)*l.speedlimit()), l.speedlimit());
             }
         }
     }
