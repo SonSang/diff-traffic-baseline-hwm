@@ -537,38 +537,47 @@ namespace hybrid
     {
         static const float MIN_SPEED_FRACTION = 0.7;
         static const float rate               = 0.05;
-        BOOST_FOREACH(lane *l, micro_lanes)
+        BOOST_FOREACH(lane &l, lanes)
         {
-            assert(l->is_micro());
-            if(!l->parent->start->network_boundary())
+            if(!l.parent->start->network_boundary())
                 continue;
 
-            car new_car;
-            if(l->current_cars().empty())
+            bool add_car = false;
+            if(l.is_micro())
             {
-                const float add_prob     = (*uni)();
-                const float prob_of_none = std::exp(-rate*dt);
-                if(add_prob <= prob_of_none)
-                    continue;
-
-                new_car = make_car(0, std::max((float)(*uni)(), MIN_SPEED_FRACTION)*l->speedlimit(), 0);
-                new_car.compute_intersection_acceleration(*this, *l);
+                if(l.current_cars().empty())
+                    add_car = true;
+                else if(l.current_car(0).position * l.length > 2*car_length)
+                    add_car = true;
             }
             else
             {
-                const car &leader = l->current_car(0);
-                if(!(leader.position * l->length > 2*car_length))
-                    continue;
-
-                const float add_prob     = (*uni)();
-                const float prob_of_none = std::exp(-rate*dt);
-                if(add_prob <= prob_of_none)
-                    continue;
-
-                new_car           = make_car(0, leader.velocity, 0);
-                new_car.compute_acceleration(leader, (leader.position - new_car.position)*l->length, *this);
             }
-            l->next_cars().push_back(new_car);
+
+            if(!add_car)
+                continue;
+
+            const float add_prob     = (*uni)();
+            const float prob_of_none = std::exp(-rate*dt);
+            if(add_prob <= prob_of_none)
+                continue;
+
+            if(l.is_micro())
+            {
+                car new_car;
+                if(l.current_cars().empty())
+                {
+                    new_car = make_car(0, std::max((float)(*uni)(), MIN_SPEED_FRACTION)*l.speedlimit(), 0);
+                    new_car.compute_intersection_acceleration(*this, l);
+                }
+                else
+                {
+                    const car &leader = l.current_car(0);
+                    new_car           = make_car(0, leader.velocity, 0);
+                    new_car.compute_acceleration(leader, (leader.position - new_car.position)*l.length, *this);
+                }
+                l.next_cars().push_back(new_car);
+            }
         }
     }
 
