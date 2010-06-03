@@ -1994,9 +1994,9 @@ public:
                     if(imode == BACK_MANIP)
                     {
                         if(Fl::event_state() & FL_CTRL)
-                            back_image_yscale *= std::pow(2.0f, 0.1f*fy);
+                            back_image_yscale *= std::pow(2.0f, 0.01f*fy);
                         else
-                            back_image_scale  *= std::pow(2.0f, 0.1f*fy);
+                            back_image_scale  *= std::pow(2.0f, 0.01f*fy);
                     }
                 }
                 else
@@ -2152,9 +2152,9 @@ int main(int argc, char *argv[])
     if(argc == 4)
     {
         mv.back_image = new big_image(argv[3]);
-        mv.back_image_center = vec2f(-11.7303, -876.804);
-        mv.back_image_scale =  0.378929;
-        mv.back_image_yscale = 0.812253;
+        mv.back_image_center = vec2f(-16.8949, -974.423);
+        mv.back_image_scale =  0.420447;
+        mv.back_image_yscale = 0.8179020;
     }
 
     Fl::add_timeout(FRAME_RATE, draw_callback, &mv);
