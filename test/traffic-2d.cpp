@@ -1518,7 +1518,7 @@ public:
             {
                 float val    = l->q[i].rho();
                 blackbody(colors[i].data(), val);
-                colors[i][3] = 1.0f;
+                colors[i][3] = l->q[i].rho();
             }
 
             glTexImage2D (GL_TEXTURE_2D,
