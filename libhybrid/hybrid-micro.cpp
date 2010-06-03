@@ -390,6 +390,7 @@ namespace hybrid
 
     void lane::compute_merges(const float timestep, const simulator& sim)
     {
+        assert(is_micro());
         float threshold = 0.2;
         for(int i = (int)current_cars().size() - 1; i >= 0; --i)
         {
@@ -405,7 +406,8 @@ namespace hybrid
                 if (potential_right)
                 {
                     right_lane = potential_right->user_data<lane>();
-                    right_accel = current_car(i).check_lane(right_lane, right_param, timestep, sim);
+                    if(right_lane->is_micro())
+                        right_accel = current_car(i).check_lane(right_lane, right_param, timestep, sim);
                 }
 
                 float      left_param     = current_car(i).position;
@@ -415,7 +417,8 @@ namespace hybrid
                 if (potential_left)
                 {
                     left_lane = potential_left->user_data<lane>();
-                    left_accel = current_car(i).check_lane(left_lane, left_param, timestep, sim);
+                    if(left_lane->is_micro())
+                        left_accel = current_car(i).check_lane(left_lane, left_param, timestep, sim);
                 }
 
                 //Merge the cars
@@ -522,6 +525,7 @@ namespace hybrid
 
     void lane::populate(const float rate, simulator &sim)
     {
+        assert(is_micro());
         current_cars().clear();
         next_cars().clear();
 
@@ -727,6 +731,7 @@ namespace hybrid
 
                 assert(c.position < 1.0);
 
+                assert(destination_lane->is_micro());
                 destination_lane->next_cars().push_back(c);
 
             next_car:;

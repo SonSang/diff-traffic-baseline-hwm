@@ -458,6 +458,9 @@ namespace hybrid
         if(l.sim_type == MICRO)
             return;
 
+        assert(l.current_cars().empty());
+        assert(l.next_cars().empty());
+
         if(!l.fictitious)
             l.macro_instantiate(*this);
 
@@ -490,14 +493,14 @@ namespace hybrid
             micro_lanes.pop_back();
         }
 
-        if(l.fictitious)
-            return;
+        if(!l.fictitious)
+        {
+            macro_lanes.push_back(&l);
 
-        macro_lanes.push_back(&l);
-
-        l.clear_macro();
-        l.convert_cars(*this);
-        l.fill_y();
+            l.clear_macro();
+            l.convert_cars(*this);
+            l.fill_y();
+        }
 
         l.current_cars().clear();
         l.next_cars().clear();

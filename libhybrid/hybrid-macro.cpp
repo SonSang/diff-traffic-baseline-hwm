@@ -101,7 +101,10 @@ namespace hybrid
     {
         typedef pproc::inhomogeneous_poisson<simulator::rand_gen_t, lane_poisson_helper> ih_poisson_t;
 
+        assert(is_macro());
+
         current_cars().clear();
+        next_cars().clear();
 
         lane_poisson_helper helper(*this, 1.0f/sim.car_length);
         ih_poisson_t        ip(-sim.rear_bumper_offset(), helper, sim.uni);
@@ -373,6 +376,7 @@ namespace hybrid
                     if(c.position >= 1.0)
                     {
                         c.position = length*downstream->inv_length*(c.position-1.0f);
+                        assert(downstream->is_micro());
                         downstream->next_cars().push_back(sim.make_car(c.position, c.velocity, c.acceleration));
                     }
                 }
