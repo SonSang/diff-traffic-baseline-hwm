@@ -1362,6 +1362,19 @@ public:
 
         if(sim && hci && ( imode == NONE || imode == REGION_MANIP))
         {
+            vec2f lo, hi;
+            cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
+
+            aabb2d r;
+            const vec2f dir(hi-lo);
+            r.enclose_point(lo[0]-dir[0]*0.5, lo[1]-dir[1]*0.5);
+            r.enclose_point(hi[0]+dir[0]*0.5, hi[1]+dir[1]*0.5);
+            std::cout << r.bounds[0][0] << " " << r.bounds[1][0] << std::endl
+                      << r.bounds[0][1] << " " << r.bounds[1][1] << std::endl;
+
+            query_results = netaux->road_space.query(r);
+            sim->mass_reassign(query_results);
+
             timer step_timer;
             float dt_accum  = 0;
             int   num_steps = 0;
@@ -1441,7 +1454,7 @@ public:
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
-        if(imode == MC_PREVIEW && view.path.points_.size() > 2)
+        if((imode == NONE || imode == REGION_MANIP || imode == MC_PREVIEW) && view.path.points_.size() > 2)
         {
             center = sub<0,2>::vector(view.path.point(t/view.duration, 0));
             if(go)
