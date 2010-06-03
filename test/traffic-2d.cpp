@@ -1222,37 +1222,37 @@ public:
             put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 270, 5, LEFT, TOP);
 
             if(sim)
-                put_text(cr, boost::str(boost::format("number of micro cars %ld") % sim->ncars()), 0, h(), LEFT, BOTTOM);
+                put_text(cr, boost::str(boost::format("# of micro cars: %ld") % sim->ncars()), 10, 55, LEFT, TOP);
 
             if(throttle)
-                put_text(cr, "throttle", w(), 5, RIGHT, TOP);
+                put_text(cr, "throttle", w()-10, 5, RIGHT, TOP);
             if(go)
             {
                 cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
-                put_text(cr, "simulating", 10, 50, LEFT, TOP);
+                put_text(cr, "simulating", 10, 75, LEFT, TOP);
                 cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-                put_text(cr, boost::str(boost::format("avg. dt %8.3fs; avg. step time %8.3fs") % avg_dt % avg_step_time), 10, 70, LEFT, TOP);
+                put_text(cr, boost::str(boost::format("avg. dt %8.3fs; avg. step time %8.3fs") % avg_dt % avg_step_time), 10, 95, LEFT, TOP);
             }
             cairo_set_source_rgba (cr, 1.0f, 1.0f, 0.0f, 1.0f);
             switch(imode)
             {
             case ARC_MANIP:
-                    put_text(cr, "arc manip", w(), h(), RIGHT, BOTTOM);
+                    put_text(cr, "arc manip", w()-10, h()-5, RIGHT, BOTTOM);
                     if(view.path.points_.size() > 2)
-                        put_text(cr, boost::str(boost::format("path length: %6.3f") % view.path.length(0)), w(), h()-50, RIGHT, BOTTOM);
+                        put_text(cr, boost::str(boost::format("path length: %6.3f") % view.path.length(0)), w()-10, h()-55, RIGHT, BOTTOM);
                 break;
             case MC_PREVIEW:
-                    put_text(cr, "motion preview", w(), h(), RIGHT, BOTTOM);
+                    put_text(cr, "motion preview", w()-10, h()-5, RIGHT, BOTTOM);
                     if(view.path.points_.size() > 2)
-                        put_text(cr, boost::str(boost::format("path param: %6.3f") % (t/view.duration)), w(), h()-50, RIGHT, BOTTOM);
+                        put_text(cr, boost::str(boost::format("path param: %6.3f") % (t/view.duration)), w()-10, h()-55, RIGHT, BOTTOM);
                     else
-                        put_text(cr, "no path!", w(), h()-50, RIGHT, BOTTOM);
+                        put_text(cr, "no path!", w()-10, h()-55, RIGHT, BOTTOM);
                 break;
             case BACK_MANIP:
-                put_text(cr, "back manip", w(), h(), RIGHT, BOTTOM);
+                put_text(cr, "back manip", w()-10, h()-5, RIGHT, BOTTOM);
                 break;
             case REGION_MANIP:
-                put_text(cr, "region manip", w(), h(), RIGHT, BOTTOM);
+                put_text(cr, "region manip", w()-10, h()-5, RIGHT, BOTTOM);
                 break;
             default:
                 break;
@@ -1261,12 +1261,12 @@ public:
 
             if(imode == ARC_MANIP || imode == MC_PREVIEW)
             {
-                put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w(), h()-25, RIGHT, BOTTOM);
+                put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w()-10, h()-30, RIGHT, BOTTOM);
             }
         }
 
-        put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 0, h()-50, LEFT, BOTTOM);
-        put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 0, h()-75, LEFT, BOTTOM);
+        put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 10, h()-30, LEFT, BOTTOM);
+        put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 10, h()-5, LEFT, BOTTOM);
 
         cairo_destroy(cr);
 
