@@ -150,6 +150,7 @@ namespace hybrid
         void  compute_merges(const float timestep, const simulator& sim);
         car&  find_next_car(float param);
         car   get_merging_leader(float param, const lane* other_lane);
+        void  apply_roadblock(float p, simulator &s);
 
         // macro data
         void  macro_initialize(const float h_suggest);
@@ -205,6 +206,12 @@ namespace hybrid
         arz<float>::riemann_solution *rs_base;
     };
 
+    struct roadblock
+    {
+        lane  *l;
+        float  p;
+    };
+
     struct simulator
     {
         typedef boost::rand48  base_generator_type;
@@ -258,6 +265,7 @@ namespace hybrid
         std::vector<lane>      lanes;
         std::vector<lane*>     micro_lanes;
         std::vector<lane*>     macro_lanes;
+        std::vector<roadblock> roadblocks;
 
         std::vector<worker>    workers;
 
@@ -280,6 +288,7 @@ namespace hybrid
         void  compute_accelerations(float timestep);
         void  update(float timestep);
         float micro_length() const;
+        void  apply_roadblocks();
 
         float a_max;
         float a_pref;

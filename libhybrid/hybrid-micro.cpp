@@ -587,6 +587,37 @@ namespace hybrid
         return max_acceleration;
     }
 
+    struct car_sort
+    {
+        inline bool operator()(const car &l, const car &r)
+        {
+            return l.position < r.position;
+        }
+    };
+
+    void lane::apply_roadblock(float p, simulator &s)
+    {
+        if(current_cars().empty())
+            return;
+
+        car f;
+        f.velocity     = 0;
+        f.acceleration = 0;
+        f.position     = p;
+
+        std::vector<car>::iterator c = std::upper_bound(current_cars().begin(), current_cars().end(), f, car_sort());
+        if(c == current_cars().begin())
+        {
+            //            upstream;
+        }
+        else
+        {
+            --c;
+            float distance = (p - c->position)*length;
+            c->compute_acceleration(f, distance, s);
+        }
+    }
+
     void simulator::micro_initialize(const float in_a_max, const float in_a_pref, const float in_v_pref,
                                      const float in_delta)
     {
@@ -671,6 +702,8 @@ namespace hybrid
     {
         compute_accelerations(timestep);
 
+        apply_roadblocks();
+
         BOOST_FOREACH(lane *l, micro_lanes)
         {
             assert(l->is_micro());
@@ -751,5 +784,14 @@ namespace hybrid
             res += l->length;
         }
         return res;
+    }
+
+    void simulator::apply_roadblocks()
+    {
+        // probably not correct if there are multiple roadblocks
+        BOOST_FOREACH(roadblock &r, roadblocks)
+        {
+            r.l->apply_roadblock(r.p, *this);
+        }
     }
 }

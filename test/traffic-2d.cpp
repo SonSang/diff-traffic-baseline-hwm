@@ -994,11 +994,9 @@ struct view_path
 
 };
 
-struct roadblock
-{
-    void draw_block(float width, float aspect) const
+static void draw_roadblock(const hybrid::roadblock &r, float width, float aspect)
     {
-        const mat4x4f trans(l->parent->point_frame(p));
+        const mat4x4f trans(r.l->parent->point_frame(r.p));
         const mat4x4f ttrans(tvmet::trans(trans));
 
         glPushMatrix();
@@ -1017,66 +1015,62 @@ struct roadblock
         glPopMatrix();
     }
 
-    void draw_lights(float t, float width) const
+static void draw_roadblock_lights(const hybrid::roadblock &r, float t, float width)
+{
+    const mat4x4f trans(r.l->parent->point_frame(r.p));
+    const mat4x4f ttrans(tvmet::trans(trans));
+
+    const float flash_state = std::fmod(t, 2*ROADBLOCK_FLASH_INTERVAL);
+    float neg_opacity;
+    float pos_opacity;
+    if(flash_state > ROADBLOCK_FLASH_INTERVAL)
     {
-        const mat4x4f trans(l->parent->point_frame(p));
-        const mat4x4f ttrans(tvmet::trans(trans));
-
-        const float flash_state = std::fmod(t, 2*ROADBLOCK_FLASH_INTERVAL);
-        float neg_opacity;
-        float pos_opacity;
-        if(flash_state > ROADBLOCK_FLASH_INTERVAL)
-        {
-            const float param = (flash_state - ROADBLOCK_FLASH_INTERVAL)/ROADBLOCK_FLASH_INTERVAL;
-            neg_opacity = std::pow(param, 6.0f);
-            pos_opacity = std::pow(1.0f-param, 6.0f);
-        }
-        else
-        {
-            const float param = flash_state/ROADBLOCK_FLASH_INTERVAL;
-            pos_opacity = std::pow(param, 6.0f);
-            neg_opacity = std::pow(1.0f-param, 6.0f);
-        }
-
-        glPushMatrix();
-        glMultMatrixf(ttrans.data());
-        glRotatef(90.0, 0.0, 0.0, 1.0);
-        glPushMatrix();
-        glTranslatef(-width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
-        glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
-        glColor4f(neg_opacity*ROADBLOCK_FLASH_COLOR[0], neg_opacity*ROADBLOCK_FLASH_COLOR[1], neg_opacity*ROADBLOCK_FLASH_COLOR[2], neg_opacity*ROADBLOCK_FLASH_COLOR[3]);
-        glTranslatef(-0.5, -0.5, 0.0);
-        glBegin(GL_QUADS);
-        glTexCoord2f(0, 0);
-        glVertex2f  (0, 0);
-        glTexCoord2f(1, 0);
-        glVertex2f  (1, 0);
-        glTexCoord2f(1, 1);
-        glVertex2f  (1, 1);
-        glTexCoord2f(0, 1);
-        glVertex2f  (0, 1);
-        glEnd();
-        glPopMatrix();
-        glTranslatef(width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
-        glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
-        glColor4f(pos_opacity*ROADBLOCK_FLASH_COLOR[0], pos_opacity*ROADBLOCK_FLASH_COLOR[1], pos_opacity*ROADBLOCK_FLASH_COLOR[2], pos_opacity*ROADBLOCK_FLASH_COLOR[3]);
-        glTranslatef(-0.5, -0.5, 0.0);
-        glBegin(GL_QUADS);
-        glTexCoord2f(0, 0);
-        glVertex2f  (0, 0);
-        glTexCoord2f(1, 0);
-        glVertex2f  (1, 0);
-        glTexCoord2f(1, 1);
-        glVertex2f  (1, 1);
-        glTexCoord2f(0, 1);
-        glVertex2f  (0, 1);
-        glEnd();
-        glPopMatrix();
+        const float param = (flash_state - ROADBLOCK_FLASH_INTERVAL)/ROADBLOCK_FLASH_INTERVAL;
+        neg_opacity = std::pow(param, 6.0f);
+        pos_opacity = std::pow(1.0f-param, 6.0f);
+    }
+    else
+    {
+        const float param = flash_state/ROADBLOCK_FLASH_INTERVAL;
+        pos_opacity = std::pow(param, 6.0f);
+        neg_opacity = std::pow(1.0f-param, 6.0f);
     }
 
-    hybrid::lane *l;
-    float         p;
-};
+    glPushMatrix();
+    glMultMatrixf(ttrans.data());
+    glRotatef(90.0, 0.0, 0.0, 1.0);
+    glPushMatrix();
+    glTranslatef(-width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
+    glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
+    glColor4f(neg_opacity*ROADBLOCK_FLASH_COLOR[0], neg_opacity*ROADBLOCK_FLASH_COLOR[1], neg_opacity*ROADBLOCK_FLASH_COLOR[2], neg_opacity*ROADBLOCK_FLASH_COLOR[3]);
+    glTranslatef(-0.5, -0.5, 0.0);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2f  (0, 0);
+    glTexCoord2f(1, 0);
+    glVertex2f  (1, 0);
+    glTexCoord2f(1, 1);
+    glVertex2f  (1, 1);
+    glTexCoord2f(0, 1);
+    glVertex2f  (0, 1);
+    glEnd();
+    glPopMatrix();
+    glTranslatef(width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
+    glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
+    glColor4f(pos_opacity*ROADBLOCK_FLASH_COLOR[0], pos_opacity*ROADBLOCK_FLASH_COLOR[1], pos_opacity*ROADBLOCK_FLASH_COLOR[2], pos_opacity*ROADBLOCK_FLASH_COLOR[3]);
+    glTranslatef(-0.5, -0.5, 0.0);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2f  (0, 0);
+    glTexCoord2f(1, 0);
+    glVertex2f  (1, 0);
+    glTexCoord2f(1, 1);
+    glVertex2f  (1, 1);
+    glTexCoord2f(0, 1);
+    glVertex2f  (0, 1);
+    glEnd();
+    glPopMatrix();
+}
 
 static const float CAR_LENGTH    = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
@@ -1678,10 +1672,13 @@ public:
             network_drawer.draw_lane_solid(l->parent->id);
         }
 
-        glBindTexture(GL_TEXTURE_2D, roadblock_tex_);
-        BOOST_FOREACH(const roadblock &r, roadblocks)
+        if(sim)
         {
-            r.draw_block(sim->hnet->lane_width, roadblock_aspect);
+            glBindTexture(GL_TEXTURE_2D, roadblock_tex_);
+            BOOST_FOREACH(const hybrid::roadblock &r, sim->roadblocks)
+            {
+                draw_roadblock(r, sim->hnet->lane_width, roadblock_aspect);
+            }
         }
 
         if(draw_intersections)
@@ -1758,10 +1755,14 @@ public:
 
         glDepthMask(GL_FALSE);
         glBlendFunc(GL_ONE, GL_ONE);
-        glBindTexture(GL_TEXTURE_2D, roadblock_flash_tex_);
-        BOOST_FOREACH(const roadblock &r, roadblocks)
+
+        if(sim)
         {
-            r.draw_lights(t+time_offset, sim->hnet->lane_width);
+            glBindTexture(GL_TEXTURE_2D, roadblock_flash_tex_);
+            BOOST_FOREACH(const hybrid::roadblock &r, sim->roadblocks)
+            {
+                draw_roadblock_lights(r, t+time_offset, sim->hnet->lane_width);
+            }
         }
 
         if(night_setup.draw_lights(t+time_offset))
@@ -2189,10 +2190,9 @@ public:
     GLuint   arrow_tex_;
     float    arrow_aspect;
 
-    GLuint                 roadblock_tex_;
-    GLuint                 roadblock_flash_tex_;
-    float                  roadblock_aspect;
-    std::vector<roadblock> roadblocks;
+    GLuint roadblock_tex_;
+    GLuint roadblock_flash_tex_;
+    float  roadblock_aspect;
 
     std::vector<aabb2d>                                rectangles;
     bool                                               drawing;
@@ -2327,10 +2327,10 @@ int main(int argc, char *argv[])
     mv.take_focus();
     Fl::visual(FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE);
 
-    mv.roadblocks.push_back(roadblock());
+    s.roadblocks.push_back(hybrid::roadblock());
 
-    mv.roadblocks.back().l = &(s.get_lane_by_name("lane0c"));
-    mv.roadblocks.back().p = 0.5;
+    s.roadblocks.back().l = &(s.get_lane_by_name("lane0c"));
+    s.roadblocks.back().p = 0.7;
 
     mv.show(1, argv);
     return Fl::run();
