@@ -1543,12 +1543,12 @@ public:
             vec2f lo, hi;
             cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
 
-            aabb2d      r;
-            const vec2f dir(hi-lo);
-            r.enclose_point(lo[0]-dir[0]*0.5, lo[1]-dir[1]*0.5);
-            r.enclose_point(hi[0]+dir[0]*0.5, hi[1]+dir[1]*0.5);
-            query_results = netaux->road_space.query(r);
-            sim->mass_reassign(query_results);
+            // aabb2d      r;
+            // const vec2f dir(hi-lo);
+            // r.enclose_point(lo[0]-dir[0]*0.5, lo[1]-dir[1]*0.5);
+            // r.enclose_point(hi[0]+dir[0]*0.5, hi[1]+dir[1]*0.5);
+            // query_results = netaux->road_space.query(r);
+            // sim->mass_reassign(query_results);
 
             timer step_timer;
             float dt_accum  = 0;
@@ -1707,7 +1707,7 @@ public:
             {
                 float val    = l->q[i].rho();
                 blackbody(colors[i].data(), val);
-                colors[i][3] = l->q[i].rho();
+                colors[i][3] = 1.0;
             }
 
             glTexImage2D (GL_TEXTURE_2D,
@@ -1722,6 +1722,16 @@ public:
 
             network_drawer.draw_lane_solid(l->parent->id);
         }
+
+        glColor4f(0.0, 0.0, 0.0, 1.0);
+        glDisable(GL_TEXTURE_2D);
+        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+        {
+            if(l.active() && l.fictitious && l.is_macro())
+                network_drawer.draw_lane_solid(l.parent->id);
+        }
+        glEnable(GL_TEXTURE_2D);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
 
         if(sim)
         {
