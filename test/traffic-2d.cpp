@@ -2327,11 +2327,6 @@ int main(int argc, char *argv[])
     mv.take_focus();
     Fl::visual(FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE);
 
-    s.roadblocks.push_back(hybrid::roadblock());
-
-    s.roadblocks.back().l = &(s.get_lane_by_name("lane0c"));
-    s.roadblocks.back().p = 0.7;
-
     mv.show(1, argv);
     return Fl::run();
 }
