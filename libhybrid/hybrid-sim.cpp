@@ -547,7 +547,7 @@ namespace hybrid
     static float tod_car_rate(float t)
     {
         static const float MORNING_RUSH_PEAK_T = 8.5*60*60.0;
-        static const float EVENING_RUSH_PEAK_T = 5.5*60*60.0;
+        static const float EVENING_RUSH_PEAK_T = 17.5*60*60.0;
         static const float RUSH_DURATION       = 1.5*60*60.0;
 
         static const float BASE_RATE = 0.05;
