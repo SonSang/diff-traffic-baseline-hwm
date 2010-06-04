@@ -1029,13 +1029,13 @@ struct roadblock
         {
             const float param = (flash_state - ROADBLOCK_FLASH_INTERVAL)/ROADBLOCK_FLASH_INTERVAL;
             neg_opacity = std::pow(param, 6.0f);
-            pos_opacity = std::pow(1.0-param, 6.0f);
+            pos_opacity = std::pow(1.0f-param, 6.0f);
         }
         else
         {
             const float param = flash_state/ROADBLOCK_FLASH_INTERVAL;
             pos_opacity = std::pow(param, 6.0f);
-            neg_opacity = std::pow(1.0-param, 6.0f);
+            neg_opacity = std::pow(1.0f-param, 6.0f);
         }
 
         glPushMatrix();
