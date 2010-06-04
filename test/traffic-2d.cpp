@@ -27,13 +27,18 @@ static const float ROAD_SURFACE_COLOR[3]        = {    237/255.0,     234/255.0,
 static const float ROAD_LINE_COLOR[3]           = {    135/255.0,     103/255.0,      61/255.0};
 static const float REGION_BOX_BORDER_COLOR[4]   = {    246/255.0,     255/255.0,       0/255.0, 1.0};
 static const float REGION_BOX_INTERNAL_COLOR[4] = {    246/255.0,     255/255.0,       0/255.0, 0.15};
+static const float ROADBLOCK_FLASH_COLOR[4]     = {    246/255.0,     227/255.0,       0/255.0, 1.0};
 static const float ROAD_LINE_SCALE              = 300.0;
+static const float ROADBLOCK_SCALE              = 0.5;
+static const float ROADBLOCK_FLASH_SCALE        = 5.0;
+static const float ROADBLOCK_FLASH_OFFSET       = 0.2;
 static const char  RESOURCE_ROOT_ENV_NAME[]     = "TRAFFIC_2D_RESOURCE_ROOT";
 static const char  HEADLIGHT_TEX[]              = "small-headlight-pair.png";
 static const char  TAILLIGHT_TEX[]              = "taillight.png";
 static const char  AMBIENT_TEX[]                = "ambient-timeofday.png";
 static const char  ARROW_TEX[]                  = "arrow.png";
 static const char  ROADBLOCK_TEX[]              = "roadblock.png";
+static const char  ROADBLOCK_FLASH_TEX[]        = "roadblock-flash.png";
 static char       *RESOURCE_ROOT                = 0;
 
 static bool checkFramebufferStatus()
@@ -988,6 +993,74 @@ struct view_path
 
 };
 
+struct roadblock
+{
+    void draw_block(float width, float aspect) const
+    {
+        const mat4x4f trans(l->parent->point_frame(p));
+        const mat4x4f ttrans(tvmet::trans(trans));
+
+        glPushMatrix();
+        glMultMatrixf(ttrans.data());
+        glRotatef(90.0, 0.0, 0.0, 1.0);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0, 0.0);
+        glVertex2f(-width/2, -ROADBLOCK_SCALE/2);
+        glTexCoord2f(1.0/ROADBLOCK_SCALE*width/aspect, 0.0);
+        glVertex2f(width/2, -ROADBLOCK_SCALE/2);
+        glTexCoord2f(1.0/ROADBLOCK_SCALE*width/aspect, 1.0);
+        glVertex2f(width/2, ROADBLOCK_SCALE/2);
+        glTexCoord2f(0.0, 1.0);
+        glVertex2f(-width/2, ROADBLOCK_SCALE/2);
+        glEnd();
+        glPopMatrix();
+    }
+
+    void draw_lights(float t, float width) const
+    {
+        const mat4x4f trans(l->parent->point_frame(p));
+        const mat4x4f ttrans(tvmet::trans(trans));
+
+        glPushMatrix();
+        glMultMatrixf(ttrans.data());
+        glRotatef(90.0, 0.0, 0.0, 1.0);
+        glPushMatrix();
+        glTranslatef(-width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
+        glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
+        glColor4f(ROADBLOCK_FLASH_COLOR[0], ROADBLOCK_FLASH_COLOR[1], ROADBLOCK_FLASH_COLOR[2], ROADBLOCK_FLASH_COLOR[3]);
+        glTranslatef(-0.5, -0.5, 0.0);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0);
+        glVertex2f  (0, 0);
+        glTexCoord2f(1, 0);
+        glVertex2f  (1, 0);
+        glTexCoord2f(1, 1);
+        glVertex2f  (1, 1);
+        glTexCoord2f(0, 1);
+        glVertex2f  (0, 1);
+        glEnd();
+        glPopMatrix();
+        glTranslatef(width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
+        glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
+        glColor4f(ROADBLOCK_FLASH_COLOR[0], ROADBLOCK_FLASH_COLOR[1], ROADBLOCK_FLASH_COLOR[2], ROADBLOCK_FLASH_COLOR[3]);
+        glTranslatef(-0.5, -0.5, 0.0);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0);
+        glVertex2f  (0, 0);
+        glTexCoord2f(1, 0);
+        glVertex2f  (1, 0);
+        glTexCoord2f(1, 1);
+        glVertex2f  (1, 1);
+        glTexCoord2f(0, 1);
+        glVertex2f  (0, 1);
+        glEnd();
+        glPopMatrix();
+    }
+
+    hybrid::lane *l;
+    float         p;
+};
+
 static const float CAR_LENGTH    = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
 static const float CAR_REAR_AXLE = 3.5f;
@@ -1012,6 +1085,7 @@ public:
                                                           continuum_tex_(0),
                                                           arrow_tex_(0),
                                                           roadblock_tex_(0),
+                                                          roadblock_flash_tex_(0),
                                                           drawing(false),
                                                           abstract_network(true),
                                                           draw_intersections(false),
@@ -1137,11 +1211,30 @@ public:
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-            const std::string roadblock_path((bf::path(RESOURCE_ROOT) / ROADBLOCK_TEX).string());
+            const std::string  roadblock_path((bf::path(RESOURCE_ROOT) / ROADBLOCK_TEX).string());
             std::cout << "Looking for roadblock texture in " << roadblock_path << std::endl;
-            Magick::Image rim(roadblock_path);
-            unsigned char *pix = new unsigned char[rim.columns()*rim.rows()*4];
+            Magick::Image      rim(roadblock_path);
+            unsigned char     *pix = new unsigned char[rim.columns()*rim.rows()*4];
+            rim.write(0, 0, rim.columns(), rim.rows(), "RGBA", Magick::CharPixel, pix);
             roadblock_aspect = rim.columns()/static_cast<float>(rim.rows());
+            gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, rim.columns(), rim.rows(),
+                              GL_RGBA, GL_UNSIGNED_BYTE, pix);
+            delete[] pix;
+        }
+        if(!glIsTexture(roadblock_flash_tex_))
+        {
+            glGenTextures(1, &roadblock_flash_tex_);
+            glBindTexture (GL_TEXTURE_2D, roadblock_flash_tex_);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+            const std::string  roadblock_flash_path((bf::path(RESOURCE_ROOT) / ROADBLOCK_FLASH_TEX).string());
+            std::cout << "Looking for roadblock_flash texture in " << roadblock_flash_path << std::endl;
+            Magick::Image      rim(roadblock_flash_path);
+            unsigned char     *pix = new unsigned char[rim.columns()*rim.rows()*4];
             rim.write(0, 0, rim.columns(), rim.rows(), "RGBA", Magick::CharPixel, pix);
             gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, rim.columns(), rim.rows(),
                               GL_RGBA, GL_UNSIGNED_BYTE, pix);
@@ -1568,6 +1661,12 @@ public:
             network_drawer.draw_lane_solid(l->parent->id);
         }
 
+        glBindTexture(GL_TEXTURE_2D, roadblock_tex_);
+        BOOST_FOREACH(const roadblock &r, roadblocks)
+        {
+            r.draw_block(sim->hnet->lane_width, roadblock_aspect);
+        }
+
         if(draw_intersections)
         {
             const float arrow_length = arrow_aspect*sim->hnet->lane_width;
@@ -1640,10 +1739,16 @@ public:
         night_setup.start_lum();
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glDepthMask(GL_FALSE);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBindTexture(GL_TEXTURE_2D, roadblock_flash_tex_);
+        BOOST_FOREACH(const roadblock &r, roadblocks)
+        {
+            r.draw_lights(t+time_offset, sim->hnet->lane_width);
+        }
+
         if(night_setup.draw_lights(t+time_offset))
         {
-            glDepthMask(GL_FALSE);
-            glBlendFunc(GL_ONE, GL_ONE);
             if(hci)
             {
                 BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
@@ -1675,9 +1780,9 @@ public:
                     }
                 }
             }
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthMask(GL_TRUE);
         }
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_TRUE);
         glDisable(GL_DEPTH_TEST);
         night_setup.finish_lum();
 
@@ -2067,8 +2172,10 @@ public:
     GLuint   arrow_tex_;
     float    arrow_aspect;
 
-    GLuint   roadblock_tex_;
-    float    roadblock_aspect;
+    GLuint                 roadblock_tex_;
+    GLuint                 roadblock_flash_tex_;
+    float                  roadblock_aspect;
+    std::vector<roadblock> roadblocks;
 
     std::vector<aabb2d>                                rectangles;
     bool                                               drawing;
@@ -2202,6 +2309,11 @@ int main(int argc, char *argv[])
 
     mv.take_focus();
     Fl::visual(FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE);
+
+    mv.roadblocks.push_back(roadblock());
+
+    mv.roadblocks.back().l = &(s.get_lane_by_name("lane0c"));
+    mv.roadblocks.back().p = 0.5;
 
     mv.show(1, argv);
     return Fl::run();
