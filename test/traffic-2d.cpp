@@ -1072,6 +1072,57 @@ static void draw_roadblock_lights(const hybrid::roadblock &r, float t, float wid
     glPopMatrix();
 }
 
+struct roadblock_adder
+{
+    bool set_candidates(std::vector<hwm::network_aux::road_spatial::entry> &qr)
+    {
+        candidate_lanes.clear();
+        BOOST_FOREACH(hwm::network_aux::road_spatial::entry &e, qr)
+        {
+            BOOST_FOREACH(hwm::network_aux::road_rev_map::lane_cont::value_type &lcv, *e.lc)
+            {
+                hwm::lane    *hwm_l = lcv.second.lane;
+                hybrid::lane *hyb_l = hwm_l->user_data<hybrid::lane>();
+                candidate_lanes.push_back(hyb_l);
+            }
+        }
+        if(candidate_lanes.empty())
+            return false;
+
+        active_pick = 0;
+        param = 0.5;
+        return true;
+    }
+
+    void clear()
+    {
+        candidate_lanes.clear();
+    }
+
+    void next_candidate()
+    {
+        if(active())
+            active_pick = (active_pick + 1) % candidate_lanes.size();
+    }
+
+    bool active()
+    {
+        return !candidate_lanes.empty();
+    }
+
+    hybrid::roadblock test_roadblock() const
+    {
+        hybrid::roadblock r;
+        r.l = candidate_lanes[active_pick];
+        r.p = param;
+        return r;
+    }
+
+    std::vector<hybrid::lane*> candidate_lanes;
+    int                        active_pick;
+    float                      param;
+};
+
 static const float CAR_LENGTH    = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
 static const float CAR_REAR_AXLE = 3.5f;
@@ -1679,6 +1730,8 @@ public:
             {
                 draw_roadblock(r, sim->hnet->lane_width, roadblock_aspect);
             }
+            if(rb_add.active())
+                draw_roadblock(rb_add.test_roadblock(), sim->hnet->lane_width, roadblock_aspect);
         }
 
         if(draw_intersections)
@@ -1763,6 +1816,8 @@ public:
             {
                 draw_roadblock_lights(r, t+time_offset, sim->hnet->lane_width);
             }
+            if(rb_add.active())
+                draw_roadblock_lights(rb_add.test_roadblock(), 0.0, sim->hnet->lane_width);
         }
 
         if(night_setup.draw_lights(t+time_offset))
@@ -1900,6 +1955,14 @@ public:
                                 drawing      = true;
                             break;
                         }
+                    case NONE:
+                        {
+                            aabb2d r;
+                            r.enclose_point(world[0], world[1]);
+                            std::vector<hwm::network_aux::road_spatial::entry> qr(netaux->road_space.query(r));
+                            rb_add.set_candidates(qr);
+                        }
+                        break;
                     default:
                         break;
                     };
@@ -1914,6 +1977,15 @@ public:
                             drawing = true;
                             break;
                         }
+                    case NONE:
+                        {
+                            if(rb_add.active() && sim)
+                            {
+                                sim->roadblocks.push_back(rb_add.test_roadblock());
+                                rb_add.clear();
+                            }
+                        }
+                        break;
                     default:
                         break;
                     };
@@ -2000,6 +2072,15 @@ public:
         case FL_KEYBOARD:
             switch(Fl::event_key())
             {
+            case 'w':
+                rb_add.param = std::max(rb_add.param-0.05f, 0.0f);
+                break;
+            case 'e':
+                rb_add.param = std::min(rb_add.param+0.05f, 1.0f);
+                break;
+            case 'q':
+                rb_add.next_candidate();
+                break;
             case 'n':
                 abstract_network = !abstract_network;
                 break;
@@ -2008,6 +2089,9 @@ public:
                 {
                 case ARC_MANIP:
                     view.clear();
+                    break;
+                case NONE:
+                    rb_add.clear();
                     break;
                 default:
                     break;
@@ -2048,6 +2132,9 @@ public:
                 {
                 case MC_PREVIEW:
                     t = hci->times[0];
+                    break;
+                case NONE:
+                    sim->clear_all_roadblocks();
                     break;
                 default:
                     break;
@@ -2190,9 +2277,10 @@ public:
     GLuint   arrow_tex_;
     float    arrow_aspect;
 
-    GLuint roadblock_tex_;
-    GLuint roadblock_flash_tex_;
-    float  roadblock_aspect;
+    GLuint          roadblock_tex_;
+    GLuint          roadblock_flash_tex_;
+    float           roadblock_aspect;
+    roadblock_adder rb_add;
 
     std::vector<aabb2d>                                rectangles;
     bool                                               drawing;

@@ -289,6 +289,7 @@ namespace hybrid
         void  update(float timestep);
         float micro_length() const;
         void  apply_roadblocks();
+        void  clear_all_roadblocks();
 
         float a_max;
         float a_pref;

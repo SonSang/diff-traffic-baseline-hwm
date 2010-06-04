@@ -794,4 +794,9 @@ namespace hybrid
             r.l->apply_roadblock(r.p, *this);
         }
     }
+
+    void simulator::clear_all_roadblocks()
+    {
+        roadblocks.clear();
+    }
 }
