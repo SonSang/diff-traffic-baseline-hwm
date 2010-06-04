@@ -30,8 +30,9 @@ static const float REGION_BOX_INTERNAL_COLOR[4] = {    246/255.0,     255/255.0,
 static const float ROADBLOCK_FLASH_COLOR[4]     = {    246/255.0,     227/255.0,       0/255.0, 1.0};
 static const float ROAD_LINE_SCALE              = 300.0;
 static const float ROADBLOCK_SCALE              = 0.5;
-static const float ROADBLOCK_FLASH_SCALE        = 5.0;
+static const float ROADBLOCK_FLASH_SCALE        = 15.0;
 static const float ROADBLOCK_FLASH_OFFSET       = 0.2;
+static const float ROADBLOCK_FLASH_INTERVAL     = 0.4;
 static const char  RESOURCE_ROOT_ENV_NAME[]     = "TRAFFIC_2D_RESOURCE_ROOT";
 static const char  HEADLIGHT_TEX[]              = "small-headlight-pair.png";
 static const char  TAILLIGHT_TEX[]              = "taillight.png";
@@ -1021,13 +1022,29 @@ struct roadblock
         const mat4x4f trans(l->parent->point_frame(p));
         const mat4x4f ttrans(tvmet::trans(trans));
 
+        const float flash_state = std::fmod(t, 2*ROADBLOCK_FLASH_INTERVAL);
+        float neg_opacity;
+        float pos_opacity;
+        if(flash_state > ROADBLOCK_FLASH_INTERVAL)
+        {
+            const float param = (flash_state - ROADBLOCK_FLASH_INTERVAL)/ROADBLOCK_FLASH_INTERVAL;
+            neg_opacity = std::pow(param, 6.0f);
+            pos_opacity = std::pow(1.0-param, 6.0f);
+        }
+        else
+        {
+            const float param = flash_state/ROADBLOCK_FLASH_INTERVAL;
+            pos_opacity = std::pow(param, 6.0f);
+            neg_opacity = std::pow(1.0-param, 6.0f);
+        }
+
         glPushMatrix();
         glMultMatrixf(ttrans.data());
         glRotatef(90.0, 0.0, 0.0, 1.0);
         glPushMatrix();
         glTranslatef(-width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
         glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
-        glColor4f(ROADBLOCK_FLASH_COLOR[0], ROADBLOCK_FLASH_COLOR[1], ROADBLOCK_FLASH_COLOR[2], ROADBLOCK_FLASH_COLOR[3]);
+        glColor4f(neg_opacity*ROADBLOCK_FLASH_COLOR[0], neg_opacity*ROADBLOCK_FLASH_COLOR[1], neg_opacity*ROADBLOCK_FLASH_COLOR[2], neg_opacity*ROADBLOCK_FLASH_COLOR[3]);
         glTranslatef(-0.5, -0.5, 0.0);
         glBegin(GL_QUADS);
         glTexCoord2f(0, 0);
@@ -1042,7 +1059,7 @@ struct roadblock
         glPopMatrix();
         glTranslatef(width/2*(1.0-ROADBLOCK_FLASH_OFFSET), 0.0, 0.0);
         glScalef(ROADBLOCK_FLASH_SCALE, ROADBLOCK_FLASH_SCALE, 1.0);
-        glColor4f(ROADBLOCK_FLASH_COLOR[0], ROADBLOCK_FLASH_COLOR[1], ROADBLOCK_FLASH_COLOR[2], ROADBLOCK_FLASH_COLOR[3]);
+        glColor4f(pos_opacity*ROADBLOCK_FLASH_COLOR[0], pos_opacity*ROADBLOCK_FLASH_COLOR[1], pos_opacity*ROADBLOCK_FLASH_COLOR[2], pos_opacity*ROADBLOCK_FLASH_COLOR[3]);
         glTranslatef(-0.5, -0.5, 0.0);
         glBegin(GL_QUADS);
         glTexCoord2f(0, 0);
