@@ -536,10 +536,31 @@ namespace hybrid
         }
     }
 
+    static float bump(float x)
+    {
+        if(std::abs(x) < 1.0)
+            return std::exp(-1.0f/(1.0f-x*x));
+        else
+            return 0.0;
+    }
+
+    static float tod_car_rate(float t)
+    {
+        static const float MORNING_RUSH_PEAK_T = 8.5*60*60.0;
+        static const float EVENING_RUSH_PEAK_T = 5.5*60*60.0;
+        static const float RUSH_DURATION       = 1.5*60*60.0;
+
+        static const float BASE_RATE = 0.05;
+        static const float PEAK_RATE = 0.2-BASE_RATE;
+
+        return bump((t-MORNING_RUSH_PEAK_T)*2/RUSH_DURATION)*PEAK_RATE +
+        bump((t-EVENING_RUSH_PEAK_T)*2/RUSH_DURATION)*PEAK_RATE + BASE_RATE;
+    }
+
     void simulator::apply_incoming_bc(float dt, float t)
     {
         static const float MIN_SPEED_FRACTION = 0.7;
-        static const float rate               = 0.05;
+        const float rate                      = tod_car_rate(std::fmod(t, 24.0f*60.0f*60.0f));
         BOOST_FOREACH(lane &l, lanes)
         {
             if(!l.parent->start->network_boundary())
