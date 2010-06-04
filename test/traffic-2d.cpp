@@ -33,6 +33,7 @@ static const char  HEADLIGHT_TEX[]              = "small-headlight-pair.png";
 static const char  TAILLIGHT_TEX[]              = "taillight.png";
 static const char  AMBIENT_TEX[]                = "ambient-timeofday.png";
 static const char  ARROW_TEX[]                  = "arrow.png";
+static const char  ROADBLOCK_TEX[]              = "roadblock.png";
 static char       *RESOURCE_ROOT                = 0;
 
 static bool checkFramebufferStatus()
@@ -1010,6 +1011,7 @@ public:
                                                           overlay_tex_(0),
                                                           continuum_tex_(0),
                                                           arrow_tex_(0),
+                                                          roadblock_tex_(0),
                                                           drawing(false),
                                                           abstract_network(true),
                                                           draw_intersections(false),
@@ -1122,6 +1124,26 @@ public:
             arrow_aspect = aim.columns()/static_cast<float>(aim.rows());
             aim.write(0, 0, aim.columns(), aim.rows(), "RGBA", Magick::CharPixel, pix);
             gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, aim.columns(), aim.rows(),
+                              GL_RGBA, GL_UNSIGNED_BYTE, pix);
+            delete[] pix;
+        }
+        if(!glIsTexture(roadblock_tex_))
+        {
+            glGenTextures(1, &roadblock_tex_);
+            glBindTexture (GL_TEXTURE_2D, roadblock_tex_);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+            const std::string roadblock_path((bf::path(RESOURCE_ROOT) / ROADBLOCK_TEX).string());
+            std::cout << "Looking for roadblock texture in " << roadblock_path << std::endl;
+            Magick::Image rim(roadblock_path);
+            unsigned char *pix = new unsigned char[rim.columns()*rim.rows()*4];
+            roadblock_aspect = rim.columns()/static_cast<float>(rim.rows());
+            rim.write(0, 0, rim.columns(), rim.rows(), "RGBA", Magick::CharPixel, pix);
+            gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA8, rim.columns(), rim.rows(),
                               GL_RGBA, GL_UNSIGNED_BYTE, pix);
             delete[] pix;
         }
@@ -2044,6 +2066,9 @@ public:
     GLuint   continuum_tex_;
     GLuint   arrow_tex_;
     float    arrow_aspect;
+
+    GLuint   roadblock_tex_;
+    float    roadblock_aspect;
 
     std::vector<aabb2d>                                rectangles;
     bool                                               drawing;
