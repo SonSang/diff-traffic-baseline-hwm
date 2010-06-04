@@ -112,21 +112,19 @@ struct big_image
 
                 glBindTexture (GL_TEXTURE_2D, t.tex);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
                 im->write(t.origin[0], t.origin[1], t.size[0], t.size[1], "RGBA", Magick::CharPixel, pix);
 
-                glTexImage2D (GL_TEXTURE_2D,
-                              0,
-                              alpha ? GL_RGBA4 : GL_R3_G3_B2,
-                              t.size[0],
-                              t.size[1],
-                              0,
-                              GL_RGBA,
-                              GL_UNSIGNED_BYTE,
-                              pix);
+                gluBuild2DMipmaps(GL_TEXTURE_2D,
+                                  alpha ? GL_RGBA4 : GL_R3_G3_B2,
+                                  t.size[0],
+                                  t.size[1],
+                                  GL_RGBA,
+                                  GL_UNSIGNED_BYTE,
+                                  pix);
 
                 std::cout << boost::str(boost::format("Finished tile %d/%d\r") % tiles.size() % (ntiles[0]*ntiles[1]));
                 std::cout.flush();
