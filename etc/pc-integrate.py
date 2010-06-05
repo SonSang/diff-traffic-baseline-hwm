@@ -6,6 +6,7 @@ from matplotlib import rc
 import bisect
 import random
 import sys
+import itertools
 
 car_length = 4.5
 
@@ -144,10 +145,10 @@ def show_poisson_proc(ax, start_end, pc):
 
     return ax
 
-def plot_events(ax, res, height):
+def plot_events(ax, res, height, num):
     l0 = matplotlib.lines.Line2D((res[0], res[0]), (0, height), color='green', linewidth=1.0, label='vehicle location')
     ax.add_line(l0)
-    for i in res[1:]:
+    for (i,c) in itertools.izip(res[1:], xrange(num)):
         l0 = matplotlib.lines.Line2D((i, i), (0, height), color='green', linewidth=1.0)
         ax.add_line(l0)
     return ax
@@ -158,21 +159,19 @@ if __name__ == '__main__':
     i = pc_string(getn.readline().rstrip())
     gen = [float(x) for x in getn.readline().rstrip().split()]
 
-    pyplot.figure(figsize=(8, 4))
-    ax = pyplot.axes([0.065, 0.1, 0.9, 0.8])
+    for (c,g) in enumerate(gen):
+        pyplot.figure(figsize=(8, 3))
+        ax = pyplot.axes([0.075, 0.15, 1.0-0.1, 0.725])
 
-    ax = i.plot(ax, True, False, i.end())
+        ax = i.plot(ax, True, False, i.end())
 
-    ax = plot_events(ax, gen, 1.0)
+        ax = plot_events(ax, gen, 1.0, c)
 
-    pyplot.title("Lane density and instantiated cars")
-    pyplot.xlabel("$x$ (m)")
-    pyplot.ylabel("Cars per meter")
-    ax.axis([0, 2000, 0, 1])
+        pyplot.title("Lane density and instantiated cars")
+        pyplot.xlabel("$x$ (m)")
+        pyplot.ylabel("Cars per meter")
+        ax.axis([0, 2000, 0, 0.05])
 
-    pyplot.legend(loc=0)
+#        pyplot.legend(loc=0)
 
-    if len(sys.argv) > 1:
-        pyplot.savefig(sys.argv[1])
-    else:
-        pyplot.show()
+        pyplot.savefig("pc-process-%04d.pdf" % c)
