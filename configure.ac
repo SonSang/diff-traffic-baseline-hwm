@@ -182,6 +182,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_SEARCH_LIBS([png_write_row], [png])
 AC_CHECK_FUNCS([floor memset pow sqrt strdup])
 
 AC_CONFIG_FILES([Makefile
