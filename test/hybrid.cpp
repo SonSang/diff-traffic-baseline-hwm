@@ -56,5 +56,7 @@ int main(int argc, char *argv[])
 
     s.parallel_hybrid_run(num_steps);
 
+    std::cout << s.time << std::endl
+              << s.car_id_counter << std::endl;
     return 0;
 }

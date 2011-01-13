@@ -115,7 +115,7 @@ if __name__ == '__main__':
         if(sim_iters < 1):
             print "Need positive sim_iters"
             sys.exit(1)
-        datafiles = ["/home/sewall/unc/traffic/libroad/test/biscoe-test.xml.gz"]
+        datafiles = ["/home/jsewall/ref/traffic/hwm-perf/biscoe-test.xml.gz"]
 
         exe = sys.argv[1]
 
@@ -144,7 +144,10 @@ if __name__ == '__main__':
         print "Output written to %s" % logfile_name
 	end = time.time()
 
-	mail('smtp.unc.edu', 'jsewall@email.unc.edu', 'jasonsewall@gmail.com',
-	     "Run %s finished at %s" %(logfile_name, time.asctime()),
-	     "Started at %s\nFinished at %s\nElapsed %s\n" % (time.ctime(start), time.ctime(end), str(datetime.timedelta(0, end-start))),
-	     [logfile_name])
+	print "Run %s finished at %s" % (logfile_name, time.asctime())
+        print "Started at %s\nFinished at %s\nElapsed %s\n" % (time.ctime(start), time.ctime(end), str(datetime.timedelta(0, end-start)))
+
+	# mail('smtp.unc.edu', 'jsewall@email.unc.edu', 'jasonsewall@gmail.com',
+	#      "Run %s finished at %s" %(logfile_name, time.asctime()),
+	#      "Started at %s\nFinished at %s\nElapsed %s\n" % (time.ctime(start), time.ctime(end), str(datetime.timedelta(0, end-start))),
+	#      [logfile_name])
