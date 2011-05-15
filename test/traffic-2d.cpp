@@ -562,6 +562,17 @@ static const char *fshader =
 "gl_FragColor               = mix(color, gl_Color*color, mask);           \n"
 "}                                                                        \n";
 
+static const char *monochrome_shader =
+"uniform sampler2D tex;                                                   \n"
+"uniform float     saturation;                                            \n"
+"                                                                         \n"
+"void main()                                                              \n"
+"{                                                                        \n"
+"vec4               color   = texture2D(full_tex, gl_TexCoord[0].st);     \n"
+"float              lum     = (color.r + color.g + color.b)/3.0;          \n"
+"gl_FragColor               = mix(vec3(lum), color, saturation);          \n"
+"}                                                                        \n";
+
 struct car_draw_info
 {
     typedef enum {ENTERING, NORMAL, LEAVING} state_t;
@@ -1212,6 +1223,29 @@ public:
                 std::cout << "car drawers skipping " << itr->path() << std::endl;
             }
         }
+    }
+
+    void init_monochrome()
+    {
+        GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(shader, 1, &monochrome_shader, 0);
+        glCompileShader(shader);
+
+        printShaderInfoLog(shader);
+
+        mono_program = glCreateProgram();
+        glAttachShader(mono_program, shader);
+        glLinkProgram(mono_program);
+        glError();
+    }
+
+    void draw_background
+    {
+        glUseProgram(lprogram);
+        int lum_uniform_location = glGetUniformLocation(lprogram, "lum_tex");
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, lum_tex);
+        glUniform1i(lum_uniform_location, 0);
     }
 
     void init_textures()
@@ -2409,6 +2443,11 @@ int main(int argc, char *argv[])
 
     if(argc == 4)
     {
+    // scale: 1.9185
+    //     center: [378.73, 64.5092]
+    //     y offset: 0.993091
+
+
         mv.back_image = new big_image(argv[3]);
         mv.back_image_center = vec2f(-16.8949, -974.423);
         mv.back_image_scale =  0.420447;
