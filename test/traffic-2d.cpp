@@ -167,7 +167,6 @@ static void put_text(cairo_t * cr, const std::string &str, float x, float y, con
     cairo_restore(cr);
 }
 
-
 static const char *fshader =
 "uniform sampler2D full_tex, body_tex;                                    \n"
 "uniform float     opacity;                                               \n"
@@ -1141,21 +1140,9 @@ public:
             }
         }
     }
-
-    void draw()
+    void advance_sim()
     {
         float dt = 0;
-        frame_timer.stop();
-        if(go)
-        {
-            if(screenshot_mode)
-                t += sim_time_scale*FRAME_RATE;
-            else
-                t += sim_time_scale*frame_timer.interval_S();
-        }
-        frame_timer.reset();
-        frame_timer.start();
-
         if(sim && hci && ( imode == NONE || imode == REGION_MANIP))
         {
             vec2f lo, hi;
@@ -1188,83 +1175,65 @@ public:
                 avg_step_time = step_timer.interval_S()/num_steps;
             }
         }
+    }
 
-        if (!valid())
+    void draw_init()
+    {
+        std::cout << "Shader version is " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+        std::cout << "Window size is " << w() << " " << h() << std::endl;
+        glViewport(0, 0, w(), h());
+        glClearColor(0.0, 0.0, 0.0, 1.0);
+
+        if(GLEW_OK != glew_state)
+            init_glew();
+
+        if(!network_drawer.initialized())
+            network_drawer.initialize(sim->hnet, 0.01f);
+
+        hwm::road_metrics rm;
+        rm.lane_width      = sim->hnet->lane_width;
+        rm.shoulder_width  = 2.0f;
+        rm.line_width      = 0.125;
+        rm.line_sep_width  = 0.125;
+        rm.line_length     = 3.0f;
+        rm.line_gap_length = 9.0f;
+
+        if(!network_aux_drawer.initialized())
+            network_aux_drawer.initialize(netaux, rm, 0.01f);
+
+        init_textures();
+        view.initialize();
+        if(car_drawers.empty())
         {
-            std::cout << "Shader version is " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-            std::cout << "Window size is " << w() << " " << h() << std::endl;
-            glViewport(0, 0, w(), h());
-            glClearColor(0.0, 0.0, 0.0, 1.0);
+            init_car_drawers(RESOURCE_ROOT);
 
-            if(GLEW_OK != glew_state)
-                init_glew();
-
-            if(!network_drawer.initialized())
-                network_drawer.initialize(sim->hnet, 0.01f);
-
-            hwm::road_metrics rm;
-            rm.lane_width      = sim->hnet->lane_width;
-            rm.shoulder_width  = 2.0f;
-            rm.line_width      = 0.125;
-            rm.line_sep_width  = 0.125;
-            rm.line_length     = 3.0f;
-            rm.line_gap_length = 9.0f;
-
-            if(!network_aux_drawer.initialized())
-                network_aux_drawer.initialize(netaux, rm, 0.01f);
-
-            init_textures();
-            view.initialize();
-            if(car_drawers.empty())
+            if(sim && hci)
             {
-                init_car_drawers(RESOURCE_ROOT);
+                update_drawers();
 
-                if(sim && hci)
-                {
-                    update_drawers();
+                sim->hybrid_step();
+                hci->capture(*sim);
+                update_drawers();
+                sim->hybrid_step();
 
-                    sim->hybrid_step();
-                    hci->capture(*sim);
-                    update_drawers();
-                    sim->hybrid_step();
-
-                    t = hci->times[0];
-                }
+                t = hci->times[0];
             }
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            night_setup.initialize(RESOURCE_ROOT, sim, vec2i(w(), h()));
-            glEnable(GL_MULTISAMPLE);
-            glEnable(GL_TEXTURE_2D);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glDisable(GL_LIGHTING);
-            glDepthFunc(GL_LEQUAL);
         }
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        if((imode == NONE || imode == REGION_MANIP || imode == MC_PREVIEW) && view.path.points_.size() > 2)
-        {
-            center = sub<0,2>::vector(view.path.point(t/view.duration, 0));
-            if(go)
-                view.get_scale(scale, t/view.duration);
-        }
+        night_setup.initialize(RESOURCE_ROOT, sim, vec2i(w(), h()));
+        glEnable(GL_MULTISAMPLE);
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_LIGHTING);
+        glDepthFunc(GL_LEQUAL);
+    }
 
-        vec2f lo, hi;
-        cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
-        glOrtho(lo[0], hi[0], lo[1], hi[1], -50.0, 50.0);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        night_setup.start_to_light();
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-        glColor4f(1.0, 1.0, 1.0, 1.0);
+    void draw_background()
+    {//doesn't change state
         if(back_image && !back_image->tiles.empty())
         {
             glPushMatrix();
@@ -1277,7 +1246,10 @@ public:
             glPopMatrix();
         }
 
-        glEnable(GL_DEPTH_TEST);
+    }
+
+    void draw_network()
+    {//assumes texture_2d, may unset it
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(20000.0/scale, 0.0);
 
@@ -1309,9 +1281,10 @@ public:
 
         network_aux_drawer.draw_intersections_solid();
         glDisable(GL_POLYGON_OFFSET_FILL);
+    }
 
-        glEnable(GL_TEXTURE_2D);
-
+    void draw_continuum_data()
+    {//assumes texture_2d
         glColor4f(1.0, 1.0, 1.0, 1.0);
         std::vector<vec4f> colors;
         glBindTexture (GL_TEXTURE_2D, continuum_tex_);
@@ -1340,17 +1313,10 @@ public:
 
             network_drawer.draw_lane_solid(l->parent->id);
         }
+    }
 
-        glColor4f(0.0, 0.0, 0.0, 1.0);
-        glDisable(GL_TEXTURE_2D);
-        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
-        {
-            if(l.active() && l.fictitious && l.is_macro())
-                network_drawer.draw_lane_solid(l.parent->id);
-        }
-        glEnable(GL_TEXTURE_2D);
-        glColor4f(1.0, 1.0, 1.0, 1.0);
-
+    void draw_roadblocks()
+    {//assumes texture_2d, doesn't change state
         if(sim)
         {
             glBindTexture(GL_TEXTURE_2D, roadblock_tex_);
@@ -1361,7 +1327,24 @@ public:
             if(rb_add.active())
                 draw_roadblock(rb_add.test_roadblock(), sim->hnet->lane_width, roadblock_aspect);
         }
+    }
 
+    void draw_roadblocks_lights()
+    {//assumes texture_2d, doesn't change state
+        if(sim)
+        {
+            glBindTexture(GL_TEXTURE_2D, roadblock_flash_tex_);
+            BOOST_FOREACH(const hybrid::roadblock &r, sim->roadblocks)
+            {
+                draw_roadblock_lights(r, t+time_offset, sim->hnet->lane_width);
+            }
+            if(rb_add.active())
+                draw_roadblock_lights(rb_add.test_roadblock(), 0.0, sim->hnet->lane_width);
+        }
+    }
+
+    void draw_intersection_arrows()
+    {//assumes texture_2d, no state change
         if(draw_intersections)
         {
             const float arrow_length = arrow_aspect*sim->hnet->lane_width;
@@ -1385,7 +1368,10 @@ public:
             glLoadIdentity();
             glMatrixMode(GL_MODELVIEW);
         }
+    }
 
+    void draw_cars()
+    {//assumes texture_2d, doesn't change state
         if(hci)
         {
             glDepthMask(GL_FALSE);
@@ -1427,6 +1413,103 @@ public:
             }
             glDepthMask(GL_TRUE);
         }
+    }
+
+    void draw_cars_lights()
+    {//assumes texture_2d, doesn't change state
+        if(hci)
+        {
+            BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
+            {
+                typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
+                BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
+                {
+                    float opacity;
+                    switch(car.second.state)
+                    {
+                    case car_draw_info::ENTERING:
+                        opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
+                        break;
+                    case car_draw_info::LEAVING:
+                        opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                        break;
+                    case car_draw_info::NORMAL:
+                    default:
+                        opacity = 1.0;
+                        break;
+                    }
+                    glPushMatrix();
+                    glMultMatrixf(car.second.frame.data());
+                    if(car.second.state != car_draw_info::NORMAL)
+                        glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
+                    const bool braking = car.second.state == car_draw_info::NORMAL && hci->acceleration(car.first, t) < BRAKING_THRESHOLD;
+                    night_setup.draw_car_lights(opacity, braking);
+                    glPopMatrix();
+                }
+            }
+        }
+    }
+
+    void draw()
+    {
+        frame_timer.stop();
+        if(go)
+        {
+            if(screenshot_mode)
+                t += sim_time_scale*FRAME_RATE;
+            else
+                t += sim_time_scale*frame_timer.interval_S();
+        }
+        frame_timer.reset();
+        frame_timer.start();
+
+        advance_sim();
+
+        if (!valid())
+            draw_init();
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        if((imode == NONE || imode == REGION_MANIP || imode == MC_PREVIEW) && view.path.points_.size() > 2)
+        {
+            center = sub<0,2>::vector(view.path.point(t/view.duration, 0));
+            if(go)
+                view.get_scale(scale, t/view.duration);
+        }
+
+        vec2f lo, hi;
+        cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
+        glOrtho(lo[0], hi[0], lo[1], hi[1], -50.0, 50.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        night_setup.start_to_light();
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        draw_background();
+
+        glEnable(GL_DEPTH_TEST);
+        draw_network();
+
+        glEnable(GL_TEXTURE_2D);
+        draw_continuum_data();
+
+        glColor4f(0.0, 0.0, 0.0, 1.0);
+        glDisable(GL_TEXTURE_2D);
+        BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+        {
+            if(l.active() && l.fictitious && l.is_macro())
+                network_drawer.draw_lane_solid(l.parent->id);
+        }
+        glEnable(GL_TEXTURE_2D);
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+
+        draw_roadblocks();
+        draw_intersection_arrows();
+        draw_cars();
 
         night_setup.finish_to_light();
         glError();
@@ -1437,51 +1520,11 @@ public:
         glDepthMask(GL_FALSE);
         glBlendFunc(GL_ONE, GL_ONE);
 
-        if(sim)
-        {
-            glBindTexture(GL_TEXTURE_2D, roadblock_flash_tex_);
-            BOOST_FOREACH(const hybrid::roadblock &r, sim->roadblocks)
-            {
-                draw_roadblock_lights(r, t+time_offset, sim->hnet->lane_width);
-            }
-            if(rb_add.active())
-                draw_roadblock_lights(rb_add.test_roadblock(), 0.0, sim->hnet->lane_width);
-        }
+        draw_roadblocks_lights();
 
         if(night_setup.draw_lights(t+time_offset))
-        {
-            if(hci)
-            {
-                BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
-                {
-                    typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
-                    BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
-                    {
-                        float opacity;
-                        switch(car.second.state)
-                        {
-                        case car_draw_info::ENTERING:
-                            opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
-                            break;
-                        case car_draw_info::LEAVING:
-                            opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
-                            break;
-                        case car_draw_info::NORMAL:
-                        default:
-                            opacity = 1.0;
-                            break;
-                        }
-                        glPushMatrix();
-                        glMultMatrixf(car.second.frame.data());
-                        if(car.second.state != car_draw_info::NORMAL)
-                            glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
-                        const bool braking = car.second.state == car_draw_info::NORMAL && hci->acceleration(car.first, t) < BRAKING_THRESHOLD;
-                        night_setup.draw_car_lights(opacity, braking);
-                        glPopMatrix();
-                    }
-                }
-            }
-        }
+            draw_cars_lights();
+
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_TRUE);
         glDisable(GL_DEPTH_TEST);
