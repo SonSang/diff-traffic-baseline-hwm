@@ -2114,12 +2114,23 @@ int main(int argc, char *argv[])
     // scale: 1.9185
     //     center: [378.73, 64.5092]
     //     y offset: 0.993091
+ // scale: 0.959254
+ // center: [1306.83, -509.796]
+ // y offset: 1.00346
 
+ // scale: 0.952628
+ // center: [1316.74, -486.947]
+ // y offset: 1.02454
 
         mv.back_image = new big_image(argv[3]);
-        mv.back_image_center = vec2f(-16.8949, -974.423);
-        mv.back_image_scale =  0.420447;
-        mv.back_image_yscale = 0.8179020;
+        mv.back_image_center = vec2f(1316.74, -486.947);
+        mv.back_image_scale =  0.952628;
+        mv.back_image_yscale = 1.02454;
+
+        // mv.back_image_center = vec2f(-16.8949, -974.423);
+        // mv.back_image_scale =  0.420447;
+        // mv.back_image_yscale = 0.8179020;
+
     }
 
     Fl::add_timeout(FRAME_RATE, draw_callback, &mv);
