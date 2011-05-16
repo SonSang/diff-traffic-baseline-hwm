@@ -752,7 +752,9 @@ class fltkview : public Fl_Gl_Window
 public:
     typedef enum {REGION_MANIP, ARC_MANIP, MC_PREVIEW, BACK_MANIP, NONE} interaction_mode;
 
-    fltkview(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l),
+    typedef enum {NET_NONE=0, NET_ABSTRACT=1, NET_TEXTURE=2} network_draw_mode;
+
+    fltkview(int x, int y, int w, int h) : Fl_Gl_Window(x, y, w, h, 0),
                                                           lastpick(0),
                                                           net(0),
                                                           netaux(0),
@@ -767,7 +769,7 @@ public:
                                                           roadblock_tex_(0),
                                                           roadblock_flash_tex_(0),
                                                           drawing(false),
-                                                          abstract_network(true),
+                                                          network_draw(NET_TEXTURE),
                                                           draw_intersections(false),
                                                           sim(0),
                                                           t(0),
@@ -779,6 +781,7 @@ public:
                                                           screenshot_mode(0),
                                                           screenshot_count(0),
                                                           do_night(true),
+                                                          do_lights(true),
                                                           saturation(1.0),
                                                           view(1.0f),
                                                           imode(NONE),
@@ -1258,33 +1261,39 @@ public:
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(20000.0/scale, 0.0);
 
-        if(abstract_network)
+        switch(network_draw)
         {
-            glDisable(GL_TEXTURE_2D);
-            glColor3fv(ROAD_SURFACE_COLOR);
-            network_aux_drawer.draw_roads_solid();
-
-            const float line_width = ROAD_LINE_SCALE/scale;
-            if(line_width > 1)
+        case NET_ABSTRACT:
             {
-                glLineWidth(line_width);
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                glColor3fv(ROAD_LINE_COLOR);
-                network_aux_drawer.draw_roads_wire();
-                network_aux_drawer.draw_intersections_wire();
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glDisable(GL_TEXTURE_2D);
+                glColor3fv(ROAD_SURFACE_COLOR);
+                network_aux_drawer.draw_roads_solid();
+
+                const float line_width = ROAD_LINE_SCALE/scale;
+                if(line_width > 1)
+                {
+                    glLineWidth(line_width);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    glColor3fv(ROAD_LINE_COLOR);
+                    network_aux_drawer.draw_roads_wire();
+                    network_aux_drawer.draw_intersections_wire();
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                }
+                glColor3fv(ROAD_SURFACE_COLOR);
+                network_aux_drawer.draw_intersections_solid();
+                break;
             }
-            glColor3fv(ROAD_SURFACE_COLOR);
-        }
-        else
-        {
+        case NET_TEXTURE:
             glColor3f(1.0, 1.0, 1.0);
             network_aux_drawer.draw_roads_solid();
             glDisable(GL_TEXTURE_2D);
             glColor3f(0.4, 0.4, 0.4);
+            network_aux_drawer.draw_intersections_solid();
+            break;
+        case NET_NONE:
+            break;
         }
 
-        network_aux_drawer.draw_intersections_solid();
         glDisable(GL_POLYGON_OFFSET_FILL);
     }
 
@@ -1519,14 +1528,17 @@ public:
             night_setup.start_lum();
             {
                 glClear(GL_COLOR_BUFFER_BIT);
-                glDepthMask(GL_FALSE);
-                glBlendFunc(GL_ONE, GL_ONE);
-                draw_roadblocks_lights();
-                if(night_setup.draw_lights(t+time_offset))
-                    draw_cars_lights();
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glDepthMask(GL_TRUE);
-                glDisable(GL_DEPTH_TEST);
+                if(do_lights)
+                {
+                    glDepthMask(GL_FALSE);
+                    glBlendFunc(GL_ONE, GL_ONE);
+                    draw_roadblocks_lights();
+                    if(night_setup.draw_lights(t+time_offset))
+                        draw_cars_lights();
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    glDepthMask(GL_TRUE);
+                    glDisable(GL_DEPTH_TEST);
+                }
             }
             night_setup.finish_lum();
             night_setup.compose(t+time_offset, lo, hi);
@@ -1629,10 +1641,28 @@ public:
         std::cout << "Wrote " << new_file << " : " << fsize << " bytes" << std::endl;
     }
 
+    void set_throttle()
+    {
+        if(throttle)
+        {
+            std::cout << "Throttling FPS to " << FRAME_RATE << std::endl;
+            Fl::remove_idle(draw_callback, this);
+            Fl::add_timeout(FRAME_RATE, draw_callback, this);
+        }
+        else
+        {
+            std::cout << "Removing throttling" << std::endl;
+            Fl::remove_timeout(draw_callback);
+            Fl::add_idle(draw_callback, this);
+        }
+    }
+
     int handle(int event)
     {
         switch(event)
         {
+        case FL_FOCUS:
+            return 1;
         case FL_PUSH:
             {
                 const vec2i xy(Fl::event_x(),
@@ -1789,7 +1819,12 @@ public:
                 rb_add.next_candidate();
                 break;
             case 'n':
-                abstract_network = !abstract_network;
+                if(network_draw == NET_NONE)
+                    network_draw = NET_ABSTRACT;
+                else if(network_draw == NET_ABSTRACT)
+                    network_draw = NET_TEXTURE;
+                else if(network_draw == NET_TEXTURE)
+                    network_draw = NET_NONE;
                 break;
             case 'c':
                 switch(imode)
@@ -1898,18 +1933,7 @@ public:
                 do_night = !do_night;
             case 't':
                 throttle = !throttle;
-                if(throttle)
-                {
-                    std::cout << "Throttling FPS to " << FRAME_RATE << std::endl;
-                    Fl::remove_idle(draw_callback, this);
-                    Fl::add_timeout(FRAME_RATE, draw_callback, this);
-                }
-                else
-                {
-                    std::cout << "Removing throttling" << std::endl;
-                    Fl::remove_timeout(draw_callback);
-                    Fl::add_idle(draw_callback, this);
-                }
+                set_throttle();
                 break;
             case ' ':
                 go = !go;
@@ -2000,7 +2024,7 @@ public:
     std::vector<tex_car_draw*> car_drawers;
     hwm::network_draw          network_drawer;
     hwm::network_aux_draw      network_aux_drawer;
-    bool                       abstract_network;
+    network_draw_mode          network_draw;
     bool                       draw_intersections;
 
     hybrid::simulator  *sim;
@@ -2018,6 +2042,7 @@ public:
     std::tr1::unordered_map<size_t, tex_car_draw*>  car_map;
 
     bool              do_night;
+    bool              do_lights;
     night_render      night_setup;
     float             saturation;
     monochrome_render mono_setup;
@@ -2032,6 +2057,8 @@ static void draw_callback(void *v)
     if(reinterpret_cast<fltkview*>(v)->throttle)
         Fl::repeat_timeout(FRAME_RATE, draw_callback, v);
 }
+
+#include "helper-window.cpp"
 
 int main(int argc, char *argv[])
 {
@@ -2099,15 +2126,17 @@ int main(int argc, char *argv[])
 
     //    s.settle(0.033);
 
-    fltkview mv(0, 0, 1280, 720, "fltk View");
-    mv.net    = &net;
-    mv.netaux = &neta;
-    mv.sim    = &s;
+    Fl_Double_Window *helper = make_window();
+    helper->show(1, argv);
+
+    sim_win->net    = &net;
+    sim_win->netaux = &neta;
+    sim_win->sim    = &s;
 
     hybrid::car_interp hci(s);
-    mv.hci    = &hci;
+    sim_win->hci    = &hci;
 
-    mv.time_offset = 0;
+    sim_win->time_offset = 0;
 
     if(argc == 4)
     {
@@ -2122,27 +2151,27 @@ int main(int argc, char *argv[])
  // center: [1316.74, -486.947]
  // y offset: 1.02454
 
-        mv.back_image = new big_image(argv[3]);
-        mv.back_image_center = vec2f(1316.74, -486.947);
-        mv.back_image_scale =  0.952628;
-        mv.back_image_yscale = 1.02454;
+        sim_win->back_image = new big_image(argv[3]);
+        sim_win->back_image_center = vec2f(1316.74, -486.947);
+        sim_win->back_image_scale =  0.952628;
+        sim_win->back_image_yscale = 1.02454;
 
-        // mv.back_image_center = vec2f(-16.8949, -974.423);
-        // mv.back_image_scale =  0.420447;
-        // mv.back_image_yscale = 0.8179020;
+        // sim_win->back_image_center = vec2f(-16.8949, -974.423);
+        // sim_win->back_image_scale =  0.420447;
+        // sim_win->back_image_yscale = 0.8179020;
 
     }
 
-    Fl::add_timeout(FRAME_RATE, draw_callback, &mv);
+    Fl::add_timeout(FRAME_RATE, draw_callback, sim_win);
 
     vec3f low(FLT_MAX);
     vec3f high(-FLT_MAX);
     net.bounding_box(low, high);
-    box_to_cscale(mv.center, mv.scale, sub<0,2>::vector(low), sub<0,2>::vector(high), vec2i(500,500));
+    box_to_cscale(sim_win->center, sim_win->scale, sub<0,2>::vector(low), sub<0,2>::vector(high), vec2i(500,500));
 
-    mv.take_focus();
     Fl::visual(FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE);
 
-    mv.show(1, argv);
+    helper->show(1, argv);
+
     return Fl::run();
 }

@@ -1,0 +1,103 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0110 
+header_name {.hpp} 
+code_name {.cpp}
+Function {update_tod(double val)} {open private
+} {
+  code {sim_win->time_offset = 60*60*val;
+sim_win->redraw();} {}
+} 
+
+Function {toggle_lights(bool val)} {open private
+} {
+  code {sim_win->do_lights = val;
+sim_win->redraw();} {}
+} 
+
+Function {set_network_draw(int val)} {open
+} {
+  code {sim_win->network_draw = (fltkview::network_draw_mode)val;
+sim_win->redraw();} {selected
+  }
+} 
+
+Function {toggle_screenshot(bool val)} {open private
+} {
+  code {sim_win->screenshot_mode = val;
+sim_win->redraw();} {}
+} 
+
+Function {toggle_go(bool val)} {open private
+} {
+  code {sim_win->go = val;
+sim_win->redraw();} {}
+} 
+
+Function {toggle_throttle(double val)} {open private
+} {
+  code {sim_win->throttle = val;
+sim_win->set_throttle();
+sim_win->redraw();} {}
+} 
+
+Function {make_window()} {open private
+} {
+  Fl_Window {} {open
+    xywh {2611 267 1465 780} type Double visible
+  } {
+    Fl_Box sim_win {
+      xywh {10 5 1280 720} box DOWN_FRAME hotspot
+      class fltkview
+    }
+    Fl_Slider {} {
+      label {Time of day} user_data_type {void*}
+      callback {update_tod(o->value());}
+      private xywh {10 740 1275 20} type Horizontal maximum 24 step 0.05
+      code0 {o->value(sim_win->time_offset);}
+    }
+    Fl_Light_Button {} {
+      label {Draw lights}
+      callback {toggle_lights(o->value());}
+      private xywh {1350 50 100 25}
+      code0 {o->value(sim_win->do_lights);}
+    }
+    Fl_Choice {} {
+      label Roads
+      callback {set_network_draw(o->value());} open
+      private xywh {1345 15 110 25} down_box BORDER_BOX
+      code0 {o->value(sim_win->network_draw);}
+    } {
+      MenuItem {} {
+        label None
+        private xywh {0 0 100 20}
+      }
+      MenuItem {} {
+        label Abstract
+        private xywh {0 0 100 20}
+      }
+      MenuItem {} {
+        label Textured
+        private xywh {10 10 100 20}
+      }
+    }
+    Fl_Light_Button {} {
+      label Record
+      callback {toggle_screenshot(o->value());}
+      private xywh {1365 100 85 25}
+      code0 {o->value(sim_win->screenshot_mode);}
+    }
+    Fl_Light_Button {} {
+      label {Go!}
+      callback {toggle_go(o->value());}
+      private xywh {1300 740 70 25}
+      code0 {o->value(sim_win->go);}
+    }
+    Fl_Light_Button {} {
+      label Throttle
+      callback {toggle_throttle(o->value());}
+      private xywh {1375 740 80 25}
+      code0 {o->value(sim_win->throttle);}
+    }
+  }
+  code {Fl::focus(sim_win);} {}
+} 
