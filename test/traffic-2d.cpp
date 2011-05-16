@@ -16,7 +16,6 @@
 #include "libhybrid/timer.hpp"
 #include "big-image-tile.hpp"
 #include "night-render.hpp"
-#include "monochrome-render.hpp"
 
 static const float FRAME_RATE                   = 1.0/24.0;
 static const float EXPIRE_TIME                  = 2.0f;
@@ -780,9 +779,9 @@ public:
                                                           avg_step_time(0),
                                                           screenshot_mode(0),
                                                           screenshot_count(0),
-                                                          do_night(true),
                                                           do_lights(true),
-                                                          saturation(1.0),
+                                                          bg_saturation(1.0),
+                                                          fg_saturation(1.0),
                                                           view(1.0f),
                                                           imode(NONE),
                                                           throttle(true)
@@ -1231,7 +1230,6 @@ public:
 
         night_setup.initialize(RESOURCE_ROOT, sim, vec2i(w(), h()));
 
-        mono_setup.initialize(vec2i(w(), h()));
         glEnable(GL_MULTISAMPLE);
         glEnable(GL_TEXTURE_2D);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -1499,61 +1497,11 @@ public:
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        if(do_night)
+        night_setup.start_to_light();
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         {
-            night_setup.start_to_light();
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-            {
-                glColor4f(1.0, 1.0, 1.0, 1.0);
-                draw_background();
-                glEnable(GL_DEPTH_TEST);
-                draw_network();
-                glEnable(GL_TEXTURE_2D);
-                draw_continuum_data();
-                glColor4f(0.0, 0.0, 0.0, 1.0);
-                glDisable(GL_TEXTURE_2D);
-                BOOST_FOREACH(hybrid::lane &l, sim->lanes)
-                {
-                    if(l.active() && l.fictitious && l.is_macro())
-                        network_drawer.draw_lane_solid(l.parent->id);
-                }
-                glEnable(GL_TEXTURE_2D);
-                glColor4f(1.0, 1.0, 1.0, 1.0);
-                draw_roadblocks();
-                draw_intersection_arrows();
-                draw_cars();
-            }
-            night_setup.finish_to_light();
-            glError();
-            night_setup.start_lum();
-            {
-                glClear(GL_COLOR_BUFFER_BIT);
-                if(do_lights)
-                {
-                    glDepthMask(GL_FALSE);
-                    glBlendFunc(GL_ONE, GL_ONE);
-                    draw_roadblocks_lights();
-                    if(night_setup.draw_lights(t+time_offset))
-                        draw_cars_lights();
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    glDepthMask(GL_TRUE);
-                    glDisable(GL_DEPTH_TEST);
-                }
-            }
-            night_setup.finish_lum();
-            night_setup.compose(t+time_offset, lo, hi);
-        }
-        else
-        {
-            mono_setup.start_mono();
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-            {
-                glColor4f(1.0, 1.0, 1.0, 1.0);
-                draw_background();
-            }
-            mono_setup.finish_mono();
-            mono_setup.compose(saturation, lo, hi);
-
+            glColor4f(1.0, 1.0, 1.0, 1.0);
+            draw_background();
             glEnable(GL_DEPTH_TEST);
             draw_network();
             glEnable(GL_TEXTURE_2D);
@@ -1571,6 +1519,25 @@ public:
             draw_intersection_arrows();
             draw_cars();
         }
+        night_setup.finish_to_light();
+        glError();
+        night_setup.start_lum();
+        {
+            glClear(GL_COLOR_BUFFER_BIT);
+            if(do_lights)
+            {
+                glDepthMask(GL_FALSE);
+                glBlendFunc(GL_ONE, GL_ONE);
+                draw_roadblocks_lights();
+                if(night_setup.draw_lights(t+time_offset))
+                    draw_cars_lights();
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glDepthMask(GL_TRUE);
+                glDisable(GL_DEPTH_TEST);
+            }
+        }
+        night_setup.finish_lum();
+        night_setup.compose(t+time_offset, lo, hi, bg_saturation, fg_saturation);
 
         if(imode == ARC_MANIP)
             view.draw(scale);
@@ -1802,12 +1769,10 @@ public:
             switch(Fl::event_key())
             {
             case '0':
-                if(!do_night)
-                    saturation = std::max(0.0f, saturation - 0.05f);
+                bg_saturation = std::max(0.0f, bg_saturation - 0.05f);
                 break;
             case '9':
-                if(!do_night)
-                    saturation = std::min(1.0f, saturation + 0.05f);
+                bg_saturation = std::min(1.0f, bg_saturation + 0.05f);
                 break;
             case 'w':
                 rb_add.param = std::max(rb_add.param-0.05f, 0.0f);
@@ -1929,8 +1894,6 @@ public:
                     break;
                 }
                 break;
-            case 'x':
-                do_night = !do_night;
             case 't':
                 throttle = !throttle;
                 set_throttle();
@@ -2041,11 +2004,10 @@ public:
     int                                             screenshot_count;
     std::tr1::unordered_map<size_t, tex_car_draw*>  car_map;
 
-    bool              do_night;
     bool              do_lights;
     night_render      night_setup;
-    float             saturation;
-    monochrome_render mono_setup;
+    float             bg_saturation;
+    float             fg_saturation;
     view_path         view;
     interaction_mode  imode;
     bool              throttle;

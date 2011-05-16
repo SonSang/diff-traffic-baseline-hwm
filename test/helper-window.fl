@@ -17,8 +17,7 @@ sim_win->redraw();} {}
 Function {set_network_draw(int val)} {open
 } {
   code {sim_win->network_draw = (fltkview::network_draw_mode)val;
-sim_win->redraw();} {selected
-  }
+sim_win->redraw();} {}
 } 
 
 Function {toggle_screenshot(bool val)} {open private
@@ -37,6 +36,18 @@ Function {toggle_throttle(double val)} {open private
 } {
   code {sim_win->throttle = val;
 sim_win->set_throttle();
+sim_win->redraw();} {}
+} 
+
+Function {set_bg_saturation(double val)} {open private
+} {
+  code {sim_win->bg_saturation = val;
+sim_win->redraw();} {}
+} 
+
+Function {set_fg_saturation(double val)} {open private
+} {
+  code {sim_win->fg_saturation = val;
 sim_win->redraw();} {}
 } 
 
@@ -82,7 +93,7 @@ Function {make_window()} {open private
     }
     Fl_Light_Button {} {
       label Record
-      callback {toggle_screenshot(o->value());}
+      callback {toggle_screenshot(o->value());} selected
       private xywh {1365 100 85 25}
       code0 {o->value(sim_win->screenshot_mode);}
     }
@@ -97,6 +108,18 @@ Function {make_window()} {open private
       callback {toggle_throttle(o->value());}
       private xywh {1375 740 80 25}
       code0 {o->value(sim_win->throttle);}
+    }
+    Fl_Slider {} {
+      label {bg saturation}
+      callback {set_bg_saturation(o->value());}
+      private xywh {1305 550 150 20} type Horizontal align 1 step 0.01
+      code0 {o->value(sim_win->bg_saturation);}
+    }
+    Fl_Slider {} {
+      label {fg saturation}
+      callback {set_fg_saturation(o->value());}
+      private xywh {1306 594 150 20} type Horizontal align 1 step 0.01
+      code0 {o->value(sim_win->fg_saturation);}
     }
   }
   code {Fl::focus(sim_win);} {}

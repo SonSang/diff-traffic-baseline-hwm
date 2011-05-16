@@ -33,6 +33,16 @@ sim_win->set_throttle();
 sim_win->redraw();
 }
 
+static void set_bg_saturation(double val) {
+  sim_win->bg_saturation = val;
+sim_win->redraw();
+}
+
+static void set_fg_saturation(double val) {
+  sim_win->fg_saturation = val;
+sim_win->redraw();
+}
+
 fltkview *sim_win=(fltkview *)0;
 
 static void cb_Time(Fl_Slider* o, void*) {
@@ -64,6 +74,14 @@ static void cb_Go(Fl_Light_Button* o, void*) {
 
 static void cb_Throttle(Fl_Light_Button* o, void*) {
   toggle_throttle(o->value());
+}
+
+static void cb_bg(Fl_Slider* o, void*) {
+  set_bg_saturation(o->value());
+}
+
+static void cb_fg(Fl_Slider* o, void*) {
+  set_fg_saturation(o->value());
 }
 
 static Fl_Double_Window* make_window() {
@@ -111,6 +129,20 @@ static Fl_Double_Window* make_window() {
       o->callback((Fl_Callback*)cb_Throttle);
       o->value(sim_win->throttle);
     } // Fl_Light_Button* o
+    { Fl_Slider* o = new Fl_Slider(1305, 550, 150, 20, "bg saturation");
+      o->type(1);
+      o->step(0.01);
+      o->callback((Fl_Callback*)cb_bg);
+      o->align(FL_ALIGN_TOP);
+      o->value(sim_win->bg_saturation);
+    } // Fl_Slider* o
+    { Fl_Slider* o = new Fl_Slider(1306, 594, 150, 20, "fg saturation");
+      o->type(1);
+      o->step(0.01);
+      o->callback((Fl_Callback*)cb_fg);
+      o->align(FL_ALIGN_TOP);
+      o->value(sim_win->fg_saturation);
+    } // Fl_Slider* o
     o->end();
   } // Fl_Double_Window* o
   Fl::focus(sim_win);

@@ -19,8 +19,16 @@ static const char *lshader       =
 "uniform sampler2DMS lum_tex;                                               \n"
 "uniform sampler2DMS to_light_tex;                                          \n"
 "uniform int       nsamples;                                                \n"
+"uniform float     bg_saturation;                                           \n"
+"uniform float     fg_saturation;                                           \n"
 "uniform vec4      ambient_level;                                           \n"
 "out vec4 FragColor;                                                        \n"
+"vec4 desaturate(vec4 val, float sat)                                       \n"
+"{                                                                          \n"
+"    float lum = dot(val.rgb, vec3(1.0/3.0));                               \n"
+"    vec4 lum_v = vec4(lum, lum, lum, val.a);                               \n"
+"    return mix(lum_v, val, sat);                                           \n"
+"}                                                                          \n"
 "                                                                           \n"
 "void main()                                                                \n"
 "{                                                                          \n"
@@ -29,9 +37,10 @@ static const char *lshader       =
 "    for(int i = 0; i < nsamples; ++i)                                      \n"
 "        back += texelFetch(to_light_tex, screen_coord, i);                 \n"
 "    back *= vec4(1.0/nsamples);                                            \n"
-"    vec4               lum  = texelFetch(lum_tex, screen_coord,0);         \n"
-"    vec4              light = lum*(vec4(0.5)+back);                        \n"
-"    FragColor               = light + ambient_level*back;                  \n"
+"    back  = desaturate(back, bg_saturation);                               \n"
+"    vec4       lum  = texelFetch(lum_tex, screen_coord,0);                 \n"
+"    vec4      light = desaturate(lum, fg_saturation)*(vec4(0.5)+back);     \n"
+"    FragColor       = light + ambient_level*back;                          \n"
 "}                                                                          \n";
 
 struct night_render
@@ -267,7 +276,7 @@ struct night_render
         return vec3f(vec3f(base[0], base[1], base[2])/255.0);
     }
 
-    void compose(const float t, const vec2f &lo, const vec2f &hi)
+    void compose(const float t, const vec2f &lo, const vec2f &hi, float bg_saturation, float fg_saturation)
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -281,6 +290,12 @@ struct night_render
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, to_light_tex);
         glUniform1i(to_light_uniform_location, 1);
+
+        int bg_saturation_uniform_location = glGetUniformLocation(lprogram, "bg_saturation");
+        glUniform1f(bg_saturation_uniform_location, bg_saturation);
+
+        int fg_saturation_uniform_location = glGetUniformLocation(lprogram, "fg_saturation");
+        glUniform1f(fg_saturation_uniform_location, fg_saturation);
 
         glBindFragDataLocation(lprogram, 0, "FragColor") ;
 
