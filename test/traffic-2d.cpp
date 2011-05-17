@@ -783,6 +783,7 @@ public:
                                                           screenshot_mode(0),
                                                           screenshot_count(0),
                                                           do_lights(true),
+                                                          do_cars(true),
                                                           bg_saturation(1.0),
                                                           fg_saturation(1.0),
                                                           view(1.0f),
@@ -790,7 +791,8 @@ public:
                                                           path_param_rate(0.01f),
                                                           path_auto_advance(false),
                                                           imode(NONE),
-                                                          throttle(true)
+                                                          throttle(true),
+                                                          show_lengths(true)
     {
         this->resizable(this);
         frame_timer.reset();
@@ -1061,8 +1063,11 @@ public:
             cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
         }
 
-        put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 10, h()-30, LEFT, BOTTOM);
-        put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 10, h()-5, LEFT, BOTTOM);
+        if(show_lengths)
+        {
+            put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 10, h()-30, LEFT, BOTTOM);
+            put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 10, h()-5, LEFT, BOTTOM);
+        }
 
         cairo_destroy(cr);
 
@@ -1528,7 +1533,8 @@ public:
             glColor4f(1.0, 1.0, 1.0, 1.0);
             draw_roadblocks();
             draw_intersection_arrows();
-            draw_cars();
+            if(do_cars)
+                draw_cars();
         }
         night_setup.finish_to_light();
         glError();
@@ -1540,7 +1546,7 @@ public:
                 glDepthMask(GL_FALSE);
                 glBlendFunc(GL_ONE, GL_ONE);
                 draw_roadblocks_lights();
-                if(night_setup.draw_lights(t+time_offset))
+                if(do_cars && night_setup.draw_lights(t+time_offset))
                     draw_cars_lights();
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glDepthMask(GL_TRUE);
@@ -1989,6 +1995,7 @@ public:
     std::tr1::unordered_map<size_t, tex_car_draw*>  car_map;
 
     bool              do_lights;
+    bool              do_cars;
     night_render      night_setup;
     float             bg_saturation;
     float             fg_saturation;
@@ -1998,6 +2005,8 @@ public:
     bool              path_auto_advance;
     interaction_mode  imode;
     bool              throttle;
+
+    bool show_lengths;
 };
 
 static void draw_callback(void *v)

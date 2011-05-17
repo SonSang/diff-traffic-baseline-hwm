@@ -64,12 +64,22 @@ sim_win->redraw();
 
 static void set_path_auto_advance(bool val) {
   sim_win->path_auto_advance = val;
-sim_win->path_param 0;
+sim_win->path_param = 0;
 sim_win->redraw();
 }
 
 static void set_path_param_rate(double val) {
   sim_win->path_param_rate = val;
+}
+
+static void toggle_show_lengths(bool val) {
+  sim_win->show_lengths = val;
+sim_win->redraw();
+}
+
+static void toggle_cars(bool val) {
+  sim_win->do_cars = val;
+sim_win->redraw();
 }
 
 fltkview *sim_win=(fltkview *)0;
@@ -150,6 +160,14 @@ static void cb_view_rate_slider(Fl_Slider* o, void*) {
   set_path_param_rate(o->value());
 }
 
+static void cb_Draw1(Fl_Light_Button* o, void*) {
+  toggle_show_lengths(o->value());
+}
+
+static void cb_Draw2(Fl_Light_Button* o, void*) {
+  toggle_cars(o->value());
+}
+
 static Fl_Double_Window* make_window() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = new Fl_Double_Window(1465, 860);
@@ -177,7 +195,7 @@ static Fl_Double_Window* make_window() {
       o->callback((Fl_Callback*)cb_Draw);
       o->value(sim_win->do_lights);
     } // Fl_Light_Button* o
-    { Fl_Choice* o = new Fl_Choice(1346, 565, 110, 25, "Roads");
+    { Fl_Choice* o = new Fl_Choice(1346, 539, 110, 25, "Roads");
       o->down_box(FL_BORDER_BOX);
       o->callback((Fl_Callback*)cb_Roads);
       o->menu(menu_Roads);
@@ -202,7 +220,7 @@ static Fl_Double_Window* make_window() {
       o->align(FL_ALIGN_TOP);
       o->value(sim_win->bg_saturation);
     } // Fl_Slider* o
-    { Fl_Slider* o = new Fl_Slider(1306, 690, 150, 20, "fg saturation");
+    { Fl_Slider* o = new Fl_Slider(1305, 687, 150, 20, "fg saturation");
       o->type(1);
       o->step(0.01);
       o->callback((Fl_Callback*)cb_fg);
@@ -238,6 +256,14 @@ static Fl_Double_Window* make_window() {
       view_rate_slider->callback((Fl_Callback*)cb_view_rate_slider);
       o->value(sim_win->path_param_rate);
     } // Fl_Slider* view_rate_slider
+    { Fl_Light_Button* o = new Fl_Light_Button(1305, 715, 150, 25, "Draw lengths");
+      o->callback((Fl_Callback*)cb_Draw1);
+      o->value(sim_win->show_lengths);
+    } // Fl_Light_Button* o
+    { Fl_Light_Button* o = new Fl_Light_Button(1300, 570, 150, 25, "Draw cars");
+      o->callback((Fl_Callback*)cb_Draw2);
+      o->value(sim_win->do_cars);
+    } // Fl_Light_Button* o
     o->end();
   } // Fl_Double_Window* o
   Fl::focus(sim_win);

@@ -79,13 +79,25 @@ sim_win->redraw();} {}
 Function {set_path_auto_advance(bool val)} {open private
 } {
   code {sim_win->path_auto_advance = val;
-sim_win->path_param 0;
+sim_win->path_param = 0;
 sim_win->redraw();} {}
 } 
 
 Function {set_path_param_rate(double val)} {open private
 } {
   code {sim_win->path_param_rate = val;} {}
+} 
+
+Function {toggle_show_lengths(bool val)} {open private
+} {
+  code {sim_win->show_lengths = val;
+sim_win->redraw();} {}
+} 
+
+Function {toggle_cars(bool val)} {open private
+} {
+  code {sim_win->do_cars = val;
+sim_win->redraw();} {}
 } 
 
 Function {make_window()} {open private
@@ -112,7 +124,7 @@ Function {make_window()} {open private
     Fl_Choice {} {
       label Roads
       callback {set_network_draw(o->value());} open
-      private xywh {1346 565 110 25} down_box BORDER_BOX
+      private xywh {1346 539 110 25} down_box BORDER_BOX
       code0 {o->value(sim_win->network_draw);}
     } {
       MenuItem {} {
@@ -155,7 +167,7 @@ Function {make_window()} {open private
     Fl_Slider {} {
       label {fg saturation}
       callback {set_fg_saturation(o->value());}
-      private xywh {1306 690 150 20} type Horizontal align 1 step 0.01
+      private xywh {1305 687 150 20} type Horizontal align 1 step 0.01
       code0 {o->value(sim_win->fg_saturation);}
     }
     Fl_Choice {} {
@@ -211,9 +223,21 @@ Function {make_window()} {open private
     }
     Fl_Slider view_rate_slider {
       label {View param rate} user_data_type {void*}
-      callback {set_path_param_rate(o->value());} selected
+      callback {set_path_param_rate(o->value());}
       private xywh {10 818 1275 22} type Horizontal maximum 0.2
       code0 {o->value(sim_win->path_param_rate);}
+    }
+    Fl_Light_Button {} {
+      label {Draw lengths}
+      callback {toggle_show_lengths(o->value());}
+      private xywh {1305 715 150 25}
+      code0 {o->value(sim_win->show_lengths);}
+    }
+    Fl_Light_Button {} {
+      label {Draw cars}
+      callback {toggle_cars(o->value());} selected
+      private xywh {1300 570 150 25}
+      code0 {o->value(sim_win->do_cars);}
     }
   }
   code {Fl::focus(sim_win);} {}
