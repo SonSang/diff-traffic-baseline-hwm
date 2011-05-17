@@ -349,7 +349,7 @@ struct tex_car_draw
 static const char *pointVertexShader =
     "void main()                                                            \n"
     "{                                                                      \n"
-    "    gl_PointSize = 500*gl_Point.size;                                  \n"
+    "    gl_PointSize = 10*gl_Point.size;                                  \n"
     "    gl_TexCoord[0] = gl_MultiTexCoord0;                                \n"
     "    gl_Position = ftransform();                                        \n"
     "    gl_FrontColor = gl_Color;                                          \n"
@@ -1669,7 +1669,7 @@ public:
                     {
                     case ARC_MANIP:
                         {
-                            view.pick_point(vec3f(world[0], world[1], 0.0f), view.point_size*5);
+                            view.pick_point(vec3f(world[0], world[1], 0.0f), view.point_size*5*scale);
                             drawing = true;
                             break;
                         }
