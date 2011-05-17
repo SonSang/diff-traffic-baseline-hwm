@@ -1940,7 +1940,10 @@ public:
                 }
                 else
                 {
-                    scale *= std::pow(2.0f, fy);
+                    if(Fl::event_state() & FL_CTRL)
+                        scale *= std::pow(2.0f, 0.01f*fy);
+                    else
+                        scale *= std::pow(2.0f, fy);
                 }
             }
             take_focus();
