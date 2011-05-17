@@ -10,4 +10,5 @@ extern fltkview *sim_win;
 #include <FL/Fl_Light_Button.H>
 #include <FL/Fl_Choice.H>
 extern Fl_Menu_Item menu_Roads[];
+extern Fl_Menu_Item menu_Mode[];
 #endif

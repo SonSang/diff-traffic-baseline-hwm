@@ -43,6 +43,11 @@ static void set_fg_saturation(double val) {
 sim_win->redraw();
 }
 
+static void set_imode(int val) {
+  sim_win->imode = (fltkview::interaction_mode)val;
+sim_win->redraw();
+}
+
 fltkview *sim_win=(fltkview *)0;
 
 static void cb_Time(Fl_Slider* o, void*) {
@@ -84,6 +89,19 @@ static void cb_fg(Fl_Slider* o, void*) {
   set_fg_saturation(o->value());
 }
 
+static void cb_Mode(Fl_Choice* o, void*) {
+  set_imode(o->value());
+}
+
+Fl_Menu_Item menu_Mode[] = {
+ {"REGION_MANIP", 0,  0, 0, 0, FL_NORMAL_LABEL, 0, 10, 0},
+ {"ARC_MANIP", 0,  0, 0, 0, FL_NORMAL_LABEL, 0, 10, 0},
+ {"MC_PREVIEW", 0,  0, 0, 0, FL_NORMAL_LABEL, 0, 10, 0},
+ {"BACK_MANIP", 0,  0, 0, 0, FL_NORMAL_LABEL, 0, 10, 0},
+ {"NONE", 0,  0, 0, 0, FL_NORMAL_LABEL, 0, 10, 0},
+ {0,0,0,0,0,0,0,0,0}
+};
+
 static Fl_Double_Window* make_window() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = new Fl_Double_Window(1465, 780);
@@ -107,17 +125,17 @@ static Fl_Double_Window* make_window() {
       o->callback((Fl_Callback*)cb_Time);
       o->value(sim_win->time_offset);
     } // Fl_Slider* o
-    { Fl_Light_Button* o = new Fl_Light_Button(1350, 50, 100, 25, "Draw lights");
+    { Fl_Light_Button* o = new Fl_Light_Button(1350, 561, 100, 25, "Draw lights");
       o->callback((Fl_Callback*)cb_Draw);
       o->value(sim_win->do_lights);
     } // Fl_Light_Button* o
-    { Fl_Choice* o = new Fl_Choice(1345, 15, 110, 25, "Roads");
+    { Fl_Choice* o = new Fl_Choice(1345, 526, 110, 25, "Roads");
       o->down_box(FL_BORDER_BOX);
       o->callback((Fl_Callback*)cb_Roads);
       o->menu(menu_Roads);
       o->value(sim_win->network_draw);
     } // Fl_Choice* o
-    { Fl_Light_Button* o = new Fl_Light_Button(1365, 100, 85, 25, "Record");
+    { Fl_Light_Button* o = new Fl_Light_Button(1365, 596, 85, 25, "Record");
       o->callback((Fl_Callback*)cb_Record);
       o->value(sim_win->screenshot_mode);
     } // Fl_Light_Button* o
@@ -129,20 +147,26 @@ static Fl_Double_Window* make_window() {
       o->callback((Fl_Callback*)cb_Throttle);
       o->value(sim_win->throttle);
     } // Fl_Light_Button* o
-    { Fl_Slider* o = new Fl_Slider(1305, 550, 150, 20, "bg saturation");
+    { Fl_Slider* o = new Fl_Slider(1305, 646, 150, 20, "bg saturation");
       o->type(1);
       o->step(0.01);
       o->callback((Fl_Callback*)cb_bg);
       o->align(FL_ALIGN_TOP);
       o->value(sim_win->bg_saturation);
     } // Fl_Slider* o
-    { Fl_Slider* o = new Fl_Slider(1306, 594, 150, 20, "fg saturation");
+    { Fl_Slider* o = new Fl_Slider(1306, 690, 150, 20, "fg saturation");
       o->type(1);
       o->step(0.01);
       o->callback((Fl_Callback*)cb_fg);
       o->align(FL_ALIGN_TOP);
       o->value(sim_win->fg_saturation);
     } // Fl_Slider* o
+    { Fl_Choice* o = new Fl_Choice(1345, 15, 110, 25, "Mode");
+      o->down_box(FL_BORDER_BOX);
+      o->callback((Fl_Callback*)cb_Mode);
+      o->menu(menu_Mode);
+      o->value(sim_win->imode);
+    } // Fl_Choice* o
     o->end();
   } // Fl_Double_Window* o
   Fl::focus(sim_win);

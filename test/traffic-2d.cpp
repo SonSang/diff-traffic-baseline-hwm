@@ -749,7 +749,7 @@ static void draw_callback(void *v);
 class fltkview : public Fl_Gl_Window
 {
 public:
-    typedef enum {REGION_MANIP, ARC_MANIP, MC_PREVIEW, BACK_MANIP, NONE} interaction_mode;
+    typedef enum {REGION_MANIP=0, ARC_MANIP=1, MC_PREVIEW=2, BACK_MANIP=3, NONE=4} interaction_mode;
 
     typedef enum {NET_NONE=0, NET_ABSTRACT=1, NET_TEXTURE=2} network_draw_mode;
 
