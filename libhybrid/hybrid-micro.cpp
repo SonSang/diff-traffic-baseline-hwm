@@ -76,7 +76,7 @@ namespace hybrid
             theta = other_lane_membership.theta;
 
             float lane_theta;
-            pos = other_lane_membership.other_lane->parent->point_theta(lane_theta, other_lane_membership.position, offset);
+            pos = other_lane_membership.other_lane->parent->point_theta(lane_theta, std::min(1.0f, other_lane_membership.position), offset);
             theta += lane_theta;
         }
         else
