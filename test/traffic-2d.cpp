@@ -17,6 +17,9 @@
 #include "big-image-tile.hpp"
 #include "night-render.hpp"
 
+struct fltkview;
+#include "helper-window.hpp"
+
 static const float FRAME_RATE                   = 1.0/24.0;
 static const float EXPIRE_TIME                  = 2.0f;
 static const float ROAD_SURFACE_COLOR[3]        = {    237/255.0,     234/255.0,     186/255.0};
@@ -389,8 +392,8 @@ static unsigned char* point_tex(int N)
 
 struct view_path
 {
-    view_path(float psize) : active_point(-1), duration(1.0),
-                             program(0), texture(0), point_size(psize)
+    view_path(float psize) : active_point(-1),
+                             program(0), texture(0), point_size(psize), obey_scale(false), obey_position(true)
     {}
 
     void clear()
@@ -602,13 +605,13 @@ struct view_path
     std::vector<vertex>    extracted;
     int                    active_point;
     partition01<float>     scales;
-    float                  duration;
 
     GLuint program;
     GLuint texture;
 
     float point_size;
-
+    bool  obey_scale;
+    bool  obey_position;
 };
 
 static void draw_roadblock(const hybrid::roadblock &r, float width, float aspect)
@@ -783,6 +786,9 @@ public:
                                                           bg_saturation(1.0),
                                                           fg_saturation(1.0),
                                                           view(1.0f),
+                                                          path_param(0.0f),
+                                                          path_param_rate(0.01f),
+                                                          path_auto_advance(false),
                                                           imode(NONE),
                                                           throttle(true)
     {
@@ -1042,10 +1048,6 @@ public:
                 break;
             case MC_PREVIEW:
                     put_text(cr, "motion preview", w()-10, h()-5, RIGHT, BOTTOM);
-                    if(view.path.points_.size() > 2)
-                        put_text(cr, boost::str(boost::format("path param: %6.3f") % (t/view.duration)), w()-10, h()-55, RIGHT, BOTTOM);
-                    else
-                        put_text(cr, "no path!", w()-10, h()-55, RIGHT, BOTTOM);
                 break;
             case BACK_MANIP:
                 put_text(cr, "back manip", w()-10, h()-5, RIGHT, BOTTOM);
@@ -1057,11 +1059,6 @@ public:
                 break;
             };
             cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-
-            if(imode == ARC_MANIP || imode == MC_PREVIEW)
-            {
-                put_text(cr, boost::str(boost::format("duration: %6.3f") % view.duration), w()-10, h()-30, RIGHT, BOTTOM);
-            }
         }
 
         put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 10, h()-30, LEFT, BOTTOM);
@@ -1468,9 +1465,22 @@ public:
         if(go)
         {
             if(screenshot_mode)
+            {
                 t += sim_time_scale*FRAME_RATE;
+                if(path_auto_advance)
+                    path_param = std::min(1.0f, path_param + FRAME_RATE*path_param_rate);
+            }
             else
+            {
                 t += sim_time_scale*frame_timer.interval_S();
+                if(path_auto_advance)
+                    path_param = std::min(1.0f, path_param + FRAME_RATE*path_param_rate);
+            }
+            if(path_auto_advance)
+            {
+                view_slider->value(path_param);
+                view_slider->redraw();
+            }
         }
         frame_timer.reset();
         frame_timer.start();
@@ -1485,9 +1495,10 @@ public:
 
         if((imode == NONE || imode == REGION_MANIP || imode == MC_PREVIEW) && view.path.points_.size() > 2)
         {
-            center = sub<0,2>::vector(view.path.point(t/view.duration, 0));
-            if(go)
-                view.get_scale(scale, t/view.duration);
+            if(view.obey_position)
+                center = sub<0,2>::vector(view.path.point(path_param, 0));
+            if(view.obey_scale)
+                view.get_scale(scale, path_param);
         }
 
         vec2f lo, hi;
@@ -1804,36 +1815,6 @@ public:
                     break;
                 }
                 break;
-            case '1':
-                switch(imode)
-                {
-                case ARC_MANIP:
-                case MC_PREVIEW:
-                    if(Fl::event_state() & FL_SHIFT)
-                        view.duration *= 0.5;
-                    else
-                        view.duration -= 0.5;
-                    if(view.duration < 0.0)
-                        view.duration = 0;
-                    break;
-                default:
-                    break;
-                }
-                break;
-            case '2':
-                switch(imode)
-                {
-                case ARC_MANIP:
-                case MC_PREVIEW:
-                    if(Fl::event_state() & FL_SHIFT)
-                        view.duration *= 2.0;
-                    else
-                        view.duration += 0.5;
-                    break;
-                default:
-                    break;
-                }
-                break;
             case 'r':
                 switch(imode)
                 {
@@ -1851,7 +1832,7 @@ public:
                 switch(imode)
                 {
                 case MC_PREVIEW:
-                    view.insert_scale_keyframe(t/view.duration, scale);
+                    view.insert_scale_keyframe(path_param, scale);
                     break;
                 default:
                     break;
@@ -2012,6 +1993,9 @@ public:
     float             bg_saturation;
     float             fg_saturation;
     view_path         view;
+    float             path_param;
+    float             path_param_rate;
+    bool              path_auto_advance;
     interaction_mode  imode;
     bool              throttle;
 };
