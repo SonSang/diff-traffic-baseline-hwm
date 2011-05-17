@@ -1069,6 +1069,8 @@ public:
 
         if(show_lengths)
         {
+            cairo_set_source_rgba (cr, 1.0f, 1.0f, 0.7f, 1.0f);
+
             put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 10, h()-30, LEFT, BOTTOM);
             put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 10, h()-5, LEFT, BOTTOM);
         }
