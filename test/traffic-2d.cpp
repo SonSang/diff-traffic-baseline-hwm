@@ -62,6 +62,10 @@ static inline void blackbody(float *rgb, const float val)
        rgb[1] = 1.0f;
        rgb[2] = (val-2.0f/3.0f)*3.0f;
    }
+
+   for(int i = 0; i < 3; ++i)
+       rgb[i] = std::min(1.0f, rgb[i]*1.5f);
+
    return;
 }
 
