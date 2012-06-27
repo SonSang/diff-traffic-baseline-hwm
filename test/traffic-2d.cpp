@@ -1260,7 +1260,6 @@ public:
         int          cars_n_allocd = 0;
         cars_at_time(&cars, &cars_n, &cars_n_allocd, anim, t);
 
-        printf("cars_n: %d\n", cars_n);
         for(int c = 0; c < cars_n; ++c)
         {
             car_at_time  *time_car = cars + c;
@@ -1289,10 +1288,13 @@ public:
             assert( t >= f0->time && t <= f1->time);
             float s = (t - f0->time)/(f1->time-f0->time);
             for(int i = 0; i < 3; ++i)
-                draw_info.frame(i, 3) = 0.0f; //f0->position[i]*(1-s) + s*f1->position[i];
+                draw_info.frame(3, i) = f0->position[i]*(1-s) + s*f1->position[i];
 
+            draw_info.frame(0,0) = f0->direction[0]*(1-s) + s*f1->direction[0];
+            draw_info.frame(0,1) = f0->direction[1]*(1-s) + s*f1->direction[1];
+            draw_info.frame(1,0) = f0->direction[1]*(1-s) + s*f1->direction[1];
+            draw_info.frame(1,1) = -(f0->direction[0]*(1-s) + s*f1->direction[0]);
 
-            std::cout << draw_info.frame << std::endl;
             tcd->members.insert(std::make_pair(the_car->id, draw_info));
         }
 
@@ -1863,7 +1865,6 @@ int main(int argc, char *argv[])
     net.build_intersections();
     net.build_fictitious_lanes();
     net.auto_scale_memberships();
-    net.center();
     std::cerr << "HWM net loaded successfully" << std::endl;
 
     try
@@ -1880,7 +1881,7 @@ int main(int argc, char *argv[])
     hwm::network_aux neta(net);
 
     car_animation anim;
-    load_trajectory_data(&anim, "/home/jsewall/Downloads/smaller_test_2d.txt");
+    load_trajectory_data(&anim, "/home/jsewall/Downloads/small_test_2d.txt");
 
     Fl_Double_Window *helper = make_window();
     helper->show(1, argv);
