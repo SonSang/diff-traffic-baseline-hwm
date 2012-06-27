@@ -1,6 +1,6 @@
 noinst_PROGRAMS = hybrid ih-riemann-test pc-int-test dump-to-png image-average
 
-EXTRA_DIST = arcball.hpp big-image-tile.hpp night-render.hpp gl-common.hpp
+EXTRA_DIST = arcball.hpp big-image-tile.hpp night-render.hpp gl-common.hpp car-animation.hpp
 
 hybrid_SOURCES  = hybrid.cpp
 hybrid_CPPFLAGS = $(LIBROAD_CFLAGS) $(CAIRO_CFLAGS) $(TVMET_CFLAGS) $(BOOST_CPPFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(OPENMP_CXXFLAGS) $(CXXFLAGS) -I$(top_srcdir)
@@ -38,7 +38,7 @@ hybrid_viewer_LDADD    = $(LIBROAD_LIBS)/libroad.la $(LIBROAD_LIBS)/libroad_visu
 
 noinst_PROGRAMS += traffic-2d
 
-traffic_2d_SOURCES  = traffic-2d.cpp
+traffic_2d_SOURCES  = traffic-2d.cpp car-animation.cpp
 traffic_2d_CPPFLAGS = $(LIBROAD_CFLAGS) $(GLIBMM_CFLAGS) $(LIBXMLPP_CFLAGS) $(CAIRO_CFLAGS) $(BOOST_CPPFLAGS) $(TVMET_CFLAGS) $(MAGICKPP_CXXFLAGS) $(CAIRO_CFLAGS) $(OPENMP_CXXFLAGS) $(CXXFLAGS) -I$(top_srcdir)
 traffic_2d_LDFLAGS  = $(BOOST_FILESYSTEM_LIBS) $(CAIRO_LIBS) $(MAGICKPP_LDFLAGS) $(FLTK_LDFLAGS) $(FLTK_GL_LDFLAGS) $(GLEW_LIBS) $(LDFLAGS) $(OPENMP_CXXFLAGS)
 traffic_2d_LDADD    = $(BOOST_THREAD_LIBS) $(BOOST_REGEX_LIBS) $(LIBROAD_LIBS)/libroad.la $(LIBROAD_LIBS)/libroad_visual.la $(LIBROAD_LIBS)/libroad_image.la $(top_builddir)/libhybrid/libhybrid.la $(LIBROAD_LIBS)/libroad_image.la

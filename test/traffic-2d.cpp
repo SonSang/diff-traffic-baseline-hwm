@@ -16,6 +16,7 @@
 #include "libhybrid/timer.hpp"
 #include "big-image-tile.hpp"
 #include "night-render.hpp"
+#include "car-animation.hpp"
 
 struct fltkview;
 #include "helper-window.hpp"
@@ -2071,6 +2072,9 @@ int main(int argc, char *argv[])
         n_threads = boost::lexical_cast<int>(argv[2]);
     omp_set_num_threads(n_threads);
     std::cout << "OpenMP using " << n_threads << " threads" << std::endl;
+
+    car_animation anim;
+    load_trajectory_data(&anim, "/home/jsewall/Downloads/small_test_2d.txt");
 
     hybrid::simulator s(&net,
                         4.5,
