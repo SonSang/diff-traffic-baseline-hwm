@@ -1223,7 +1223,6 @@ public:
                 glColor3fv(car_colors[car.second.thecar->color_idx]);
 
                 glPushMatrix();
-                std::cout << car.second.frame << std::endl;
                 glMultMatrixf(car.second.frame.data());
                 drawer->draw_car_list(1.0);
                 glPopMatrix();
@@ -1646,7 +1645,7 @@ public:
                 switch(imode)
                 {
                 case MC_PREVIEW:
-                    //                    t = hci->times[0];
+                    t = 0.0f;
                     break;
                 case NONE:
                     break;
@@ -1881,7 +1880,7 @@ int main(int argc, char *argv[])
     hwm::network_aux neta(net);
 
     car_animation anim;
-    load_trajectory_data(&anim, "/home/jsewall/Downloads/small_test_2d.txt");
+    load_trajectory_data(&anim, "/home/jsewall/Downloads/cars2.txt");
 
     Fl_Double_Window *helper = make_window();
     helper->show(1, argv);
