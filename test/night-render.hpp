@@ -3,7 +3,6 @@
 
 #include "gl-common.hpp"
 
-static const float BRAKING_THRESHOLD            = -0.1;
 static const float HEADLIGHT_THRESHOLD          = 0.65*1.732;
 static const float HEADLIGHT_COLOR[3]           = {0.5*255/255.0, 0.5*254/255.0, 0.5*149/255.0};
 static const float TAILLIGHT_COLOR[3]           = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};

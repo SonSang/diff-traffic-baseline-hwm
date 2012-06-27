@@ -23,6 +23,7 @@ struct fltkview;
 
 static const float FRAME_RATE                   = 1.0/24.0;
 static const float EXPIRE_TIME                  = 2.0f;
+static const float BRAKING_THRESHOLD            = -1.0f;
 static const float ROAD_SURFACE_COLOR[3]        = {    237/255.0,     234/255.0,     186/255.0};
 static const float ROAD_LINE_COLOR[3]           = {    135/255.0,     103/255.0,      61/255.0};
 static const float REGION_BOX_BORDER_COLOR[4]   = {    246/255.0,     255/255.0,       0/255.0, 1.0};
@@ -1269,7 +1270,6 @@ public:
 
             car_draw_info draw_info;
             draw_info.thecar = the_car;
-            draw_info.braking = false;
 
             assert(time_car->frame_idx >= 0 && time_car->frame_idx < the_car->frames_n-1);
             car_frame *f0 = the_car->frames+time_car->frame_idx;
@@ -1288,6 +1288,9 @@ public:
             float s = (t - f0->time)/(f1->time-f0->time);
             for(int i = 0; i < 3; ++i)
                 draw_info.frame(3, i) = f0->position[i]*(1-s) + s*f1->position[i];
+
+            float acceleration = f0->acceleration*(1-s) + s*f1->acceleration;
+            draw_info.braking = acceleration < BRAKING_THRESHOLD;
 
             draw_info.frame(0,0) = f0->direction[0]*(1-s) + s*f1->direction[0];
             draw_info.frame(0,1) = f0->direction[1]*(1-s) + s*f1->direction[1];
