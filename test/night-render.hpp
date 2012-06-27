@@ -68,7 +68,7 @@ struct night_render
             delete[] ambient_data;
     }
 
-    void initialize(const char *resource_root, hybrid::simulator *sim, const vec2i &dim)
+    void initialize(const char *resource_root, float front_bumper_offset, float rear_bumper_offset, const vec2i &dim)
     {
         {
             if(ambient_data)
@@ -184,7 +184,7 @@ struct night_render
 
         glPushMatrix();
         {
-            glTranslatef(sim->front_bumper_offset()-1, 0, 0);
+            glTranslatef(front_bumper_offset-1, 0, 0);
             draw_headlight();
         }
         glPopMatrix();
@@ -192,7 +192,7 @@ struct night_render
 
         taillight_list = glGenLists(1);
         glNewList(taillight_list, GL_COMPILE);
-        glTranslatef(sim->rear_bumper_offset()-0.1, 0, 0);
+        glTranslatef(rear_bumper_offset-0.1, 0, 0);
         draw_taillight();
         glEndList();
     }

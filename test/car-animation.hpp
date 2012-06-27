@@ -14,6 +14,8 @@ struct car_frame
 struct car
 {
     int        id;
+    int        color_idx;
+    int        body_idx;
     int        frames_n;
     int        frames_n_allocd;
     car_frame *frames;
