@@ -30,4 +30,13 @@ struct car_animation
 };
 
 void load_trajectory_data(car_animation *anim, const char *filename);
+
+struct car_at_time
+{
+    int car_idx;
+    int frame_idx;
+};
+
+void cars_at_time(car_at_time **cf, int *cf_n, int *cf_n_allocd, const car_animation *ca, float t);
+
 #endif

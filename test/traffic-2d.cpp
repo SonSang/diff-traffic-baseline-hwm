@@ -742,8 +742,8 @@ struct roadblock_adder
 static const float CAR_LENGTH    = 4.5f;
 //* This is the position of the car's axle from the FRONT bumper of the car
 static const float CAR_REAR_AXLE = 3.5f;
-static const float FRONT_BUMPER_OFFSET = -CAR_REAR_AXLE;
-static const float REAR_BUMPER_OFFSET = CAR_LENGTH-CAR_REAR_AXLE;
+static const float FRONT_BUMPER_OFFSET = 3.5f;
+static const float REAR_BUMPER_OFFSET = -1.0f;
 
 static void draw_callback(void *v);
 
@@ -776,6 +776,7 @@ public:
                                                           time_offset(0),
                                                           sim_time_scale(1),
                                                           go(false),
+                                                          last_drawer_update(-1),
                                                           avg_dt(0),
                                                           avg_step_time(0),
                                                           screenshot_mode(0),
@@ -1213,7 +1214,6 @@ public:
     void draw_cars()
     {//assumes texture_2d, doesn't change state
         glDepthMask(GL_FALSE);
-        const float car_draw_time = t;
         BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
         {
             drawer->draw_start();
@@ -1223,6 +1223,7 @@ public:
                 glColor3fv(car_colors[car.second.thecar->color_idx]);
 
                 glPushMatrix();
+                std::cout << car.second.frame << std::endl;
                 glMultMatrixf(car.second.frame.data());
                 drawer->draw_car_list(1.0);
                 glPopMatrix();
@@ -1245,6 +1246,59 @@ public:
                 glPopMatrix();
             }
         }
+    }
+
+    void update_drawers(float t)
+    {
+        BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
+        {
+            drawer->members.clear();
+        }
+
+        car_at_time *cars          = 0;
+        int          cars_n        = 0;
+        int          cars_n_allocd = 0;
+        cars_at_time(&cars, &cars_n, &cars_n_allocd, anim, t);
+
+        printf("cars_n: %d\n", cars_n);
+        for(int c = 0; c < cars_n; ++c)
+        {
+            car_at_time  *time_car = cars + c;
+            car          *the_car  = anim->cars + time_car->car_idx;
+
+            assert(the_car->body_idx >= 0 && the_car->body_idx < car_drawers.size());
+            tex_car_draw *tcd      = car_drawers[the_car->body_idx];
+
+            car_draw_info draw_info;
+            draw_info.thecar = the_car;
+            draw_info.braking = false;
+
+            assert(time_car->frame_idx >= 0 && time_car->frame_idx < the_car->frames_n-1);
+            car_frame *f0 = the_car->frames+time_car->frame_idx;
+            car_frame *f1 = the_car->frames+time_car->frame_idx+1;
+
+            for(int i = 0; i < 4; ++i)
+                for(int j = 0; j < 4; ++j)
+                {
+                    if(i==j)
+                        draw_info.frame(i, j) = 1.0f;
+                    else
+                        draw_info.frame(i, j) = 0.0f;
+                }
+
+            assert( t >= f0->time && t <= f1->time);
+            float s = (t - f0->time)/(f1->time-f0->time);
+            for(int i = 0; i < 3; ++i)
+                draw_info.frame(i, 3) = 0.0f; //f0->position[i]*(1-s) + s*f1->position[i];
+
+
+            std::cout << draw_info.frame << std::endl;
+            tcd->members.insert(std::make_pair(the_car->id, draw_info));
+        }
+
+        free(cars);
+
+        last_drawer_update = t;
     }
 
     void draw()
@@ -1275,6 +1329,9 @@ public:
 
         if (!valid())
             draw_init();
+
+        if(last_drawer_update != t)
+            update_drawers(t);
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -1541,6 +1598,12 @@ public:
         case FL_KEYBOARD:
             switch(Fl::event_key())
             {
+            case '1':
+                t -= 0.025;
+                break;
+            case '2':
+                t += 0.025;
+                break;
             case '0':
                 bg_saturation = std::max(0.0f, bg_saturation - 0.05f);
                 break;
@@ -1732,6 +1795,7 @@ public:
     std::vector<hwm::network_aux::road_spatial::entry> query_results;
 
     std::vector<tex_car_draw*> car_drawers;
+    float                      last_drawer_update;
     hwm::network_draw          network_drawer;
     hwm::network_aux_draw      network_aux_drawer;
     network_draw_mode          network_draw;
@@ -1816,7 +1880,7 @@ int main(int argc, char *argv[])
     hwm::network_aux neta(net);
 
     car_animation anim;
-    load_trajectory_data(&anim, "/home/jsewall/Downloads/small_test_2d.txt");
+    load_trajectory_data(&anim, "/home/jsewall/Downloads/smaller_test_2d.txt");
 
     Fl_Double_Window *helper = make_window();
     helper->show(1, argv);

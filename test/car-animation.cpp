@@ -100,3 +100,31 @@ void load_trajectory_data(car_animation *anim, const char *filename)
            anim->cars_n);
     fclose(fp);
 };
+
+static int car_anim_at_time(const car_animation *ca, float time, const car *c)
+{
+    int current_frame = 0;
+    for(int f = 0; f < c->frames_n; ++f)
+        if(c->frames[f].time > time)
+            return f-1;
+    return -1;
+}
+
+void cars_at_time(car_at_time **cf, int *cf_n, int *cf_n_allocd, const car_animation *ca, float t)
+{
+    INIT_ARRAY(*cf, 0, *cf_n_allocd);
+
+    for(int c = 0; c < ca->cars_n; ++c)
+    {
+        car *current = ca->cars + c;
+        int frame;
+        if(current->id == -1 || (frame = car_anim_at_time(ca, t, current)) == -1)
+            continue;
+
+        EXTEND_ARRAY(*cf, 1, *cf_n_allocd);
+        (*cf)[*cf_n].car_idx   = c;
+        (*cf)[*cf_n].frame_idx = frame;
+        ++*cf_n;
+    }
+}
+
