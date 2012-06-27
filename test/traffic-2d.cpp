@@ -1844,7 +1844,7 @@ int main(int argc, char *argv[])
     std::cout << libhybrid_package_string() << std::endl;
     if(argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <input network> [nthreads] [background image] " << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <input network> <trajectory file> [background image] " << std::endl;
         return 1;
     }
     RESOURCE_ROOT = getenv(RESOURCE_ROOT_ENV_NAME);
@@ -1880,7 +1880,7 @@ int main(int argc, char *argv[])
     hwm::network_aux neta(net);
 
     car_animation anim;
-    load_trajectory_data(&anim, "/home/jsewall/Downloads/cars2.txt");
+    load_trajectory_data(&anim, argv[2]);
 
     Fl_Double_Window *helper = make_window();
     helper->show(1, argv);
