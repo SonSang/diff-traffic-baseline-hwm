@@ -1,5 +1,5 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0110 
+version 1.0300 
 do_not_include_H_from_C 
 header_name {.hpp} 
 code_name {.cpp}
@@ -103,28 +103,28 @@ sim_win->redraw();} {}
 Function {make_window()} {open private
 } {
   Fl_Window {} {open
-    xywh {2611 267 1465 860} type Double visible
+    xywh {57 313 2105 1220} type Double visible
   } {
-    Fl_Box sim_win {
-      xywh {10 5 1280 720} box DOWN_FRAME hotspot
+    Fl_Box sim_win {selected
+      xywh {10 5 1920 1080} box DOWN_FRAME hotspot
       class fltkview
     }
     Fl_Slider {} {
       label {Time of day} user_data_type {void*}
       callback {update_tod(o->value());}
-      private xywh {10 739 1275 21} type Horizontal maximum 24 step 0.05
+      private xywh {5 1089 2095 26} type Horizontal maximum 24 step 0.05
       code0 {o->value(sim_win->time_offset);}
     }
     Fl_Light_Button {} {
       label {Draw lights}
       callback {toggle_lights(o->value());}
-      private xywh {1300 601 150 25}
+      private xywh {1940 591 150 25}
       code0 {o->value(sim_win->do_lights);}
     }
     Fl_Choice {} {
       label Roads
       callback {set_network_draw(o->value());} open
-      private xywh {1346 539 110 25} down_box BORDER_BOX
+      private xywh {1986 529 110 25} down_box BORDER_BOX
       code0 {o->value(sim_win->network_draw);}
     } {
       MenuItem {} {
@@ -143,37 +143,37 @@ Function {make_window()} {open private
     Fl_Light_Button {} {
       label Record
       callback {toggle_screenshot(o->value());}
-      private xywh {1305 48 147 25}
+      private xywh {1945 38 147 25}
       code0 {o->value(sim_win->screenshot_mode);}
     }
     Fl_Light_Button {} {
       label {Go!}
       callback {toggle_go(o->value());}
-      private xywh {1300 85 70 25}
+      private xywh {1940 75 70 25}
       code0 {o->value(sim_win->go);}
     }
     Fl_Light_Button {} {
       label Throttle
       callback {toggle_throttle(o->value());}
-      private xywh {1375 85 80 25}
+      private xywh {2015 75 80 25}
       code0 {o->value(sim_win->throttle);}
     }
     Fl_Slider {} {
       label {bg saturation}
       callback {set_bg_saturation(o->value());}
-      private xywh {1305 646 150 20} type Horizontal align 1 step 0.01
+      private xywh {1945 636 150 20} type Horizontal align 1 step 0.01
       code0 {o->value(sim_win->bg_saturation);}
     }
     Fl_Slider {} {
       label {fg saturation}
       callback {set_fg_saturation(o->value());}
-      private xywh {1305 687 150 20} type Horizontal align 1 step 0.01
+      private xywh {1945 677 150 20} type Horizontal align 1 step 0.01
       code0 {o->value(sim_win->fg_saturation);}
     }
     Fl_Choice {} {
       label Mode
       callback {set_imode(o->value());} open
-      private xywh {1345 15 110 25} down_box BORDER_BOX
+      private xywh {1985 5 110 25} down_box BORDER_BOX
       code0 {o->value(sim_win->imode);}
     } {
       MenuItem {} {
@@ -200,43 +200,43 @@ Function {make_window()} {open private
     Fl_Slider view_slider {
       label {View param} user_data_type {void*}
       callback {set_path_param(o->value());}
-      xywh {10 781 1275 20} type Horizontal
+      xywh {5 1136 2095 20} type Horizontal
       code0 {o->value(sim_win->path_param);}
     }
     Fl_Light_Button {} {
       label Scale
       callback {set_obey_scale(o->value());}
-      private xywh {1380 800 80 25}
+      private xywh {2020 790 80 25}
       code0 {o->value(sim_win->view.obey_scale);}
     }
     Fl_Light_Button {} {
       label Position
       callback {set_obey_position(o->value());}
-      private xywh {1380 770 78 25}
+      private xywh {2020 760 78 25}
       code0 {o->value(sim_win->view.obey_position);}
     }
     Fl_Light_Button {} {
       label {Follow t}
       callback {set_path_auto_advance(o->value());}
-      private xywh {1295 780 78 25}
+      private xywh {1935 770 78 25}
       code0 {o->value(sim_win->path_auto_advance);}
     }
     Fl_Slider view_rate_slider {
       label {View param rate} user_data_type {void*}
       callback {set_path_param_rate(o->value());}
-      private xywh {10 818 1275 22} type Horizontal maximum 0.2
+      private xywh {5 1173 2095 22} type Horizontal maximum 0.2
       code0 {o->value(sim_win->path_param_rate);}
     }
     Fl_Light_Button {} {
       label {Draw lengths}
       callback {toggle_show_lengths(o->value());}
-      private xywh {1305 715 150 25}
+      private xywh {1945 705 150 25}
       code0 {o->value(sim_win->show_lengths);}
     }
     Fl_Light_Button {} {
       label {Draw cars}
-      callback {toggle_cars(o->value());} selected
-      private xywh {1300 570 150 25}
+      callback {toggle_cars(o->value());}
+      private xywh {1940 560 150 25}
       code0 {o->value(sim_win->do_cars);}
     }
   }
