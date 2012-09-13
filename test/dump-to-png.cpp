@@ -127,7 +127,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    convert_dump(bf::path(argv[1]).replace_extension("png").string(), argv[1]);
+    char *newstr = strdup(argv[1]);
+    char *extstart = strrchr(newstr, '.');
+    if(extstart)
+        *extstart = 0;
+    char buff[1024];
+    snprintf(buff, 1023, "%s.png", newstr);
+
+    convert_dump(buff, argv[1]);
 
     return 0;
 }
