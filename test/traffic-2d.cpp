@@ -1354,6 +1354,7 @@ public:
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
         night_setup.start_to_light();
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -1387,6 +1388,7 @@ public:
             }
         }
         night_setup.finish_lum();
+        glLoadIdentity();
         night_setup.compose(t+time_offset, lo, hi, bg_saturation, fg_saturation);
 
         if(imode == ARC_MANIP)
