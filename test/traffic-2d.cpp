@@ -1908,9 +1908,9 @@ int main(int argc, char *argv[])
  // y offset: 1.02454
 
         sim_win->back_image = new big_image(argv[3]);
-        sim_win->back_image_center = vec2f(1316.74, -486.947);
-        sim_win->back_image_scale =  0.952628;
-        sim_win->back_image_yscale = 1.02454;
+        sim_win->back_image_center = vec2f(-41.8057, 94.5195);
+        sim_win->back_image_scale =  0.423366;
+        sim_win->back_image_yscale = 1.10954;
 
         // sim_win->back_image_center = vec2f(-16.8949, -974.423);
         // sim_win->back_image_scale =  0.420447;
