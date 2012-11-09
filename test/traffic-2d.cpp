@@ -762,6 +762,7 @@ public:
                                                           glew_state(GLEW_OK+1),
                                                           anim(0),
                                                           back_image(0),
+                                                          back_image_overlay(0),
                                                           back_image_center(0),
                                                           back_image_scale(1),
                                                           back_image_yscale(1),
@@ -857,7 +858,11 @@ public:
         std::cout << "Largest texture I support: " << biggest_width << std::endl;
         if(back_image && back_image->tiles.empty())
         {
-            back_image->make_tiles(biggest_width/2, false);
+            back_image->make_tiles(biggest_width/2, true);
+        }
+        if(back_image_overlay && back_image_overlay->tiles.empty())
+        {
+            back_image_overlay->make_tiles(biggest_width/2, true);
         }
         if(!glIsTexture(overlay_tex_))
         {
@@ -1143,6 +1148,21 @@ public:
 
     }
 
+    void draw_background_overlay()
+    {//doesn't change state
+        if(back_image_overlay && !back_image_overlay->tiles.empty())
+        {
+            glPushMatrix();
+            glTranslatef(-back_image_center[0], -back_image_center[1], 0);
+            glScalef    (back_image_scale, back_image_yscale*back_image_scale,   1);
+
+            vec2i dim(back_image_overlay->dim());
+            glTranslatef(-dim[0]/2, dim[1]/2, 0);
+            back_image_overlay->draw();
+            glPopMatrix();
+        }
+    }
+
     void draw_network()
     {//assumes texture_2d, may unset it
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -1390,7 +1410,14 @@ public:
         night_setup.finish_lum();
         glLoadIdentity();
         night_setup.compose(t+time_offset, lo, hi, bg_saturation, fg_saturation);
+        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+        vec4f ambient_color_vec;
+        sub<0,3>::vector(ambient_color_vec) = night_setup.ambient_color(t);
+        ambient_color_vec[3]                = 1.0f;
+        glColor4fv(&ambient_color_vec[0]);
+        draw_background_overlay();
 
+        glLoadIdentity();
         if(imode == ARC_MANIP)
             view.draw(scale);
 
@@ -1777,8 +1804,8 @@ public:
     car_animation *anim;
 
     GLuint     glew_state;
-    GLuint     background_tex_;
     big_image *back_image;
+    big_image *back_image_overlay;
     vec2i      back_image_dim;
     vec2f      back_image_center;
     float      back_image_scale;
@@ -1896,7 +1923,7 @@ int main(int argc, char *argv[])
 
     sim_win->time_offset = 0;
 
-    if(argc == 4)
+    if(argc == 5)
     {
     // scale: 1.9185
     //     center: [378.73, 64.5092]
@@ -1910,6 +1937,8 @@ int main(int argc, char *argv[])
  // y offset: 1.02454
 
         sim_win->back_image = new big_image(argv[3]);
+        sim_win->back_image_overlay = new big_image(argv[4]);
+
         sim_win->back_image_center = vec2f(-41.8057, 94.5195);
         sim_win->back_image_scale =  0.423366;
         sim_win->back_image_yscale = 1.10954;
