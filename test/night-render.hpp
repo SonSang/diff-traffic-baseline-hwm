@@ -57,8 +57,8 @@ struct night_render
                      ambient_data(0),
                      nsamples(4),
                      day_length(24*60*60),
-                     sunrise_interval(60*60*vec2f(5.5, 7.5)),
-                     sunset_interval(60*60*vec2f(18.0, 20.0))
+                     sunrise_interval(60*60*vec2f((float)5.5, (float)7.5)),
+                     sunset_interval(60*60*vec2f((float)18.0, (float)20.0))
                      {}
 
     ~night_render()

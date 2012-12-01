@@ -37,12 +37,12 @@ struct tile
 
 struct big_image
 {
-    big_image(const std::string &im_name) : im(new Magick::Image(im_name)), dimensions(im->columns(), im->rows())
+    big_image(const std::string &im_name) : im(new Magick::Image(im_name)), dimensions((int)im->columns(), (int)im->rows())
     {
         std::cout << "Loaded image " <<  im_name << " "  << dim() << std::endl;
     }
 
-    big_image(Magick::Image *image) : im(image), dimensions(im->columns(), im->rows())
+    big_image(Magick::Image *image) : im(image), dimensions((int)im->columns(), (int)im->rows())
     {
         std::cout << "Copied image " << dim() << std::endl;
     }
@@ -62,6 +62,8 @@ struct big_image
     {
         glPushMatrix();
         glScalef(1, -1, 1);
+        //        std::cout << "Tiles : " << tiles.size() << std::endl;
+
         BOOST_FOREACH(const tile &t, tiles)
         {
             t.draw();
@@ -112,19 +114,21 @@ struct big_image
 
                 glBindTexture (GL_TEXTURE_2D, t.tex);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
                 im->write(t.origin[0], t.origin[1], t.size[0], t.size[1], "RGBA", Magick::CharPixel, pix);
 
-                gluBuild2DMipmaps(GL_TEXTURE_2D,
-                                  alpha ? GL_RGBA4 : GL_R3_G3_B2,
-                                  t.size[0],
-                                  t.size[1],
-                                  GL_RGBA,
-                                  GL_UNSIGNED_BYTE,
-                                  pix);
+                glTexImage2D (GL_TEXTURE_2D,
+                              0,
+                              alpha ? GL_RGBA4 : GL_R3_G3_B2,
+                              t.size[0],
+                              t.size[1],
+                              0,
+                              GL_RGBA,
+                              GL_UNSIGNED_BYTE,
+                              pix);
 
                 std::cout << boost::str(boost::format("Finished tile %d/%d\r") % tiles.size() % (ntiles[0]*ntiles[1]));
                 std::cout.flush();

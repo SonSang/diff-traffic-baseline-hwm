@@ -232,9 +232,9 @@ struct tex_car_draw
         car_rear_axle = car_rear_axle_;
 
         Magick::Image full_im(full.string());
-        const vec2i dim(full_im.columns(), full_im.rows());
+        const vec2i dim((int)full_im.columns(), (int)full_im.rows());
         if(dim[0] > dim[1])
-            extents = vec2f(1.0, static_cast<float>(dim[1])/dim[0]);
+           extents = vec2f((float)1.0, static_cast<float>(dim[1])/dim[0]);
         else
             extents = vec2f(static_cast<float>(dim[0])/dim[1], 1.0);
 
@@ -466,7 +466,7 @@ struct view_path
     void update_extracted(float resolution)
     {
         extracted.clear();
-        path.extract_center(extracted, vec2f(0.0, 1.0), 0.0, resolution);
+        path.extract_center(extracted, vec2f((float)0.0, (float)1.0), 0.0, resolution);
     }
 
     bool get_scale(float &scale, float t)
@@ -1939,7 +1939,7 @@ int main(int argc, char *argv[])
         sim_win->back_image = new big_image(argv[3]);
         sim_win->back_image_overlay = new big_image(argv[4]);
 
-        sim_win->back_image_center = vec2f(-41.8057, 94.5195);
+        sim_win->back_image_center = vec2f((float)-41.8057, (float)94.5195);
         sim_win->back_image_scale =  0.423366;
         sim_win->back_image_yscale = 1.10954;
 
