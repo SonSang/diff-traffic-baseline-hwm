@@ -10,6 +10,8 @@ PKG_PROG_PKG_CONFIG
 
 AC_LANG([C++])
 
+AM_PROG_AR
+
 AX_OPENMP([AC_SUBST(OPENMP_CXXFLAGS)] ,
 	  [AC_MSG_FAILURE([cannot find flag for OpenMP])])
 
