@@ -5,6 +5,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/Fl_Menu_Button.H>
+#undef None // Stupid X11/X.h defines this!
 #include <boost/regex.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
