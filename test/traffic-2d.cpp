@@ -233,11 +233,11 @@ struct tex_car_draw
         car_rear_axle = car_rear_axle_;
 
         Magick::Image full_im(full.string());
-        const vec2i dim((int)full_im.columns(), (int)full_im.rows());
+        const vec2i dim(make_v2((int)full_im.columns(), (int)full_im.rows()));
         if(dim[0] > dim[1])
-           extents = vec2f((float)1.0, static_cast<float>(dim[1])/dim[0]);
+	    extents = make_v2((float)1.0, static_cast<float>(dim[1])/dim[0]);
         else
-            extents = vec2f(static_cast<float>(dim[0])/dim[1], 1.0);
+	    extents = make_v2(static_cast<float>(dim[0])/dim[1], 1.0f);
 
         unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
 
@@ -467,7 +467,7 @@ struct view_path
     void update_extracted(float resolution)
     {
         extracted.clear();
-        path.extract_center(extracted, vec2f((float)0.0, (float)1.0), 0.0, resolution);
+        path.extract_center(extracted, make_v2((float)0.0, (float)1.0), 0.0, resolution);
     }
 
     bool get_scale(float &scale, float t)
@@ -874,7 +874,7 @@ public:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-            retex_overlay(center, scale, vec2i(w(), h()), screenshot_mode);
+            retex_overlay(center, scale, make_v2(w(), h()), screenshot_mode);
         }
         if(!glIsTexture(continuum_tex_))
         {
@@ -1002,10 +1002,10 @@ public:
 
             if(drawing)
             {
-                const vec2f low(std::min(first_point[0], second_point[0]),
-                                std::min(first_point[1], second_point[1]));
-                const vec2f high(std::max(first_point[0], second_point[0]),
-                                 std::max(first_point[1], second_point[1]));
+                const vec2f low(make_v2(std::min(first_point[0], second_point[0]),
+                                        std::min(first_point[1], second_point[1])));
+                const vec2f high(make_v2(std::max(first_point[0], second_point[0]),
+                                         std::max(first_point[1], second_point[1])));
                 cairo_set_matrix(cr, &cmat);
                 cairo_rectangle(cr, low[0], low[1], high[0]-low[0], high[1]-low[1]);
                 cairo_set_source_rgba(cr, REGION_BOX_INTERNAL_COLOR[0], REGION_BOX_INTERNAL_COLOR[1], REGION_BOX_INTERNAL_COLOR[2], REGION_BOX_INTERNAL_COLOR[3]);
@@ -1123,7 +1123,7 @@ public:
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        night_setup.initialize(RESOURCE_ROOT, FRONT_BUMPER_OFFSET, REAR_BUMPER_OFFSET, vec2i(w(), h()));
+        night_setup.initialize(RESOURCE_ROOT, FRONT_BUMPER_OFFSET, REAR_BUMPER_OFFSET, make_v2(w(), h()));
 
         glEnable(GL_MULTISAMPLE);
         glEnable(GL_TEXTURE_2D);
@@ -1370,7 +1370,7 @@ public:
         }
 
         vec2f lo, hi;
-        cscale_to_box(lo, hi, center, scale, vec2i(w(), h()));
+        cscale_to_box(lo, hi, center, scale, make_v2(w(), h()));
         glOrtho(lo[0], hi[0], lo[1], hi[1], -50.0, 50.0);
 
         glMatrixMode(GL_MODELVIEW);
@@ -1424,7 +1424,7 @@ public:
 
         glColor4f(1.0, 1.0, 1.0, 1.0);
         glBindTexture (GL_TEXTURE_2D, overlay_tex_);
-        retex_overlay(center, scale, vec2i(w(), h()), !screenshot_mode);
+        retex_overlay(center, scale, make_v2(w(), h()), !screenshot_mode);
         glPushMatrix();
         glBegin(GL_QUADS);
         glTexCoord2f(0.0, 0.0);
@@ -1512,9 +1512,9 @@ public:
             return 1;
         case FL_PUSH:
             {
-                const vec2i xy(Fl::event_x(),
-                               Fl::event_y());
-                const vec2f world(world_point(vec2i(xy[0], h()-xy[1]), center, scale, vec2i(w(), h())));
+                const vec2i xy(make_v2(Fl::event_x(),
+				       Fl::event_y()));
+                const vec2f world(world_point(make_v2(xy[0], h()-xy[1]), center, scale, make_v2(w(), h())));
 
                 if(Fl::event_button() == FL_LEFT_MOUSE)
                 {
@@ -1583,9 +1583,9 @@ public:
             return 1;
         case FL_DRAG:
             {
-                const vec2i xy(Fl::event_x(),
-                               Fl::event_y());
-                const vec2f world(world_point(vec2i(xy[0], h()-xy[1]), center, scale, vec2i(w(), h())));
+                const vec2i xy(make_v2(Fl::event_x(),
+				       Fl::event_y()));
+                const vec2f world(world_point(make_v2(xy[0], h()-xy[1]), center, scale, make_v2(w(), h())));
                 vec2f dvec(0);
                 if(Fl::event_button() == FL_LEFT_MOUSE)
                 {
@@ -1761,10 +1761,10 @@ public:
             return 1;
         case FL_MOUSEWHEEL:
             {
-                const vec2i xy(Fl::event_x(),
-                               Fl::event_y());
-                const vec2i dxy(Fl::event_dx(),
-                                Fl::event_dy());
+                const vec2i xy(make_v2(Fl::event_x(),
+				       Fl::event_y()));
+                const vec2i dxy(make_v2(Fl::event_dx(),
+					Fl::event_dy()));
                 const float fy = copysign(0.5, dxy[1]);
 
                 if(Fl::event_state() & FL_SHIFT)
@@ -1940,7 +1940,7 @@ int main(int argc, char *argv[])
         sim_win->back_image = new big_image(argv[3]);
         sim_win->back_image_overlay = new big_image(argv[4]);
 
-        sim_win->back_image_center = vec2f((float)-41.8057, (float)94.5195);
+        sim_win->back_image_center = make_v2((float)-41.8057, (float)94.5195);
         sim_win->back_image_scale =  0.423366;
         sim_win->back_image_yscale = 1.10954;
 
@@ -1955,7 +1955,7 @@ int main(int argc, char *argv[])
     vec3f low(FLT_MAX);
     vec3f high(-FLT_MAX);
     net.bounding_box(low, high);
-    box_to_cscale(sim_win->center, sim_win->scale, sub<0,2>::vector(low), sub<0,2>::vector(high), vec2i(500,500));
+    box_to_cscale(sim_win->center, sim_win->scale, sub<0,2>::vector(low), sub<0,2>::vector(high), make_v2(500,500));
 
     Fl::visual(FL_DOUBLE|FL_DEPTH|FL_MULTISAMPLE);
 
