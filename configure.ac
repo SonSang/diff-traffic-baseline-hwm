@@ -10,6 +10,8 @@ PKG_PROG_PKG_CONFIG
 
 AC_LANG([C++])
 
+AM_PROG_AR
+
 AX_OPENMP([AC_SUBST(OPENMP_CXXFLAGS)] ,
 	  [AC_MSG_FAILURE([cannot find flag for OpenMP])])
 
@@ -130,8 +132,8 @@ AS_IF([test x"$enable_visual" != xno -a x"$have_fltk" = xyes -a x"$have_glew" = 
             [visual_ok=yes
              FLTK_CXXFLAGS=`fltk-config --cxxflags`
              FLTK_LDFLAGS=`fltk-config --ldflags`
-             FLTK_GL_CXXFLAGS=`fltk-config --cxxflags --use-gl`
-             FLTK_GL_LDFLAGS=`fltk-config --ldflags --use-gl`
+             FLTK_GL_CXXFLAGS="`fltk-config --cxxflags --use-gl` -lGLU -lGL"
+             FLTK_GL_LDFLAGS="`fltk-config --ldflags --use-gl` -lGLU -lGL"
              AC_SUBST([FLTK_CXXFLAGS])
              AC_SUBST([FLTK_LDFLAGS])
              AC_SUBST([FLTK_GL_CXXFLAGS])
