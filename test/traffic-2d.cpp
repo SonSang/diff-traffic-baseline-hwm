@@ -1,7 +1,6 @@
 #include <Magick++.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <GL/glext.h>
 #include <FL/Fl.H>
 #include <FL/Fl_Gl_Window.H>
 #include <FL/Fl_Menu_Button.H>
@@ -24,7 +23,6 @@ struct fltkview;
 
 static const float FRAME_RATE                   = 1.0/24.0;
 static const float EXPIRE_TIME                  = 2.0f;
-static const float BRAKING_THRESHOLD            = -1.0f;
 static const float ROAD_SURFACE_COLOR[3]        = {    237/255.0,     234/255.0,     186/255.0};
 static const float ROAD_LINE_COLOR[3]           = {    135/255.0,     103/255.0,      61/255.0};
 static const float REGION_BOX_BORDER_COLOR[4]   = {    246/255.0,     255/255.0,       0/255.0, 1.0};
@@ -194,6 +192,17 @@ struct car_draw_info
     car     *thecar;
     bool     braking;
     mat4x4f  frame;
+    typedef enum {ENTERING, NORMAL, LEAVING} state_t;
+
+    car_draw_info()
+    {}
+    car_draw_info(int c) : color(c), state(NORMAL)
+    {}
+
+    int     color;
+    state_t state;
+    float   timestamp;
+    float   last_velocity;
 };
 
 struct tex_car_draw
@@ -235,9 +244,9 @@ struct tex_car_draw
         Magick::Image full_im(full.string());
         const vec2i dim(make_v2((int)full_im.columns(), (int)full_im.rows()));
         if(dim[0] > dim[1])
-	    extents = make_v2((float)1.0, static_cast<float>(dim[1])/dim[0]);
+            extents = make_v2((float)1.0, static_cast<float>(dim[1])/dim[0]);
         else
-	    extents = make_v2(static_cast<float>(dim[0])/dim[1], 1.0f);
+            extents = make_v2(static_cast<float>(dim[0])/dim[1], 1.0f);
 
         unsigned char *pix = new unsigned char[dim[0]*dim[1]*4];
 
@@ -761,9 +770,7 @@ public:
                                                           net(0),
                                                           netaux(0),
                                                           glew_state(GLEW_OK+1),
-                                                          anim(0),
                                                           back_image(0),
-                                                          back_image_overlay(0),
                                                           back_image_center(0),
                                                           back_image_scale(1),
                                                           back_image_yscale(1),
@@ -779,7 +786,6 @@ public:
                                                           time_offset(0),
                                                           sim_time_scale(1),
                                                           go(false),
-                                                          last_drawer_update(-1),
                                                           avg_dt(0),
                                                           avg_step_time(0),
                                                           screenshot_mode(0),
@@ -844,13 +850,6 @@ public:
                 std::cout << "car drawers skipping " << itr->path() << std::endl;
             }
         }
-
-        for(int c = 0; c < anim->cars_n; ++c)
-        {
-            car *current       = anim->cars + c;
-            current->body_idx  = rand() % car_drawers.size();
-            current->color_idx = rand() % n_car_colors;
-        }
     }
 
     void init_textures()
@@ -859,11 +858,7 @@ public:
         std::cout << "Largest texture I support: " << biggest_width << std::endl;
         if(back_image && back_image->tiles.empty())
         {
-            back_image->make_tiles(biggest_width/2, true);
-        }
-        if(back_image_overlay && back_image_overlay->tiles.empty())
-        {
-            back_image_overlay->make_tiles(biggest_width/2, true);
+            back_image->make_tiles(biggest_width/2, false);
         }
         if(!glIsTexture(overlay_tex_))
         {
@@ -1041,7 +1036,8 @@ public:
             put_text(cr, boost::str(boost::format("time of day: %s") % boost::posix_time::to_simple_string(td)), 10, 30, LEFT, TOP);
             put_text(cr, boost::str(boost::format("scaling factor %8.3fx") % sim_time_scale), 270, 5, LEFT, TOP);
 
-            put_text(cr, boost::str(boost::format("# of cars: %ld") % anim->cars_n), 10, 55, LEFT, TOP);
+            if(sim)
+                put_text(cr, boost::str(boost::format("# of micro cars: %ld") % sim->ncars()), 10, 55, LEFT, TOP);
 
             if(throttle)
                 put_text(cr, "throttle", w()-10, 5, RIGHT, TOP);
@@ -1075,6 +1071,14 @@ public:
             cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
         }
 
+        if(show_lengths)
+        {
+            cairo_set_source_rgba (cr, 1.0f, 1.0f, 0.7f, 1.0f);
+
+            put_text(cr, boost::str(boost::format("micro: % 6.1f km") % (sim->micro_length()/1000.0)), 10, h()-30, LEFT, BOTTOM);
+            put_text(cr, boost::str(boost::format("macro: % 6.1f km") % (sim->macro_length()/1000.0)), 10, h()-5, LEFT, BOTTOM);
+        }
+
         cairo_destroy(cr);
 
         glBindTexture(GL_TEXTURE_2D, overlay_tex_);
@@ -1091,6 +1095,105 @@ public:
         cairo_surface_destroy(cs);
     }
 
+    void update_drawers()
+    {
+        {
+            std::vector<hybrid::car_interp::car_spatial> gone_cars;
+            std::set_difference(hci->car_data[0].begin(), hci->car_data[0].end(),
+                                hci->car_data[1].begin(), hci->car_data[1].end(),
+                                std::inserter(gone_cars, gone_cars.end()),
+                                hci->car_data[0].value_comp());
+
+            BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, gone_cars)
+            {
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator  to_remove = car_map.find(cs.c.id);
+                assert(to_remove != car_map.end());
+                car_draw_info                                            &cdi       = to_remove->second->members.find(cs.c.id)->second;
+                cdi.state                                                           = car_draw_info::LEAVING;
+                cdi.last_velocity                                                   = cs.c.velocity;
+                cdi.timestamp                                                       = hci->times[0];
+            }
+        }
+        {
+            std::vector<hybrid::car_interp::car_spatial> new_cars;
+            std::set_difference(hci->car_data[1].begin(), hci->car_data[1].end(),
+                                hci->car_data[0].begin(), hci->car_data[0].end(),
+                                std::inserter(new_cars, new_cars.end()),
+                                hci->car_data[0].value_comp());
+
+            BOOST_FOREACH(hybrid::car_interp::car_spatial &cs, new_cars)
+            {
+                std::tr1::unordered_map<size_t, tex_car_draw*>::iterator  drawer(car_map.find(cs.c.id));
+
+                assert(drawer == car_map.end());
+                tex_car_draw                                             *draw_pick = car_drawers[rand() % car_drawers.size()];
+                drawer                                                              = car_map.insert(drawer, std::make_pair(cs.c.id, draw_pick));
+                std::tr1::unordered_map<size_t, car_draw_info>::iterator  new_cdi   = draw_pick->members.insert(std::make_pair(cs.c.id, car_draw_info(rand() % n_car_colors))).first;
+                drawer->second                                                      = draw_pick;
+                new_cdi->second.state                                               = car_draw_info::ENTERING;
+                new_cdi->second.last_velocity                                       = cs.c.velocity;
+                new_cdi->second.timestamp                                           = hci->times[1];
+                const mat4x4f trans(cs.c.point_frame(cs.la, sim->hnet->lane_width));
+                new_cdi->second.frame                                               = tvmet::trans(trans);
+            }
+        }
+
+        BOOST_FOREACH(tex_car_draw *tcd, car_drawers)
+        {
+            std::tr1::unordered_map<size_t, car_draw_info>::iterator current = tcd->members.begin();
+            while(current != tcd->members.end())
+            {
+                std::tr1::unordered_map<size_t, car_draw_info>::iterator copy(current);
+                ++current;
+                if(copy->second.state == car_draw_info::LEAVING && t - copy->second.timestamp > EXPIRE_TIME)
+                {
+                    car_map.erase(copy->first);
+                    tcd->members.erase(copy);
+                }
+                else if(copy->second.state == car_draw_info::ENTERING && t > copy->second.timestamp)
+                {
+                    copy->second.state = car_draw_info::NORMAL;
+                }
+            }
+        }
+    }
+    void advance_sim()
+    {
+        float dt = 0;
+        if(sim && hci && ( imode == NONE || imode == REGION_MANIP))
+        {
+            vec2f lo, hi;
+            cscale_to_box(lo, hi, center, scale, make_v2(w(), h()));
+
+            // aabb2d      r;
+            // const vec2f dir(hi-lo);
+            // r.enclose_point(lo[0]-dir[0]*0.5, lo[1]-dir[1]*0.5);
+            // r.enclose_point(hi[0]+dir[0]*0.5, hi[1]+dir[1]*0.5);
+            // query_results = netaux->road_space.query(r);
+            // sim->mass_reassign(query_results);
+
+            timer step_timer;
+            float dt_accum  = 0;
+            int   num_steps = 0;
+            step_timer.start();
+            while(t > hci->times[1])
+            {
+                hci->capture(*sim);
+                update_drawers();
+                dt = sim->hybrid_step();
+                sim->advance_intersections(dt);
+                ++num_steps;
+                dt_accum += dt;
+            }
+            step_timer.stop();
+            if(num_steps > 0)
+            {
+                avg_dt = dt_accum / num_steps;
+                avg_step_time = step_timer.interval_S()/num_steps;
+            }
+        }
+    }
+
     void draw_init()
     {
         std::cout << "Shader version is " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
@@ -1102,10 +1205,10 @@ public:
             init_glew();
 
         if(!network_drawer.initialized())
-            network_drawer.initialize(net, 0.01f);
+            network_drawer.initialize(sim->hnet, 0.01f);
 
         hwm::road_metrics rm;
-        rm.lane_width      = net->lane_width;
+        rm.lane_width      = sim->hnet->lane_width;
         rm.shoulder_width  = 2.0f;
         rm.line_width      = 0.125;
         rm.line_sep_width  = 0.125;
@@ -1118,7 +1221,21 @@ public:
         init_textures();
         view.initialize();
         if(car_drawers.empty())
+        {
             init_car_drawers(RESOURCE_ROOT);
+
+            if(sim && hci)
+            {
+                update_drawers();
+
+                sim->hybrid_step();
+                hci->capture(*sim);
+                update_drawers();
+                sim->hybrid_step();
+
+                t = hci->times[0];
+            }
+        }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1147,21 +1264,6 @@ public:
             glPopMatrix();
         }
 
-    }
-
-    void draw_background_overlay()
-    {//doesn't change state
-        if(back_image_overlay && !back_image_overlay->tiles.empty())
-        {
-            glPushMatrix();
-            glTranslatef(-back_image_center[0], -back_image_center[1], 0);
-            glScalef    (back_image_scale, back_image_yscale*back_image_scale,   1);
-
-            vec2i dim(back_image_overlay->dim());
-            glTranslatef(-dim[0]/2, dim[1]/2, 0);
-            back_image_overlay->draw();
-            glPopMatrix();
-        }
     }
 
     void draw_network()
@@ -1193,7 +1295,6 @@ public:
             }
         case NET_TEXTURE:
             glColor3f(1.0, 1.0, 1.0);
-            glEnable(GL_TEXTURE_2D);
             network_aux_drawer.draw_roads_solid();
             glDisable(GL_TEXTURE_2D);
             glColor3f(0.4, 0.4, 0.4);
@@ -1206,14 +1307,74 @@ public:
         glDisable(GL_POLYGON_OFFSET_FILL);
     }
 
+    void draw_continuum_data()
+    {//assumes texture_2d
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        std::vector<vec4f> colors;
+        glBindTexture (GL_TEXTURE_2D, continuum_tex_);
+        BOOST_FOREACH(hybrid::lane *l, sim->macro_lanes)
+        {
+            if(!l->active() || l->fictitious)
+                continue;
+
+            colors.resize(l->N);
+            for(size_t i = 0; i < l->N; ++i)
+            {
+                float val    = l->q[i].rho();
+                blackbody(colors[i].data(), val);
+                colors[i][3] = 1.0;
+            }
+
+            glTexImage2D (GL_TEXTURE_2D,
+                          0,
+                          GL_RGBA,
+                          l->N,
+                          1,
+                          0,
+                          GL_RGBA,
+                          GL_FLOAT,
+                          colors[0].data());
+
+            network_drawer.draw_lane_solid(l->parent->id);
+        }
+    }
+
+    void draw_roadblocks()
+    {//assumes texture_2d, doesn't change state
+        if(sim)
+        {
+            glBindTexture(GL_TEXTURE_2D, roadblock_tex_);
+            BOOST_FOREACH(const hybrid::roadblock &r, sim->roadblocks)
+            {
+                draw_roadblock(r, sim->hnet->lane_width, roadblock_aspect);
+            }
+            if(rb_add.active())
+                draw_roadblock(rb_add.test_roadblock(), sim->hnet->lane_width, roadblock_aspect);
+        }
+    }
+
+    void draw_roadblocks_lights()
+    {//assumes texture_2d, doesn't change state
+        if(sim)
+        {
+            glBindTexture(GL_TEXTURE_2D, roadblock_flash_tex_);
+            BOOST_FOREACH(const hybrid::roadblock &r, sim->roadblocks)
+            {
+                draw_roadblock_lights(r, t+time_offset, sim->hnet->lane_width);
+            }
+            if(rb_add.active())
+                draw_roadblock_lights(rb_add.test_roadblock(), 0.0, sim->hnet->lane_width);
+        }
+    }
+
     void draw_intersection_arrows()
     {//assumes texture_2d, no state change
         if(draw_intersections)
         {
-            const float arrow_length = arrow_aspect*net->lane_width;
+            const float arrow_length = arrow_aspect*sim->hnet->lane_width;
             glBindTexture (GL_TEXTURE_2D, arrow_tex_);
             glMatrixMode(GL_TEXTURE);
-            BOOST_FOREACH(const hwm::intersection_pair &ip, net->intersections)
+            BOOST_FOREACH(const hwm::intersection_pair &ip, sim->hnet->intersections)
             {
                 if(ip.second.locked)
                     continue;
@@ -1235,95 +1396,82 @@ public:
 
     void draw_cars()
     {//assumes texture_2d, doesn't change state
-        glDepthMask(GL_FALSE);
-        BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
+        if(hci)
         {
-            drawer->draw_start();
-            typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
-            BOOST_FOREACH(id_car_draw_info &car, drawer->members)
+            glDepthMask(GL_FALSE);
+            const float car_draw_time = cog::clamp(t, hci->times[0], hci->times[1]);
+            BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
-                glColor3fv(car_colors[car.second.thecar->color_idx]);
+                drawer->draw_start();
+                typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
+                BOOST_FOREACH(id_car_draw_info &car, drawer->members)
+                {
+                    glColor3fv(car_colors[car.second.color]);
+                    float opacity;
+                    switch(car.second.state)
+                    {
+                    case car_draw_info::ENTERING:
+                        opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
+                        break;
+                    case car_draw_info::LEAVING:
+                        opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                        break;
+                    case car_draw_info::NORMAL:
+                    default:
+                        {
+                            const mat4x4f trans(hci->point_frame(car.first, car_draw_time, sim->hnet->lane_width));
+                            car.second.frame = tvmet::trans(trans);
+                            opacity          = 1.0;
+                        }
+                        break;
+                    }
 
-                glPushMatrix();
-                glMultMatrixf(car.second.frame.data());
-                drawer->draw_car_list(1.0);
-                glPopMatrix();
+                    glPushMatrix();
+                    glMultMatrixf(car.second.frame.data());
+                    if(car.second.state != car_draw_info::NORMAL)
+                        glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
+                    drawer->draw_car_list(opacity);
+                    glPopMatrix();
+                }
+                drawer->draw_end();
             }
-            drawer->draw_end();
+            glDepthMask(GL_TRUE);
         }
-        glDepthMask(GL_TRUE);
     }
 
     void draw_cars_lights()
     {//assumes texture_2d, doesn't change state
-        BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
+        if(hci)
         {
-            typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
-            BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
+            BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
             {
-                glPushMatrix();
-                glMultMatrixf(car.second.frame.data());
-                night_setup.draw_car_lights(1.0, car.second.braking);
-                glPopMatrix();
+                typedef std::pair<const size_t, car_draw_info> id_car_draw_info;
+                BOOST_FOREACH(const id_car_draw_info &car, drawer->members)
+                {
+                    float opacity;
+                    switch(car.second.state)
+                    {
+                    case car_draw_info::ENTERING:
+                        opacity = (t - hci->times[0])/(hci->times[1]-hci->times[0]);
+                        break;
+                    case car_draw_info::LEAVING:
+                        opacity = 1.0 - (t - car.second.timestamp)/EXPIRE_TIME;
+                        break;
+                    case car_draw_info::NORMAL:
+                    default:
+                        opacity = 1.0;
+                        break;
+                    }
+                    glPushMatrix();
+                    glMultMatrixf(car.second.frame.data());
+                    if(car.second.state != car_draw_info::NORMAL)
+                        glTranslatef(car.second.last_velocity * (t - car.second.timestamp), 0.0, 0.0);
+                    const bool braking = car.second.state == car_draw_info::NORMAL && hci->acceleration(car.first, t) < BRAKING_THRESHOLD;
+                    night_setup.draw_car_lights(opacity, braking);
+                    glPopMatrix();
+                }
             }
         }
-    }
-
-    void update_drawers(float t)
-    {
-        BOOST_FOREACH(tex_car_draw *drawer, car_drawers)
-        {
-            drawer->members.clear();
-        }
-
-        car_at_time *cars          = 0;
-        int          cars_n        = 0;
-        int          cars_n_allocd = 0;
-        cars_at_time(&cars, &cars_n, &cars_n_allocd, anim, t);
-
-        for(int c = 0; c < cars_n; ++c)
-        {
-            car_at_time  *time_car = cars + c;
-            car          *the_car  = anim->cars + time_car->car_idx;
-
-            assert(the_car->body_idx >= 0 && the_car->body_idx < car_drawers.size());
-            tex_car_draw *tcd      = car_drawers[the_car->body_idx];
-
-            car_draw_info draw_info;
-            draw_info.thecar = the_car;
-
-            assert(time_car->frame_idx >= 0 && time_car->frame_idx < the_car->frames_n-1);
-            car_frame *f0 = the_car->frames+time_car->frame_idx;
-            car_frame *f1 = the_car->frames+time_car->frame_idx+1;
-
-            for(int i = 0; i < 4; ++i)
-                for(int j = 0; j < 4; ++j)
-                {
-                    if(i==j)
-                        draw_info.frame(i, j) = 1.0f;
-                    else
-                        draw_info.frame(i, j) = 0.0f;
-                }
-
-            assert( t >= f0->time && t <= f1->time);
-            float s = (t - f0->time)/(f1->time-f0->time);
-            for(int i = 0; i < 3; ++i)
-                draw_info.frame(3, i) = f0->position[i]*(1-s) + s*f1->position[i];
-
-            float acceleration = f0->acceleration*(1-s) + s*f1->acceleration;
-            draw_info.braking = acceleration < BRAKING_THRESHOLD;
-
-            draw_info.frame(0,0) = f0->direction[0]*(1-s) + s*f1->direction[0];
-            draw_info.frame(0,1) = f0->direction[1]*(1-s) + s*f1->direction[1];
-            draw_info.frame(1,0) = f0->direction[1]*(1-s) + s*f1->direction[1];
-            draw_info.frame(1,1) = -(f0->direction[0]*(1-s) + s*f1->direction[0]);
-
-            tcd->members.insert(std::make_pair(the_car->id, draw_info));
-        }
-
-        free(cars);
-
-        last_drawer_update = t;
     }
 
     void draw()
@@ -1352,11 +1500,10 @@ public:
         frame_timer.reset();
         frame_timer.start();
 
+        advance_sim();
+
         if (!valid())
             draw_init();
-
-        if(last_drawer_update != t)
-            update_drawers(t);
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -1375,7 +1522,6 @@ public:
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
 
         night_setup.start_to_light();
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -1384,10 +1530,18 @@ public:
             draw_background();
             glEnable(GL_DEPTH_TEST);
             draw_network();
+            glEnable(GL_TEXTURE_2D);
+            draw_continuum_data();
             glColor4f(0.0, 0.0, 0.0, 1.0);
             glDisable(GL_TEXTURE_2D);
+            BOOST_FOREACH(hybrid::lane &l, sim->lanes)
+            {
+                if(l.active() && l.fictitious && l.is_macro())
+                    network_drawer.draw_lane_solid(l.parent->id);
+            }
             glEnable(GL_TEXTURE_2D);
             glColor4f(1.0, 1.0, 1.0, 1.0);
+            draw_roadblocks();
             draw_intersection_arrows();
             if(do_cars)
                 draw_cars();
@@ -1401,6 +1555,7 @@ public:
             {
                 glDepthMask(GL_FALSE);
                 glBlendFunc(GL_ONE, GL_ONE);
+                draw_roadblocks_lights();
                 if(do_cars && night_setup.draw_lights(t+time_offset))
                     draw_cars_lights();
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1409,16 +1564,8 @@ public:
             }
         }
         night_setup.finish_lum();
-        glLoadIdentity();
         night_setup.compose(t+time_offset, lo, hi, bg_saturation, fg_saturation);
-        glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
-        vec4f ambient_color_vec;
-        sub<0,3>::vector(ambient_color_vec) = night_setup.ambient_color(t);
-        ambient_color_vec[3]                = 1.0f;
-        glColor4fv(&ambient_color_vec[0]);
-        draw_background_overlay();
 
-        glLoadIdentity();
         if(imode == ARC_MANIP)
             view.draw(scale);
 
@@ -1513,7 +1660,7 @@ public:
         case FL_PUSH:
             {
                 const vec2i xy(make_v2(Fl::event_x(),
-				       Fl::event_y()));
+                                    Fl::event_y()));
                 const vec2f world(world_point(make_v2(xy[0], h()-xy[1]), center, scale, make_v2(w(), h())));
 
                 if(Fl::event_button() == FL_LEFT_MOUSE)
@@ -1554,6 +1701,13 @@ public:
                             break;
                         }
                     case NONE:
+                        {
+                            if(rb_add.active() && sim)
+                            {
+                                sim->roadblocks.push_back(rb_add.test_roadblock());
+                                rb_add.clear();
+                            }
+                        }
                         break;
                     default:
                         break;
@@ -1571,6 +1725,15 @@ public:
                     switch(imode)
                     {
                     case REGION_MANIP:
+                        {
+                            rectangles.clear();
+                            rectangles.push_back(aabb2d());
+                            rectangles.back().enclose_point(first_point[0], first_point[1]);
+                            rectangles.back().enclose_point(second_point[0], second_point[1]);
+                            drawing       = false;
+                            query_results = netaux->road_space.query(rectangles.back());
+                            sim->mass_reassign(query_results);
+                        }
                         break;
                     case ARC_MANIP:
                         drawing = false;
@@ -1584,7 +1747,7 @@ public:
         case FL_DRAG:
             {
                 const vec2i xy(make_v2(Fl::event_x(),
-				       Fl::event_y()));
+                                    Fl::event_y()));
                 const vec2f world(world_point(make_v2(xy[0], h()-xy[1]), center, scale, make_v2(w(), h())));
                 vec2f dvec(0);
                 if(Fl::event_button() == FL_LEFT_MOUSE)
@@ -1632,12 +1795,6 @@ public:
         case FL_KEYBOARD:
             switch(Fl::event_key())
             {
-            case '1':
-                t -= 0.025;
-                break;
-            case '2':
-                t += 0.025;
-                break;
             case '0':
                 bg_saturation = std::max(0.0f, bg_saturation - 0.05f);
                 break;
@@ -1678,9 +1835,10 @@ public:
                 switch(imode)
                 {
                 case MC_PREVIEW:
-                    t = 0.0f;
+                    t = hci->times[0];
                     break;
                 case NONE:
+                    sim->clear_all_roadblocks();
                     break;
                 default:
                     break;
@@ -1752,7 +1910,7 @@ public:
                 {
                     std::cout << " scale: "  << back_image_scale  << std::endl
                               << " center: " << back_image_center << std::endl
-			      << " y offset: " << back_image_yscale << std::endl;
+                  << " y offset: " << back_image_yscale << std::endl;
                 }
                 else
                     std::cout << "No image" << std::endl;
@@ -1762,9 +1920,9 @@ public:
         case FL_MOUSEWHEEL:
             {
                 const vec2i xy(make_v2(Fl::event_x(),
-				       Fl::event_y()));
+                                        Fl::event_y()));
                 const vec2i dxy(make_v2(Fl::event_dx(),
-					Fl::event_dy()));
+                                        Fl::event_dy()));
                 const float fy = copysign(0.5, dxy[1]);
 
                 if(Fl::event_state() & FL_SHIFT)
@@ -1802,11 +1960,9 @@ public:
     vec2f             center;
     float             scale;
 
-    car_animation *anim;
-
     GLuint     glew_state;
+    GLuint     background_tex_;
     big_image *back_image;
-    big_image *back_image_overlay;
     vec2i      back_image_dim;
     vec2f      back_image_center;
     float      back_image_scale;
@@ -1829,12 +1985,13 @@ public:
     std::vector<hwm::network_aux::road_spatial::entry> query_results;
 
     std::vector<tex_car_draw*> car_drawers;
-    float                      last_drawer_update;
     hwm::network_draw          network_drawer;
     hwm::network_aux_draw      network_aux_drawer;
     network_draw_mode          network_draw;
     bool                       draw_intersections;
 
+    hybrid::simulator  *sim;
+    hybrid::car_interp *hci;
     float               t;
     float               time_offset;
     float               sim_time_scale;
@@ -1873,11 +2030,12 @@ static void draw_callback(void *v)
 
 int main(int argc, char *argv[])
 {
+    Magick::InitializeMagick(nullptr);
     std::cout << libroad_package_string() << std::endl;
     std::cout << libhybrid_package_string() << std::endl;
     if(argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <input network> <trajectory file> [background image] " << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <input network> [nthreads] [background image] " << std::endl;
         return 1;
     }
     RESOURCE_ROOT = getenv(RESOURCE_ROOT_ENV_NAME);
@@ -1897,6 +2055,7 @@ int main(int argc, char *argv[])
     net.build_intersections();
     net.build_fictitious_lanes();
     net.auto_scale_memberships();
+    net.center();
     std::cerr << "HWM net loaded successfully" << std::endl;
 
     try
@@ -1912,19 +2071,43 @@ int main(int argc, char *argv[])
 
     hwm::network_aux neta(net);
 
-    car_animation anim;
-    load_trajectory_data(&anim, argv[2]);
+    int n_threads = 1;
+    if(argc >= 3)
+        n_threads = boost::lexical_cast<int>(argv[2]);
+    omp_set_num_threads(n_threads);
+    std::cout << "OpenMP using " << n_threads << " threads" << std::endl;
+
+    hybrid::simulator s(&net,
+                        4.5,
+                        1.0);
+    s.micro_initialize(0.73,
+                       1.67,
+                       33,
+                       4);
+    s.macro_initialize(8.1*4.5, 0.0f);
+
+    BOOST_FOREACH(hybrid::lane &l, s.lanes)
+    {
+        l.sim_type = hybrid::MICRO;
+        l.populate(0.05/s.car_length, s);
+        s.micro_lanes.push_back(&l);
+    }
+
+    //    s.settle(0.033);
 
     Fl_Double_Window *helper = make_window();
     helper->show(1, argv);
 
     sim_win->net    = &net;
     sim_win->netaux = &neta;
-    sim_win->anim   = &anim;
+    sim_win->sim    = &s;
+
+    hybrid::car_interp hci(s);
+    sim_win->hci    = &hci;
 
     sim_win->time_offset = 0;
 
-    if(argc == 5)
+    if(argc == 4)
     {
     // scale: 1.9185
     //     center: [378.73, 64.5092]
@@ -1938,11 +2121,9 @@ int main(int argc, char *argv[])
  // y offset: 1.02454
 
         sim_win->back_image = new big_image(argv[3]);
-        sim_win->back_image_overlay = new big_image(argv[4]);
-
-        sim_win->back_image_center = make_v2((float)-41.8057, (float)94.5195);
-        sim_win->back_image_scale =  0.423366;
-        sim_win->back_image_yscale = 1.10954;
+        sim_win->back_image_center = vec2f(1316.74, -486.947);
+        sim_win->back_image_scale =  0.952628;
+        sim_win->back_image_yscale = 1.02454;
 
         // sim_win->back_image_center = vec2f(-16.8949, -974.423);
         // sim_win->back_image_scale =  0.420447;

@@ -55,7 +55,6 @@ public:
     {
         lastmouse[0] = 0.0f;
         lastmouse[1] = 0.0f;
-
         this->resizable(this);
     }
 
