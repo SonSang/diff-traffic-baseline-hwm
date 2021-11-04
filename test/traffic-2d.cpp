@@ -189,8 +189,6 @@ static const char *fshader =
 
 struct car_draw_info
 {
-    car     *thecar;
-    bool     braking;
     mat4x4f  frame;
     typedef enum {ENTERING, NORMAL, LEAVING} state_t;
 
@@ -782,6 +780,7 @@ public:
                                                           drawing(false),
                                                           network_draw(NET_TEXTURE),
                                                           draw_intersections(false),
+                                                          sim(0),
                                                           t(0),
                                                           time_offset(0),
                                                           sim_time_scale(1),
