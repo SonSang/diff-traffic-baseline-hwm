@@ -3,6 +3,7 @@
 
 #include "gl-common.hpp"
 
+static const float BRAKING_THRESHOLD            = -0.1;
 static const float HEADLIGHT_THRESHOLD          = 0.65*1.732;
 static const float HEADLIGHT_COLOR[3]           = {0.5*255/255.0, 0.5*254/255.0, 0.5*149/255.0};
 static const float TAILLIGHT_COLOR[3]           = {0.6*122/255.0, 0.6* 15/255.0, 0.6* 25/255.0};
@@ -126,7 +127,6 @@ struct night_render
         glGenRenderbuffers(1, &depth_fb);
 
         glBindRenderbuffer(GL_RENDERBUFFER, depth_fb);
-
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, nsamples, GL_DEPTH_COMPONENT32F, dim[0], dim[1]);
         glError();
 
@@ -140,7 +140,7 @@ struct night_render
 
         glBindFramebuffer(GL_FRAMEBUFFER, lum_fb);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, lum_tex);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], false);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], true);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, lum_tex, 0);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_fb);
@@ -156,7 +156,7 @@ struct night_render
 
         glBindFramebuffer(GL_FRAMEBUFFER, to_light_fb);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, to_light_tex);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], false);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, nsamples, GL_RGBA8, dim[0], dim[1], true);
         glFramebufferTexture2D(GL_FRAMEBUFFER,
                                GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, to_light_tex, 0);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_fb);
